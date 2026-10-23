@@ -157,7 +157,7 @@ func test_killing_the_lord_wins_in_lord_mode() -> void:
 	)
 	var lord := -1
 	for e in SimKit.events(sim, SimEvents.SPAWN):
-		if e["type"] == &"kale_lordu":
+		if e["enemy_type"] == &"kale_lordu":
 			lord = int(e["id"])
 	assert_ne(lord, -1, "20. dk'da Kale Lordu doğar")
 	if lord == -1:
@@ -183,7 +183,7 @@ func test_lord_death_and_player_death_on_the_same_step_is_a_win() -> void:
 	)
 	var lord := -1
 	for e in SimKit.events(sim, SimEvents.SPAWN):
-		if e["type"] == &"kale_lordu":
+		if e["enemy_type"] == &"kale_lordu":
 			lord = int(e["id"])
 	assert_ne(lord, -1)
 	if lord == -1:
@@ -198,7 +198,7 @@ func test_lord_death_and_player_death_on_the_same_step_is_a_win() -> void:
 		var kills := SimKit.events(sim, SimEvents.KILL)
 		var lord_died_same_step := false
 		for k in kills:
-			if k["type"] == &"kale_lordu" and int(k["step"]) == sim.step_count:
+			if k["enemy_type"] == &"kale_lordu" and int(k["step"]) == sim.step_count:
 				lord_died_same_step = true
 		if not lord_died_same_step:
 			pending(
