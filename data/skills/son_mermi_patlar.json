@@ -1,0 +1,40 @@
+{
+  "id": "son_mermi_patlar",
+  "kind": "active",
+  "name": "Son Mermi Patlar",
+  "icon": "placeholder:son_mermi_patlar",
+  "max_level": 5,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "son_mermi_patlar",
+  "levels": [
+    {
+      "ex_damage": 50,
+      "ex_radius": 100
+    },
+    {
+      "ex_damage": 70,
+      "ex_radius": 115
+    },
+    {
+      "ex_damage": 90,
+      "ex_radius": 130
+    },
+    {
+      "ex_damage": 115,
+      "ex_radius": 150
+    },
+    {
+      "ex_damage": 150,
+      "ex_radius": 170
+    }
+  ],
+  "desc": [
+    "Şarjörün son kurşunu patlar.",
+    "Patlama büyür.",
+    "Patlama büyür.",
+    "Patlama büyür.",
+    "Patlama en üst seviyede."
+  ]
+}

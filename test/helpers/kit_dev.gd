@@ -109,3 +109,27 @@ static func has_signal_args(script: Script, sig: String) -> String:
 				names.append(a["name"])
 			return ",".join(names)
 	return "<yok>"
+
+
+## Gerçek veriyle, olay kaydı açık bir sim (varsayılan tohum 1).
+static func sim(opts: Dictionary = {}, seed_value: int = 1) -> GameSim:
+	var o := {"log_events": true}
+	o.merge(opts, true)
+	return GameSim.new(seed_value, &"gunslinger", o)
+
+
+## Olay günlüğünden bir türün kayıtları.
+static func events(s: GameSim, type: StringName) -> Array:
+	var out: Array = []
+	for e in s.event_log:
+		if e["type"] == type:
+			out.append(e)
+	return out
+
+
+## n adım ilerletir; LEVEL_UP olursa ilk kartı seçer.
+static func run(s: GameSim, n: int, move: Vector2 = Vector2.ZERO) -> void:
+	for i in n:
+		if s.state == GameSim.State.LEVEL_UP:
+			s.choose(0)
+		s.step(move)

@@ -1,0 +1,37 @@
+{
+  "id": "saglam_yelek",
+  "kind": "passive",
+  "name": "Sağlam Yelek",
+  "icon": "placeholder:saglam_yelek",
+  "max_level": 5,
+  "tags": [],
+  "levels": [
+    {
+      "max_hp_add": 15,
+      "regen": 0.25
+    },
+    {
+      "max_hp_add": 30,
+      "regen": 0.5
+    },
+    {
+      "max_hp_add": 45,
+      "regen": 0.75
+    },
+    {
+      "max_hp_add": 60,
+      "regen": 1.0
+    },
+    {
+      "max_hp_add": 75,
+      "regen": 1.25
+    }
+  ],
+  "desc": [
+    "Azami can +15, saniyede +0,25 can.",
+    "Azami can +30, saniyede +0,5 can.",
+    "Azami can +45, saniyede +0,75 can.",
+    "Azami can +60, saniyede +1 can.",
+    "Azami can +75, saniyede +1,25 can."
+  ]
+}

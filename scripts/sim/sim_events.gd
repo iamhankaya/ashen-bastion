@@ -1,14 +1,15 @@
 class_name SimEvents
 extends RefCounted
 ## event_log kayıt türleri ve kayıt kurucusu. Tür EKLEMEK serbest (sona); mevcut ad/alan değişmez.
-## Kayıt: {"step": int, "type": StringName, …alanlar}
+## Kayıt: {"step": int, "type": StringName, …alanlar}. "step" ve "type" alan adı olarak KULLANILMAZ
+## (planın kill/spawn/boss_spawn "type" alanı bu yüzden `enemy_type` adını taşır).
 
 const SHOT := &"shot"  # gun, origin, dir, dmg, index_in_mag, is_last
 const DAMAGE := &"damage"  # target, amount, raw, kind (bullet|explosion|contact|dot), source
 const EXPLOSION := &"explosion"  # pos, radius, dmg, source
-const KILL := &"kill"  # enemy_id, type, pos
-const SPAWN := &"spawn"  # type, id, pos
-const SPAWN_DROPPED := &"spawn_dropped"  # type
+const KILL := &"kill"  # enemy_id, enemy_type, pos
+const SPAWN := &"spawn"  # enemy_type, id, pos
+const SPAWN_DROPPED := &"spawn_dropped"  # enemy_type
 const RELOAD_START := &"reload_start"  # duration
 const RELOAD_END := &"reload_end"
 const REFUND := &"refund"  # n
@@ -20,7 +21,7 @@ const CHOICES := &"choices"  # ids
 const CHOICE_MADE := &"choice_made"  # skill_id
 const EVOLUTION := &"evolution"  # evo_id
 const BOSS_WARNING := &"boss_warning"  # kind
-const BOSS_SPAWN := &"boss_spawn"  # type
+const BOSS_SPAWN := &"boss_spawn"  # enemy_type
 const RUN_END := &"run_end"  # won
 
 const ALL: Array[StringName] = [
@@ -49,5 +50,6 @@ const ALL: Array[StringName] = [
 static func make(step: int, type: StringName, fields: Dictionary = {}) -> Dictionary:
 	var rec := {"step": step, "type": type}
 	for k in fields.keys():
-		rec[k] = fields[k]
+		if k != "step" and k != "type":  # kayıt kimliğini alan ezemez
+			rec[k] = fields[k]
 	return rec

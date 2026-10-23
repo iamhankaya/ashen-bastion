@@ -62,3 +62,23 @@ func test_huge_radius_does_not_scan_every_cell() -> void:
 	var out := PackedInt32Array()
 	h.query_circle(Vector2.ZERO, 1.0e9, out)
 	assert_eq(out, PackedInt32Array([1, 2]))
+
+
+func test_cells_sharing_a_bucket_do_not_duplicate_results() -> void:
+	# Aynı kovaya düşen hücreler sorguda bir kez gezilir; sonuç tekrarsız ve doğru.
+	var h := SpatialHash.new(96.0)
+	var n := 0
+	for cx in range(-40, 40):
+		for cy in range(-3, 3):
+			h.insert(n, Vector2(cx * 96.0 + 5.0, cy * 96.0 + 5.0))
+			n += 1
+	var out := PackedInt32Array()
+	h.query_circle(Vector2(5, 5), 300.0, out)
+	var seen := {}
+	for id in out:
+		assert_false(seen.has(id), "tekrar: %d" % id)
+		seen[id] = true
+	assert_gt(out.size(), 0)
+	for id in out:
+		var p := Vector2(float(id / 6 - 40) * 96.0 + 5.0, float(id % 6 - 3) * 96.0 + 5.0)
+		assert_lte(p.distance_to(Vector2(5, 5)), 300.0)

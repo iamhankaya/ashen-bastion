@@ -1,7 +1,9 @@
 extends SkillBehavior
-## İskelet: kancalar boş. Gövdeyi ilgili uygulama görevi doldurur (bkz. docs/dev/skill-hooks.md).
-## Uygulayan görev bu setup geçersiz kılmasını gerçek gövdeyle DEĞİŞTİRİR (Stub.todo kalkar).
+## Temel silah: şarjörden çıkış ve atış aralığını sim yürütür; bu davranış seviye değerlerini sim'e verir.
+## Aralık TABANCA BAŞINA; iki tabanca yarım aralık faz farkıyla sırayla ateş eder.
 
 
 func setup(api: GameSim, def: SkillDef, level: int) -> void:
-	Stub.todo(&"skills.cift_tabanca")
+	var lv := def.level_data(level)
+	api.gun_damage = float(lv.get("damage", api.gun_damage))
+	api.gun_interval = float(lv.get("interval", api.gun_interval))

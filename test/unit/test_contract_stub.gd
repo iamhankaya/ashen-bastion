@@ -21,21 +21,10 @@ func test_calls_returns_a_copy() -> void:
 
 
 func test_skeleton_methods_report_themselves() -> void:
+	# Hâlâ iskelet olan (uygulama-2) gövdeler. Uygulanan sınıf buradan çıkarılır.
 	var cases := [
-		[func(): Magazine.new().consume(), &"Magazine.consume"],
-		[func(): XpCurve.need(1), &"XpCurve.need"],
-		[func(): Difficulty.alive_cap(0.0), &"Difficulty.alive_cap"],
-		[
-			func(): Targeting.pick(0, Vector2.ZERO, 700.0, EnemyPool.new(), SpatialHash.new(), -1),
-			&"Targeting.pick"
-		],
-		[func(): Loadout.new().roll_choices(RandomNumberGenerator.new()), &"Loadout.roll_choices"],
-		[func(): EnemyPool.new().spawn(&"x", Vector2.ZERO, 1.0, 1.0, 1.0), &"EnemyPool.spawn"],
+		[func(): MapSim.new().obstacles_near(Vector2.ZERO), &"MapSim.obstacles_near"],
 		[func(): MusicPlan.track_for(0.0, {}), &"MusicPlan.track_for"],
-		[
-			func(): GameSim.new(1, &"gunslinger").debug_spawn(&"x", Vector2.ZERO),
-			&"GameSim.debug_spawn"
-		],
 	]
 	for c in cases:
 		Stub.reset()
