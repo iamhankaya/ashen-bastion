@@ -271,11 +271,12 @@ static func pop_scale(t: float, peak: float) -> float:
 
 func _on_score_changed(_score: int, _mult: int, gain: int) -> void:
 	if is_big_gain(gain):
-		_pop_t = 0.0
-		_pop_big = true
-		_since_pop = 0.0
-		_gain_t = 0.0
+		_gain_t = 0.0  # başlık her büyük kazançta; pop yine 300 ms aralık kuralına uyar
 		gain_label.text = "+" + format_score(gain)
+		if should_pop(gain, _since_pop):
+			_pop_t = 0.0
+			_pop_big = true
+			_since_pop = 0.0
 	elif should_pop(gain, _since_pop):
 		_pop_t = 0.0
 		_pop_big = false

@@ -390,7 +390,7 @@ func _layout_row(row: Control, h: float) -> void:
 	dash.position = Vector2.ZERO
 	dash.size = Vector2(_w, h)
 	var score := inner.get_node("Score") as Label
-	score.position = Vector2(140.0, cy - 66.0 + (h - ROW_H) * 0.0)
+	score.position = Vector2(140.0, maxf(2.0, cy - 66.0))
 	score.size = Vector2(_w - 420.0, 76.0)
 	var chip := inner.get_node("Chip") as Control
 	chip.position = Vector2(140.0, cy + 22.0)

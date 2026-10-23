@@ -71,13 +71,12 @@ func save() -> bool:
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		return false
-	f.store_string(JSON.stringify({"v": VERSION, "entries": entries}))
+	var wrote := f.store_string(JSON.stringify({"v": VERSION, "entries": entries}))
 	f.close()
-	if DirAccess.rename_absolute(tmp, _path) != OK:
-		DirAccess.remove_absolute(_path)
-		if DirAccess.rename_absolute(tmp, _path) != OK:
-			DirAccess.remove_absolute(tmp)
-			return false
+	# Yazma ya da rename başarısızsa önceki geçerli dosya olduğu gibi kalır (silip yeniden denemek yok).
+	if not wrote or DirAccess.rename_absolute(tmp, _path) != OK:
+		DirAccess.remove_absolute(tmp)
+		return false
 	return true
 
 

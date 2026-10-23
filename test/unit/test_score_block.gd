@@ -186,3 +186,15 @@ func test_rebinding_to_a_new_sim_resets_display_and_disconnects_old() -> void:
 	b.bind(null)
 	b.refresh(0.1)
 	assert_true(fresh.bus.score_changed.get_connections().is_empty())
+
+
+func test_big_gain_respects_300ms_pop_gap_but_still_shows_title() -> void:
+	var b := _block()
+	await get_tree().process_frame
+	b.refresh(0.5)
+	_sim.bus.score_changed.emit(400, 1, 400)
+	b.refresh(0.1)
+	_sim.bus.score_changed.emit(900, 1, 500)  # son pop'tan 100 ms
+	b.refresh(0.08)
+	assert_eq(b.gain_label.text, "+500", "başlık yine güncellenir")
+	assert_lt(b.value_label.scale.x, 1.18, "ikinci büyük pop 300 ms dolmadan tetiklenmez")

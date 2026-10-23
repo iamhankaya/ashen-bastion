@@ -298,3 +298,19 @@ func test_format_date_applies_timezone_bias() -> void:
 	assert_eq(Highscores.format_date(1_700_000_000, -300), "14.11.2023")
 	assert_eq(Highscores.format_date(0, 0), "01.01.1970")
 	assert_eq(Highscores.format_date(0, -60), "31.12.1969")
+
+
+func test_failed_save_keeps_previous_valid_file() -> void:
+	var h := Highscores.new(_path())
+	h.submit(_e(321))
+	assert_true(h.save())
+	# rename hedefi dolu bir dizin: rename başarısız olur, önceki dosya ve içerik korunur
+	var blocked := Highscores.new(DIR + "/blocked")
+	DirAccess.make_dir_recursive_absolute(DIR + "/blocked")
+	blocked.submit(_e(1))
+	assert_false(blocked.save())
+	assert_false(FileAccess.file_exists(DIR + "/blocked.tmp"), "geçici dosya temizlenir")
+	var h2 := Highscores.new(_path())
+	assert_true(h2.load_file())
+	assert_eq(h2.entries[0]["score"], 321)
+	DirAccess.remove_absolute(DIR + "/blocked")

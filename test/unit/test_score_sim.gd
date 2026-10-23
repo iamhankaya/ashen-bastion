@@ -44,7 +44,8 @@ func test_contact_damage_breaks_streak_before_player_damaged_signal() -> void:
 		if s.enemies.alive[i] == 1:
 			s.grid.insert(EnemyPool.make_id(s.enemies.gen[i], i), s.enemies.pos[i])
 	var seen_mult: Array = []
-	s.bus.player_damaged.connect(func(_a: float, _h: float) -> void: seen_mult.append(s.score.mult))
+	var keeper := s.score  # lambda sim'i yakalamasın (referans döngüsü sızıntısı)
+	s.bus.player_damaged.connect(func(_a: float, _h: float) -> void: seen_mult.append(keeper.mult))
 	assert_gt(s.damage.contact_tick(s, 1.0 / 60.0), 0.0)
 	assert_eq(seen_mult, [1], "player_damaged yayınlandığında seri zaten bozulmuş")
 	assert_eq(s.score.streak_count, 0)

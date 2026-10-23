@@ -46,6 +46,7 @@ const ROW_SLIDE_PX := 40.0
 const TOP_DEFAULT := 96.0
 const BOTTOM_DEFAULT := 72.0
 const DESIGN_H := 2400.0
+const DISPLAY_CAP := 99999999
 
 var won: bool = false
 var stats: Dictionary = {}
@@ -89,6 +90,8 @@ var _stamped: bool = false
 var _shine: ColorRect
 var _strip_nodes: Array[Control] = []
 var _hero_total: int = 0
+var _combos_data: Array[Dictionary] = []
+var _shown_combos: int = MAX_COMBOS
 
 
 func _ready() -> void:
@@ -304,10 +307,11 @@ func show_result(
 	title_label.add_theme_color_override(&"font_color", UiKit.AMBER if won else UiKit.KEMIK_100)
 	sub_label.text = subtitle if subtitle != "" else (WON_SUB if won else LOST_SUB)
 	glow.texture = _glow_texture(UiKit.AMBER if won else UiKit.BORDO_500)
+	_shown_combos = MAX_COMBOS
 	_fill_combos(combos)
 	_fill_record()
 	_fill_rows()
-	_hero_total = maxi(0, int(stats.get("score", 0)))
+	_hero_total = clampi(int(stats.get("score", 0)), 0, DISPLAY_CAP)
 	var amber := won or record_kind == &"record"
 	score_value.add_theme_color_override(&"font_color", UiKit.AMBER if amber else UiKit.KEMIK_100)
 	_t = 0.0
@@ -319,6 +323,13 @@ func show_result(
 
 
 func _fill_combos(combos: Array[Dictionary]) -> void:
+	_combos_data = combos
+	_render_combos()
+
+
+## Görünen kombo satırları `_shown_combos` kadar; taşma olursa `_layout` bunu azaltır ve "+N" büyür.
+func _render_combos() -> void:
+	var combos := _combos_data
 	for c in combo_box.get_children():
 		combo_box.remove_child(c)
 		c.queue_free()
@@ -328,11 +339,11 @@ func _fill_combos(combos: Array[Dictionary]) -> void:
 		e.custom_minimum_size = Vector2(_w - 100.0, 0)
 		combo_box.add_child(e)
 		return
-	for i in mini(combos.size(), MAX_COMBOS):
+	for i in mini(combos.size(), _shown_combos):
 		combo_box.add_child(_combo_row(combos[i]))
-	if combos.size() > MAX_COMBOS:
+	if combos.size() > _shown_combos:
 		var more := UiKit.label(
-			"+%d" % (combos.size() - MAX_COMBOS), &"LabelTimer", 36, UiKit.BRONZ_300
+			"+%d" % (combos.size() - _shown_combos), &"LabelTimer", 36, UiKit.BRONZ_300
 		)
 		more.custom_minimum_size = Vector2(0, 56)
 		more.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -458,6 +469,16 @@ func _layout() -> void:
 	combo_panel.position = Vector2(_x0, Y_COMBOS + _dy)
 	combo_panel.size = Vector2(_w, combo_panel.get_combined_minimum_size().y)
 	var by := maxf(combo_panel.position.y + combo_panel.size.y + GAP, BUTTONS_MIN_Y)
+	var limit := DESIGN_H - BOTTOM_DEFAULT - _extra.w
+	if (
+		by + REPLAY_H + BUTTON_GAP + MENU_H > limit
+		and _shown_combos > 1
+		and _combos_data.size() > 1
+	):
+		_shown_combos -= 1  # alt güvenli alana sığmıyor: bir kombo satırı daha "+N"e katılır
+		_render_combos()
+		_layout()
+		return
 	_put_abs(replay_button, _x0, by, _w, REPLAY_H)
 	_put_abs(menu_button, _x0, by + REPLAY_H + BUTTON_GAP, _w, MENU_H)
 
@@ -493,6 +514,9 @@ func apply_safe_area(extra: Variant = null) -> void:
 		_extra = extra
 	else:
 		_extra = UiKit.current_safe_extra(Vector2(1080.0, DESIGN_H))
+	_shown_combos = MAX_COMBOS
+	if combo_box != null:
+		_render_combos()
 	_layout()
 
 

@@ -234,3 +234,21 @@ func test_second_finish_does_not_extend_lock() -> void:
 	r._t = 1.0
 	r.finish_count()
 	assert_true(r.buttons_enabled(), "ilk atlama t'si korunur")
+
+
+func test_four_combos_with_big_safe_area_shrink_rows_instead_of_overflowing() -> void:
+	var r := _screen(true, 4)
+	r.apply_safe_area(Vector4(0, 100, 0, 150))
+	var limit := 2400.0 - 72.0 - 150.0
+	assert_lte(r.menu_button.position.y + r.menu_button.size.y, limit)
+	var last := r.combo_box.get_child(r.combo_box.get_child_count() - 1) as Label
+	assert_true(last is Label and last.text.begins_with("+"), "taşan kombolar +N olur")
+	r.apply_safe_area(Vector4.ZERO)
+	assert_eq(r.combo_box.get_child_count(), 4, "güvenli alan kalkınca 4 satır geri gelir")
+
+
+func test_hero_score_is_capped_at_display_cap() -> void:
+	var st := _stats(1_500_000_000)
+	var r := _screen(true, 0, {}, st)
+	r.finish_count()
+	assert_eq(r.score_value.text, "99.999.999")
