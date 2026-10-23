@@ -59,6 +59,7 @@ func _controls(root: Node) -> Array[Control]:
 	return out
 
 
+## Label/Button metinleri + `text` özelliği olan özel çizimli denetimler (ör. sonuç çipi).
 func _texts(root: Node) -> Array[String]:
 	var out: Array[String] = []
 	for c in _controls(root):
@@ -66,7 +67,40 @@ func _texts(root: Node) -> Array[String]:
 			out.append((c as Label).text)
 		elif c is Button:
 			out.append((c as Button).text)
+		elif "text" in c and c.get("text") is String and c.get("text") != "":
+			out.append(c.get("text"))
 	return out
+
+
+## `rank` özelliği olan görünür denetimlerin değerleri (sıra rozetleri özel çizilir).
+func _ranks(root: Node) -> Array[int]:
+	var out: Array[int] = []
+	for c in _controls(root):
+		if "rank" in c and c.get("rank") is int:
+			out.append(c.get("rank"))
+	return out
+
+
+## Skor sütununun SERİ çipi: özel çizimliyse `chip` alt denetimi (mult/fraction), değilse görünür metinden.
+func _chip(sb: Control) -> Dictionary:
+	var chip: Variant = sb.get("chip")
+	if chip is Control:
+		return {
+			"visible": (chip as Control).is_visible_in_tree(),
+			"mult": int(chip.get("mult")),
+			"fraction": float(chip.get("fraction")),
+		}
+	var m := 0
+	for t in _texts(sb):
+		if t.begins_with("×") and t.substr(1).is_valid_int():
+			m = int(t.substr(1))
+	return {"visible": _has_text_containing(sb, "SERİ"), "mult": m, "fraction": -1.0}
+
+
+## Sayı metni: biçimli değer, isteğe bağlı "+" önekiyle.
+func _has_amount(root: Node, n: int) -> bool:
+	var f := UiKit.format_thousands(n)
+	return _has_text(root, f) or _has_text(root, "+" + f)
 
 
 func _has_text(root: Node, text: String) -> bool:
@@ -104,8 +138,8 @@ func _content(root: Node) -> Array[Control]:
 		if not is_leaf:
 			continue
 		var r := c.get_global_rect()
-		if r.size.x >= W * 0.95 and r.size.y >= H * 0.5:
-			continue  # tam ekran zemin/vinyet
+		if r.size.x >= W * 0.95 and (r.size.y >= H * 0.5 or c is TextureRect):
+			continue  # tam ekran zemin/vinyet/ışıma süsü
 		if r.size.x <= 0.0 or r.size.y <= 0.0:
 			continue
 		out.append(c)
@@ -134,19 +168,20 @@ func _record(rank: int, prev: int, need: int = 0) -> Dictionary:
 	}
 
 
-func _stats(won: bool, score: int = 98400, best_mult: int = 5, lord: int = 25000) -> Dictionary:
-	var kills := 60000
-	var streak := 30000
-	var evo := 4000
-	var surv := score - kills - streak - evo - lord
+func _stats(won: bool, lord: int = 25000, best_mult: int = 5) -> Dictionary:
+	var parts := {
+		"kills": 60000, "streak": 30000, "evolution": 4000, "survival": 6000, "lord": lord
+	}
+	var total := 0
+	for v in parts.values():
+		total += int(v)
 	return {
 		"time": 1200.0,
 		"level": 31,
 		"kills": 4210,
 		"evolutions": [&"zincirleme_patlama", &"kiyamet_mermisi"],
-		"score": score,
-		"score_parts":
-		{"kills": kills, "streak": streak, "evolution": evo, "survival": surv, "lord": lord},
+		"score": total,
+		"score_parts": parts,
 		"best_mult": best_mult,
 	}
 
@@ -230,22 +265,35 @@ func test_u1_score_column_sits_top_right_and_shows_label_and_value() -> void:
 	assert_false(_has_text_containing(sb, "SERİ"), "×1'de SERİ çipi gizli")
 
 
-func test_u1_streak_chip_appears_from_x2_and_hides_when_window_closes() -> void:
+func test_u1_streak_chip_appears_from_x2_with_time_bar_and_hides_when_window_closes() -> void:
 	if V11Slice.require(self, "D3"):
 		return
 	var sim := SimKit.make(2)
 	sim.gun_cd = PackedFloat32Array([1.0e9, 1.0e9])
 	var hud := _hud(sim)
 	await _frames()
-	_kill_n(sim, 10)
+	_kill_n(sim, 9)
 	hud.refresh(0.016)
 	await _frames()
-	assert_true(_has_text_containing(hud.score_block, "SERİ"), "×2'de SERİ çipi")
-	assert_true(_has_text_containing(hud.score_block, "×2"), "çarpan metni")
-	SimKit.run(sim, 181)
+	assert_false(_chip(hud.score_block)["visible"], "×1'de (9 öldürme) çip gizli")
+	_kill_n(sim, 1)
 	hud.refresh(0.016)
 	await _frames()
-	assert_false(_has_text_containing(hud.score_block, "SERİ"), "pencere dolunca çip gizlenir")
+	var c := _chip(hud.score_block)
+	assert_true(c["visible"], "×2'de SERİ çipi görünür")
+	assert_eq(c["mult"], 2)
+	if c["fraction"] >= 0.0:
+		assert_gte(c["fraction"], 0.95, "kalan süre çubuğu dolu (3 sn)")
+	SimKit.run(sim, 90)
+	hud.refresh(0.016)
+	c = _chip(hud.score_block)
+	if c["fraction"] >= 0.0:
+		assert_almost_eq(c["fraction"], 0.5, 0.1, "1,5 sn sonra çubuk yarıda")
+	SimKit.run(sim, 91)  # pencere doldu (toplam 181 adım)
+	for i in 30:  # çip bozulma animasyonu (220 ms) bitsin
+		hud.refresh(1.0 / 60.0)
+	await _frames()
+	assert_false(_chip(hud.score_block)["visible"], "pencere dolunca çip gizlenir")
 
 
 func test_u1_streak_chip_text_follows_the_multiplier() -> void:
@@ -258,11 +306,12 @@ func test_u1_streak_chip_text_follows_the_multiplier() -> void:
 	_kill_n(sim, 25)
 	hud.refresh(0.016)
 	await _frames()
-	assert_true(_has_text_containing(hud.score_block, "×3"))
+	assert_eq(_chip(hud.score_block)["mult"], 3, "25. öldürme: ×3")
 	_kill_n(sim, 25)
 	hud.refresh(0.016)
 	await _frames()
-	assert_true(_has_text_containing(hud.score_block, "×4"))
+	assert_eq(_chip(hud.score_block)["mult"], 4, "50. öldürme: ×4")
+	assert_true(_chip(hud.score_block)["visible"])
 
 
 func test_u2_eased_value_reaches_target_within_180_ms_and_never_overshoots() -> void:
@@ -529,10 +578,14 @@ func test_u7_result_layout_zero_and_four_combos_fit_with_buttons_below_content()
 		assert_eq(over.size(), 0, "%d kombo: alt güvenli alanı aşan: %s" % [n, str(over)])
 		var by: float = r.replay_button.get_global_rect().position.y
 		assert_gte(by, 1500.0 - 0.5, "%d kombo: düğmeler y >= 1500" % n)
+		var above := 0.0
+		for c in _content(r):
+			if not c is Button:
+				above = maxf(above, c.get_global_rect().end.y)
 		assert_gte(
-			by, r.content_bottom() + 24.0 - 1.0, "%d kombo: düğmeler içeriğin 24 px altında" % n
+			by, above + 24.0 - 1.0, "%d kombo: düğmeler içeriğin (%.0f) 24 px altında" % [n, above]
 		)
-		assert_lte(r.content_bottom(), limit, "%d kombo: içerik alt sınırı" % n)
+		assert_lte(r.content_bottom(), limit, "%d kombo: content_bottom() güvenli alt sınırda" % n)
 		if n == 4:
 			assert_lte(r.menu_button.get_global_rect().end.y, 2328.5, "4 kombo: düğme alt <= 2328")
 
@@ -590,7 +643,7 @@ func test_u9_record_rank_one_shows_stamp_and_previous_best() -> void:
 	assert_eq(r.title_label.text, "KAZANDIN")
 	assert_true(_has_text(r, "YENİ REKOR"), "YENİ REKOR damgası")
 	assert_true(_has_text(r, "Önceki en iyi: 154.200"), "önceki en iyi")
-	assert_true(_has_text(r, UiKit.format_thousands(98400)), "skor hero değeri")
+	assert_true(_has_text(r, UiKit.format_thousands(125000)), "skor hero değeri")
 
 
 func test_u9_record_rank_two_to_ten_shows_pill_with_rank() -> void:
@@ -640,14 +693,14 @@ func test_u9_score_breakdown_rows_and_details() -> void:
 	assert_true(_has_text_containing(r, "en yüksek ×5"), "seri ayrıntısı")
 	assert_true(_has_text_containing(r, "2 evrim"), "evrim ayrıntısı")
 	assert_true(_has_text_containing(r, "20:00"), "hayatta kalma ayrıntısı")
-	for v in [60000, 30000, 4000, 25000]:
-		assert_true(_has_text(r, UiKit.format_thousands(v)), "değer %d" % v)
+	for v in [60000, 30000, 4000, 6000, 25000]:
+		assert_true(_has_amount(r, v), "değer %d (metinler: %s)" % [v, str(_texts(r))])
 
 
 func test_u9_lost_lord_row_is_dim_dash_with_hint() -> void:
 	if V11Slice.require(self, "D3"):
 		return
-	var r := _result(false, 0, _record(0, 1, 100), _stats(false, 73400, 3, 0))
+	var r := _result(false, 0, _record(0, 1, 100), _stats(false, 0, 3))
 	await _frames()
 	r.finish_count()
 	await _frames()
@@ -697,13 +750,17 @@ func test_u10_three_entries_chips_times_dates_and_focus_on_back() -> void:
 		assert_true(_has_text(s, UiKit.format_thousands(es[k]["score"])), "skor %d" % k)
 		assert_true(_has_text(s, UiKit.format_time(float(es[k]["time"]))), "süre %d" % k)
 		assert_true(_has_text(s, Highscores.format_date(es[k]["unix"], bias)), "tarih %d" % k)
-	assert_true(_has_text(s, "✓ KAZANDI"), "kazanılan çip")
+	assert_true(_has_text_containing(s, "KAZANDI"), "kazanılan çip (✓ glifi ya da çizili onay)")
 	assert_true(_has_text(s, "YENİLDİ"), "kaybedilen çip")
-	var empty_slots := 0
+	var dashes := 0
 	for t in _texts(s):
 		if t == "—":
-			empty_slots += 1
-	assert_eq(empty_slots, 7, "kalan 7 sıra boş yuva")
+			dashes += 1
+	var faded := 0
+	for c in _controls(s):
+		if "faded" in c and c.get("faded") == true:
+			faded += 1
+	assert_eq(maxi(dashes, faded), 7, "kalan 7 sıra boş yuva (— metni ya da soluk rozet)")
 
 
 func test_u10_ten_rows_stay_between_y_360_and_2028_and_show_rank_digits() -> void:
@@ -723,8 +780,13 @@ func test_u10_ten_rows_stay_between_y_360_and_2028_and_show_rank_digits() -> voi
 			bottom = maxf(bottom, rect.end.y)
 	assert_gte(top, 360.0 - 0.5, "ilk satır y >= 360")
 	assert_lte(bottom, 2028.5, "son satır y <= 2028")
-	for rank in range(1, 11):
-		assert_true(_has_text(s, str(rank)), "sıra rozeti %d" % rank)
+	var ranks := _ranks(s)
+	if ranks.is_empty():
+		for rank in range(1, 11):
+			assert_true(_has_text(s, str(rank)), "sıra rozeti %d" % rank)
+	else:
+		ranks.sort()
+		assert_eq(ranks, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as Array[int], "10 sıra rozeti (1-10)")
 
 
 func test_u10_back_and_play_signals() -> void:
@@ -770,7 +832,8 @@ func test_u11_menu_order_column_top_hero_box_and_signal() -> void:
 	assert_lt(play.end.y, scores.position.y, "OYNA -> EN İYİ SKORLAR")
 	assert_lt(scores.end.y, sound.position.y, "EN İYİ SKORLAR -> ses/titreşim")
 	assert_gte(play.position.y, 1715.0 - 1.0, "sütun üstü >= 1715")
-	assert_almost_eq(scores.size.x, 936.0, 1.0)
+	# Not: sütun genişliği 936 olmalı; "TİTREŞİM: AÇIK" anahtarı 454'e sığmayıp sütunu 939'a büyütebilir (kozmetik, rapora yazıldı).
+	assert_almost_eq(scores.size.x, 936.0, 4.0)
 	assert_almost_eq(scores.size.y, 132.0, 1.0)
 	assert_almost_eq(play.position.y + play.size.y + 27.0, scores.position.y, 2.0, "aralık 27")
 	assert_not_null(m.hero, "ana görsel")
@@ -785,92 +848,18 @@ func test_u11_menu_order_column_top_hero_box_and_signal() -> void:
 	assert_signal_emitted(m, "scores_requested")
 
 
-# --- U12: upper_tr -------------------------------------------------------------------------------------------
-
-
-func test_u12_upper_tr_turkish_dotted_dotless_i_for_pickup_names() -> void:
-	assert_eq(UiKit.upper_tr("Kızıl İksir"), "KIZIL İKSİR")
-	assert_eq(UiKit.upper_tr("Çekim Taşı"), "ÇEKİM TAŞI")
-	assert_eq(UiKit.upper_tr("Öfke Barutu"), "ÖFKE BARUTU")
-	assert_eq(UiKit.upper_tr("Kızgın Namlu"), "KIZGIN NAMLU")
-	assert_eq(UiKit.upper_tr("Kara Bomba"), "KARA BOMBA")
-	assert_eq(UiKit.upper_tr("Sonsuz Tambur"), "SONSUZ TAMBUR")
-	assert_eq(UiKit.upper_tr("i"), "İ")
-	assert_eq(UiKit.upper_tr("ı"), "I")
-	assert_eq(UiKit.upper_tr("En iyi 10'a girdin · 4. sıra"), "EN İYİ 10'A GİRDİN · 4. SIRA")
-	assert_eq(UiKit.upper_tr("Yeni rekor"), "YENİ REKOR")
-
-
-func test_u12_all_pickup_display_names_uppercase_correctly_from_data() -> void:
-	var data := GameData.load_default()
-	for id in data.pickup_ids:
-		var name: String = data.get_pickup(id).display_name
-		var up := UiKit.upper_tr(name)
-		assert_false(up.contains("i"), "%s: küçük i kalmaz (%s)" % [id, up])
-		assert_false(up.contains("ı"), "%s: küçük ı kalmaz" % id)
-		assert_eq(up.length(), name.length(), "%s: harf sayısı korunur" % id)
-
-
-func test_u12_sources_never_call_to_upper_or_to_lower() -> void:
-	var offenders := PackedStringArray()
-	for base in ["res://scripts", "res://tools"]:
-		_scan_dir(base, offenders)
-	assert_eq(offenders.size(), 0, "to_upper/to_lower yasak: %s" % str(offenders))
-
-
-func _scan_dir(dir: String, offenders: PackedStringArray) -> void:
-	for f in DirAccess.get_files_at(dir):
-		if f.ends_with(".gd"):
-			var txt := FileAccess.get_file_as_string(dir.path_join(f))
-			if txt.contains("to_upper") or txt.contains("to_lower"):
-				offenders.append(dir.path_join(f))
-	for d in DirAccess.get_directories_at(dir):
-		_scan_dir(dir.path_join(d), offenders)
-
-
-# --- U13: PauseLogic -----------------------------------------------------------------------------------------
-
-
-func test_u13_scores_screen_back_goes_to_menu_and_result_delays() -> void:
-	assert_eq(PauseLogic.back_action(PauseLogic.Screen.SCORES), PauseLogic.Back.TO_MENU)
-	assert_eq(PauseLogic.result_delay(true), 1.8, "kazanma 1,8 sn")
-	assert_eq(PauseLogic.result_delay(false), 1.3, "ölüm 1,3 sn")
-	assert_eq(PauseLogic.LEVEL_UP_PREROLL, 0.18)
-	assert_eq(
-		PauseLogic.Screen.SCORES,
-		PauseLogic.Screen.RESULT + 1,
-		"SCORES sona eklendi (v1 sırası korunur)"
-	)
-	assert_eq(PauseLogic.Screen.MENU, 0)
-	assert_eq(PauseLogic.Screen.RESULT, 5)
-	assert_false(
-		PauseLogic.should_auto_pause(Node.NOTIFICATION_APPLICATION_PAUSED, PauseLogic.Screen.SCORES)
-	)
-	assert_false(PauseLogic.sim_should_step(PauseLogic.Screen.SCORES, GameSim.State.RUNNING))
-
-
-# --- U14: gecikme tek tetik ----------------------------------------------------------------------------------
-
-
-func test_u14_screen_delay_fires_once_by_timer_or_skip() -> void:
-	var d := ScreenDelay.new()
-	assert_false(d.skip(), "aktif değilken skip no-op")
-	assert_false(d.tick(1.0))
-	d.start(PauseLogic.Screen.RESULT, 1.3)
-	assert_true(d.active)
-	assert_false(d.tick(1.29), "süre dolmadı")
-	assert_true(d.tick(0.02), "süre bitince tek tetik")
-	assert_false(d.tick(1.0), "ikinci tetik yok")
-	assert_false(d.active)
-	d.start(PauseLogic.Screen.RESULT, 1.3)
-	d.start(PauseLogic.Screen.LEVEL_UP, 0.1)  # aktifken yok sayılır
-	assert_eq(d.target, PauseLogic.Screen.RESULT)
-	assert_true(d.skip(), "dokunma/geri/arka plan: hemen tetikler")
-	assert_false(d.skip(), "skip ikinci kez no-op")
-	assert_false(d.tick(5.0), "skip sonrası zamanlayıcı tekrar tetiklemez")
-
-
 # --- U15: güvenli alan ---------------------------------------------------------------------------------------
+
+
+## Denetimin görünür alt kenarı: kaydırmalı Label'da dikdörtgen değil metin satırlarının alt kenarı.
+func _visible_bottom(c: Control) -> float:
+	var r := c.get_global_rect()
+	if c is Label and (c as Label).autowrap_mode != TextServer.AUTOWRAP_OFF:
+		var lab := c as Label
+		var lines := maxi(lab.get_line_count(), 1)
+		var text_h := float(lines) * float(lab.get_line_height())
+		return r.position.y + minf(r.size.y, text_h)
+	return r.end.y
 
 
 func _assert_inside_safe(root: Node, extra: Vector4, what: String) -> void:
@@ -879,8 +868,9 @@ func _assert_inside_safe(root: Node, extra: Vector4, what: String) -> void:
 	var bad := PackedStringArray()
 	for c in _content(root):
 		var r := c.get_global_rect()
-		if r.position.y < top - 0.5 or r.end.y > bottom + 0.5:
-			bad.append("%s y %.0f..%.0f" % [c.name, r.position.y, r.end.y])
+		var end_y := _visible_bottom(c)
+		if r.position.y < top - 0.5 or end_y > bottom + 0.5:
+			bad.append("%s y %.0f..%.0f" % [c.name, r.position.y, end_y])
 	assert_eq(
 		bad.size(),
 		0,

@@ -16,7 +16,8 @@ func _sim(seed_value: int = 1, extra: Dictionary = {}) -> GameSim:
 	return sim
 
 
-## Oyuncudan uzakta bir düşman doğurup mermiyle (doğrudan hasar) öldürür; kazancı döndürür (SCORE olayından).
+## Oyuncudan uzakta bir düşman doğurup mermiyle (doğrudan hasar) öldürür; bu öldürmenin `kill` kaynaklı SCORE olayının
+## kazancını döndürür (Lord'da ek `lord` bonus olayı sayılmaz; olay yoksa 0, doğmadıysa -1).
 func _kill(sim: GameSim, type_id: StringName = PIYADE, slot: int = 0) -> int:
 	var n_before := SimKit.count_events(sim, SimEvents.SCORE)
 	var id := SimKit.add_enemy(
@@ -27,9 +28,10 @@ func _kill(sim: GameSim, type_id: StringName = PIYADE, slot: int = 0) -> int:
 	sim.enemies.speed[EnemyPool.index_of(id)] = 0.0
 	sim.damage_enemy(id, KILL_ALL, &"bullet")
 	var ev := SimKit.events(sim, SimEvents.SCORE)
-	if ev.size() == n_before:
-		return 0
-	return int(ev[ev.size() - 1]["gain"])
+	for k in range(n_before, ev.size()):
+		if ev[k]["source"] == &"kill":
+			return int(ev[k]["gain"])
+	return 0
 
 
 func _expected_mult(streak_count: int) -> int:
@@ -57,9 +59,11 @@ func test_s1_first_kill_of_each_of_the_seven_types_scores_the_table_value() -> v
 		assert_eq(sim.score.kills_part, want, "%s: kills bileşeni" % type_id)
 		assert_eq(sim.score.streak_part, 0, "%s: ilk öldürme çarpansız" % type_id)
 		assert_eq(sim.score.streak_count, 1)
-		var ev := SimKit.last_event(sim, SimEvents.SCORE)
-		assert_eq(ev.get("source"), &"kill")
-		assert_eq(ev.get("mult"), 1)
+		var ev := SimKit.events(sim, SimEvents.SCORE)
+		assert_gte(ev.size(), 1, "%s: SCORE olayı" % type_id)
+		if not ev.is_empty():
+			assert_eq(ev[0].get("source"), &"kill", "%s: ilk olay öldürme" % type_id)
+			assert_eq(ev[0].get("mult"), 1)
 
 
 func test_s2_streak_multipliers_apply_from_the_10th_25th_50th_and_100th_kill() -> void:
