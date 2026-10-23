@@ -7,7 +7,7 @@ const ENEMY_SIZE := 128
 const GEM_SIZE := 48
 const BULLET_SIZE := Vector2i(64, 24)
 const GROUND_SIZE := 256
-const SHADOW_CORE := 0.45
+const SHADOW_CORE := 0.55
 
 static var _cache: Dictionary = {}
 

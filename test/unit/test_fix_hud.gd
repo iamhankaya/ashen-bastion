@@ -39,8 +39,14 @@ func test_boss_band_clears_hud_with_notch() -> void:
 		"pasif yuva": (h.passive_slots[0] as Control).get_global_rect(),
 	}
 	for k in others:
-		assert_false(band.intersects(others[k]), "%s bandın altında kalmaz (%s ↔ %s)" % [k, band, others[k]])
-	assert_gte(band.position.y, h.boss_row.get_global_rect().end.y - 0.5, "bant boss satırının hemen altında")
+		assert_false(
+			band.intersects(others[k]), "%s bandın altında kalmaz (%s ↔ %s)" % [k, band, others[k]]
+		)
+	assert_gte(
+		band.position.y,
+		h.boss_row.get_global_rect().end.y - 0.5,
+		"bant boss satırının hemen altında"
+	)
 
 
 func test_boss_band_unchanged_without_notch() -> void:
@@ -65,15 +71,19 @@ func _edge_gap(target: Vector2, safe: Rect2) -> float:
 	assert_true(r["visible"])
 	var c: Vector2 = r["pos"]
 	var rad := OffscreenArrow.SIZE * 0.5
-	return minf(
-		minf(c.x - rad, VIEW.x - c.x - rad),
-		minf(c.y - rad, VIEW.y - c.y - rad)
-	)
+	return minf(minf(c.x - rad, VIEW.x - c.x - rad), minf(c.y - rad, VIEW.y - c.y - rad))
 
 
 func test_arrow_circle_keeps_36px_from_screen_edge_without_notch() -> void:
 	var safe := Rect2(Vector2.ZERO, VIEW)
-	for t in [Vector2(3000, 0), Vector2(-3000, 0), Vector2(0, 3000), Vector2(0, -3000), Vector2(2500, 2500), Vector2(-2500, -2500)]:
+	for t in [
+		Vector2(3000, 0),
+		Vector2(-3000, 0),
+		Vector2(0, 3000),
+		Vector2(0, -3000),
+		Vector2(2500, 2500),
+		Vector2(-2500, -2500)
+	]:
 		assert_gte(_edge_gap(t, safe), 36.0, "kenara >= 36 px (%s)" % t)
 
 
@@ -81,10 +91,18 @@ func test_arrow_circle_keeps_36px_plus_inset_with_notch() -> void:
 	var safe := Rect2(Vector2(48.0, 130.0), VIEW - Vector2(96.0, 210.0))
 	var rad := OffscreenArrow.SIZE * 0.5
 	# hedef yönü -> [kenar uzaklığı ölçüsü, beklenen en az (36 + pay)]
-	var left := OffscreenArrow.place(Vector2(-3000, 0), Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN)
-	var right := OffscreenArrow.place(Vector2(3000, 0), Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN)
-	var up := OffscreenArrow.place(Vector2(0, -3000), Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN)
-	var down := OffscreenArrow.place(Vector2(0, 3000), Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN)
+	var left := OffscreenArrow.place(
+		Vector2(-3000, 0), Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN
+	)
+	var right := OffscreenArrow.place(
+		Vector2(3000, 0), Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN
+	)
+	var up := OffscreenArrow.place(
+		Vector2(0, -3000), Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN
+	)
+	var down := OffscreenArrow.place(
+		Vector2(0, 3000), Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN
+	)
 	assert_gte((left["pos"] as Vector2).x - rad, 36.0 + 48.0 - 0.01, "sol")
 	assert_gte(VIEW.x - (right["pos"] as Vector2).x - rad, 36.0 + 48.0 - 0.01, "sağ")
 	assert_gte((up["pos"] as Vector2).y - rad, 36.0 + 130.0 - 0.01, "üst")

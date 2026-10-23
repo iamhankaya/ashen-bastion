@@ -6,8 +6,8 @@ extends MultiMeshInstance2D
 
 const STRIDE := 12
 const SHADOW_ALPHA := 0.38
-## Ekrandaki tepe opaklık = SHADOW_ALPHA × GAIN (≈0,68). Tampon α'sı (0,38) kabul testlerinde sabit; kazanç shader'dadır (V-01).
-const GAIN := 1.8
+## Ekrandaki tepe opaklık = SHADOW_ALPHA × GAIN (≈0,84). Tampon α'sı (0,38) kabul testlerinde sabit; kazanç shader'dadır (V-01).
+const GAIN := 2.2
 const SHADER_PATH := "res://assets/shaders/shadow_gain.gdshader"
 
 

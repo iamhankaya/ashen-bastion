@@ -74,6 +74,8 @@ func test_menu_column_is_936_wide_and_toggles_fit_454() -> void:
 			m.set_settings(sound, vib)
 			await get_tree().process_frame
 			assert_lte(m.sound_button.get_combined_minimum_size().x, 454.0, "SES ×%s" % sound)
-			assert_lte(m.vibration_button.get_combined_minimum_size().x, 454.0, "TİTREŞİM ×%s" % vib)
+			assert_lte(
+				m.vibration_button.get_combined_minimum_size().x, 454.0, "TİTREŞİM ×%s" % vib
+			)
 	assert_almost_eq(m.scores_button.size.x, 936.0, 0.5, "sütun 936")
 	assert_almost_eq(m.sound_button.size.x, m.vibration_button.size.x, 1.0)

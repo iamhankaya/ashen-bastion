@@ -1,7 +1,6 @@
 extends GutTest
 ## Ara denetim düzeltmeleri (görünüm): V-07 yaygın eklenti parlaması, V-08 seviye halkası zamanlaması.
 
-
 # --- V-07 --------------------------------------------------------------------------------------------------
 
 
@@ -87,7 +86,9 @@ func test_debug_labels_do_not_cover_the_badge_row_or_the_drum() -> void:
 			assert_true(label.visible)
 			var r: Rect2 = (label as Control).get_global_rect()
 			for k: String in zone:
-				assert_false(r.intersects(zone[k]), "%s etiketi %s bölgesini örtmez" % [label.name, k])
+				assert_false(
+					r.intersects(zone[k]), "%s etiketi %s bölgesini örtmez" % [label.name, k]
+				)
 			assert_gte(r.position.x, 0.0)
 			assert_lte(r.end.x, 1080.0 - UiKit.SAFE_EDGE + 0.01, "sağ güvenli kenar")
 			assert_lte(r.end.y, 2400.0 + 0.01)
