@@ -4,8 +4,10 @@ extends RefCounted
 ## bus, havuzların açık alanları) bakar; iç yapıya bakmaz.
 ##
 ## Veri türleri (opts["data_kind"]):
-##   "quiet"          gerçek data/, doğurma çizelgesi BOŞ (kural testleri tesadüfi düşmandan arınır; varsayılan)
-##   "real"           gerçek data/ (waves.json dahil)
+##   "quiet"          gerçek data/, doğurma çizelgesi BOŞ (varsayılan). Eklenti tablosu veriyle gelir (açık);
+##                    eklentisiz koşu için opts["pickups"] = false verilir (D2 birim testleri bu sözleşmeye göre yazıldı)
+##   "quiet_pickups"  "quiet" ile aynı (v1.1 kabul testlerinde niyeti açıkça belirtmek için takma ad)
+##   "real"           gerçek data/ (waves.json ve pickups.json dahil)
 ##   "fixture"        test/fixtures/data_valid, doğurma çizelgesi boş
 ##   "fixture_waves"  test/fixtures/data_valid (waves.json dahil)
 
@@ -43,11 +45,13 @@ static func data_for(kind: String) -> GameData:
 		"real":
 			return GameData.load_default()
 		"quiet":
-			return _cached("quiet", REAL_DIR, true)
+			return _cached("quiet", REAL_DIR, true, true)
+		"quiet_pickups":
+			return _cached("quiet_pickups", REAL_DIR, true, true)
 		"fixture":
-			return _cached("fixture", FIXTURE_DIR, true)
+			return _cached("fixture", FIXTURE_DIR, true, true)
 		"fixture_waves":
-			return _cached("fixture_waves", FIXTURE_DIR, false)
+			return _cached("fixture_waves", FIXTURE_DIR, false, true)
 	return GameData.load_default()
 
 
@@ -145,6 +149,20 @@ static func card_index(sim: GameSim, skill_id: StringName) -> int:
 	return -1
 
 
+## Oyuncunun `dist` px sağına `kind_id` eklentisi koyar; pickups indeksi (-1 = olmadı).
+static func pickup_near(sim: GameSim, kind_id: StringName, dist: float = 0.0) -> int:
+	return sim.debug_spawn_pickup(kind_id, sim.player_pos + Vector2(dist, 0.0))
+
+
+## Olay kaydındaki `type` alanı verilen türde olanların `step` değerleri.
+static func steps_of(sim: GameSim, type: StringName) -> Array[int]:
+	var out: Array[int] = []
+	for e in sim.event_log:
+		if e["type"] == type:
+			out.append(int(e["step"]))
+	return out
+
+
 ## Veri dizinini (res:// ya da user://) yeni bir user:// dizinine kopyalar; yolunu döndürür.
 static func copy_data(src: String, label: String) -> String:
 	_counter += 1
@@ -168,12 +186,15 @@ static func remove_tmp() -> void:
 	_remove_recursive(ProjectSettings.globalize_path(TMP_ROOT))
 
 
-static func _cached(key: String, src: String, empty_waves: bool) -> GameData:
+static func _cached(key: String, src: String, empty_waves: bool, with_pickups: bool) -> GameData:
 	if _cache.has(key):
 		return _cache[key]
 	var dir := copy_data(src, key)
 	if empty_waves:
 		write_json(dir.path_join("waves.json"), EMPTY_WAVES)
+	if not with_pickups:
+		# Boş eklenti tablosu = doğuş yok (pickups.json yoksa GameData tabloyu boş kurar).
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(dir.path_join("pickups.json")))
 	var g := GameData.load_dir(dir)
 	_cache[key] = g
 	return g
