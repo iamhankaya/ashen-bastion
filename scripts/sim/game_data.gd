@@ -252,7 +252,8 @@ func validate(registry: Dictionary = {}, complete: bool = false) -> PackedString
 	_validate_enemies(out)
 	_validate_characters(out)
 	_validate_waves(out)
-	_validate_ruins(out)
+	if not _ruins_failed and _raw_ruins != null:
+		RuinsValidator.run(self, _raw_ruins, out)
 	if complete:
 		_validate_complete(out)
 	return out
@@ -904,41 +905,6 @@ func _validate_waves(out: PackedStringArray) -> void:
 			_num(out, "waves.json after_lord", al, "piyade_rate_mult", 0, 1)
 			if not al.has("karga_stop") or not (al["karga_stop"] is bool):
 				_err(out, "bad_type", "waves.json after_lord", "'karga_stop' bool olmalı")
-
-
-## ruins.json isteğe bağlıdır (yoksa harita boş). Varsa: dizi; her kayıt id (benzersiz), sprite (var), display_scale,
-## foot [x,y] 0..1, footprint {w,h}, weight > 0, solid bool.
-func _validate_ruins(out: PackedStringArray) -> void:
-	if _ruins_failed or _raw_ruins == null:
-		return
-	if not (_raw_ruins is Array):
-		_err(out, "bad_type", "ruins.json", "kök dizi olmalı")
-		return
-	var seen := {}
-	for i in _raw_ruins.size():
-		var ctx := "ruins.json[%d]" % i
-		var d: Variant = _raw_ruins[i]
-		if not (d is Dictionary):
-			_err(out, "not_object", ctx, "kayıt nesne olmalı")
-			continue
-		if not _valid_id(d.get("id")):
-			_err(out, "missing_field", ctx, "geçerli 'id' yok")
-		elif seen.has(d["id"]):
-			_err(out, "dup_id", ctx, "yinelenen id '%s'" % d["id"])
-		else:
-			seen[d["id"]] = true
-		_check_asset(out, ctx, d, "sprite")
-		_num(out, ctx, d, "display_scale", 0.1, 20)
-		_num(out, ctx, d, "weight", 0.01, 1000)
-		_pair(out, ctx, d, "foot", 0, 1)
-		var fp: Variant = d.get("footprint")
-		if not (fp is Dictionary):
-			_err(out, "missing_field", ctx, "'footprint' nesne olmalı")
-		else:
-			_num(out, ctx + " footprint", fp, "w", 1, 2000)
-			_num(out, ctx + " footprint", fp, "h", 1, 2000)
-		if typeof(d.get("solid")) != TYPE_BOOL:
-			_err(out, "bad_type", ctx, "'solid' bool olmalı")
 
 
 func _validate_wave_row(out: PackedStringArray, ctx: String, row: Variant, end_time: float) -> void:

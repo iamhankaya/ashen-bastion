@@ -123,3 +123,40 @@ func test_ruin_view_creates_and_frees_sprites_with_chunks() -> void:
 	await get_tree().process_frame
 	assert_lt(actors.get_child_count(), near + rv.sprite_count() + 1)
 	rv.clear()
+
+
+func test_bad_ruin_records_are_reported() -> void:
+	var dir := SimKit.copy_data("res://data", "bad_ruins")
+	(
+		SimKit
+		. write_json(
+			dir.path_join("ruins.json"),
+			[
+				{
+					"id": "a",
+					"sprite": "placeholder:x",
+					"display_scale": 1,
+					"foot": [0.5, 0.9],
+					"footprint": {"w": 10, "h": 4},
+					"weight": 1,
+					"solid": true
+				},
+				{
+					"id": "a",
+					"sprite": "res://yok.png",
+					"display_scale": 0,
+					"foot": [2, 0.9],
+					"footprint": {"w": 0},
+					"weight": 1,
+					"solid": "evet"
+				},
+			]
+		)
+	)
+	var errs := GameData.load_dir(dir).validate()
+	assert_gt(errs.size(), 4, "yinelenen id, eksik dosya, aralık, footprint, solid türü")
+	var joined := "\n".join(errs)
+	assert_true("dup_id" in joined)
+	assert_true("asset_missing" in joined)
+	assert_true("out_of_range" in joined)
+	assert_true("bad_type" in joined)
