@@ -86,7 +86,7 @@ class Chip:
 		var x := CHIP_PAD
 		draw_string(
 			f_small,
-			Vector2(x, base + 10.0),
+			Vector2(x, base + 7.0),
 			"SERİ",
 			HORIZONTAL_ALIGNMENT_LEFT,
 			-1,
@@ -96,7 +96,7 @@ class Chip:
 		x += f_small.get_string_size("SERİ", HORIZONTAL_ALIGNMENT_LEFT, -1, 28).x + 12.0
 		draw_string(
 			f_big,
-			Vector2(x, base + 12.0),
+			Vector2(x, base + 9.0),
 			"×%d" % mult,
 			HORIZONTAL_ALIGNMENT_LEFT,
 			-1,
