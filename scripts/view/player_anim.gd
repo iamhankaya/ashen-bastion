@@ -306,10 +306,11 @@ func _update_facing(dt: float, facing_left: bool) -> void:
 		var e := _ease_in_out_cubic(_turn_t)
 		var old_sign := signf(_turn_from)
 		var new_sign := signf(_turn_to)
+		var m0 := absf(_turn_from)  # dönüş sürerken geri çevrilirse mevcut genişlikten devam (sıçrama yok)
 		if old_sign == new_sign:
-			turn_x = _turn_to
+			turn_x = new_sign * lerpf(m0, 1.0, e)
 		elif e < 0.5:
-			turn_x = old_sign * lerpf(1.0, TURN_MIN, e / 0.5)
+			turn_x = old_sign * lerpf(m0, TURN_MIN, e / 0.5)
 		else:
 			turn_x = new_sign * lerpf(TURN_MIN, 1.0, (e - 0.5) / 0.5)
 		if _turn_t >= 1.0:

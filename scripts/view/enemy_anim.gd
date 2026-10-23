@@ -9,6 +9,8 @@ const CAP := EnemyPool.CAP
 ## Kare modunda tek adımda en çok bu kadar piksel yürüme fazına yazılır (ışınlanma/geri dönüşüm sıçratmaz).
 const MAX_STEP_PX := 60.0
 const FLAP_FPS := 12.0
+## step_seen ilk kare işareti: doğuşta sahte adım teması (toz/titreşim) üretmez.
+const STEP_UNSEEN := -2147483648
 const KIND_NAMES: PackedStringArray = ["none", "crawl", "flap", "float", "stomp"]
 
 enum Kind { NONE, CRAWL, FLAP, FLOAT, STOMP }
@@ -182,7 +184,7 @@ func sync_slot(i: int, gen: int, pos: Vector2) -> void:
 	walk[i] = p0
 	last_pos[i] = pos
 	enrage_t0[i] = -1.0
-	step_seen[i] = 0
+	step_seen[i] = STEP_UNSEEN
 	timer_seen[i] = INF
 	slam_t0[i] = -10.0
 
@@ -206,11 +208,11 @@ static func flap_frame(frames: int, t: float, p0: float) -> int:
 
 ## (theta, sx, sy, bob_px) — ayak noktası etrafında; öteleme (0, −bob). Ham poz: vuruş/lean/özel durum renderer'da biner.
 static func pose_of(
-	kind: int, hz: float, bob: float, rot_rad: float, sq: float, t: float, p0: float
+	kind: int, hz: float, bob: float, rot_rad: float, sq: float, t: float, phase0: float
 ) -> Vector4:
 	if kind == Kind.NONE:
 		return Vector4(0.0, 1.0, 1.0, 0.0)
-	var f := hz * speed_mult(p0) * t + p0
+	var f := hz * speed_mult(phase0) * t + phase0
 	var s1 := lut_sin(f)
 	var theta := 0.0
 	var bob_px := 0.0

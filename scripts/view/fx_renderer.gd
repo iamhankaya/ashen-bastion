@@ -425,7 +425,7 @@ func _draw_v11() -> void:
 			continue
 		var u := 1.0 - left / SHELL_TIME
 		var p := _shell_pos[i] + _shell_dir[i] * _shell_dist[i] * u
-		p.y += -6.0 * sin(PI * u) * 2.0 + 10.0 * u * u  # 6 px yükselip düşer
+		p.y += -6.0 * sin(PI * u) + 10.0 * u * u  # 6 px yükselip düşer
 		var ang := u * 9.0 * signf(_shell_dir[i].x)
 		var half := Vector2(2.0, 1.0)
 		var xf := Transform2D(ang, p)

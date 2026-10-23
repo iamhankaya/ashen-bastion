@@ -38,6 +38,8 @@ var _height: float = DEFAULT_HEIGHT
 var _arm_len: float = 70.0
 var _facing_left: bool = false
 var _last_pos: Vector2 = Vector2.ZERO
+var _last_steps: int = 0
+var _vel: Vector2 = Vector2.ZERO
 var _sway: float = 0.0
 var _pad_world: Vector2 = Vector2.ZERO
 var _arm_orig: Vector2 = Vector2(120, 48)
@@ -238,6 +240,8 @@ func bind(sim: GameSim) -> void:
 		bus.run_ended.connect(_on_run_ended)
 		position = sim.player_pos
 		_last_pos = sim.player_pos
+		_last_steps = sim.step_count
+	_vel = Vector2.ZERO
 	update_view(0.0)
 
 
@@ -304,8 +308,14 @@ func update_view(dt: float) -> void:
 	if mag.reloading:
 		rp = clampf(1.0 - mag.reload_left / maxf(mag.reload_total, 0.0001), 0.0, 1.0)
 	anim.on_buffs(_aura_mask())
-	var vel := moved / dt if dt > 0.0 else Vector2.ZERO
-	anim.update(dt, vel, _facing_left, rp)
+	# Hız sim adımından türetilir (render karesinden değil): sim adımlamayan karede (120 Hz ekran, vuruş donması) son hız korunur.
+	var steps := _sim.step_count - _last_steps
+	_last_steps = _sim.step_count
+	if steps > 0:
+		_vel = moved / (float(steps) * GameSim.STEP)
+	elif moved != Vector2.ZERO and dt > 0.0:
+		_vel = moved / dt  # sim dışı konum değişimi (ışınlanma/test): doğrudan
+	anim.update(dt, _vel, _facing_left, rp)
 	_apply_pose(dt, moved)
 	_update_ring(dt, mag, rp)
 	_update_flash(dt)

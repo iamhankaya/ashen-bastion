@@ -454,3 +454,13 @@ func test_zero_dt_changes_nothing() -> void:
 	var k := a.knock_px
 	a.update(0.0, Vector2.ZERO, false, -1.0)
 	assert_eq(a.knock_px, k)
+
+
+func test_reversing_mid_turn_continues_from_the_current_width() -> void:
+	var a := _anim()
+	_run(a, 0.1)
+	for i in 3:
+		a.update(0.01, Vector2.ZERO, true, -1.0)
+	var mid := a.turn_x
+	a.update(0.001, Vector2.ZERO, false, -1.0)  # geri çevir
+	assert_lt(absf(a.turn_x - mid), 0.12, "genişlik sıçramaz")

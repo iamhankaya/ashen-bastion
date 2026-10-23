@@ -344,6 +344,7 @@ func test_elite_steps_make_dust_at_most_four_per_second_and_shake_when_close() -
 	var base := fx.particle_count()
 	for k in 600:  # 10 sn
 		sim.time = float(k) / 60.0
+		sim.enemies.pos[i] += Vector2(1.0, 0.0)  # yürüyen elit (yerinde duran toz vermez)
 		r.refresh()
 		dust = fx.particle_count() - base
 	assert_lte(dust, 40 + 1, "<=4/sn")
@@ -359,6 +360,7 @@ func test_elite_steps_make_dust_at_most_four_per_second_and_shake_when_close() -
 	_spawn(far._sim, &"elit_piyade", Vector2(-900.0, 0.0))
 	for k in 300:
 		far._sim.time = float(k) / 60.0
+		far._sim.enemies.pos[EnemyPool.index_of(far._sim.alive_ids()[0])] += Vector2(1.0, 0.0)
 		far.refresh()
 	assert_eq(cam2._shake, 0.0, "400 px üstü: sarsıntı yok")
 
@@ -385,3 +387,16 @@ func test_unbound_or_empty_is_safe() -> void:
 	r.bind(null)
 	r.refresh()
 	assert_eq(r.last_shadow_instances, 0)
+
+
+func test_elite_spawn_and_standing_still_make_no_dust() -> void:
+	var sim := _sim()
+	var r := _renderer(sim)
+	var fx := FxRenderer.new()
+	add_child_autofree(fx)
+	r.set_effects(fx, null)
+	_spawn(sim, &"elit_piyade", Vector2(-300.0, 0.0))
+	for k in 300:  # yerinde duran elit: zaman akar, konum değişmez
+		sim.time = 50.0 + float(k) / 60.0
+		r.refresh()
+	assert_eq(fx.particle_count(), 0)

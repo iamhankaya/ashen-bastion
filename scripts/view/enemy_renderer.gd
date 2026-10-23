@@ -358,7 +358,7 @@ func refresh() -> void:
 					cb = ENRAGE_TINT.b
 					lord_enraged_now = true
 					lord_pos = p
-			if kind == EnemyAnim.Kind.CRAWL or kind == EnemyAnim.Kind.STOMP:
+			if (kind == EnemyAnim.Kind.CRAWL or kind == EnemyAnim.Kind.STOMP) and not framed_walk:
 				_elite_step(i, t, p, time, ppos, sp == EnemyAnim.Special.LORD)
 		var qx0 := _t_qx[t]
 		var qy0 := _t_qy[t]
@@ -426,9 +426,14 @@ func _enrage_pulse(i: int, p: Vector2, time: float) -> float:
 func _elite_step(i: int, t: int, p: Vector2, time: float, ppos: Vector2, lord: bool) -> void:
 	var f := anim.hz_t[t] * EnemyAnim.speed_mult(anim.phase0[i]) * time + anim.phase0[i]
 	var step := floori(2.0 * f)
-	if step == anim.step_seen[i]:
+	var moved := p.distance_squared_to(anim.last_pos[i]) > 0.25
+	anim.last_pos[i] = p
+	var seen := anim.step_seen[i]
+	if step == seen:
 		return
 	anim.step_seen[i] = step
+	if seen == EnemyAnim.STEP_UNSEEN or not moved:  # doğuş ilk karesi / yerinde duran elit: temas yok
+		return
 	if _fx == null or time - _last_dust < DUST_GAP:
 		return
 	_last_dust = time
