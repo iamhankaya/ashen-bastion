@@ -703,7 +703,7 @@ func test_a12_stop_crossfades_to_standing_cell_within_80_ms() -> void:
 	var n := 6
 	var a := _anim(n)
 	_run(a, 0.6, Vector2(FAST, 0))
-	_run(a, 0.001, Vector2.ZERO)
+	_run(a, DT, Vector2.ZERO)
 	var contact := a.frame_a
 	assert_true(
 		contact == 0 or contact == n / 2,
