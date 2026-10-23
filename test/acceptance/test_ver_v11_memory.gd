@@ -7,6 +7,10 @@ const TOTAL_BUDGET_BYTES := 24_000_000  # atlas + oyuncu şeridi + tamponlar + h
 
 
 ## Bir nesnenin Packed*Array alanlarının toplam bayt boyutu (ad -> bayt).
+func after_all() -> void:
+	SimKit.remove_tmp()
+
+
 func _packed_bytes(obj: Object) -> int:
 	var total := 0
 	for p in obj.get_property_list():

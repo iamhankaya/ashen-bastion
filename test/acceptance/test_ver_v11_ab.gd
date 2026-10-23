@@ -3,6 +3,10 @@ extends GutTest
 ## üretilir; burada tanımı sınanır: determinizm, eşli tohum (eklenti bayrağı dışında aynı dünya), alan tutarlılığı.
 
 
+func after_all() -> void:
+	SimKit.remove_tmp()
+
+
 func test_runner_is_deterministic_for_the_same_seed_and_arm() -> void:
 	var o := {"seed": 31, "policy": &"greedy_pickup", "pickups": true, "max_steps": 6000}
 	var a := AbRunner.run(o)

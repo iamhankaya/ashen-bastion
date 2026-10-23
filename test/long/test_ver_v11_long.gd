@@ -7,6 +7,10 @@ const TWENTY_MIN := 72000
 const GROWTH_BUDGET_BYTES := 16_000_000
 
 
+func after_all() -> void:
+	SimKit.remove_tmp()
+
+
 func _policies(with_pickups: bool) -> Array[StringName]:
 	var out: Array[StringName] = Bots.POLICIES.duplicate()
 	if with_pickups:
