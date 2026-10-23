@@ -43,3 +43,44 @@ static func padded(path: String, pad: int) -> Texture2D:
 	var tex := ImageTexture.create_from_image(out)
 	_cache[key] = tex
 	return tex
+
+
+## Yatay şeridi `cells` eşit hücreye böler ve HER hücreyi ayrı `pad` piksel saydam boşlukla çevreler (rim komşu kareye
+## sızmasın). Çıktı genişliği cells × (hücre + 2·pad). Önbellekli; dosya yok / hücreye bölünmüyorsa null.
+## İçe aktarılmamış dosyayı (ör. user://) da okur: kare şeridi sentetik testlerde çalışma anında yazılır.
+static func padded_cells(path: String, cells: int, pad: int) -> Texture2D:
+	var key := "padc%d:%d:%s" % [pad, cells, path]
+	if _cache.has(key):
+		return _cache[key]
+	if cells < 1 or path == "" or path.begins_with("placeholder:"):
+		return null
+	var img := image(path)
+	if img == null or img.get_width() % cells != 0:
+		return null
+	if img.is_compressed():
+		img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	var cw := img.get_width() / cells
+	var ch := img.get_height()
+	var out := Image.create_empty(cells * (cw + pad * 2), ch + pad * 2, false, Image.FORMAT_RGBA8)
+	for c in cells:
+		out.blit_rect(img, Rect2i(c * cw, 0, cw, ch), Vector2i(c * (cw + pad * 2) + pad, pad))
+	var tex := ImageTexture.create_from_image(out)
+	_cache[key] = tex
+	return tex
+
+
+## Dosyanın ham görüntüsü (ImageTexture/içe aktarılmış ya da düz dosya); null = yok. Önbelleksiz: çağıran dönüştürür.
+static func image(path: String) -> Image:
+	if path == "" or path.begins_with("placeholder:"):
+		return null
+	return _read_image(path)
+
+
+static func _read_image(path: String) -> Image:
+	if ResourceLoader.exists(path):
+		var t := load(path) as Texture2D
+		return t.get_image() if t != null else null
+	if FileAccess.file_exists(path):
+		return Image.load_from_file(path)
+	return null
