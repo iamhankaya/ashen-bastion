@@ -8,10 +8,10 @@ extends MultiMeshInstance2D
 const STRIDE := 16
 const SHADER_PATH := "res://assets/shaders/enemy_flash.gdshader"
 const DEFAULT_HEIGHT := 110.0
-const RIM_SCREEN_PX := 2.2
+const RIM_SCREEN_PX := 1.5
 ## Taban düşman kontur rengi (shader varsayılanıyla aynı; zeminden >= 3:1 testlidir).
 const RIM_COLOR := Color(0.74, 0.64, 0.47)  # ekranda hedef kontur kalınlığı
-const RIM_ELITE_SCREEN_PX := 3.6
+const RIM_ELITE_SCREEN_PX := 2.5
 const ANIM_FPS := 9.0  # çok kareli sprite (kargalar) kanat hızı
 
 var atlas: EnemyAtlas = null
@@ -101,7 +101,7 @@ func bind(sim: GameSim) -> void:
 		_frames_by_type.append(frames)
 		_elite_by_type.append(elite)
 		var want := RIM_ELITE_SCREEN_PX if elite > 0.0 else RIM_SCREEN_PX
-		_rim_by_type.append(clampf(want / world_per_texel, 2.0, 14.0))
+		_rim_by_type.append(clampf(want / world_per_texel, 1.0, 14.0))
 
 
 ## Kare başına bir kez: canlıları tara, tampona yaz, tek buffer ataması yap.
