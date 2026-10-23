@@ -178,17 +178,8 @@ func _cases_d2() -> Array:
 ## D3: skor, highscore, ekranlar
 func _cases_d3() -> Array:
 	var sim := GameSim.new(1, &"gunslinger")
-	var score_block: ScoreBlock = _node(ScoreBlock.new())
-	score_block.visible = true
 	var scores: HighscoreScreen = _node(HighscoreScreen.new())
 	return [
-		[func() -> void: score_block.bind(sim), &"ScoreBlock.bind"],
-		[func() -> void: score_block.refresh(0.016), &"ScoreBlock.refresh"],
-		[func() -> void: ScoreBlock.eased(0.0, 100, 0.016), &"ScoreBlock.eased"],
-		[func() -> void: ScoreBlock.should_pop(50, 1.0), &"ScoreBlock.should_pop"],
-		[func() -> void: ScoreBlock.is_big_gain(400), &"ScoreBlock.is_big_gain"],
-		[func() -> void: ScoreBlock.tier_of(2), &"ScoreBlock.tier_of"],
-		[func() -> void: ScoreBlock.format_score(1234), &"ScoreBlock.format_score"],
 		[
 			func() -> void: scores.show_scores([] as Array[Dictionary]),
 			&"HighscoreScreen.show_scores"

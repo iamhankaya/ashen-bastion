@@ -126,6 +126,22 @@ static func font_semibold() -> Font:
 	return f
 
 
+## Inter 700 (HUD etiketleri: SKOR, SERİ) — font_semibold ile aynı kalıp.
+static func font_bold() -> Font:
+	if _tex_cache.has("font_bold"):
+		return _tex_cache["font_bold"]
+	var base := "res://assets/fonts/inter-latin-700-normal.woff2"
+	var ext := "res://assets/fonts/inter-latin-ext-700-normal.woff2"
+	var f: Font = font_semibold()
+	if ResourceLoader.exists(base) and ResourceLoader.exists(ext):
+		var fv := FontVariation.new()
+		fv.base_font = load(base)
+		fv.fallbacks = [load(ext)]
+		f = fv
+	_tex_cache["font_bold"] = f
+	return f
+
+
 static func label(
 	text: String, variation: StringName = &"", size: int = 0, color: Variant = null
 ) -> Label:
