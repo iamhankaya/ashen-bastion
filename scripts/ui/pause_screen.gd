@@ -53,7 +53,7 @@ func _build() -> void:
 	col.anchor_right = 0.5
 	col.offset_left = -BTN_W * 0.5
 	col.offset_right = BTN_W * 0.5
-	col.offset_top = 270.0
+	col.offset_top = 380.0  # HUD yuva satırlarının (y<350) altında; başlık onlara binmez
 	add_child(col)
 
 	var title := UiKit.label("DURAKLATILDI", &"LabelTitle")
@@ -78,7 +78,7 @@ func _build() -> void:
 	col.add_child(panel)
 
 	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 54)
+	gap.custom_minimum_size = Vector2(0, 170)  # eylem düğmeleri makete göre aşağıda (başparmak bölgesi)
 	col.add_child(gap)
 
 	resume_button = UiKit.button("DEVAM ET", &"primary", 156.0)
@@ -90,9 +90,11 @@ func _build() -> void:
 	row.add_theme_constant_override(&"separation", 27)
 	sound_button = UiKit.button("", &"secondary")
 	sound_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sound_button.custom_minimum_size.x = 454.0
 	sound_button.pressed.connect(_on_sound)
 	vibration_button = UiKit.button("", &"secondary")
 	vibration_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vibration_button.custom_minimum_size.x = 454.0
 	vibration_button.pressed.connect(_on_vibration)
 	row.add_child(sound_button)
 	row.add_child(vibration_button)

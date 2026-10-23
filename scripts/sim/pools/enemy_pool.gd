@@ -20,7 +20,16 @@ var contact: PackedFloat32Array = PackedFloat32Array()
 var armor: PackedFloat32Array = PackedFloat32Array()
 var radius: PackedFloat32Array = PackedFloat32Array()
 var max_hp: PackedFloat32Array = PackedFloat32Array()
+## Yapay zekâ durumu (elit karga şarjı, Lord çağırması): geri sayım, yardımcı değer, kilitli yön.
+var ai_timer: PackedFloat32Array = PackedFloat32Array()
+var ai_aux: PackedFloat32Array = PackedFloat32Array()
+var ai_dir: PackedVector2Array = PackedVector2Array()
 
+## Tür başına yapay zekâ sınıfı (sıcak yolda def aramasını önler): 0 düz, 1 yer (engelden kayar), 2 özel (şarj/çağırma).
+const KIND_PLAIN := 0
+const KIND_GROUND := 1
+const KIND_SPECIAL := 2
+var type_kind: PackedByteArray = PackedByteArray()
 var _type_ids: Array[StringName] = []
 var _defs: Array[EnemyDef] = []
 var _free: PackedInt32Array = PackedInt32Array()
@@ -38,6 +47,9 @@ func _init(data: GameData = null) -> void:
 	armor.resize(CAP)
 	radius.resize(CAP)
 	max_hp.resize(CAP)
+	ai_timer.resize(CAP)
+	ai_aux.resize(CAP)
+	ai_dir.resize(CAP)
 	_free.resize(CAP)
 	for k in CAP:
 		_free[k] = CAP - 1 - k  # en düşük indeks yığının tepesinde
@@ -49,9 +61,17 @@ func _init(data: GameData = null) -> void:
 func bind(data: GameData) -> void:
 	_type_ids.clear()
 	_defs.clear()
+	type_kind.clear()
 	for id in data.enemy_ids:
+		var def := data.get_enemy(id)
 		_type_ids.append(id)
-		_defs.append(data.get_enemy(id))
+		_defs.append(def)
+		var k := KIND_PLAIN
+		if def.ai == &"ground":
+			k = KIND_GROUND
+		elif not def.charge.is_empty() or not def.summon.is_empty():
+			k = KIND_SPECIAL
+		type_kind.append(k)
 
 
 static func make_id(generation: int, index: int) -> int:
@@ -86,6 +106,14 @@ func spawn(
 	contact[i] = def.dmg * contact_mult
 	armor[i] = def.armor
 	radius[i] = def.radius
+	ai_aux[i] = 0.0
+	ai_dir[i] = Vector2.ZERO
+	if not def.charge.is_empty():
+		ai_timer[i] = float(def.charge.get("every", 4.0))
+	elif not def.summon.is_empty():
+		ai_timer[i] = float(def.summon.get("every", 8.0)) * 0.4  # Lord geldikten kısa süre sonra ilk çağırma
+	else:
+		ai_timer[i] = 0.0
 	count += 1
 	return make_id(gen[i], i)
 

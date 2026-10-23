@@ -184,6 +184,8 @@ var character_ids: Array[StringName] = []
 var skill_ids: Array[StringName] = []
 var enemy_ids: Array[StringName] = []
 var waves: Dictionary = {}
+## data/ruins.json (isteğe bağlı): harabe tanımları [{id, sprite, display_scale, foot, footprint{w,h}, weight, solid}].
+var ruins: Array[Dictionary] = []
 
 var _characters: Dictionary = {}  # StringName -> CharacterDef
 var _skills: Dictionary = {}  # StringName -> SkillDef
@@ -194,6 +196,8 @@ var _raw_skills: Array[Dictionary] = []
 var _raw_enemies: Array[Dictionary] = []
 var _raw_waves: Variant = null
 var _waves_failed: bool = false
+var _raw_ruins: Variant = null
+var _ruins_failed: bool = false
 
 static var _default: GameData = null
 
@@ -248,6 +252,8 @@ func validate(registry: Dictionary = {}, complete: bool = false) -> PackedString
 	_validate_enemies(out)
 	_validate_characters(out)
 	_validate_waves(out)
+	if not _ruins_failed and _raw_ruins != null:
+		RuinsValidator.run(self, _raw_ruins, out)
 	if complete:
 		_validate_complete(out)
 	return out
@@ -269,6 +275,15 @@ func _load_all() -> void:
 		load_errors.append("[missing_file] waves.json: dosya yok")
 	if _raw_waves is Dictionary:
 		waves = _raw_waves
+	var rp := root_dir.path_join("ruins.json")
+	if FileAccess.file_exists(rp):
+		var rr := _read_json(rp, "ruins.json")
+		_raw_ruins = rr.get("data")
+		_ruins_failed = rr.get("failed", false)
+		if _raw_ruins is Array:
+			for x in _raw_ruins:
+				if x is Dictionary:
+					ruins.append(x)
 	for e in _raw_characters:
 		var d: Variant = e["data"]
 		if d is Dictionary and _valid_id(d.get("id")) and not _characters.has(StringName(d["id"])):

@@ -14,7 +14,8 @@ var _ex_radius: float = EX_RADIUS
 var _ex_damage: float = EX_DAMAGE
 
 
-func setup(_api: GameSim, def: SkillDef, level: int) -> void:
+func setup(api: GameSim, def: SkillDef, level: int) -> void:
+	_bind(api)
 	var lv := def.level_data(level) if def != null else {}
 	_every_n = maxi(1, int(lv.get("every_n", EVERY_N)))
 	_bounces = int(lv.get("bounces", BOUNCES))

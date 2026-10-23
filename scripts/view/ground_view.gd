@@ -3,12 +3,17 @@ extends Sprite2D
 ## Döşenen koyu zemin (prosedürel, dikişsiz). Kamerayı döşeme adımıyla izler; bölge görünür alanı + bir döşeme kaplar.
 
 const MARGIN_TILES := 2
+const GROUND_PATH := "res://assets/gfx/map/ground.png"
+## Gotik atmosfer için zemini karartır (mor-kahve ton); gerçek doku olduğu gibi çok parlak.
+const TINT := Color(0.46, 0.40, 0.50)
 
 var _tile: float = float(PlaceholderArt.GROUND_SIZE)
 
 
 func _init() -> void:
-	texture = PlaceholderArt.ground_texture()
+	var real := ArtLoader.texture(GROUND_PATH)
+	texture = real if real != null else PlaceholderArt.ground_texture()
+	modulate = TINT if real != null else Color.WHITE
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	region_enabled = true
 	centered = true

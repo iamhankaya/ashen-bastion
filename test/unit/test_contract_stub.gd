@@ -20,12 +20,10 @@ func test_calls_returns_a_copy() -> void:
 	assert_eq(Stub.calls().size(), 1)
 
 
-func test_skeleton_methods_report_themselves() -> void:
-	# Hâlâ iskelet olan (uygulama-2) gövdeler. Uygulanan sınıf buradan çıkarılır.
-	var cases := [
-		[func(): MapSim.new().obstacles_near(Vector2.ZERO), &"MapSim.obstacles_near"],
-		[func(): MusicPlan.track_for(0.0, {}), &"MusicPlan.track_for"],
-	]
+func test_no_skeleton_methods_remain() -> void:
+	# Hâlâ iskelet olan gövdeler buraya [çağrı, kimlik] olarak eklenir; içerik tamamlandığında liste boştur.
+	var cases: Array = []
+	assert_eq(cases.size(), 0, "iskelet gövde kalmadı")
 	for c in cases:
 		Stub.reset()
 		c[0].call()

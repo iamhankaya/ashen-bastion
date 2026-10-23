@@ -1,0 +1,15 @@
+{
+  "id": "elit_piyade",
+  "name": "Elit Piyade",
+  "hp": 1800,
+  "speed": 110,
+  "dmg": 14,
+  "radius": 60,
+  "armor": 2,
+  "xp": 80,
+  "ai": "elite",
+  "scales_with_time": false,
+  "sprite": "res://assets/gfx/enemies/curumus_piyade.png",
+  "display_height": 230,
+  "tint": "#b8404a"
+}

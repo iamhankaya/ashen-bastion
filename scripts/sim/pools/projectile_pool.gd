@@ -12,6 +12,8 @@ const FLAG_EXPLODE_ON_EXPIRE := 2  # dinamit
 const FLAG_EXPLODE_ON_BOUNCE := 4  # zincirleme_patlama
 const FLAG_RICOCHET := 8
 const FLAG_RADIAL := 16  # yalnız görsel
+const FLAG_LOB := 32  # yay atış (dinamit): düşmana çarpmaz, ömrü bitince patlar
+const FLAG_SHRAPNEL := 64  # şarapnel parçası: öldürdüğü düşman yeniden şarapnel saçmaz
 
 const DEFAULT_LIFE := 1.2
 

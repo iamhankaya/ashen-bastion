@@ -14,7 +14,9 @@ func test_muzzle_is_ahead_of_shoulder_along_aim() -> void:
 		var m := PlayerRig.muzzle_world(gun, Vector2.ZERO, 0.0, false, rig)
 		assert_gt(m.x, sh.x)
 		var arm_len: float = float(rig["arm_scale"]) * float(rig["display_height"])
-		assert_almost_eq(m.x - sh.x, (0.98 - 0.11) * arm_len, 1e-3)
+		var pv: Array = rig["arm_pivot"]
+		var mz: Array = rig["muzzle"]
+		assert_almost_eq(m.x - sh.x, (float(mz[0]) - float(pv[0])) * arm_len, 1e-3)
 
 
 func test_muzzle_offset_translates_with_player() -> void:

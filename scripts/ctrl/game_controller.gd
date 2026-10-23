@@ -3,11 +3,12 @@ extends Node
 ## Bağlama (U1-9): girdi → zaman biriktirici → `sim.step(input_gate.move())` (kare başına en çok 3 adım;
 ## yetişemezse yavaş çekim), ekran geçişleri (menü → oyun ⇄ seviye atlama / duraklatma → sonuç → tekrar/menü),
 ## Android geri tuşu, arka plana alınınca otomatik duraklatma. Karar mantığı InputGate/PauseLogic'tedir;
-## bu sınıf yalnız uygular. Sim 480 sn "timer" demo (U1).
+## bu sınıf yalnız uygular. Tam oyun: 20 dk, Kale Lordu (lord modu).
 
 const CHARACTER := &"gunslinger"
-const RUN_OPTS := {"end_mode": "timer", "end_time": 480.0}
-const WON_TIMER_SUB := "Şafak söktü; kale seni yutamadı."
+## Tam oyun: 20 dk, 20. dk'da Kale Lordu (ölümü kazandırır).
+const RUN_OPTS := {"end_mode": "lord", "end_time": 1200.0}
+const WON_SUB := "Şafak söktü; kale seni yutamadı."
 const DAMAGE_VIBRATE_MS := 25
 
 var screen: int = PauseLogic.Screen.MENU
@@ -22,6 +23,9 @@ var actors: Node2D
 var player_view: PlayerView
 var projectile_renderer: ProjectileRenderer
 var camera: CameraRig
+var fx_renderer: FxRenderer
+var ruin_view: RuinView = RuinView.new()
+var atmosphere: Atmosphere
 
 var ui: CanvasLayer
 var hud: Hud
@@ -34,6 +38,7 @@ var menu: MainMenu
 var audio: AudioDirector
 var _stress: StressRun = null
 var _stress_label: Label = null
+var _render_label: Label = null
 var _accum: float = 0.0
 var _run_won: bool = false
 var _run_stats: Dictionary = {}
@@ -73,9 +78,19 @@ func _build_world() -> void:
 	projectile_renderer = ProjectileRenderer.new()
 	projectile_renderer.name = "Projectiles"
 	world.add_child(projectile_renderer)
+	fx_renderer = FxRenderer.new()
+	fx_renderer.name = "Fx"
+	world.add_child(fx_renderer)
 	camera = CameraRig.new()
 	camera.name = "Camera"
 	world.add_child(camera)
+	var atmo_layer := CanvasLayer.new()
+	atmo_layer.name = "AtmosphereLayer"
+	atmo_layer.layer = 5
+	add_child(atmo_layer)
+	atmosphere = Atmosphere.new()
+	atmosphere.name = "Atmosphere"
+	atmo_layer.add_child(atmosphere)
 	world.visible = false
 
 
@@ -84,13 +99,14 @@ func _build_ui() -> void:
 	ui.name = "UI"
 	ui.layer = 10
 	add_child(ui)
+	# Joystick HUD'ın ALTINDA çizilir: köşede tamburu örtmez (ara denetim #7).
+	joystick = JoystickView.new()
+	joystick.name = "Joystick"
+	ui.add_child(joystick)
 	hud = Hud.new()
 	hud.name = "Hud"
 	ui.add_child(hud)
 	hud.pause_pressed.connect(pause_game)
-	joystick = JoystickView.new()
-	joystick.name = "Joystick"
-	ui.add_child(joystick)
 	level_up = LevelUpScreen.new()
 	level_up.name = "LevelUp"
 	ui.add_child(level_up)
@@ -115,6 +131,57 @@ func _build_ui() -> void:
 	menu.sound_toggled.connect(_on_sound)
 	menu.vibration_toggled.connect(_on_vibration)
 	menu.debug_stress_requested.connect(start_stress)
+	_build_render_debug()
+
+
+## F-ashen-bastion-002 (B): yalnız debug derlemede. Düşman/taş görünür-sayı etiketi; dokunmak kesme
+## dikdörtgeni düzeltmesini (RenderFix) açar/kapatır. Cihazda iki durum karşılaştırılır.
+func _build_render_debug() -> void:
+	if not OS.is_debug_build():
+		return
+	_render_label = Label.new()
+	_render_label.name = "RenderDebug"
+	_render_label.position = Vector2(300, 2236)
+	_render_label.size = Vector2(480, 96)
+	_render_label.add_theme_font_size_override(&"font_size", 26)
+	_render_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
+	_render_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
+	_render_label.add_theme_constant_override(&"outline_size", 6)
+	_render_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_render_label.gui_input.connect(_on_render_label_input)
+	_render_label.visible = false
+	ui.add_child(_render_label)
+
+
+func render_debug_text() -> String:
+	if sim == null:
+		return ""
+	return (
+		"düşman %d/%d  taş %d/%d\nkesme düzeltmesi: %s (dokun)"
+		% [
+			enemy_renderer.visible_count(),
+			sim.enemies.count,
+			gem_renderer.visible_count(),
+			sim.gems.count,
+			"AÇIK" if RenderFix.enabled else "KAPALI",
+		]
+	)
+
+
+func toggle_cull_fix() -> void:
+	_settings().set_cull_fix(not RenderFix.enabled)
+	enemy_renderer.apply_cull_fix()
+	gem_renderer.apply_cull_fix()
+	projectile_renderer.apply_cull_fix()
+
+
+func _on_render_label_input(event: InputEvent) -> void:
+	var tap: bool = (
+		(event is InputEventMouseButton and event.pressed)
+		or (event is InputEventScreenTouch and event.pressed)
+	)
+	if tap:
+		toggle_cull_fix()
 
 
 # --- ekran geçişleri ------------------------------------------------------------------------
@@ -124,6 +191,7 @@ func go_menu() -> void:
 	_stop_stress()
 	_bind(null)
 	world.visible = false
+	atmosphere.visible = false
 	menu.open(_settings().sound_on, _settings().vibration_on)
 	_set_screen(PauseLogic.Screen.MENU)
 
@@ -133,6 +201,7 @@ func start_run() -> void:
 	_stop_stress()
 	_bind(GameSim.new(randi(), CHARACTER, RUN_OPTS))
 	world.visible = true
+	atmosphere.visible = true
 	_update_views(0.0)
 	_set_screen(PauseLogic.Screen.PLAYING)
 
@@ -151,6 +220,7 @@ func start_stress() -> void:
 	_stress_label.add_theme_font_size_override(&"font_size", 34)
 	ui.add_child(_stress_label)
 	world.visible = true
+	atmosphere.visible = true
 	_set_screen(PauseLogic.Screen.PLAYING)
 	hud.visible = true
 	joystick.visible = false
@@ -212,6 +282,10 @@ func _set_screen(next: int) -> void:
 		sim != null and next != PauseLogic.Screen.MENU and next != PauseLogic.Screen.RESULT
 	)
 	joystick.visible = next == PauseLogic.Screen.PLAYING
+	if _render_label != null:
+		_render_label.visible = (
+			sim != null and next in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
+		)
 	level_up.visible = next == PauseLogic.Screen.LEVEL_UP
 	pause_screen.visible = next == PauseLogic.Screen.PAUSED
 	result_screen.visible = next == PauseLogic.Screen.RESULT
@@ -227,6 +301,11 @@ func _bind(new_sim: GameSim) -> void:
 	enemy_renderer.bind(sim)
 	projectile_renderer.bind(sim)
 	gem_renderer.bind(sim)
+	fx_renderer.bind(sim, camera)
+	if sim != null:
+		ruin_view.bind(actors, sim.map)
+	else:
+		ruin_view.clear()
 	player_view.bind(sim)
 	hud.bind(sim)
 	if sim != null:
@@ -259,6 +338,18 @@ func _process(delta: float) -> void:
 		_after_step()
 	_update_views(delta)
 	joystick.show_state(gate)
+	_update_music()
+
+
+func _update_music() -> void:
+	var s := sim
+	audio.update_music(
+		s.time if s != null else 0.0,
+		screen == PauseLogic.Screen.MENU,
+		s != null and s.state == GameSim.State.WON,
+		s != null and s.state == GameSim.State.LOST,
+		screen == PauseLogic.Screen.PAUSED
+	)
 
 
 func _after_step() -> void:
@@ -276,11 +367,16 @@ func _update_views(dt: float) -> void:
 		return
 	player_view.update_view(dt)
 	camera.follow(sim.player_pos, dt)
+	ruin_view.follow(sim.player_pos)
 	ground.follow(camera.position, camera.view_size())
 	enemy_renderer.refresh()
 	gem_renderer.refresh()
 	projectile_renderer.refresh()
+	fx_renderer.update_fx(dt)
+	atmosphere.follow(camera.position, camera.view_size())
 	hud.refresh(dt)
+	if _render_label != null and _render_label.visible:
+		_render_label.text = render_debug_text()
 
 
 func _show_level_up() -> void:
@@ -308,8 +404,8 @@ func _show_result() -> void:
 		_run_won = sim.state == GameSim.State.WON
 	var combos := UiKit.combo_rows(stats.get("evolutions", []), sim.data)
 	var sub := ""
-	if _run_won and sim.end_mode == GameSim.END_MODE_TIMER:
-		sub = WON_TIMER_SUB
+	if _run_won:
+		sub = WON_SUB
 	result_screen.show_result(_run_won, stats, combos, sub)
 	_set_screen(PauseLogic.Screen.RESULT)
 

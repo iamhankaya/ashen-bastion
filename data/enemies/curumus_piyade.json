@@ -9,7 +9,7 @@
   "xp": 1,
   "ai": "ground",
   "scales_with_time": true,
-  "sprite": "placeholder:curumus_piyade",
+  "sprite": "res://assets/gfx/enemies/curumus_piyade.png",
   "display_height": 104,
-  "tint": "#8a7a63"
+  "tint": "#ffffff"
 }

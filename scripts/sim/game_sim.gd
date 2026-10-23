@@ -40,10 +40,14 @@ const RETARGET_INTERVAL := 0.1
 const DRY_FIRE_INTERVAL := 0.5
 const GEM_PULL_SPEED := 700.0
 const BOUNCE_RANGE := 300.0
+## Mermi çarpışma sorgusunun ızgara yarıçapı payı; bundan büyük düşmanlar (_big_ids) ayrıca denetlenir.
+const SMALL_ENEMY_RADIUS := 40.0
 const DEFAULT_START_SKILL_RANGE := 700.0
 const RNG_STREAMS: Array[StringName] = [&"spawn", &"choice", &"map", &"combat"]
 
 var bus: SimBus = SimBus.new()
+## Yalnız görsel/işitsel efekt bildirimleri (sim kararları bağlı değil).
+var fx: SimFx = SimFx.new()
 var data: GameData = null
 var character: CharacterDef = null
 var end_mode: String = END_MODE_LORD
@@ -72,11 +76,16 @@ var evolved_log: Array[StringName] = []
 var event_log: Array = []
 var work: Dictionary = {}
 var spawn_dropped: int = 0
+## Kale Lordu öldü (end_mode lord): _phase_status hp<=0'dan ÖNCE WON yapar.
+var lord_killed: bool = false
+## Şu an hasar veren merminin bayrakları (on_kill kancaları kaynağı görebilsin diye); mermi dışı kaynak 0.
+var kill_source_flags: int = 0
 
 # Alt sistemler ve temel silah durumu.
 var grid: SpatialHash = SpatialHash.new()
 var damage: DamageSystem = DamageSystem.new()
 var spawn_director: SpawnDirector = null
+var map: MapSim = null
 var enemy_ai: EnemyAI = EnemyAI.new()
 ## cift_tabanca davranışı seviye değerlerini buraya yazar (setup).
 var gun_damage: float = 15.0
@@ -112,6 +121,7 @@ var _trace_phases: bool = false
 var _retarget_cd: float = 0.0
 var _dry_cd: PackedFloat32Array = PackedFloat32Array([0.0, 0.0])
 var _max_enemy_radius: float = 40.0
+var _big_ids: PackedInt32Array = PackedInt32Array()
 var _scratch: PackedInt32Array = PackedInt32Array()
 var _explode_buf: PackedInt32Array = PackedInt32Array()
 var _bounce_buf: PackedInt32Array = PackedInt32Array()
@@ -133,6 +143,8 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	for eid in data.enemy_ids:
 		_max_enemy_radius = maxf(_max_enemy_radius, data.get_enemy(eid).radius)
 	spawn_director = SpawnDirector.new(data.waves)
+	map = MapSim.new(_stream_seed(&"map"), data.ruins)
+	map.ensure(player_pos)
 	spawn_director.skip_to(time)
 	loadout = Loadout.new(data)
 	loadout.bind_api(self)
@@ -216,7 +228,20 @@ func choose(index: int) -> bool:
 
 
 func spawn_projectile(p: Vector2, v: Vector2, dmg: float, o: Dictionary = {}) -> int:
-	return projectiles.spawn(p, v, dmg, o)
+	var idx := projectiles.spawn(p, v, dmg, o)
+	if idx >= 0 and _log_events:
+		log_event(
+			SimEvents.SHOT,
+			{
+				"gun": -1,
+				"origin": p,
+				"dir": v.normalized(),
+				"dmg": dmg,
+				"index_in_mag": 0,
+				"is_last": false
+			}
+		)
+	return idx
 
 
 ## Zırhı yok sayar; area_mult / explosion_dmg_mult uygular.
@@ -282,7 +307,7 @@ func spawn_enemy(type_id: StringName, pos: Vector2) -> int:
 		type_id,
 		pos,
 		Difficulty.enemy_hp_mult(time) if scaled else 1.0,
-		Difficulty.enemy_dmg_mult(time) if scaled else 1.0,
+		1.0,  # temas çarpanı doğma anında değil tick anında uygulanır (DamageSystem.contact_tick)
 		Difficulty.enemy_speed_mult(time) if scaled else 1.0
 	)
 	if id < 0:
@@ -309,12 +334,16 @@ func state_hash() -> int:
 	h.append(xp)
 	h.append(level)
 	h.append(pending_levels)
+	h.append(1 if lord_killed else 0)
+	h.append(spawn_director.progress_hash())
 	for id in enemies.alive_ids():
 		var i := EnemyPool.index_of(id)
 		h.append(i)
 		h.append(_q(enemies.pos[i].x))
 		h.append(_q(enemies.pos[i].y))
 		h.append(_q(enemies.hp[i]))
+		h.append(_q(enemies.ai_timer[i]))
+		h.append(_q(enemies.ai_aux[i]))
 	h.append(projectiles.count)
 	h.append(gems.count)
 	h.append(gems.total_value())
@@ -472,6 +501,8 @@ func _phase_player_move(move: Vector2) -> void:
 	last_move = move
 	if move.length_squared() > 0.0:
 		player_pos += move * character.move_speed * stats.move_speed_mult * STEP
+		map.ensure(player_pos)
+		player_pos = map.resolve(player_pos, character.collision_radius)
 		if move.x < -0.1:
 			player_facing_left = true
 		elif move.x > 0.1:
@@ -482,9 +513,13 @@ func _phase_player_move(move: Vector2) -> void:
 func _phase_rebuild_hash() -> void:
 	_trace(2)
 	grid.clear()
+	_big_ids.clear()
 	for i in EnemyPool.CAP:
 		if enemies.alive[i] == 1:
-			grid.insert(EnemyPool.make_id(enemies.gen[i], i), enemies.pos[i])
+			var id := EnemyPool.make_id(enemies.gen[i], i)
+			grid.insert(id, enemies.pos[i])
+			if enemies.radius[i] > SMALL_ENEMY_RADIUS:
+				_big_ids.append(id)
 
 
 ## (4) hedefleme + ateş (tabanca 0 sonra 1).
@@ -492,9 +527,9 @@ func _phase_targeting_fire() -> void:
 	_trace(3)
 	var need := _retarget_cd <= 0.0
 	for g in 2:
-		if gun_target[g] >= 0 and not enemies.is_alive(gun_target[g]):
+		if gun_target[g] < 0 or not enemies.is_alive(gun_target[g]):
 			gun_target[g] = -1
-			need = true
+			need = true  # hedefsiz/ölü hedef: bir sonraki düşman gecikmesiz seçilir
 	if need:
 		_retarget_cd = RETARGET_INTERVAL
 		var rng_px := character.attack_range * stats.range_mult
@@ -503,7 +538,9 @@ func _phase_targeting_fire() -> void:
 	for g in 2:
 		var tid := gun_target[g]
 		if tid >= 0:
-			gun_aim[g] = (enemies.pos[EnemyPool.index_of(tid)] - player_pos).angle()
+			gun_aim[g] = PlayerRig.solve_aim(
+				g, player_pos, enemies.pos[EnemyPool.index_of(tid)], character.rig
+			)
 		elif last_move.length_squared() > 0.01:
 			gun_aim[g] = last_move.angle()
 		gun_cd[g] = maxf(gun_cd[g], -STEP)
@@ -526,15 +563,16 @@ func _fire(g: int, tid: int) -> void:
 	ctx.gun = g
 	ctx.index_in_mag = res["index"]
 	ctx.is_last = res["is_last"]
-	# Namlu aim açısına bağlı, aim namluya bağlı: iki yineleme yeter. Atış yönü = son aim; origin = muzzle_world(aim).
+	# Kol açısı PlayerRig.solve_aim ile çözülür (namlu hedefe bakar); hedef kolun menzilinden yakınsa omuzdan atılır.
 	var target_pos := enemies.pos[EnemyPool.index_of(tid)]
-	var aim := (target_pos - player_pos).angle()
-	var origin := player_pos
-	for k in 2:
-		origin = PlayerRig.muzzle_world(g, player_pos, aim, cos(aim) < 0.0, character.rig)
-		aim = (target_pos - origin).angle()
-	ctx.dir = Vector2.from_angle(aim)
-	ctx.origin = PlayerRig.muzzle_world(g, player_pos, aim, ctx.dir.x < 0.0, character.rig)
+	var aim := PlayerRig.solve_aim(g, player_pos, target_pos, character.rig)
+	var flip := cos(aim) < 0.0
+	var origin := PlayerRig.muzzle_world(g, player_pos, aim, flip, character.rig)
+	var sh := PlayerRig.shoulder_world(g, player_pos, target_pos.x < player_pos.x, character.rig)
+	if target_pos.distance_to(sh) < origin.distance_to(sh) * 1.3:
+		origin = sh
+	ctx.dir = (target_pos - origin).normalized()
+	ctx.origin = origin
 	if g == 0:
 		player_facing_left = ctx.dir.x < 0.0
 	ctx.damage = gun_damage * stats.bullet_dmg_mult
@@ -604,36 +642,57 @@ func _phase_projectiles() -> void:
 		pr.pos[i] += pr.vel[i] * STEP
 		pr.life[i] -= STEP
 		var consumed := false
-		grid.query_circle(pr.pos[i], BULLET_RADIUS + _max_enemy_radius, _scratch)
-		for id in _scratch:
-			if not enemies.is_alive(id) or pr.has_hit(i, id):
-				continue
-			w_collision_tests += 1
-			var ei := EnemyPool.index_of(id)
-			var reach := BULLET_RADIUS + enemies.radius[ei]
-			if enemies.pos[ei].distance_squared_to(pr.pos[i]) <= reach * reach:
-				if _projectile_hit(i, id):
-					consumed = true
-					break
+		_scratch.clear()
+		if (pr.flags[i] & ProjectilePool.FLAG_LOB) == 0:
+			grid.query_circle(pr.pos[i], BULLET_RADIUS + SMALL_ENEMY_RADIUS, _scratch)
+			for id in _scratch:
+				if not enemies.is_alive(id) or pr.has_hit(i, id):
+					continue
+				w_collision_tests += 1
+				var ei := EnemyPool.index_of(id)
+				var reach := BULLET_RADIUS + enemies.radius[ei]
+				if enemies.pos[ei].distance_squared_to(pr.pos[i]) <= reach * reach:
+					if _projectile_hit(i, id):
+						consumed = true
+						break
+			if not consumed and not _big_ids.is_empty():
+				consumed = _projectile_vs(i, _big_ids)  # elit/Lord: ızgara sorgusu dışında doğrudan denetlenir
 		if not consumed and pr.life[i] <= 0.0:
 			if pr.flags[i] & ProjectilePool.FLAG_EXPLODE_ON_EXPIRE:
 				explode(pr.pos[i], pr.ex_radius[i], pr.ex_dmg[i], &"projectile")
 			consumed = true
+		kill_source_flags = 0
 		if consumed:
 			pr.remove(i)
 		i -= 1
 
 
+## Mermi `pi` aday düşmanlara (artan id sırası) çarpıyor mu; true = mermi tükendi.
+func _projectile_vs(pi: int, ids: PackedInt32Array) -> bool:
+	var pr := projectiles
+	for id in ids:
+		if not enemies.is_alive(id) or pr.has_hit(pi, id):
+			continue
+		w_collision_tests += 1
+		var ei := EnemyPool.index_of(id)
+		var reach := BULLET_RADIUS + enemies.radius[ei]
+		if enemies.pos[ei].distance_squared_to(pr.pos[pi]) <= reach * reach:
+			if _projectile_hit(pi, id):
+				return true
+	return false
+
+
 ## Mermi düşmana değdi. true = mermi tükendi.
 func _projectile_hit(pi: int, id: int) -> bool:
 	var pr := projectiles
+	kill_source_flags = pr.flags[pi]
 	damage.damage_enemy(self, id, pr.dmg[pi], &"bullet")
 	pr.mark_hit(pi, id)
 	for st in loadout.actives():
 		if st.behavior != null:
 			st.behavior.on_hit(id, pi)
 	var f := pr.flags[pi]
-	if pr.push[pi] > 0.0 and enemies.is_alive(id):
+	if pr.push[pi] > 0.0 and enemies.is_alive(id) and not enemies.is_elite(EnemyPool.index_of(id)):
 		var ei := EnemyPool.index_of(id)
 		enemies.pos[ei] += pr.vel[pi].normalized() * pr.push[pi]
 	if f & ProjectilePool.FLAG_EXPLODES:
@@ -722,6 +781,9 @@ func _phase_status() -> void:
 		pending_levels += 1
 		log_event(SimEvents.LEVEL_UP, {"level": level})
 		bus.level_up.emit(level)
+	if lord_killed:
+		_end_run(true)  # Lord ölümü hp<=0'dan önce işlenir
+		return
 	if hp <= 0.0:
 		_end_run(false)  # bekleyen seçimler iptal edilir, seviye sayısı korunur
 		return

@@ -1,0 +1,27 @@
+{
+  "id": "kiyamet_mermisi",
+  "kind": "evolution",
+  "name": "Kıyamet Mermisi",
+  "icon": "placeholder:kiyamet_mermisi",
+  "max_level": 1,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "kiyamet_mermisi",
+  "levels": [
+    {
+      "ex_damage": 400,
+      "ex_radius": 260,
+      "refund": 2
+    }
+  ],
+  "desc": [
+    "Son kurşun devasa patlar; döngüde bir kez 2 mermi geri yazılır."
+  ],
+  "requires": {
+    "active": "son_mermi_patlar",
+    "active_level": 5,
+    "passive": "hizli_doldurma",
+    "passive_min_level": 1
+  }
+}

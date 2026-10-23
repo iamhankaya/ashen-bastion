@@ -1,0 +1,28 @@
+{
+  "id": "mermi_firtinasi",
+  "kind": "evolution",
+  "name": "Mermi Fırtınası",
+  "icon": "placeholder:mermi_firtinasi",
+  "max_level": 1,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "mermi_firtinasi",
+  "levels": [
+    {
+      "salvo_mult": 2,
+      "damage": 20,
+      "ring_every": 0.15,
+      "ring_count": 6
+    }
+  ],
+  "desc": [
+    "Doldurma başında şarjör x2 salvo, boyunca altılı halkalar."
+  ],
+  "requires": {
+    "active": "doldurma_sacilmasi",
+    "active_level": 5,
+    "passive": "fazladan_mermi",
+    "passive_min_level": 1
+  }
+}

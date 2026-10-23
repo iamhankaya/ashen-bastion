@@ -34,8 +34,10 @@ static func quad_mesh(size: Vector2) -> ArrayMesh:
 
 
 ## Alt bölümlü ızgara ağ (gövde salınım shader'ı için; köşe başına UV). Sol üst köşe orijinde.
-static func grid_mesh(size: Vector2, cols: int, rows: int) -> ArrayMesh:
-	var key := "grid_%s_%d_%d" % [size, cols, rows]
+static func grid_mesh(
+	size: Vector2, cols: int, rows: int, origin: Vector2 = Vector2.ZERO
+) -> ArrayMesh:
+	var key := "grid_%s_%d_%d_%s" % [size, cols, rows, origin]
 	if _cache.has(key):
 		return _cache[key]
 	var verts := PackedVector2Array()
@@ -45,7 +47,7 @@ static func grid_mesh(size: Vector2, cols: int, rows: int) -> ArrayMesh:
 		for c in cols + 1:
 			var uv := Vector2(float(c) / cols, float(r) / rows)
 			uvs.append(uv)
-			verts.append(uv * size)
+			verts.append(origin + uv * size)
 	for r in rows:
 		for c in cols:
 			var a := r * (cols + 1) + c

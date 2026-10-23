@@ -1,0 +1,43 @@
+{
+  "id": "yelpaze_atis",
+  "kind": "active",
+  "name": "Yelpaze Atış",
+  "icon": "placeholder:yelpaze_atis",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "yelpaze_atis",
+  "levels": [
+    {
+      "cooldown": 4.0,
+      "pellets": 5,
+      "damage": 9
+    },
+    {
+      "cooldown": 3.6,
+      "pellets": 6,
+      "damage": 10
+    },
+    {
+      "cooldown": 3.2,
+      "pellets": 7,
+      "damage": 11
+    },
+    {
+      "cooldown": 2.8,
+      "pellets": 8,
+      "damage": 12
+    },
+    {
+      "cooldown": 2.4,
+      "pellets": 9,
+      "damage": 14
+    }
+  ],
+  "desc": [
+    "Yakın düşmana geniş açıyla saçma atar.",
+    "Bir saçma daha, daha sık.",
+    "Bir saçma daha, daha sık.",
+    "Bir saçma daha, daha sık.",
+    "Saçma yelpazesi en üst seviyede."
+  ]
+}

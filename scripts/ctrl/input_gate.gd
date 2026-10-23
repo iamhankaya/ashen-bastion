@@ -2,12 +2,15 @@ class_name InputGate
 extends RefCounted
 ## Dokunma girdisinin TEK karar noktası (saf sınıf; Node/Input/Time bilmez).
 ## Kurallar (plan "Arayüzler > Sabitler ve ölçü"): ilk parmak joystick, ikinci parmak yok sayılır;
-## ölü bölge 0,12; maks. yarıçap 150 px; parmak kalkınca topuz 120 ms'de söner;
+## ölü bölge 24 px (≈0,12); maks. yarıçap 195 px; parmak kalkınca topuz 120 ms'de söner;
 ## devam/seviye atlama sonrası 600 ms girdi kilidi. Zaman dışarıdan `tick(dt)` ile gelir.
 ## Hareket vektörünü yalnız `move()` üretir (|v| <= 1).
 
-const DEAD_ZONE := 0.12
-const MAX_RADIUS := 150.0
+## Joystick sabitlerinin TEK ayar noktası (ara denetim #2: cihazda 180–210 px / ≈24 px denenir).
+## Taban çapı (JoystickView) ve ölü bölge oranı bunlardan türer.
+const MAX_RADIUS := 195.0
+const DEAD_ZONE_PX := 24.0
+const DEAD_ZONE := DEAD_ZONE_PX / MAX_RADIUS
 const FADE_TIME := 0.12
 const LOCK_TIME := 0.6
 const NO_FINGER := -1

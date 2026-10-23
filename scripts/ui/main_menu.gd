@@ -1,7 +1,7 @@
 class_name MainMenu
 extends Control
 ## Ana menü (docs/ui/mockups/01-ana-menu). Oyun adı, OYNA (birincil, 180 px), Ses/Titreşim anahtarları,
-## sürüm etiketi. U1'de ana görsel (yeşil arka planlı kaynak) kullanılmaz: prosedürel zemin + tambur amblemi.
+## sürüm etiketi. Ana görsel varsa (assets/gfx/ui/ana_gorsel.png) tambur amblemi yerine o gösterilir.
 ## Sürüm etiketine 3 dokunuş: yalnız debug derlemede `debug_stress_requested` (stres koşusu, U1-10).
 
 signal play_requested
@@ -10,7 +10,9 @@ signal vibration_toggled(on: bool)
 signal debug_stress_requested
 
 const VERSION := "0.1"
+const HERO_PATH := "res://assets/gfx/ui/ana_gorsel.png"
 const W := 936.0
+const TOGGLE_W := 454.0  # iki anahtar eşit genişlikte (etiket uzunluğu yerleşimi kaydırmaz)
 const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
 
@@ -19,6 +21,7 @@ var sound_button: Button
 var vibration_button: Button
 var version_label: Label
 var emblem: Emblem
+var hero: TextureRect
 
 var _sound_on: bool = true
 var _vibration_on: bool = true
@@ -105,6 +108,25 @@ func _build() -> void:
 	emblem.offset_top = -380.0
 	emblem.offset_bottom = 280.0
 	add_child(emblem)
+	var hero_tex := ArtLoader.texture(HERO_PATH)
+	if hero_tex != null:
+		# Ana görsel (art/ref/ana-gorsel-atis.png, yeşil zemini temizlenmiş): başlık ile düğmeler arasında.
+		emblem.visible = false
+		hero = TextureRect.new()
+		hero.name = "Hero"
+		hero.texture = hero_tex
+		hero.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hero.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		hero.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hero.anchor_left = 0.5
+		hero.anchor_right = 0.5
+		hero.anchor_top = 0.5
+		hero.anchor_bottom = 0.5
+		hero.offset_left = -480.0
+		hero.offset_right = 480.0
+		hero.offset_top = -560.0
+		hero.offset_bottom = 640.0
+		add_child(hero)
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override(&"separation", 27)
@@ -124,9 +146,11 @@ func _build() -> void:
 	row.add_theme_constant_override(&"separation", 27)
 	sound_button = UiKit.button("", &"secondary")
 	sound_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sound_button.custom_minimum_size.x = TOGGLE_W
 	sound_button.pressed.connect(_on_sound)
 	vibration_button = UiKit.button("", &"secondary")
 	vibration_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vibration_button.custom_minimum_size.x = TOGGLE_W
 	vibration_button.pressed.connect(_on_vibration)
 	row.add_child(sound_button)
 	row.add_child(vibration_button)

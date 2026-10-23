@@ -1,0 +1,23 @@
+{
+  "id": "kale_lordu",
+  "name": "Düşmüş Kale Lordu",
+  "hp": 45000,
+  "speed": 80,
+  "dmg": 40,
+  "radius": 72,
+  "armor": 6,
+  "xp": 500,
+  "ai": "lord",
+  "scales_with_time": false,
+  "sprite": "res://assets/gfx/enemies/kale_lordu.png",
+  "display_height": 384,
+  "tint": "#ffffff",
+  "summon": {
+    "type": "curumus_piyade",
+    "every": 8,
+    "count": 12,
+    "enrage_hp_frac": 0.5,
+    "enrage_speed_mult": 1.4,
+    "enrage_every": 5
+  }
+}

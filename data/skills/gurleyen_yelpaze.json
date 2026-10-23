@@ -1,0 +1,27 @@
+{
+  "id": "gurleyen_yelpaze",
+  "kind": "evolution",
+  "name": "Gürleyen Yelpaze",
+  "icon": "placeholder:gurleyen_yelpaze",
+  "max_level": 1,
+  "tags": [],
+  "behavior": "gurleyen_yelpaze",
+  "levels": [
+    {
+      "cooldown": 2.0,
+      "pellets": 13,
+      "damage": 20,
+      "pierce": 2,
+      "push": 160
+    }
+  ],
+  "desc": [
+    "13 saçma deler geçer ve düşmanları geri iter."
+  ],
+  "requires": {
+    "active": "yelpaze_atis",
+    "active_level": 5,
+    "passive": "agir_kursun",
+    "passive_min_level": 1
+  }
+}

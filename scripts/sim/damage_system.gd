@@ -40,8 +40,11 @@ func _kill(sim: GameSim, id: int, i: int) -> void:
 	var p := sim.enemies.pos[i]
 	var type_id := sim.enemies.type_id_of(i)
 	var xp_value := sim.enemies.def_of(i).xp
+	var is_lord := sim.enemies.def_of(i).ai == &"lord"
 	sim.enemies.kill(id)
 	sim.kills += 1
+	if is_lord and sim.end_mode == GameSim.END_MODE_LORD:
+		sim.lord_killed = true
 	if sim.logging():
 		sim.log_event(SimEvents.KILL, {"enemy_id": id, "enemy_type": type_id, "pos": p})
 	if xp_value > 0:
@@ -63,6 +66,7 @@ func contact_tick(sim: GameSim, dt: float) -> float:
 	sim.grid.query_circle(sim.player_pos, pr + CONTACT_QUERY_PAD, _scratch)
 	var total := 0.0
 	var touching := 0
+	var dmg_mult := Difficulty.enemy_dmg_mult(sim.time)
 	for id in _scratch:
 		if not sim.enemies.is_alive(id):
 			continue
@@ -70,7 +74,11 @@ func contact_tick(sim: GameSim, dt: float) -> float:
 		sim.w_collision_tests += 1
 		var reach := pr + sim.enemies.radius[i]
 		if sim.enemies.pos[i].distance_squared_to(sim.player_pos) <= reach * reach:
-			total += sim.enemies.contact[i]
+			# Plan: tick toplamı = Σ(temas_hasarı × enemy_dmg_mult(t)); çarpan doğma anında değil tick anında.
+			total += (
+				sim.enemies.contact[i]
+				* (dmg_mult if sim.enemies.def_of(i).scales_with_time else 1.0)
+			)
 			touching += 1
 			if touching >= MAX_CONTACTS_PER_TICK:
 				break

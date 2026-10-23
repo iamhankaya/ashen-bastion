@@ -136,6 +136,8 @@ func show_choices(choices: Array, level: int, data: GameData = null) -> void:
 	_lock_left = LOCK_TIME
 	_apply_lock()
 	visible = true
+	if not cards.is_empty():
+		cards[0].grab_focus.call_deferred()  # varsayılan odak (klavye/gamepad)
 
 
 func is_locked() -> bool:

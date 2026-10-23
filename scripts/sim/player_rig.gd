@@ -7,8 +7,8 @@ extends RefCounted
 ## - Omuz: shoulders[gun] gövde kutusunda (0..1); sola bakışta x aynalanır.
 ## - Kol: uzunluğu L = arm_scale * H, yüksekliği L * ARM_ASPECT; pivot arm_pivot, namlu muzzle (kol kutusunda 0..1).
 ## - Kol aim_angle kadar döner; cos(aim_angle) < 0 ise kol dikey çevrilir (scale.y = -1).
-const BODY_ASPECT := 0.5
-const ARM_ASPECT := 0.4
+const BODY_ASPECT := 0.553  # gerçek gövde görseli 177x320
+const ARM_ASPECT := 0.296  # gerçek kol görseli 240x71
 
 
 ## Omuz (dünya).
@@ -40,3 +40,16 @@ static func muzzle_world(
 	if cos(aim_angle) < 0.0:
 		local.y = -local.y
 	return shoulder_world(gun, player_pos, facing_left, rig) + local.rotated(aim_angle)
+
+
+## Namlunun hedefe baktığı kol açısı (radyan). Hedef kolun menzilinden yakınsa (namlu hedefi aşar) omuzdan hedefe bakılır.
+static func solve_aim(gun: int, player_pos: Vector2, target: Vector2, rig: Dictionary) -> float:
+	var sh := shoulder_world(gun, player_pos, target.x < player_pos.x, rig)
+	var aim := (target - sh).angle()
+	var reach := muzzle_world(gun, player_pos, aim, cos(aim) < 0.0, rig).distance_to(sh)
+	if target.distance_to(sh) < reach * 1.3:
+		return aim
+	for k in 5:
+		var m := muzzle_world(gun, player_pos, aim, cos(aim) < 0.0, rig)
+		aim = (target - m).angle()
+	return aim

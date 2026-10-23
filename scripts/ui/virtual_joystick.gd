@@ -1,10 +1,10 @@
 class_name JoystickView
 extends Control
 ## Sanal joystick: YALNIZ InputGate çıktısını gösterir (karar vermez, girdi okumaz).
-## Dokunulan yerde belirir: taban 300 px (%28 opak), topuz 132 px (%55 opak), topuz yarıçapı 150 px ile sınırlı;
+## Dokunulan yerde belirir: taban çapı = 2 × InputGate.MAX_RADIUS (%28 opak), topuz 132 px (%55 opak), topuz yarıçapı MAX_RADIUS ile sınırlı;
 ## parmak kalkınca 120 ms'de söner (görünürlük InputGate.visibility()).
 
-const BASE_DIAMETER := 300.0
+const BASE_DIAMETER := InputGate.MAX_RADIUS * 2.0
 const KNOB_DIAMETER := 132.0
 const BASE_ALPHA := 0.28
 const KNOB_ALPHA := 0.55
