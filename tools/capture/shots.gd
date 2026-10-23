@@ -2,7 +2,7 @@ extends SceneTree
 ## Ekran görüntüsü öz-kontrolü (masaüstü render; commit'lenmez çıktı). Kullanım:
 ##   xvfb-run -a -s "-screen 0 1080x2400x24" godot --path . --rendering-driver opengl3 --resolution 1080x2400 \
 ##     -s res://tools/capture/shots.gd -- <çıktı_dizini> [senaryo,senaryo]
-## Senaryolar: menu, game, crowd, boss, lord, levelup, pause, win, lose, contrast
+## Senaryolar: menu, game, crowd, boss, lord, levelup, pause, win, lose, contrast, ruins, stress
 
 var out_dir := "/tmp/shots/"
 var scenarios: PackedStringArray = ["menu", "game", "crowd"]
@@ -53,10 +53,7 @@ func fresh(opts: Dictionary = {}) -> void:
 	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
 	root.add_child(c)
 	await frames(3)
-	if opts.get("lord", false):
-		c.start_run()
-	else:
-		c.start_run()
+	c.start_run()
 	await frames(2)
 	c.sim.max_hp = 1.0e9
 	c.sim.hp = 1.0e9

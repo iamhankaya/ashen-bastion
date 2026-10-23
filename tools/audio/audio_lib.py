@@ -20,6 +20,8 @@ def loudness(x: np.ndarray, sr: int) -> float:
 def normalize(x: np.ndarray, sr: int, target: float, ceiling_db: float):
     """Hedef LUFS'a kazanç uygular; tepe `ceiling_db` üstüne çıkarsa kazancı düşürür (limiter yok).
     Döner: (ses, ulaşılan_lufs, hedefin_altında_mı)."""
+    if float(np.max(np.abs(x))) < 1e-6:
+        return x.copy(), float('-inf'), False  # sessiz kayıt: kazanç uygulanmaz
     lufs = loudness(x, sr)
     gain_db = target - lufs
     peak = float(np.max(np.abs(x))) or 1e-9
@@ -63,6 +65,8 @@ def loop_crossfade(x: np.ndarray, sr: int, seconds: float, search_s: float = 4.0
 
 def fade_out(x: np.ndarray, sr: int, seconds: float = 0.15) -> np.ndarray:
     n = min(int(sr * seconds), len(x))
+    if n <= 0:
+        return x.copy()
     y = x.copy()
     ramp = np.linspace(1.0, 0.0, n, dtype=np.float32)
     y[-n:] *= ramp[:, None] if y.ndim == 2 else ramp

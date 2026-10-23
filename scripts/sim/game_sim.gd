@@ -334,12 +334,16 @@ func state_hash() -> int:
 	h.append(xp)
 	h.append(level)
 	h.append(pending_levels)
+	h.append(1 if lord_killed else 0)
+	h.append(spawn_director.progress_hash())
 	for id in enemies.alive_ids():
 		var i := EnemyPool.index_of(id)
 		h.append(i)
 		h.append(_q(enemies.pos[i].x))
 		h.append(_q(enemies.pos[i].y))
 		h.append(_q(enemies.hp[i]))
+		h.append(_q(enemies.ai_timer[i]))
+		h.append(_q(enemies.ai_aux[i]))
 	h.append(projectiles.count)
 	h.append(gems.count)
 	h.append(gems.total_value())
@@ -688,7 +692,7 @@ func _projectile_hit(pi: int, id: int) -> bool:
 		if st.behavior != null:
 			st.behavior.on_hit(id, pi)
 	var f := pr.flags[pi]
-	if pr.push[pi] > 0.0 and enemies.is_alive(id):
+	if pr.push[pi] > 0.0 and enemies.is_alive(id) and not enemies.is_elite(EnemyPool.index_of(id)):
 		var ei := EnemyPool.index_of(id)
 		enemies.pos[ei] += pr.vel[pi].normalized() * pr.push[pi]
 	if f & ProjectilePool.FLAG_EXPLODES:

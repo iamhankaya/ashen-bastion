@@ -15,6 +15,7 @@
   "test/acceptance/test_acc_tables.gd": 13,
   "test/acceptance/test_acc_waves.gd": 12,
   "test/unit/test_audio_director.gd": 6,
+  "test/unit/test_boss_safety.gd": 5,
   "test/unit/test_contract_events.gd": 3,
   "test/unit/test_contract_hooks.gd": 11,
   "test/unit/test_contract_no_cycles.gd": 2,

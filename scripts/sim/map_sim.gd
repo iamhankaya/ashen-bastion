@@ -105,7 +105,7 @@ func _generate(c: Vector2i) -> void:
 	if _chunks.has(key):
 		return
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([_seed, c.x, c.y])
+	rng.seed = _mix(_seed, c.x, c.y)
 	var made := PackedInt32Array()
 	if not _defs.is_empty():
 		var origin := Vector2(c.x * CHUNK, c.y * CHUNK)
@@ -174,3 +174,11 @@ static func _chunk_key(c: Vector2i) -> int:
 
 static func _cell_key(p: Vector2) -> int:
 	return floori(p.x / CELL) * 1000003 + floori(p.y / CELL)
+
+
+## Sürümler/platformlar arası kararlı tamsayı karıştırma (Variant hash'ine bağlı değil).
+static func _mix(a: int, b: int, c: int) -> int:
+	var x := (a ^ (b * 0x9E3779B1) ^ (c * 0x85EBCA6B)) & 0x7FFFFFFFFFFFFFFF
+	x = ((x ^ (x >> 30)) * 0x3F58476D1CE4E5B9) & 0x7FFFFFFFFFFFFFFF
+	x = ((x ^ (x >> 27)) * 0x14D049BB133111EB) & 0x7FFFFFFFFFFFFFFF
+	return x ^ (x >> 31)

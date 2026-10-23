@@ -6,6 +6,8 @@ extends RefCounted
 ## Doğma halkası: kamera yarı-köşegeni (√(540²+1200²) ≈ 1315,9) + 80 px.
 const RING_RADIUS := 1395.9
 const GROUP_SPREAD := 36.0
+## Sürekli doğuş havuzun bu kadarını boş bırakır: boss/Lord/çağırma/halka dalgası için yer kalsın.
+const BOSS_RESERVE := 24
 
 var waves: Dictionary = {}
 var _rows: Array = []
@@ -13,6 +15,7 @@ var _acc: PackedFloat64Array = PackedFloat64Array()  # rate: birikim; group: kal
 var _skip_before: float = 0.0
 var _done: PackedByteArray = PackedByteArray()  # burst/boss: tetiklendi
 var _warned: PackedByteArray = PackedByteArray()  # boss: uyarı verildi
+var _spawned: PackedByteArray = PackedByteArray()  # boss: gerçekten doğdu
 
 
 func _init(p_waves: Dictionary = {}) -> void:
@@ -22,16 +25,18 @@ func _init(p_waves: Dictionary = {}) -> void:
 	_acc.resize(_rows.size())
 	_done.resize(_rows.size())
 	_warned.resize(_rows.size())
+	_spawned.resize(_rows.size())
 	for k in _rows.size():
 		_acc[k] = 0.0
 		_done[k] = 0
 		_warned[k] = 0
+		_spawned[k] = 0
 
 
 func step(sim: GameSim) -> void:
 	var t := sim.time
 	var dt := GameSim.STEP
-	var cap := Difficulty.alive_cap(t)
+	var cap := mini(Difficulty.alive_cap(t), EnemyPool.CAP - BOSS_RESERVE)
 	var after := sim.end_mode == GameSim.END_MODE_LORD and t >= sim.end_time
 	var al: Dictionary = waves.get("after_lord", {})
 	for k in _rows.size():
@@ -117,12 +122,41 @@ func _boss(sim: GameSim, k: int, row: Dictionary, t: float) -> void:
 		_warned[k] = 1
 		sim.log_event(SimEvents.BOSS_WARNING, {"kind": type_id})
 		sim.bus.boss_warning.emit(type_id)
-	if _done[k] == 0 and t >= at:
+	# Lord kazanmanın tek yolu: start_time/debug_set_time ile atlanmış olsa da (henüz doğmadıysa) doğar.
+	var is_lord := def.ai == &"lord"
+	if (_done[k] == 0 or (is_lord and _spawned[k] == 0)) and t >= at:
 		_done[k] = 1
+		if is_lord and sim.enemies.count >= EnemyPool.CAP:
+			_make_room(sim)
 		var id := sim.spawn_enemy(type_id, ring_position(sim, TAU * sim.rng_spawn.randf()))
 		if id >= 0:
+			_spawned[k] = 1
 			sim.log_event(SimEvents.BOSS_SPAWN, {"enemy_type": type_id, "id": id})
 			sim.bus.boss_spawned.emit(type_id)
+
+
+## Havuz doluyken Lord için oyuncudan en uzak sıradan (elit olmayan) düşmanı sessizce kaldırır (XP/öldürme yok).
+func _make_room(sim: GameSim) -> void:
+	var e := sim.enemies
+	var best := -1
+	var best_d := -1.0
+	for i in EnemyPool.CAP:
+		if e.alive[i] == 1 and not e.is_elite(i):
+			var d := e.pos[i].distance_squared_to(sim.player_pos)
+			if d > best_d:
+				best_d = d
+				best = i
+	if best >= 0:
+		e.kill(EnemyPool.make_id(e.gen[best], best))
+
+
+## Burst/boss tetik durumunun özeti (state_hash için).
+func progress_hash() -> int:
+	var h := 0
+	for k in _rows.size():
+		h = h * 7 + int(_done[k]) + 2 * int(_warned[k]) + 4 * int(_spawned[k])
+		h &= 0x3FFFFFFFFFFF
+	return h
 
 
 ## start_time / debug_set_time atlamasında: at < t olan olaylar "yapıldı" işaretlenir (U1'de at olayı yok).

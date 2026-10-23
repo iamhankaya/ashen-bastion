@@ -68,7 +68,7 @@ func test_resolve_pushes_circle_out_of_solid_obstacle() -> void:
 	var r := m.ob_r[found]
 	var out := m.resolve(center + Vector2(10, 0), 22.0)
 	assert_almost_eq(out.distance_to(center), r + 22.0, 0.5)
-	var far := center + Vector2(r + 500.0, 0)
+	var far := Vector2(-4000, -4000)  # başlangıçtan ve chunk'lardan uzak, engelsiz
 	assert_eq(m.resolve(far, 22.0), far, "engelden uzak konum değişmez")
 
 

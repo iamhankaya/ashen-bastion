@@ -4,7 +4,7 @@ extends SceneTree
 ## politika: idle | kite | greedy. Her koşu: sonuç, süre, seviye, en çok eşzamanlı düşman, en düşük can oranı.
 ## test/helpers/bots.gd botlarını kullanır (kendi RNG'si; sim akışlarına dokunmaz).
 
-const MAX_STEPS := 72500
+const MAX_STEPS := 90000  # 1500 sn: Lord (1200) dövüşü de ölçülür
 
 
 func _initialize() -> void:
@@ -19,7 +19,8 @@ func _initialize() -> void:
 		print(JSON.stringify(rows[-1]))
 	if out_path != "":
 		var f := FileAccess.open(out_path, FileAccess.WRITE)
-		f.store_string(JSON.stringify(rows, "  "))
+		if f != null:
+			f.store_string(JSON.stringify(rows, "  "))
 	quit()
 
 

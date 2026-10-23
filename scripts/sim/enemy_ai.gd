@@ -33,8 +33,9 @@ func step(sim: GameSim) -> void:
 				spd = e.speed[i]
 				is_lord = true
 			elif not def.charge.is_empty():
+				charging = e.ai_aux[i] > 0.0  # şarj durumu bu adımın BAŞINDAKİ değer
 				spd = _charge(e, i, def, to, dt)
-				charging = e.ai_aux[i] > 0.0
+				charging = charging or e.ai_aux[i] > 0.0
 		if d2 > recycle2 and not is_lord:
 			e.pos[i] = sim.spawn_director.recycle_position(sim)
 		elif charging and spd > 0.0:
