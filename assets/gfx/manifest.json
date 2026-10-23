@@ -248,6 +248,14 @@
     116
    ],
    "frames": 1
+  },
+  "assets/gfx/ui/ana_gorsel.png": {
+   "source": "art/ref/ana-gorsel-atis.png",
+   "size": [
+    784,
+    1100
+   ],
+   "frames": 1
   }
  }
 }

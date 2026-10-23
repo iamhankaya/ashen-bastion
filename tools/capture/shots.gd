@@ -33,16 +33,17 @@ func frames(n: int) -> void:
 
 
 ## Sim'i `n` adım (kare beklemeden) ilerletir; seviye atlamada ilk kartı seçer.
-func advance(n: int, move: Vector2 = Vector2.ZERO) -> void:
+func advance(n: int, move: Vector2 = Vector2.ZERO, auto_choose: bool = true) -> void:
 	var sim: GameSim = c.sim
 	for i in n:
-		if sim.state == GameSim.State.LEVEL_UP:
+		if auto_choose and sim.state == GameSim.State.LEVEL_UP:
 			sim.choose(0)
 			sim.max_hp = 1.0e9
 			sim.hp = 1.0e9
 		if sim.state != GameSim.State.RUNNING:
 			break
 		sim.step(move)
+	c._after_step()
 
 
 func fresh(opts: Dictionary = {}) -> void:
@@ -100,6 +101,7 @@ func _run() -> void:
 				await fresh()
 				c.sim.debug_spawn(&"kale_lordu", c.sim.player_pos + Vector2(0, -420))
 				advance(60)
+				c.hud.show_boss_band(&"kale_lordu")
 				await frames(3)
 				await shot("lord")
 			"ruins":
@@ -122,7 +124,7 @@ func _run() -> void:
 			"levelup":
 				await fresh()
 				c.sim.debug_add_xp(30)
-				advance(5)
+				advance(5, Vector2.ZERO, false)
 				await frames(40)
 				await shot("levelup")
 			"pause":

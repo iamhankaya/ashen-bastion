@@ -16,6 +16,8 @@
      "smoke_cleanup": {"open_r": 4, "grow": 5, "max_v": 120, "min_d": 2, "opaque_below": 0.9}},
     {"id": "les_kargasi", "kind": "three_poses", "src": "art/ref/dusmanlar/les-kargalari.png",
      "out": "assets/gfx/enemies/les_kargasi.png", "frame_width": 192, "frames": 3, "merge_r": 1, "min_area": 20000},
+    {"id": "ana_gorsel", "kind": "sprite", "src": "art/ref/ana-gorsel-atis.png",
+     "out": "assets/gfx/ui/ana_gorsel.png", "max_side": 1100},
     {"id": "ground", "kind": "tile", "src": "art/ref/harita/zemin-doku.png",
      "out": "assets/gfx/map/ground.png", "size": 768, "blend_band": 24},
     {"id": "ruins", "kind": "components", "src": "art/ref/harita/harabe-parcalari.png",

@@ -99,13 +99,14 @@ func _build_ui() -> void:
 	ui.name = "UI"
 	ui.layer = 10
 	add_child(ui)
+	# Joystick HUD'ın ALTINDA çizilir: köşede tamburu örtmez (ara denetim #7).
+	joystick = JoystickView.new()
+	joystick.name = "Joystick"
+	ui.add_child(joystick)
 	hud = Hud.new()
 	hud.name = "Hud"
 	ui.add_child(hud)
 	hud.pause_pressed.connect(pause_game)
-	joystick = JoystickView.new()
-	joystick.name = "Joystick"
-	ui.add_child(joystick)
 	level_up = LevelUpScreen.new()
 	level_up.name = "LevelUp"
 	ui.add_child(level_up)

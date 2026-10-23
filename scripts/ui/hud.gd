@@ -32,6 +32,9 @@ var active_slots: Array[SkillSlot] = []
 var passive_slots: Array[SkillSlot] = []
 var drum: MagazineDrum
 var boss_band: PanelContainer
+## Elit/Lord canı çubuğu (yalnız biri canlıyken görünür).
+var boss_bar: ProgressBar
+var boss_name: Label
 var boss_label: Label
 var vignette: Vignette
 ## Cihaz güvenli alanı payı kadar içeri çekilmiş katman (rozet, çubuklar, yuvalar, tambur, duraklat).
@@ -41,6 +44,7 @@ var _sim: GameSim = null
 var _xp_shown: float = 0.0
 var _hp_critical: bool = false
 var _boss_left: float = 0.0
+var _boss_scan: int = 0
 
 
 ## Seviye rozeti (daire + sayı).
@@ -151,12 +155,12 @@ func _build() -> void:
 	timer_label.name = "Timer"
 	timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	timer_label.add_theme_constant_override(&"shadow_offset_y", 3)
-	_place(timer_label, 0.5, Rect2(-240, TOP + 30.0, 480, 96))
+	_place(timer_label, 0.5, Rect2(-240, TOP + 38.0, 480, 96))
 	root.add_child(timer_label)
 
 	pause_button = Button.new()
 	pause_button.name = "PauseButton"
-	pause_button.focus_mode = Control.FOCUS_NONE
+	pause_button.focus_mode = Control.FOCUS_ALL  # klavye/gamepad odağı (DESIGN-UI §8); focus stili tanımlı
 	pause_button.icon = UiKit.hud_icon("hud-duraklat")
 	pause_button.expand_icon = true
 	pause_button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -209,6 +213,24 @@ func _build() -> void:
 		)
 		root.add_child(s)
 		passive_slots.append(s)
+
+	boss_bar = ProgressBar.new()
+	boss_bar.name = "BossBar"
+	boss_bar.show_percentage = false
+	boss_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	boss_bar.max_value = 1.0
+	boss_bar.step = 0.0
+	boss_bar.add_theme_stylebox_override(
+		&"fill", UiKit.stylebox(UiKit.BORDO_500, UiKit.BORDO_400, 0, 14)
+	)
+	boss_bar.visible = false
+	_place(boss_bar, 0.0, Rect2(420.0, TOP + 124.0, 460.0, 32.0))
+	root.add_child(boss_bar)
+	boss_name = UiKit.label("", &"", 24, UiKit.KEMIK_100)
+	boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	boss_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	UiKit.fill(boss_name)
+	boss_bar.add_child(boss_name)
 
 	drum = MagazineDrum.new()
 	drum.name = "MagazineDrum"
@@ -298,6 +320,7 @@ func refresh(dt: float) -> void:
 		prog = 1.0 - mag.reload_left / mag.reload_total
 	drum.set_state(mag.count, mag.cap, mag.reloading, prog)
 	drum.tick(dt)
+	_refresh_boss_bar()
 	_tick_effects(dt)
 
 
@@ -321,6 +344,24 @@ func show_boss_band(kind: StringName) -> void:
 	boss_label.text = boss_text(kind)
 	boss_band.visible = true
 	_boss_left = BOSS_BAND_TIME
+
+
+## Her 6. karede düşman havuzunu tarar; elit/Lord varsa en yüksek maks. canlısının canını gösterir.
+func _refresh_boss_bar() -> void:
+	_boss_scan += 1
+	if _boss_scan % 6 != 0:
+		return
+	var e := _sim.enemies
+	var best := -1
+	var best_max := 0.0
+	for i in EnemyPool.CAP:
+		if e.alive[i] == 1 and e.is_elite(i) and e.max_hp[i] > best_max:
+			best = i
+			best_max = e.max_hp[i]
+	boss_bar.visible = best >= 0
+	if best >= 0:
+		boss_bar.value = clampf(e.hp[best] / maxf(e.max_hp[best], 1.0), 0.0, 1.0)
+		boss_name.text = e.def_of(best).display_name
 
 
 func _xp_ratio() -> float:
