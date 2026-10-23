@@ -40,3 +40,52 @@ func test_empty_text_is_ignored() -> void:
 	add_child_autofree(f)
 	f.show_text("", Vector2.ZERO)
 	assert_false(f.visible)
+
+
+# --- V-02: aynı anda toplanan eklentilerin metinleri üst üste binmez ---------------------------------------
+
+
+func _min_gap_over_time(f: FloatText) -> float:
+	var worst := 1.0e9
+	for _k in 44:
+		var ys: Array[float] = []
+		for i in FloatText.POOL:
+			if f.progress_of(i) < 1.0:
+				ys.append(f.draw_y(i))
+		ys.sort()
+		for j in range(1, ys.size()):
+			worst = minf(worst, ys[j] - ys[j - 1])
+		f.refresh(0.016)
+	return worst
+
+
+func test_three_pickups_in_one_frame_keep_44px_apart() -> void:
+	var f := FloatText.new()
+	add_child_autofree(f)
+	for t in ["Sınırsız şarjör", "Hasar arttı", "Atış hızı arttı"]:
+		f.show_text(t, Vector2(540.0, 900.0))
+	assert_eq(f.active_count(), 3)
+	assert_gte(_min_gap_over_time(f), 44.0, "hiçbir iki satır örtüşmez")
+
+
+func test_pickups_300ms_apart_do_not_overlap_either() -> void:
+	var f := FloatText.new()
+	add_child_autofree(f)
+	f.show_text("Hasar arttı", Vector2(540.0, 900.0))
+	for _k in 18:
+		f.refresh(0.016)
+	f.show_text("Atış hızı arttı", Vector2(540.0, 900.0))
+	for _k in 18:
+		f.refresh(0.016)
+	f.show_text("Sınırsız şarjör", Vector2(540.0, 900.0))
+	assert_gte(_min_gap_over_time(f), 44.0)
+
+
+func test_a_lone_pickup_keeps_its_position() -> void:
+	var f := FloatText.new()
+	add_child_autofree(f)
+	f.show_text("+25 Can", Vector2(540.0, 900.0))
+	assert_almost_eq(f.draw_y(0), 900.0, 0.01, "yalnız başlık kaymaz")
+	f.refresh(0.016)
+	f.show_text("Hasar arttı", Vector2(540.0, 2000.0))
+	assert_almost_eq(f.draw_y(1), 2000.0, 0.01, "uzaktaki başlık kaymaz")

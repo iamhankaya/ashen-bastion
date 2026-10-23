@@ -7,7 +7,8 @@ extends Control
 const SIZE := 84.0
 const ICON_PX := 50.0
 const ALPHA := 0.7
-const MARGIN := SIZE * 0.5 + 8.0
+## Daire merkezinin güvenli dikdörtgen kenarından içeri payı: daire kenara ≥ SAFE_EDGE (36) uzakta kalır (V-04).
+const MARGIN := UiKit.SAFE_EDGE + SIZE * 0.5
 const RING_W := 5.0
 
 var _sim: GameSim = null

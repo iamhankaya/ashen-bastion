@@ -20,6 +20,9 @@ const BOTTOM := 72.0
 const CRITICAL := 0.25
 const BAR_EASE := 0.18
 const BOSS_BAND_TIME := 2.4
+## "KALE LORDU GELİYOR" bandı: tam genişlik; üst kenarı cihaz üst payı kadar iner (HUD ile aynı oranda kayar, V-03).
+const BOSS_BAND_TOP := 520.0
+const BOSS_BAND_H := 132.0
 const HUD_ALPHA := 0.85
 ## Elit/Lord can satırı: pasif yuva satırının altında, ortada, oyuncu canından ayrı (N2). Ad üstte (≥26 px),
 ## çubuk altta; Lord daha kalın ve ayrı renkte. Birden çok elit varsa en yüksek maks. canlı gösterilir, ada "+N" eklenir.
@@ -70,6 +73,7 @@ var _xp_shown: float = 0.0
 var _hp_critical: bool = false
 var _boss_left: float = 0.0
 var _boss_scan: int = 0
+var _safe_top: float = 0.0
 var _boss_style: int = -1  # 0 elit, 1 Lord (stil değişince yeniden kurulur)
 
 
@@ -288,7 +292,8 @@ func _build() -> void:
 	band.border_width_top = 4
 	band.border_width_bottom = 4
 	boss_band.add_theme_stylebox_override(&"panel", band)
-	_place_stretch(boss_band, 0.0, 0.0, 520.0, 132.0)
+	_place_stretch(boss_band, 0.0, 0.0, BOSS_BAND_TOP, BOSS_BAND_H)
+	_shift_boss_band()
 	boss_label = UiKit.label("", &"LabelAccent", 56, UiKit.KEMIK_100)
 	boss_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	boss_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -335,6 +340,15 @@ func apply_safe_area(extra: Variant = null) -> void:
 	safe.offset_top = e.y
 	safe.offset_right = -e.z
 	safe.offset_bottom = -e.w
+	_safe_top = e.y
+	_shift_boss_band()
+
+
+## Lord bandını güvenli alan üst payı kadar indirir (bant `safe` dışında, tam genişlikte kalır).
+func _shift_boss_band() -> void:
+	if boss_band != null:
+		boss_band.offset_top = BOSS_BAND_TOP + _safe_top
+		boss_band.offset_bottom = BOSS_BAND_TOP + _safe_top + BOSS_BAND_H
 
 
 ## Sim'e bağlan (yeni oyun). Sinyallerden yalnız görsel geri bildirim alınır.
