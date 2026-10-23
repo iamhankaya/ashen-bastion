@@ -19,7 +19,7 @@
   "test/acceptance/test_ver_determinism_full.gd": 8,
   "test/acceptance/test_ver_end_to_end.gd": 4,
   "test/acceptance/test_ver_goals.gd": 11,
-  "test/acceptance/test_ver_known_gaps.gd": 3,
+  "test/acceptance/test_ver_known_gaps.gd": 5,
   "test/acceptance/test_ver_render_text.gd": 7,
   "test/unit/test_audio_director.gd": 6,
   "test/unit/test_boss_safety.gd": 5,
