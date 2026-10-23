@@ -6,5 +6,5 @@
   "test/unit/test_contract_sim.gd": 19,
   "test/unit/test_contract_spatial_hash.gd": 5,
   "test/unit/test_contract_stub.gd": 5,
-  "test/unit/test_game_data.gd": 15
+  "test/unit/test_game_data.gd": 16
 }
