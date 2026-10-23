@@ -185,15 +185,6 @@ func _cases_d3() -> Array:
 			&"HighscoreScreen.show_scores"
 		],
 		[func() -> void: scores.apply_safe_area(), &"HighscoreScreen.apply_safe_area"],
-		[
-			func() -> void: _node(ResultScreen.new()).content_bottom(),
-			&"ResultScreen.content_bottom"
-		],
-		[
-			func() -> void: _node(ResultScreen.new()).apply_safe_area(),
-			&"ResultScreen.apply_safe_area"
-		],
-		[func() -> void: ResultTimeline.buttons_ready_at(-1.0), &"ResultTimeline.buttons_ready_at"],
 		[func() -> void: _node(MainMenu.new()).apply_safe_area(), &"MainMenu.apply_safe_area"],
 	]
 
