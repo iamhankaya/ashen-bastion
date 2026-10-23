@@ -1,0 +1,2 @@
+# v1.1 tamamlanan dilim simgeleri (boşluk/satır ayraçlı). Her D fazı SON adımda kendi simgesini (D1, D2, D3, D4) ekler.
+# Simgesi eklenmemiş dilimin kabul testleri V11Slice.require ile pending döner (kırmızı değil).
