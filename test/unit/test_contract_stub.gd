@@ -23,7 +23,6 @@ func test_calls_returns_a_copy() -> void:
 func test_skeleton_methods_report_themselves() -> void:
 	# Hâlâ iskelet olan (uygulama-2) gövdeler. Uygulanan sınıf buradan çıkarılır.
 	var cases := [
-		[func(): MapSim.new().obstacles_near(Vector2.ZERO), &"MapSim.obstacles_near"],
 		[func(): MusicPlan.track_for(0.0, {}), &"MusicPlan.track_for"],
 	]
 	for c in cases:

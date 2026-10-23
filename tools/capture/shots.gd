@@ -38,7 +38,8 @@ func advance(n: int, move: Vector2 = Vector2.ZERO) -> void:
 	for i in n:
 		if sim.state == GameSim.State.LEVEL_UP:
 			sim.choose(0)
-			sim.hp = sim.max_hp
+			sim.max_hp = 1.0e9
+			sim.hp = 1.0e9
 		if sim.state != GameSim.State.RUNNING:
 			break
 		sim.step(move)
@@ -101,6 +102,23 @@ func _run() -> void:
 				advance(60)
 				await frames(3)
 				await shot("lord")
+			"ruins":
+				await fresh()
+				c.sim.map.ensure(Vector2(1800, 0))
+				var target := Vector2(1800, 0)
+				for o in c.sim.map.obstacles_near(Vector2(1800, 0)):
+					if o.x > 900.0 and o.z > 100.0:
+						target = Vector2(o.x, o.y)
+						break
+				c.sim.player_pos = target + Vector2(0, 380)
+				c.sim.debug_fill(&"curumus_piyade", 25, 520.0)
+				c.sim.debug_grant(&"son_mermi_patlar", 4)
+				c.sim.debug_grant(&"dinamit", 3)
+				c.sim.max_hp = 1.0e9
+				c.sim.hp = 1.0e9
+				advance(150)
+				await frames(3)
+				await shot("ruins")
 			"levelup":
 				await fresh()
 				c.sim.debug_add_xp(30)

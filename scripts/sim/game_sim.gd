@@ -85,6 +85,7 @@ var kill_source_flags: int = 0
 var grid: SpatialHash = SpatialHash.new()
 var damage: DamageSystem = DamageSystem.new()
 var spawn_director: SpawnDirector = null
+var map: MapSim = null
 var enemy_ai: EnemyAI = EnemyAI.new()
 ## cift_tabanca davranışı seviye değerlerini buraya yazar (setup).
 var gun_damage: float = 15.0
@@ -142,6 +143,8 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	for eid in data.enemy_ids:
 		_max_enemy_radius = maxf(_max_enemy_radius, data.get_enemy(eid).radius)
 	spawn_director = SpawnDirector.new(data.waves)
+	map = MapSim.new(_stream_seed(&"map"), data.ruins)
+	map.ensure(player_pos)
 	spawn_director.skip_to(time)
 	loadout = Loadout.new(data)
 	loadout.bind_api(self)
@@ -494,6 +497,8 @@ func _phase_player_move(move: Vector2) -> void:
 	last_move = move
 	if move.length_squared() > 0.0:
 		player_pos += move * character.move_speed * stats.move_speed_mult * STEP
+		map.ensure(player_pos)
+		player_pos = map.resolve(player_pos, character.collision_radius)
 		if move.x < -0.1:
 			player_facing_left = true
 		elif move.x > 0.1:

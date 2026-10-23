@@ -3,11 +3,12 @@ extends Node
 ## Bağlama (U1-9): girdi → zaman biriktirici → `sim.step(input_gate.move())` (kare başına en çok 3 adım;
 ## yetişemezse yavaş çekim), ekran geçişleri (menü → oyun ⇄ seviye atlama / duraklatma → sonuç → tekrar/menü),
 ## Android geri tuşu, arka plana alınınca otomatik duraklatma. Karar mantığı InputGate/PauseLogic'tedir;
-## bu sınıf yalnız uygular. Sim 480 sn "timer" demo (U1).
+## bu sınıf yalnız uygular. Tam oyun: 20 dk, Kale Lordu (lord modu).
 
 const CHARACTER := &"gunslinger"
-const RUN_OPTS := {"end_mode": "timer", "end_time": 480.0}
-const WON_TIMER_SUB := "Şafak söktü; kale seni yutamadı."
+## Tam oyun: 20 dk, 20. dk'da Kale Lordu (ölümü kazandırır).
+const RUN_OPTS := {"end_mode": "lord", "end_time": 1200.0}
+const WON_SUB := "Şafak söktü; kale seni yutamadı."
 const DAMAGE_VIBRATE_MS := 25
 
 var screen: int = PauseLogic.Screen.MENU
@@ -22,6 +23,9 @@ var actors: Node2D
 var player_view: PlayerView
 var projectile_renderer: ProjectileRenderer
 var camera: CameraRig
+var fx_renderer: FxRenderer
+var ruin_view: RuinView = RuinView.new()
+var atmosphere: Atmosphere
 
 var ui: CanvasLayer
 var hud: Hud
@@ -74,9 +78,19 @@ func _build_world() -> void:
 	projectile_renderer = ProjectileRenderer.new()
 	projectile_renderer.name = "Projectiles"
 	world.add_child(projectile_renderer)
+	fx_renderer = FxRenderer.new()
+	fx_renderer.name = "Fx"
+	world.add_child(fx_renderer)
 	camera = CameraRig.new()
 	camera.name = "Camera"
 	world.add_child(camera)
+	var atmo_layer := CanvasLayer.new()
+	atmo_layer.name = "AtmosphereLayer"
+	atmo_layer.layer = 5
+	add_child(atmo_layer)
+	atmosphere = Atmosphere.new()
+	atmosphere.name = "Atmosphere"
+	atmo_layer.add_child(atmosphere)
 	world.visible = false
 
 
@@ -176,6 +190,7 @@ func go_menu() -> void:
 	_stop_stress()
 	_bind(null)
 	world.visible = false
+	atmosphere.visible = false
 	menu.open(_settings().sound_on, _settings().vibration_on)
 	_set_screen(PauseLogic.Screen.MENU)
 
@@ -185,6 +200,7 @@ func start_run() -> void:
 	_stop_stress()
 	_bind(GameSim.new(randi(), CHARACTER, RUN_OPTS))
 	world.visible = true
+	atmosphere.visible = true
 	_update_views(0.0)
 	_set_screen(PauseLogic.Screen.PLAYING)
 
@@ -203,6 +219,7 @@ func start_stress() -> void:
 	_stress_label.add_theme_font_size_override(&"font_size", 34)
 	ui.add_child(_stress_label)
 	world.visible = true
+	atmosphere.visible = true
 	_set_screen(PauseLogic.Screen.PLAYING)
 	hud.visible = true
 	joystick.visible = false
@@ -283,6 +300,11 @@ func _bind(new_sim: GameSim) -> void:
 	enemy_renderer.bind(sim)
 	projectile_renderer.bind(sim)
 	gem_renderer.bind(sim)
+	fx_renderer.bind(sim, camera)
+	if sim != null:
+		ruin_view.bind(actors, sim.map)
+	else:
+		ruin_view.clear()
 	player_view.bind(sim)
 	hud.bind(sim)
 	if sim != null:
@@ -332,10 +354,13 @@ func _update_views(dt: float) -> void:
 		return
 	player_view.update_view(dt)
 	camera.follow(sim.player_pos, dt)
+	ruin_view.follow(sim.player_pos)
 	ground.follow(camera.position, camera.view_size())
 	enemy_renderer.refresh()
 	gem_renderer.refresh()
 	projectile_renderer.refresh()
+	fx_renderer.update_fx(dt)
+	atmosphere.follow(camera.position, camera.view_size())
 	hud.refresh(dt)
 	if _render_label != null and _render_label.visible:
 		_render_label.text = render_debug_text()
@@ -366,8 +391,8 @@ func _show_result() -> void:
 		_run_won = sim.state == GameSim.State.WON
 	var combos := UiKit.combo_rows(stats.get("evolutions", []), sim.data)
 	var sub := ""
-	if _run_won and sim.end_mode == GameSim.END_MODE_TIMER:
-		sub = WON_TIMER_SUB
+	if _run_won:
+		sub = WON_SUB
 	result_screen.show_result(_run_won, stats, combos, sub)
 	_set_screen(PauseLogic.Screen.RESULT)
 

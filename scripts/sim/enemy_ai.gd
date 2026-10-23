@@ -35,6 +35,8 @@ func step(sim: GameSim) -> void:
 			e.pos[i] = p + e.ai_dir[i] * spd * dt  # şarj: kilitli yönde düz çizgi
 		elif d2 > 1.0:
 			e.pos[i] = p + to * (spd * dt / sqrt(d2))
+		if def.ai == &"ground":
+			e.pos[i] = sim.map.resolve(e.pos[i], e.radius[i] * 0.8)  # yer düşmanları harabelerden kayar
 		if e.flash[i] > 0.0:
 			e.flash[i] = maxf(0.0, e.flash[i] - FLASH_DECAY * dt)
 

@@ -19,7 +19,7 @@ const RECOIL_PX := 6.0
 const FLASH_TIME := 0.06
 const RING_RADIUS := 26.0
 const PAD := 12  # rim için doku etrafı saydam dolgu (doku pikseli)
-const RIM_COLOR := Color(0.86, 0.80, 0.66)
+const RIM_COLOR := Color(0.80, 0.72, 0.56)
 const RIM_SCREEN_PX := 3.0
 
 var far_arm: Sprite2D

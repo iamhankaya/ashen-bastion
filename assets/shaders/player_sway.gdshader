@@ -11,7 +11,7 @@ uniform float hem_from_y = 0.6;
 uniform vec4 scarf_rect = vec4(0.1, 0.25, 0.45, 0.7);
 uniform float scarf_amp = 5.0;
 uniform vec2 pad_frac = vec2(0.0);  // dolgu / toplam doku boyutu (UV kayması için)
-uniform vec3 rim_color : source_color = vec3(0.86, 0.80, 0.66);
+uniform vec3 rim_color : source_color = vec3(0.80, 0.72, 0.56);
 uniform float rim_px = 3.0;
 
 varying vec2 v_uv;

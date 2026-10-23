@@ -8,7 +8,7 @@ shader_type canvas_item;
 // Atlas dokusu betikten de verilir (TEXTURE yerleşiği işlev bağımsız değişkeni olamaz).
 uniform sampler2D atlas_tex : source_color, filter_linear;
 uniform vec2 atlas_grid = vec2(3.0, 2.0);
-uniform vec3 rim_color : source_color = vec3(0.86, 0.80, 0.66);
+uniform vec3 rim_color : source_color = vec3(0.74, 0.64, 0.47);
 
 varying float v_flash;
 varying float v_rim_px;

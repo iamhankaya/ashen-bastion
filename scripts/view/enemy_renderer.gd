@@ -8,7 +8,9 @@ extends MultiMeshInstance2D
 const STRIDE := 16
 const SHADER_PATH := "res://assets/shaders/enemy_flash.gdshader"
 const DEFAULT_HEIGHT := 110.0
-const RIM_SCREEN_PX := 2.4  # ekranda hedef kontur kalınlığı
+const RIM_SCREEN_PX := 2.2
+## Taban düşman kontur rengi (shader varsayılanıyla aynı; zeminden >= 3:1 testlidir).
+const RIM_COLOR := Color(0.74, 0.64, 0.47)  # ekranda hedef kontur kalınlığı
 const RIM_ELITE_SCREEN_PX := 3.6
 const ANIM_FPS := 9.0  # çok kareli sprite (kargalar) kanat hızı
 
