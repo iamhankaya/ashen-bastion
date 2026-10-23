@@ -52,7 +52,7 @@ func test_kinds_are_independent_counters() -> void:
 		m.tick(ended)
 	assert_eq(ended, PackedInt32Array([D]))
 	assert_eq(m.damage_mult(), 1.0)
-	assert_eq(m.fire_rate_mult(), 1.4)
+	assert_almost_eq(m.fire_rate_mult(), 1.4, 0.0001)
 	assert_almost_eq(m.ratio(F), 0.5, 0.0001)
 	assert_true(m.any_active())
 

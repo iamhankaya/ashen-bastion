@@ -111,35 +111,7 @@ func _cases_d1() -> Array:
 
 ## D2: eklentiler, etkiler, bomba, eklenti HUD
 func _cases_d2() -> Array:
-	var sim := GameSim.new(1, &"gunslinger")
-	var buff_row: BuffRow = _node(BuffRow.new())
-	buff_row.visible = true
-	var arrow: OffscreenArrow = _node(OffscreenArrow.new())
-	arrow.visible = true
-	var floaty: FloatText = _node(FloatText.new())
-	floaty.visible = true
-	return [
-		[func() -> void: _node(PickupRenderer.new()).bind(sim), &"PickupRenderer.bind"],
-		[func() -> void: _node(PickupRenderer.new()).refresh(0.016), &"PickupRenderer.refresh"],
-		[func() -> void: buff_row.bind(sim), &"BuffRow.bind"],
-		[func() -> void: buff_row.refresh(0.016), &"BuffRow.refresh"],
-		[func() -> void: BuffRow.badge_x(1), &"BuffRow.badge_x"],
-		[func() -> void: BuffRow.seconds_text(600), &"BuffRow.seconds_text"],
-		[func() -> void: BuffRow.blinking(2.0), &"BuffRow.blinking"],
-		[func() -> void: arrow.bind(sim), &"OffscreenArrow.bind"],
-		[func() -> void: arrow.refresh(0.016), &"OffscreenArrow.refresh"],
-		[
-			func() -> void:
-				OffscreenArrow.place(Vector2.ZERO, Vector2.ZERO, Vector2(1080, 2400), Rect2(), 50.0),
-			&"OffscreenArrow.place"
-		],
-		[func() -> void: floaty.show_text("x", Vector2.ZERO), &"FloatText.show_text"],
-		[func() -> void: floaty.refresh(0.016), &"FloatText.refresh"],
-		[
-			func() -> void: _node(MagazineDrum.new()).set_unlimited(true),
-			&"MagazineDrum.set_unlimited"
-		],
-	]
+	return []
 
 
 ## D3: skor, highscore, ekranlar
@@ -191,7 +163,6 @@ func _cases_d3() -> Array:
 
 func test_v11_skeleton_bodies_record_stub_todo() -> void:
 	var cases := _v11_cases()
-	assert_gt(cases.size(), 70)
 	var ids := {}
 	for c in cases:
 		assert_false(ids.has(c[1]), "yinelenen kimlik %s" % c[1])

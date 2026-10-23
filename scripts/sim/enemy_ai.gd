@@ -49,36 +49,56 @@ func step(sim: GameSim) -> void:
 			if kind == EnemyPool.KIND_GROUND:
 				e.ai_timer[i] = 0.0  # yeni konumda eski dolanma modu geçersiz
 				e.ai_dir[i] = e.pos[i]
+				e.esc_left[i] = 0.0
+				e.stuck_n[i] = 0
 		elif charging and spd > 0.0:
 			e.pos[i] = p + e.ai_dir[i] * spd * dt  # şarj: kilitli yönde düz çizgi
 		elif d2 > 1.0:
 			var dir := to / sqrt(d2)
-			if kind == EnemyPool.KIND_GROUND and e.ai_timer[i] > 0.0:
+			if kind == EnemyPool.KIND_GROUND and e.esc_left[i] > 0.0:
+				dir = EnemyEscape.move_dir(sim, i)  # F-021: çıkmaz kaçışı, yüzeyi izle
+			elif kind == EnemyPool.KIND_GROUND and e.ai_timer[i] > 0.0:
 				# dolanma: sabit taraf (ai_aux = ±1), hedef yönü + teğet; harabenin arkasında takılmayı kırar
 				dir = dir * DETOUR_FWD + Vector2(-dir.y, dir.x) * (e.ai_aux[i] * DETOUR_TAN)
 			e.pos[i] = p + dir * (spd * dt)
 		if kind == EnemyPool.KIND_GROUND:
-			e.ai_timer[i] = maxf(0.0, e.ai_timer[i] - dt)
-			if ((i + sim.step_count) & 1) == 0:  # iki adımda bir (maliyet)
-				var before := e.pos[i]
-				e.pos[i] = sim.map.resolve(before, e.radius[i] * 0.8)  # yer düşmanları harabelerden kayar
-				var pushed := e.pos[i].distance_squared_to(before) > PUSH_DETOUR * PUSH_DETOUR
-				if (sim.step_count + i) % STUCK_CHECK == 0:
-					# dolanırken çukura/içbükey köşeye girdiyse (aralıkta ilerleme yok) taraf değiştir
-					if (
-						e.ai_timer[i] > 0.0
-						and e.pos[i].distance_squared_to(e.ai_dir[i]) < STUCK_DIST * STUCK_DIST
-					):
-						e.ai_aux[i] = -e.ai_aux[i]
-					e.ai_dir[i] = e.pos[i]  # ilerleme çapası
-				if e.ai_timer[i] > 0.0:
-					if pushed:
-						e.ai_timer[i] = DETOUR_TIME  # hâlâ itiliyor: modu tazele
-				elif pushed:
-					_pick_side(e, i, e.pos[i] - before, to)
-					e.ai_timer[i] = DETOUR_TIME
+			_ground_collide(sim, i, to)
 		if e.flash[i] > 0.0:
 			e.flash[i] = maxf(0.0, e.flash[i] - FLASH_DECAY * dt)
+
+
+## Yer düşmanı harabe çarpışması (iki adımda bir; kaçışta her adım): itme, dolanma modu, çıkmaz denetimi.
+func _ground_collide(sim: GameSim, i: int, to: Vector2) -> void:
+	var e := sim.enemies
+	e.ai_timer[i] = maxf(0.0, e.ai_timer[i] - GameSim.STEP)
+	var escaping := e.esc_left[i] > 0.0
+	if not escaping and ((i + sim.step_count) & 1) != 0:
+		return
+	var before := e.pos[i]
+	e.pos[i] = sim.map.resolve(before, e.radius[i] * 0.8)  # yer düşmanları harabelerden kayar
+	var push := e.pos[i] - before
+	var pushed := push.length_squared() > PUSH_DETOUR * PUSH_DETOUR
+	if pushed:
+		e.push_n[i] = push.normalized()
+	if escaping:
+		EnemyEscape.after_move(sim, i, push, to, GameSim.STEP)
+		return
+	if (sim.step_count + i) % STUCK_CHECK == 0:
+		# dolanırken çukura/içbükey köşeye girdiyse (aralıkta ilerleme yok) taraf değiştir; art arda olursa kaçışa geç
+		if (
+			e.ai_timer[i] > 0.0
+			and e.pos[i].distance_squared_to(e.ai_dir[i]) < STUCK_DIST * STUCK_DIST
+		):
+			e.ai_aux[i] = -e.ai_aux[i]
+		EnemyEscape.check(sim, i, to, sim.player_pos)
+		if e.esc_left[i] <= 0.0:
+			e.ai_dir[i] = e.pos[i]  # ilerleme çapası
+	if e.ai_timer[i] > 0.0:
+		if pushed:
+			e.ai_timer[i] = DETOUR_TIME  # hâlâ itiliyor: modu tazele
+	elif pushed:
+		_pick_side(e, i, push, to)
+		e.ai_timer[i] = DETOUR_TIME
 
 
 ## Dolanma tarafı: engel normaline dik iki teğetten hedefe yakın olanı (kısa taraf). Hedef normalle hizalıyken
