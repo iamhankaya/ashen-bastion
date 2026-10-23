@@ -2,7 +2,7 @@
   "test/acceptance/test_acc_caps.gd": 6,
   "test/acceptance/test_acc_character_data.gd": 6,
   "test/acceptance/test_acc_damage.gd": 10,
-  "test/acceptance/test_acc_determinism.gd": 6,
+  "test/acceptance/test_acc_determinism.gd": 8,
   "test/acceptance/test_acc_difficulty.gd": 9,
   "test/acceptance/test_acc_evolution.gd": 5,
   "test/acceptance/test_acc_levelup.gd": 17,

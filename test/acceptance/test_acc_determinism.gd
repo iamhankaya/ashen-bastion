@@ -82,3 +82,40 @@ func test_choice_stream_is_independent_of_bot_and_combat_noise() -> void:
 		ids_b.append(c.skill_id)
 	assert_gt(ids_a.size(), 0)
 	assert_eq(ids_a, ids_b)
+
+
+func test_sims_do_not_share_global_state() -> void:
+	var solo := _run(138, 4, {}, Bots.KITE)
+	var a := SimKit.make(138, {"data_kind": "real"})
+	var rng_a := Bots.make_rng(138)
+	var hashes: Array = []
+	for c in 4:
+		Bots.play(a, Bots.KITE, CHUNK, rng_a)
+		hashes.append(a.state_hash())
+		# araya başka bir oyun girer: örnek başına durum (bus, havuzlar, RNG) sızmamalı
+		var other := SimKit.make(900 + c, {"data_kind": "real"})
+		Bots.play(other, Bots.GREEDY, 200, Bots.make_rng(900 + c))
+	assert_gt(SimKit.count_events(a, SimEvents.SPAWN), 20, "koşu anlamlı olmalı")
+	assert_eq(hashes, solo["hashes"], "araya giren oyun hash dizisini değiştirmemeli")
+
+
+func test_every_run_starts_from_scratch() -> void:
+	var played := SimKit.make(139, {"data_kind": "real"})
+	Bots.play(played, Bots.GREEDY, 1200, Bots.make_rng(139))
+	played.debug_grant(&"agir_kursun", 3)
+	var fresh := SimKit.make(139, {"data_kind": "real"})
+	assert_eq(fresh.level, 1)
+	assert_eq(fresh.xp, 0)
+	assert_eq(fresh.kills, 0)
+	assert_eq(fresh.step_count, 0)
+	assert_eq(fresh.time, 0.0)
+	assert_eq(fresh.hp, fresh.max_hp)
+	assert_eq(fresh.magazine.count, fresh.magazine.cap)
+	assert_eq(fresh.enemies.count, 0)
+	assert_eq(fresh.evolved_log.size(), 0)
+	assert_eq(fresh.loadout.actives().size(), 1, "yalnız başlangıç becerisi")
+	assert_eq(fresh.loadout.passives().size(), 0, "ilerleme taşınmaz (meta ilerleme yok)")
+	assert_eq(fresh.loadout.level_of(&"cift_tabanca"), 1)
+	assert_eq(fresh.loadout.level_of(&"agir_kursun"), 0)
+	assert_eq(fresh.state, GameSim.State.RUNNING)
+	assert_eq(fresh.state_hash(), SimKit.make(139, {"data_kind": "real"}).state_hash())
