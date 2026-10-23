@@ -43,6 +43,10 @@ static func run(g: GameData, raw: Variant, out: PackedStringArray) -> void:
 ## `MAX_BOUND`'u aşamaz (katı harabe chunk kenarından bu kadar içeride durur, chunk 1024 px).
 static func _collision(out: PackedStringArray, ctx: String, d: Dictionary) -> void:
 	if not d.has("collision"):
+		if d.get("solid") == true and MapSim.bounds_of_def(d).z > MAX_BOUND:
+			GameData._err(
+				out, "out_of_range", ctx, "yedek daire (footprint.w/2) > %.0f px" % MAX_BOUND
+			)
 		return
 	var raw: Variant = d["collision"]
 	if d.get("solid") != true:

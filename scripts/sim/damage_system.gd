@@ -36,7 +36,7 @@ func damage_enemy(sim: GameSim, id: int, amount: float, kind: StringName) -> voi
 		_kill(sim, id, i)
 
 
-const GEM_CLEARANCE := 10.0
+const GEM_CLEARANCE := 16.0
 
 
 func _kill(sim: GameSim, id: int, i: int) -> void:
