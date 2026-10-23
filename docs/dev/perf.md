@@ -59,3 +59,17 @@ GDExtension bulutta derlenemediği için kapsam dışıdır. "300+" hedefinin al
 call, 2048 nesne, 64 MB statik bellek. **Yazılım rasterleştirici olduğu için cihaz hakkında hiçbir şey söylemez**; yalnızca
 sahnenin çalıştığını, draw call sayısının düşük (tür başına tek MultiMesh) kaldığını gösterir. Cihaz FPS'i kullanıcıda ölçülür
 (`docs/dev/user-verify.md`).
+
+## Uygulama-2 notları
+
+- **Sim maliyeti (masaüstü, headless, stres senaryosu, bilgi):** U1 ≈3,3–3,9 ms/adım → U2 ≈4,4–5,0 ms/adım. Artış:
+  yer düşmanları için harabe engeli (`MapSim.resolve`, iki adımda bir), tür sınıfı sorgusu, elit/Lord kancaları,
+  büyük düşmanların (yarıçap > 40) ızgara dışı ayrı denetimi (`GameSim.SMALL_ENEMY_RADIUS`/`_big_ids`; Lord yarıçapı 72
+  olduğu için ızgara sorgu yarıçapını büyütmek `cells_scanned`/`collision_tests` bütçesini 3-7 kat aşırıyordu).
+  Gate sayaç tavanları (`tools/perf_budget.json`) değişmedi.
+- **Render:** düşmanlar tek atlas dokusu + tek MultiMesh (INSTANCE_CUSTOM: parlama, hücre, kontur, elit), quad yalnız
+  sprite + 16 px pay kadar (`EnemyAtlas.rects`); kontur (rim) opak piksellerde erken çıkar. xvfb/llvmpipe yazılım GL'de
+  stres koşusu ≈133 ms/kare (düşmanlar gizliyken ≈107 ms): cihazı temsil ETMEZ, yalnız göreli karşılaştırma içindir.
+  Cihaz FPS'i kullanıcıda (docs/dev/user-verify.md §4).
+- **F-ashen-bastion-002:** `RenderFix` (özel kesme dikdörtgeni) varsayılan AÇIK; debug APK'da etiketle kapatılabilir.
+- Yedek merdiveni (yukarıdaki) hâlâ geçerli; ilk adım: `ProjectilePool.CAP`/`alive_cap` düşürme.

@@ -641,7 +641,16 @@ func _phase_projectiles() -> void:
 		_scratch.clear()
 		if (pr.flags[i] & ProjectilePool.FLAG_LOB) == 0:
 			grid.query_circle(pr.pos[i], BULLET_RADIUS + SMALL_ENEMY_RADIUS, _scratch)
-			consumed = _projectile_vs(i, _scratch)
+			for id in _scratch:
+				if not enemies.is_alive(id) or pr.has_hit(i, id):
+					continue
+				w_collision_tests += 1
+				var ei := EnemyPool.index_of(id)
+				var reach := BULLET_RADIUS + enemies.radius[ei]
+				if enemies.pos[ei].distance_squared_to(pr.pos[i]) <= reach * reach:
+					if _projectile_hit(i, id):
+						consumed = true
+						break
 			if not consumed and not _big_ids.is_empty():
 				consumed = _projectile_vs(i, _big_ids)  # elit/Lord: ızgara sorgusu dışında doğrudan denetlenir
 		if not consumed and pr.life[i] <= 0.0:

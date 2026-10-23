@@ -84,7 +84,10 @@ func obstacles_near(center: Vector2) -> Array[Vector3]:
 func resolve(pos: Vector2, radius: float) -> Vector2:
 	if _cells.is_empty():
 		return pos
-	var list: PackedInt32Array = _cells.get(_cell_key(pos), PackedInt32Array())
+	var found: Variant = _cells.get(_cell_key(pos))
+	if found == null:
+		return pos
+	var list: PackedInt32Array = found
 	for i in list:
 		var d := pos - ob_pos[i]
 		var min_d := ob_r[i] + radius

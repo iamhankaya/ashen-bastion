@@ -14,6 +14,7 @@ func step(sim: GameSim) -> void:
 	var target := sim.player_pos
 	var recycle2 := RECYCLE_DISTANCE * RECYCLE_DISTANCE
 	var e := sim.enemies
+	var kinds := e.type_kind
 	for i in EnemyPool.CAP:
 		if e.alive[i] == 0:
 			continue
@@ -21,21 +22,26 @@ func step(sim: GameSim) -> void:
 		var p := e.pos[i]
 		var to := target - p
 		var d2 := to.length_squared()
-		var def := e.def_of(i)
+		var kind := kinds[e.type_idx[i]]
 		var spd := e.speed[i]
-		if def.ai == &"lord" or def.ai == &"elite":
+		var charging := false
+		var is_lord := false
+		if kind == EnemyPool.KIND_SPECIAL:
+			var def := e.def_of(i)
 			if not def.summon.is_empty():
 				_lord(sim, i, def, dt)
 				spd = e.speed[i]
+				is_lord = true
 			elif not def.charge.is_empty():
 				spd = _charge(e, i, def, to, dt)
-		if d2 > recycle2 and def.ai != &"lord":
+				charging = e.ai_aux[i] > 0.0
+		if d2 > recycle2 and not is_lord:
 			e.pos[i] = sim.spawn_director.recycle_position(sim)
-		elif spd > 0.0 and e.ai_aux[i] > 0.0 and not def.charge.is_empty():
+		elif charging and spd > 0.0:
 			e.pos[i] = p + e.ai_dir[i] * spd * dt  # şarj: kilitli yönde düz çizgi
 		elif d2 > 1.0:
 			e.pos[i] = p + to * (spd * dt / sqrt(d2))
-		if def.ai == &"ground":
+		if kind == EnemyPool.KIND_GROUND and ((i + sim.step_count) & 1) == 0:  # iki adımda bir (maliyet)
 			e.pos[i] = sim.map.resolve(e.pos[i], e.radius[i] * 0.8)  # yer düşmanları harabelerden kayar
 		if e.flash[i] > 0.0:
 			e.flash[i] = maxf(0.0, e.flash[i] - FLASH_DECAY * dt)

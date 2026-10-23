@@ -6,12 +6,16 @@ extends RefCounted
 
 const CELL := 416
 const COLS := 3
+## Sprite çevresinde bırakılan saydam pay (rim konturu); quad yalnız bu bölgeyi çizer.
+const MARGIN := 16
 const MANIFEST := "res://assets/gfx/manifest.json"
 
 ## sprite yolu -> {"cell": ilk hücre, "frames": kare sayısı, "size": Vector2 (tek kare piksel boyutu)}
 var cells: Dictionary = {}
 var texture: Texture2D = null
 var rows: int = 1
+## Hücre başına atlas UV dikdörtgeni (u0, v0, du, dv): sprite + pay (tam hücre değil; taşan piksel çizilmez).
+var rects: PackedVector4Array = PackedVector4Array()
 
 
 ## `sprites`: benzersiz sprite yolları (sıra korunur). Döner: kendisi (zincirleme).
@@ -36,6 +40,7 @@ func build(sprites: Array[String]) -> EnemyAtlas:
 		total += frames
 	rows = maxi(1, ceili(float(total) / COLS))
 	var atlas := Image.create_empty(COLS * CELL, rows * CELL, false, Image.FORMAT_RGBA8)
+	rects.resize(COLS * rows)
 	var cell := 0
 	for p in plan:
 		var path: String = p[0]
@@ -59,6 +64,14 @@ func build(sprites: Array[String]) -> EnemyAtlas:
 				cy * CELL + (CELL - frame.get_height()) / 2
 			)
 			atlas.blit_rect(frame, Rect2i(Vector2i.ZERO, frame.get_size()), dst)
+			var tw := mini(frame.get_width() + 2 * MARGIN, CELL)
+			var th := mini(frame.get_height() + 2 * MARGIN, CELL)
+			rects[cell + f] = Vector4(
+				float(cx * CELL + (CELL - tw) / 2) / float(COLS * CELL),
+				float(cy * CELL + (CELL - th) / 2) / float(rows * CELL),
+				float(tw) / float(COLS * CELL),
+				float(th) / float(rows * CELL)
+			)
 		cells[path] = {"cell": cell, "frames": frames, "size": Vector2(fw, fh) * scale}
 		cell += frames
 	texture = ImageTexture.create_from_image(atlas)

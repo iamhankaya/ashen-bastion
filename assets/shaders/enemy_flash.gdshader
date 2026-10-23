@@ -7,7 +7,7 @@ shader_type canvas_item;
 
 // Atlas dokusu betikten de verilir (TEXTURE yerleşiği işlev bağımsız değişkeni olamaz).
 uniform sampler2D atlas_tex : source_color, filter_linear;
-uniform vec2 atlas_grid = vec2(3.0, 2.0);
+uniform vec4 cell_rect[16];  // hücre başına atlas UV dikdörtgeni (u0, v0, du, dv)
 uniform vec3 rim_color : source_color = vec3(0.74, 0.64, 0.47);
 
 varying float v_flash;
@@ -20,14 +20,14 @@ void vertex() {
 	v_rim_px = INSTANCE_CUSTOM.b;
 	v_elite = INSTANCE_CUSTOM.a;
 	v_tint = COLOR.rgb;
-	float cell = floor(INSTANCE_CUSTOM.g + 0.5);
-	float cx = mod(cell, atlas_grid.x);
-	float cy = floor(cell / atlas_grid.x);
-	UV = (vec2(cx, cy) + UV) / atlas_grid;
+	int cell = int(floor(INSTANCE_CUSTOM.g + 0.5));
+	vec4 r = cell_rect[cell];
+	UV = r.xy + UV * r.zw;
 }
 
 void fragment() {
 	vec4 t = texture(atlas_tex, UV);
+	t.a = smoothstep(0.05, 0.75, t.a);  // yarı saydam tüy/kumaş pikselleri daha dolgun
 	vec3 body = t.rgb * mix(vec3(1.0), v_tint * 1.35, v_elite * 0.6);
 	vec4 c = vec4(body, t.a);
 	vec3 rim = mix(rim_color, clamp(v_tint * 1.25, 0.0, 1.0), v_elite);

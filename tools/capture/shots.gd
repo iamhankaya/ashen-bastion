@@ -145,6 +145,22 @@ func _run() -> void:
 				advance(120)
 				await frames(30)
 				await shot(sc)
+			"stress":
+				c.start_stress()
+				if OS.get_environment("NOATMO") != "":
+					c.atmosphere.visible = false
+				if OS.get_environment("NOENEMY") != "":
+					c.enemy_renderer.visible = false
+				var t0 := Time.get_ticks_msec()
+				while (
+					c._stress != null
+					and not c._stress.is_done()
+					and Time.get_ticks_msec() - t0 < 100000
+				):
+					await process_frame
+				await frames(3)
+				await shot("stress")
+				print("PERF ", FileAccess.get_file_as_string("user://perf.json"))
 			"contrast":
 				await fresh()
 				for t in [&"curumus_piyade", &"les_kargasi", &"sovalye_hayaleti"]:

@@ -98,3 +98,11 @@ Opsiyonel `charge {every, duration, speed}` ve `summon {type, every, count 1..50
 
 Beklenen kayıt sayıları (8 aktif + 8 pasif + 4 evrim, 7 düşman) şemada değil, kabul testindedir. Sayı dengesi `data/**`
 kayıtlarının sahibi görevlerdedir; ayar yalnız denge görevinde yapılır.
+
+## Harabeler — `ruins.json` (isteğe bağlı)
+
+Dizi; her kayıt: `id` (benzersiz), `sprite` (`res://assets/gfx/map/ruins/*.png` ya da `placeholder:`), `display_scale`
+(0,1..20), `foot` `[x, y]` (0..1, sprite'ta ayak noktası), `footprint {w, h}` (çarpışma dairesi çapı = `w`), `weight`
+(chunk içi seçim ağırlığı), `solid` (bool: oyuncuyu ve yer düşmanlarını iter; mermiler her zaman geçer). Dosya yoksa harita
+boştur. Doğrulama: `scripts/sim/ruins_validator.gd`; sprite ve ölçüler `tools/art/process_art.py` çıktısından
+(`assets/gfx/map/ruins_manifest.json`) üretilir.

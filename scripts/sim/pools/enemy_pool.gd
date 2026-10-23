@@ -25,6 +25,11 @@ var ai_timer: PackedFloat32Array = PackedFloat32Array()
 var ai_aux: PackedFloat32Array = PackedFloat32Array()
 var ai_dir: PackedVector2Array = PackedVector2Array()
 
+## Tür başına yapay zekâ sınıfı (sıcak yolda def aramasını önler): 0 düz, 1 yer (engelden kayar), 2 özel (şarj/çağırma).
+const KIND_PLAIN := 0
+const KIND_GROUND := 1
+const KIND_SPECIAL := 2
+var type_kind: PackedByteArray = PackedByteArray()
 var _type_ids: Array[StringName] = []
 var _defs: Array[EnemyDef] = []
 var _free: PackedInt32Array = PackedInt32Array()
@@ -56,9 +61,17 @@ func _init(data: GameData = null) -> void:
 func bind(data: GameData) -> void:
 	_type_ids.clear()
 	_defs.clear()
+	type_kind.clear()
 	for id in data.enemy_ids:
+		var def := data.get_enemy(id)
 		_type_ids.append(id)
-		_defs.append(data.get_enemy(id))
+		_defs.append(def)
+		var k := KIND_PLAIN
+		if def.ai == &"ground":
+			k = KIND_GROUND
+		elif not def.charge.is_empty() or not def.summon.is_empty():
+			k = KIND_SPECIAL
+		type_kind.append(k)
 
 
 static func make_id(generation: int, index: int) -> int:

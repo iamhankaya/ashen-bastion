@@ -19,6 +19,7 @@ var atlas: EnemyAtlas = null
 var _sim: GameSim = null
 var _buf: PackedFloat32Array = PackedFloat32Array()
 var _scale_by_type: PackedFloat32Array = PackedFloat32Array()
+var _quad_by_type: PackedVector2Array = PackedVector2Array()
 var _tint_by_type: PackedColorArray = PackedColorArray()
 var _cell_by_type: PackedInt32Array = PackedInt32Array()
 var _frames_by_type: PackedInt32Array = PackedInt32Array()
@@ -32,7 +33,7 @@ func _init() -> void:
 	mm.transform_format = MultiMesh.TRANSFORM_2D
 	mm.use_colors = true
 	mm.use_custom_data = true
-	mm.mesh = PlaceholderArt.quad_mesh(Vector2(EnemyAtlas.CELL, EnemyAtlas.CELL))
+	mm.mesh = PlaceholderArt.quad_mesh(Vector2.ONE)  # birim dörtgen; boyut örnek dönüşümünde (tür başına)
 	mm.instance_count = _cap
 	mm.visible_instance_count = 0
 	multimesh = mm
@@ -49,6 +50,7 @@ func _init() -> void:
 func bind(sim: GameSim) -> void:
 	_sim = sim
 	_scale_by_type.clear()
+	_quad_by_type.clear()
 	_tint_by_type.clear()
 	_cell_by_type.clear()
 	_frames_by_type.clear()
@@ -64,9 +66,10 @@ func bind(sim: GameSim) -> void:
 	atlas = EnemyAtlas.new().build(paths)
 	texture = atlas.texture
 	if material is ShaderMaterial:
-		(material as ShaderMaterial).set_shader_parameter(
-			"atlas_grid", Vector2(EnemyAtlas.COLS, atlas.rows)
-		)
+		var rects: Array = []
+		for i in 16:
+			rects.append(atlas.rects[i] if i < atlas.rects.size() else Vector4.ZERO)
+		(material as ShaderMaterial).set_shader_parameter("cell_rect", rects)
 		(material as ShaderMaterial).set_shader_parameter("atlas_tex", atlas.texture)
 	for type_id in sim.data.enemy_ids:
 		var def: EnemyDef = sim.data.get_enemy(type_id)
@@ -75,6 +78,7 @@ func bind(sim: GameSim) -> void:
 		var cell := 0
 		var frames := 1
 		var sprite_h := float(EnemyAtlas.CELL) * 0.5
+		var sprite_w := sprite_h
 		var elite := 0.0
 		if def != null:
 			h = maxf(def.display_height, def.radius * 2.2)
@@ -83,9 +87,15 @@ func bind(sim: GameSim) -> void:
 			var info: Dictionary = atlas.cells.get(def.sprite, {})
 			cell = int(info.get("cell", 0))
 			frames = int(info.get("frames", 1))
-			sprite_h = float((info.get("size", Vector2(sprite_h, sprite_h)) as Vector2).y)
+			var sz: Vector2 = info.get("size", Vector2(sprite_h, sprite_h))
+			sprite_w = sz.x
+			sprite_h = sz.y
 		var world_per_texel := h / maxf(sprite_h, 1.0)
 		_scale_by_type.append(world_per_texel)
+		var tight := (
+			Vector2(sprite_w, sprite_h) + Vector2(2 * EnemyAtlas.MARGIN, 2 * EnemyAtlas.MARGIN)
+		)
+		_quad_by_type.append(tight * world_per_texel)
 		_tint_by_type.append(tint)
 		_cell_by_type.append(cell)
 		_frames_by_type.append(frames)
@@ -112,13 +122,13 @@ func refresh() -> void:
 		if alive[i] != 1:
 			continue
 		var t := tidx[i]
-		var s := 1.0
+		var q := Vector2(100.0, 100.0)
 		var c := Color.WHITE
 		var cell := 0.0
 		var rim := 0.0
 		var elite := 0.0
 		if t >= 0 and t < ntypes:
-			s = _scale_by_type[t]
+			q = _quad_by_type[t]
 			c = _tint_by_type[t]
 			cell = float(_cell_by_type[t])
 			var fr := _frames_by_type[t]
@@ -127,14 +137,14 @@ func refresh() -> void:
 			rim = _rim_by_type[t]
 			elite = _elite_by_type[t]
 		var p := pos[i]
-		var sx := -s if player_x < p.x else s  # oyuncuya bak
+		var sx := -q.x if player_x < p.x else q.x  # oyuncuya bak
 		var o := n * STRIDE
 		_buf[o] = sx
 		_buf[o + 1] = 0.0
 		_buf[o + 2] = 0.0
 		_buf[o + 3] = p.x
 		_buf[o + 4] = 0.0
-		_buf[o + 5] = s
+		_buf[o + 5] = q.y
 		_buf[o + 6] = 0.0
 		_buf[o + 7] = p.y
 		_buf[o + 8] = c.r

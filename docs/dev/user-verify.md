@@ -9,17 +9,22 @@ Bulutta telefon/emülatör yoktur; aşağıdakiler yalnız cihazda doğrulanabil
    güncelleme olarak kurulur.
 3. Açılışta ana menü görünmeli (Türkçe etiketler, `İ`/`Ş`/`Ğ` doğru).
 
-## 2. Oynanış (8 dakikalık demo)
+## 2. Oynanış (tam oyun: 20 dakika)
 
 - Ekranın herhangi bir yerine dokununca joystick o noktada belirir; parmak kalkınca karakter durur.
 - Karakter iki tabancayla otomatik ateş eder; HUD'da şarjör 6 → 0, **doldurma halkası** (≈1 sn) ve `↻` görünür.
 - Düşman ölünce XP taşı düşer, yaklaşınca toplanır; seviye atlayınca oyun durur ve 3 kart çıkar (500 ms kilit).
-- 8. dakikada **KAZANDIN**, can bitince **OYUN BİTTİ** sonuç ekranı gelir; TEKRAR OYNA / ANA MENÜ çalışır.
+- 5/10/15. dakikada uyarı bandı ("ARA BOSS YAKLAŞIYOR") + uyarı sesi, ardından elit; 20. dakikada "KALE LORDU GELİYOR" ve Lord.
+  Lord'u yenmek **KAZANDIN**, can bitince **OYUN BİTTİ** sonuç ekranı gelir (süre, seviye, öldürme, kurulan kombolar).
+- Seviye atlamada 3 kart; aktif becerisi 5. seviyedeki ve eşleşen pasifi olan oyuncuya **evrim** kartı en altta çıkar.
+- TEKRAR OYNA / ANA MENÜ çalışır.
 - Duraklat, Android geri tuşu (Devam Et), uygulamayı arka plana alma (otomatik duraklat) beklenen gibi davranır.
 
 ## 3. Görünüm ve dokunma
 
-- Çentik/kamera deliği HUD'u kesmiyor (U1'de sabit 24 px güvenli kenar; tam `safe_area` U2-11).
+- Çentik/kamera deliği ve yuvarlak köşeler HUD'u kesmiyor: yan boşluk ≥36 px, ayrıca `DisplayServer.get_display_safe_area()` payı eklenir.
+- Joystick: ölü bölge ≈24 px, yarıçap 195 px (`InputGate.MAX_RADIUS` / `DEAD_ZONE_PX`; cihazda 180–210 arası denenir).
+- Düşmanlar ve oyuncu zeminden açık konturla (rim) ayrışıyor; oyuncu boyu ~200 px.
 - Dokunma hedefleri rahat, kazara dokunma yok.
 
 ## 4. Cihaz içi stres ölçümü (bize gönderin)
@@ -34,7 +39,18 @@ Bulutta telefon/emülatör yoktur; aşağıdakiler yalnız cihazda doğrulanabil
 Hedef: 60 FPS, p95 kare süresi ≤ 16,7 ms. Tutmazsa `docs/dev/perf.md` yedek merdiveni sırayla uygulanır; "300+"
 hedefinin altına inme kararı kullanıcıya aittir.
 
-## 5. Ses (U1'de yok)
+## 5. F-ashen-bastion-002 (düşman/XP taşı bir iki kare görünmez olma) karşılaştırması
 
-Ses çalma katmanı uygulama-2'dedir; U1'de ses/titreşim anahtarları yalnız saklanır. Titreşim (`Settings.vibrate`)
-cihazda denenebilir.
+Debug APK'da oyun sırasında ekranın altında (x≈300, y≈2236) iki satır belirir: `düşman N/M  taş N/M` (MultiMesh
+görünür sayısı / canlı sayı) ve `kesme düzeltmesi: AÇIK|KAPALI (dokun)`. Etikete dokunmak
+`RenderingServer.canvas_item_set_custom_rect` düzeltmesini açar/kapatır (ayar saklanır).
+1. Düzeltme AÇIKken ~2 dk oynayın, özellikle yerden XP taşı toplarken: görünmez olma oluyor mu?
+2. Etikete dokunup KAPALI yapın, aynı şekilde oynayın: sorun geri geliyor mu?
+3. Sayılar farklıysa (N ≠ M) ekran görüntüsünü paylaşın.
+
+## 6. Ses
+
+Müzik (menü, savaş-1 → 10. dk savaş-2, boss uyarısı, Kale Lordu, kazandın, kaybettin) `assets/audio/music/*.ogg`.
+Kontrol: döngü dikişi duyuluyor mu, geçişler (1,5 / 4 / 2 sn crossfade) doğal mı, boss uyarısında müzik kısılıyor mu,
+duraklatmada müzik kısılıyor mu. **SFX dosyası yok** (atış, doldurma, patlama, XP çınlaması sessiz): CC0 paket
+`assets/audio/sfx/<kimlik>.ogg` olarak konunca çalar (`LICENSES-audio.md`). Titreşim (`Settings.vibrate`) cihazda denenebilir.
