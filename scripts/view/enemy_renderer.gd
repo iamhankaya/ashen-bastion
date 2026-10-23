@@ -38,6 +38,9 @@ var last_anim_instances: int = 0
 var last_frame_selects: int = 0
 var last_shadow_instances: int = 0
 var shadows: EnemyShadowLayer = null
+## Bu karede öfkeli bir Lord var mı ve nerede (denetleyici kor aurası için; kare başına yenilenir).
+var lord_enraged_now: bool = false
+var lord_pos: Vector2 = Vector2.ZERO
 
 var _sim: GameSim = null
 var _buf: PackedFloat32Array = PackedFloat32Array()
@@ -153,6 +156,15 @@ func quad_size(t: int) -> Vector2:
 	return _quad_by_type[t] if t >= 0 and t < _quad_by_type.size() else Vector2(100.0, 100.0)
 
 
+## Tür başına atlas ilk hücre indeksi ve kontur kalınlığı (hayalet bunları paylaşır).
+func cell_of(t: int) -> int:
+	return _cell_by_type[t] if t >= 0 and t < _cell_by_type.size() else 0
+
+
+func rim_of(t: int) -> float:
+	return _rim_by_type[t] if t >= 0 and t < _rim_by_type.size() else 0.0
+
+
 ## Tür başına sprite genişliği (dünya px; paysız) — gölge genişliği buna göre.
 func sprite_world_width(t: int) -> float:
 	return _sprite_w_by_type[t] if t >= 0 and t < _sprite_w_by_type.size() else 100.0
@@ -185,6 +197,7 @@ func refresh() -> void:
 	var sel_n := 0
 	if time < _last_dust:
 		_last_dust = -10.0
+	lord_enraged_now = false
 	for i in EnemyPool.CAP:
 		if alive[i] != 1:
 			continue
@@ -284,6 +297,8 @@ func refresh() -> void:
 				if ai_aux[i] > 0.0:
 					sym *= _enrage_pulse(i, p, time)
 					c = ENRAGE_TINT
+					lord_enraged_now = true
+					lord_pos = p
 			if kind == EnemyAnim.Kind.CRAWL or kind == EnemyAnim.Kind.STOMP:
 				_elite_step(i, t, p, time, ppos, sp == EnemyAnim.Special.LORD)
 		var foot := q.y * 0.5
@@ -375,6 +390,8 @@ func apply_cull_fix() -> void:
 	RenderFix.apply(self)
 	if shadows != null:
 		shadows.apply_cull_fix()
+	if _ghosts != null:
+		_ghosts.apply_cull_fix()
 
 
 func visible_count() -> int:
