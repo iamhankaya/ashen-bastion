@@ -29,3 +29,9 @@ Varlık listesi ve hedef boyutlar `art_manifest.json`'dadır. `--preview` kontak
 ## Testler
 - `tests/test_art_units.py`: sentetik fixture (zeytin (95,105,35) korunur, saf yeşil (3,157,8) şeffaf, kenar sızıntısı, boyut/manifest, bileşen, üç poz, wrap-aware küçültme, dikiş harmanlama).
 - `tests/health/`: gerçek görseller (yeşil kalıntı, bitki-ton >=%95, harabe 20-30, karga 3 kare, zemin dikişi, hedef boyutlar, commit'li `assets/gfx/manifest.json` taze çıktıyla aynı mı). Ihlal = hata.
+
+## Uygulama ikonu (`make_icons.py`)
+`python tools/art/make_icons.py [--preview] [--verify]`: `art/ref/uygulama-ikonu-kaynak.png` (cam çerçeveli) -> çerçevesiz kırpma -> `assets/icon/{main_192x192,foreground_432x432,background_432x432,monochrome_432x432}.png` (+ `--preview`: `docs/dev/icon-preview.png`). Bağlantılar: `export_presets.cfg` `launcher_icons/*`, `project.godot` `config/icon`.
+- Katman ayrımı temiz olmadığından tam sanat `background`, `foreground` tamamen saydam. Sanat tuvalin %64'ü (ortadaki 288 px maske penceresine sığar), çevre aynı sanatın bulanık/koyu hâli.
+- `monochrome`: kaba elle çizilmiş çokgen silüet (şapkalı karakter) + ay halkası, 264 px güvenli bölgede; beyaz + alfa.
+- Testler: `tests/test_icons.py` (boyut/kanal/güvenli bölge/taze çıktı eşitliği).
