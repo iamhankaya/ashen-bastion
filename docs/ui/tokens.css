@@ -1,0 +1,14 @@
+/* Ashen Bastion UI token'ları — tokens.json ile birebir. Yalnızca maketler için; oyun Godot Theme kullanır. */
+:root{
+  --void:#0D0910; --mor-900:#171020; --mor-800:#211832; --mor-700:#2F2342; --mor-500:#4D3A6B;
+  --bordo-900:#2B0E14; --bordo-700:#5C1D26; --bordo-500:#8F2A36; --bordo-400:#B8404A;
+  --kemik-100:#EFE7D6; --kemik-300:#CFC4AE; --kemik-500:#A39883;
+  --kahve-900:#1C1411; --kahve-700:#2E211C; --kahve-500:#4A3830;
+  --bronz-700:#7A6045; --bronz-500:#A88A5C; --bronz-300:#D2B47E;
+  --amber:#E8A24A; --can:#B8404A; --can-kritik:#E0584F; --xp:#7C5CC4; --xp-parlak:#A98BEF;
+  --mermi-dolu:#D2B47E; --mermi-bos:#3A2E28; --dogru:#8DB58A;
+  --sp-xxs:6px; --sp-xs:12px; --sp-s:18px; --sp-m:27px; --sp-l:36px; --sp-xl:54px; --sp-xxl:81px;
+  --r-s:8px; --r-m:18px; --r-l:27px;
+  --touch-min:132px; --touch-comfy:156px;
+  --f-display:'Cinzel','Cinzel Fallback',Georgia,serif; --f-body:'Inter',system-ui,sans-serif;
+}
