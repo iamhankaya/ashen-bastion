@@ -59,6 +59,10 @@ var _render_label: Label = null
 var _accum: float = 0.0
 var _run_won: bool = false
 var _run_stats: Dictionary = {}
+## v1.1 D3: ekran gecikmesi (ölüm 1,3 / kazanma 1,8 / seviye ön vurgusu 0,18 sn), tek yazma bayrağı, rekor bilgisi.
+var _delay: ScreenDelay = ScreenDelay.new()
+var _run_saved: bool = false
+var _result_record: Dictionary = {}
 
 
 func _ready() -> void:
@@ -272,6 +276,8 @@ func _on_stress_finished(result: Dictionary) -> void:
 func pause_game() -> void:
 	if screen != PauseLogic.Screen.PLAYING:
 		return
+	if _v11_skip_delay():  # geri tuşu / arka plan / duraklat düğmesi gecikmeyi atlar; oyun duraklatılmaz
+		return
 	pause_screen.open(
 		sim.loadout.actives(),
 		sim.loadout.passives(),
@@ -379,6 +385,8 @@ func _update_music() -> void:
 
 func _after_step() -> void:
 	_v11_after_step()
+	if _delay.active:
+		return  # gecikme sürerken ekran geçişi geri sayımın işidir (_v11_process)
 	var next := PauseLogic.screen_after_step(screen, sim.state)
 	if next == screen:
 		return
@@ -428,12 +436,13 @@ func _show_result() -> void:
 	var stats := _run_stats
 	if stats.is_empty():
 		stats = {"time": sim.time, "level": sim.level, "kills": sim.kills, "evolutions": []}
+		stats.merge(V11State.end_stats(sim))
 		_run_won = sim.state == GameSim.State.WON
 	var combos := UiKit.combo_rows(stats.get("evolutions", []), sim.data)
 	var sub := ""
 	if _run_won:
 		sub = WON_SUB
-	result_screen.show_result(_run_won, stats, combos, sub)
+	result_screen.show_result(_run_won, stats, combos, sub, _result_record)
 	_set_screen(PauseLogic.Screen.RESULT)
 
 
@@ -459,6 +468,16 @@ func _v11_build_world() -> void:
 	enemy_renderer.lord_slammed.connect(_on_lord_slammed)
 	fx_renderer.char_layer.reparent(world)  # kömür zemin ile gölgeler arasında (normal karışım)
 	_v11_order_world()
+	highscores.load_file()
+	scores_screen = HighscoreScreen.new()
+	scores_screen.name = "Scores"
+	ui.add_child(scores_screen)
+	scores_screen.back_requested.connect(go_menu)
+	scores_screen.play_requested.connect(start_run)
+	menu.scores_requested.connect(open_scores)
+	result_screen.record_stamped.connect(_on_record_stamped)
+	get_viewport().size_changed.connect(_apply_safe_areas)
+	_apply_safe_areas()
 
 
 ## Katman sırası (plan A3): zemin → kömür → gölgeler → taşlar → eklentiler → düşmanlar → hayaletler → aktörler → mermiler → FX.
@@ -483,6 +502,21 @@ func _v11_order_world() -> void:
 		if node != null:
 			world.move_child(node, idx)
 			idx += 1
+
+
+## Yeni ekranların güvenli alanı (çentik, yuvarlak köşe); pencere boyutu değişince yenilenir.
+func _apply_safe_areas() -> void:
+	menu.apply_safe_area()
+	result_screen.apply_safe_area()
+	scores_screen.apply_safe_area()
+
+
+## Ana menüden En İyi Skorlar ekranı (vurgu yok: sonuçtan sıralamaya bağlantı v1.1 dışı).
+func open_scores() -> void:
+	if screen != PauseLogic.Screen.MENU:
+		return
+	scores_screen.show_scores(highscores.entries, -1)
+	_set_screen(PauseLogic.Screen.SCORES)
 
 
 ## `_bind` sonunda (sim null olabilir): faz başına alt işlevlere dağıtır (her D yalnız kendi gövdesini doldurur).
@@ -521,7 +555,9 @@ func _v11_bind_pickups(new_sim: GameSim) -> void:
 ## D3: skor olayları (score_changed, streak_changed).
 @warning_ignore("unused_parameter")
 func _v11_bind_score(new_sim: GameSim) -> void:
-	pass
+	_delay = ScreenDelay.new()
+	_run_saved = new_sim == null
+	_result_record = {}
 
 
 ## Her karede `_update_views` sonunda. view_dt = ekran PLAYING iken dt, değilse 0 (plan A4).
@@ -535,7 +571,7 @@ func _v11_update_player(view_dt: float) -> void:
 	var vdt := view_dt * (Motion.LORD_SLOWMO_SCALE if _lord_slow_left > 0.0 else 1.0)
 	_lord_slow_left = maxf(0.0, _lord_slow_left - view_dt)
 	ghosts.update_ghosts(vdt)
-	_tick_lord_blasts(vdt)
+	_tick_lord_blasts(view_dt)  # gerçek süre: 900 ms içinde 3 patlama, yavaş çekimden bağımsız
 	if enemy_renderer.lord_enraged_now and vdt > 0.0:
 		_lord_ember_acc += vdt * LORD_EMBER_RATE
 		while _lord_ember_acc >= 1.0:
@@ -564,9 +600,9 @@ func _v11_update_pickups(view_dt: float) -> void:
 
 
 ## `_process` başında (stres koşusu dışında), her karede. D3: ScreenDelay.tick geri sayımı.
-@warning_ignore("unused_parameter")
 func _v11_process(delta: float) -> void:
-	pass
+	if _delay.tick(delta):
+		_fire_delay(_delay.target)
 
 
 ## true = bu karede vuruş donması: sim adımlanmaz ve `_accum` artmaz. D1-3: HitStop.tick(delta).
@@ -578,19 +614,70 @@ func _v11_hit_stop(delta: float) -> bool:
 
 ## `_after_step` başında (ekran geçişinden önce). D3: gecikme başlatma, seviye ön vurgusu.
 func _v11_after_step() -> void:
-	pass
+	if sim != null and sim.state == GameSim.State.LEVEL_UP and screen == PauseLogic.Screen.PLAYING:
+		_delay.start(PauseLogic.Screen.LEVEL_UP, PauseLogic.LEVEL_UP_PREROLL)
+
+
+## Aktif gecikmeyi hemen tetikler (dokunma, geri tuşu, arka plan). Tetiklediyse true.
+func _v11_skip_delay() -> bool:
+	var target := _delay.target
+	if _delay.skip():
+		_fire_delay(target)
+		return true
+	return false
+
+
+## Gecikme bitti: hedef ekrana geç (seviye atlama kartları ya da sonuç ekranı); tek kez çağrılır.
+func _fire_delay(target: int) -> void:
+	if sim == null:
+		return
+	if target == PauseLogic.Screen.LEVEL_UP and sim.state == GameSim.State.LEVEL_UP:
+		_show_level_up()
+	elif target == PauseLogic.Screen.RESULT and screen == PauseLogic.Screen.PLAYING:
+		_show_result()
+
+
+## Testler ve araçlar için: bekleyen gecikmeyi süresini beklemeden bitirir.
+func flush_delay() -> void:
+	_v11_skip_delay()
 
 
 ## `run_ended` işleyicisinde (sonuç ekranından önce). D3: skor kaydı (tek yazma), gecikme başlatma.
-@warning_ignore("unused_parameter")
 func _v11_on_run_ended(won: bool, stats: Dictionary) -> void:
-	pass
+	if _stress != null:
+		return  # debug stres koşusu skor listesine yazmaz
+	_save_score(won, stats)
+	_delay.start(PauseLogic.Screen.RESULT, PauseLogic.result_delay(won))
+
+
+## Skoru yerel listeye yazar: koşu başına tek kez (`_run_saved`), sonuç ekranından önce (çökme riski).
+func _save_score(won: bool, stats: Dictionary) -> void:
+	if _run_saved:
+		return
+	_run_saved = true
+	_result_record = (
+		highscores
+		. submit(
+			{
+				"score": int(stats.get("score", 0)),
+				"time": floori(float(stats.get("time", 0.0))),
+				"won": won,
+				"level": int(stats.get("level", 1)),
+				"unix": int(Time.get_unix_time_from_system()),
+			}
+		)
+	)
+	if int(_result_record.get("rank", 0)) > 0:
+		highscores.save()
+
+
+func _on_record_stamped() -> void:
+	_settings().vibrate(40)
 
 
 ## `_set_screen` sonunda (next = PauseLogic.Screen). D3: SCORES ekranı, sonuç ekranı gecikmesi.
-@warning_ignore("unused_parameter")
 func _v11_on_screen(next: int) -> void:
-	pass
+	scores_screen.visible = next == PauseLogic.Screen.SCORES
 
 
 # --- D1: oyuncu/Lord görünüm olayları ---------------------------------------------------------
@@ -657,6 +744,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if screen != PauseLogic.Screen.PLAYING:
 		return
 	if event is InputEventScreenTouch:
+		if event.pressed and _v11_skip_delay():
+			return
 		gate.touch(event.index, event.pressed, event.position)
 	elif event is InputEventScreenDrag:
 		gate.drag(event.index, event.position)

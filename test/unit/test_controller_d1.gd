@@ -62,8 +62,8 @@ func test_lord_death_schedules_three_blasts_within_900ms() -> void:
 	gc.sim.bus.enemy_killed.emit(&"kale_lordu", Vector2(0, 0))
 	assert_eq(gc._lord_blast_t.size(), 3)
 	var head0 := gc.fx_renderer._ex_head
-	for i in 150:
-		gc._v11_update_player(DT * 2.5)  # yavaş çekim ×0,4 → 1 kare = 1/60 sn görünüm
+	for i in 60:
+		gc._v11_update_player(DT)
 	assert_eq(gc._lord_blast_t.size(), 0)
 	assert_eq(gc.fx_renderer._ex_head, head0 + 3, "3 patlama eklendi")
 	var other := _ctrl()
@@ -163,3 +163,43 @@ func test_paused_game_freezes_player_fx_and_ghosts_but_not_the_camera_follow() -
 	for i in 20:
 		gc._update_views(DT)
 	assert_eq(gc.player_view.anim.knock_px, knock, "duraklatmada oyuncu animasyonu donuk")
+
+
+func test_death_sequence_plays_inside_the_result_delay() -> void:
+	var gc := _ctrl()
+	gc.start_run()
+	gc.sim.bus.player_damaged.emit(5.0, 5.0)
+	gc.sim.hp = 0.0
+	for i in 4:
+		gc._process(DT)
+	assert_eq(gc.sim.state, GameSim.State.LOST)
+	assert_eq(gc.screen, PauseLogic.Screen.PLAYING, "gecikme sürerken ekran PLAYING kalır")
+	assert_eq(gc.player_view.anim.mode, PlayerAnim.Mode.DEAD)
+	var t := 0.0
+	while gc.screen == PauseLogic.Screen.PLAYING and t < 3.0:
+		gc._process(DT)
+		t += DT
+	assert_between(t, 1.0, 1.4, "sonuç ~1,3 sn sonra")
+	assert_gt(
+		absf(gc.player_view.rig_node.rotation),
+		deg_to_rad(60.0),
+		"ölüm devrilmesi gecikme içinde oynadı"
+	)
+	assert_eq(gc.screen, PauseLogic.Screen.RESULT)
+
+
+func test_lord_death_slowmo_and_blasts_run_inside_the_win_delay() -> void:
+	var gc := _ctrl()
+	gc.start_run()
+	var head0 := gc.fx_renderer._ex_head
+	gc.sim.bus.enemy_killed.emit(&"kale_lordu", gc.sim.player_pos + Vector2(200, 0))
+	gc.sim.bus.run_ended.emit(true, {"time": 1200.0, "level": 5, "kills": 10, "evolutions": []})
+	assert_true(gc._delay.active)
+	assert_eq(gc.screen, PauseLogic.Screen.PLAYING)
+	var t := 0.0
+	while gc._lord_slow_left > 0.0 and t < 3.0:
+		gc._process(DT)
+		t += DT
+	assert_between(t, 1.1, 1.4, "yavaş çekim 1,2 sn gerçek süre, gecikmeden önce biter")
+	assert_eq(gc.fx_renderer._ex_head, head0 + 3, "3 patlama gecikme içinde patladı")
+	assert_eq(gc.screen, PauseLogic.Screen.PLAYING, "kazanma gecikmesi 1,8 sn: hâlâ PLAYING")
