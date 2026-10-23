@@ -23,6 +23,16 @@ const EVOLUTION := &"evolution"  # evo_id
 const BOSS_WARNING := &"boss_warning"  # kind
 const BOSS_SPAWN := &"boss_spawn"  # enemy_type
 const RUN_END := &"run_end"  # won
+# v1.1 (eklentiler ve skor)
+const PICKUP_SPAWN := &"pickup_spawn"  # kind_id, pos
+const PICKUP_COLLECT := &"pickup_collect"  # kind_id, pos
+const PICKUP_EXPIRE := &"pickup_expire"  # kind_id
+const BUFF_START := &"buff_start"  # kind, duration, refreshed
+const BUFF_END := &"buff_end"  # kind
+const BOMB_PLANT := &"bomb_plant"  # pos, radius, fuse
+const BOMB_EXPLODE := &"bomb_explode"  # pos, radius, hits
+const SCORE := &"score"  # gain, total, mult, source (kill|evolution|lord)
+const STREAK_RESET := &"streak_reset"  # reason (window|damage)
 
 const ALL: Array[StringName] = [
 	SHOT,
@@ -44,6 +54,15 @@ const ALL: Array[StringName] = [
 	BOSS_WARNING,
 	BOSS_SPAWN,
 	RUN_END,
+	PICKUP_SPAWN,
+	PICKUP_COLLECT,
+	PICKUP_EXPIRE,
+	BUFF_START,
+	BUFF_END,
+	BOMB_PLANT,
+	BOMB_EXPLODE,
+	SCORE,
+	STREAK_RESET,
 ]
 
 

@@ -17,6 +17,8 @@ var reload_total: float = 0.0
 var base_reload: float = 1.0
 ## kiyamet_mermisi: doldurma döngüsü başına bir geri yazma; reload_finished'te false olur.
 var refund_used: bool = false
+## Sınırsız şarjör (Sonsuz Tambur): sayaç düşmez, doldurma yok, ritim döngüsü sürer. Gövde D2-1'de (consume/tick/refund).
+var unlimited: bool = false
 
 
 func can_fire() -> bool:
@@ -81,3 +83,10 @@ func set_cap(new_cap: int) -> void:
 
 func reset_cycle_flags() -> void:
 	refund_used = false
+
+
+## Sınırsız modu açar/kapatır. Açılışta doldurma iptal edilir (count = cap, reload_finished yayınlanır);
+## kapanışta count = cap, doldurma tetiklenmez.
+@warning_ignore("unused_parameter")
+func set_unlimited(on: bool) -> void:
+	Stub.todo(&"Magazine.set_unlimited")

@@ -65,14 +65,26 @@ VALID = {
         "desc": ["Her 2. kurşun seker, her sekmede patlar."],
         "requires": {"active": "seken_mermi", "active_level": 5, "passive": "barut_kesesi", "passive_min_level": 1},
     },
-    "enemies/curumus_piyade.json": enemy("curumus_piyade", "Çürümüş Piyade", 30, 95, 6, 26, 0, 1, "ground", "piyade", 192),
-    "enemies/les_kargasi.json": enemy("les_kargasi", "Leş Kargası", 12, 210, 4, 18, 0, 1, "air", "karga", 192),
+    "enemies/curumus_piyade.json": enemy(
+        "curumus_piyade", "Çürümüş Piyade", 30, 95, 6, 26, 0, 1, "ground", "piyade", 192,
+        anim={"kind": "crawl", "hz": 1.1, "bob": 5, "rot": 5, "sq": 0.05, "lean": 4, "hover": 0, "knock": 10,
+              "hit_sq": 0.12, "hit_rot": 0, "cycle": 72, "death": "collapse", "death_ms": 420, "alpha": [1, 1]}),
+    "enemies/les_kargasi.json": enemy(
+        "les_kargasi", "Leş Kargası", 12, 210, 4, 18, 0, 1, "air", "karga", 192,
+        anim={"kind": "flap", "hz": 3.0, "bob": 7, "rot": 12, "hover": 36, "death": "fall", "death_ms": 420}),
     "enemies/elit_piyade.json": enemy(
         "elit_piyade", "Elit Piyade", 1800, 110, 14, 60, 2, 80, "elite", "piyade", 422, "#8a2a3a", scales=False),
     "enemies/kale_lordu.json": enemy(
         "kale_lordu", "Düşmüş Kale Lordu", 45000, 80, 40, 72, 6, 500, "lord", "kale_lordu", 384, scales=False,
         summon={"type": "curumus_piyade", "every": 8, "count": 12,
-                "enrage_hp_frac": 0.5, "enrage_speed_mult": 1.4, "enrage_every": 5}),
+                "enrage_hp_frac": 0.5, "enrage_speed_mult": 1.4, "enrage_every": 5},
+        anim={"kind": "stomp", "hz": 0.55, "bob": 6, "rot": 2.5, "death": "lord", "death_ms": 900}),
+    "pickups.json": json.load(open(Path(__file__).resolve().parents[2] / "data/pickups.json")),
+    "score.json": {
+        "kill_points": {"curumus_piyade": 10, "les_kargasi": 8, "elit_piyade": 400, "kale_lordu": 10000},
+        "streak": {"window": 3.0, "tiers": [[0, 1], [10, 2], [25, 3], [50, 4], [100, 5]]},
+        "evolution_bonus": 2000, "survival_per_sec": 5, "lord_bonus": 25000, "display_cap": 99999999,
+    },
     "waves.json": {
         "end_time": 1200,
         "rows": [
@@ -137,6 +149,8 @@ BAD = {
     "wave_enemy_ai": {"waves.json": mut("waves.json", row(3, type="curumus_piyade"))},
     "wave_unknown_key": {"waves.json": mut("waves.json", lambda w: w.update(extra=1))},
     "unknown_key": {"enemies/les_kargasi.json": mut("enemies/les_kargasi.json", lambda d: d.update(sped=1))},
+    "pickup_weight": {"pickups.json": mut("pickups.json", lambda d: [k.update(weight=0) for k in d["kinds"]])},
+    "score_tiers": {"score.json": mut("score.json", lambda d: d["streak"].update(tiers=[[0, 1], [10, 3], [25, 2]]))},
     "no_character": {"characters/gunslinger.json.deleted": ""},
     "rhythm_count": {
         "skills/seken_mermi.json": mut("skills/seken_mermi.json", lambda d: d.update(tags=[])),

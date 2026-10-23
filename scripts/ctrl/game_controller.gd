@@ -34,6 +34,12 @@ var level_up: LevelUpScreen
 var pause_screen: PauseScreen
 var result_screen: ResultScreen
 var menu: MainMenu
+## v1.1 (iskelet): ilgili D fazları `_v11_*` işlevlerinde kurar/doldurur; o zamana dek v1 davranışı değişmez.
+var highscores: Highscores = Highscores.new()
+var scores_screen: HighscoreScreen
+var pickup_renderer: PickupRenderer
+var enemy_shadows: EnemyShadowLayer
+var ghosts: AshGhostRenderer
 
 var audio: AudioDirector
 var _stress: StressRun = null
@@ -48,6 +54,7 @@ func _ready() -> void:
 	get_tree().quit_on_go_back = false  # geri tuşunu kendimiz yönetiriz
 	_build_world()
 	_build_ui()
+	_v11_build_world()  # world ve ui kuruldu
 	audio = AudioDirector.new()
 	audio.name = "Audio"
 	add_child(audio)
@@ -289,6 +296,7 @@ func _set_screen(next: int) -> void:
 	level_up.visible = next == PauseLogic.Screen.LEVEL_UP
 	pause_screen.visible = next == PauseLogic.Screen.PAUSED
 	result_screen.visible = next == PauseLogic.Screen.RESULT
+	_v11_on_screen(next)
 
 
 func _bind(new_sim: GameSim) -> void:
@@ -312,6 +320,7 @@ func _bind(new_sim: GameSim) -> void:
 		audio.bind(sim.bus)
 		sim.bus.run_ended.connect(_on_run_ended)
 		sim.bus.player_damaged.connect(_on_player_damaged)
+	_v11_bind(sim)
 
 
 # --- kare döngüsü ---------------------------------------------------------------------------
@@ -375,6 +384,7 @@ func _update_views(dt: float) -> void:
 	fx_renderer.update_fx(dt)
 	atmosphere.follow(camera.position, camera.view_size())
 	hud.refresh(dt)
+	_v11_update_views(dt if screen == PauseLogic.Screen.PLAYING else 0.0)
 	if _render_label != null and _render_label.visible:
 		_render_label.text = render_debug_text()
 
@@ -408,6 +418,42 @@ func _show_result() -> void:
 		sub = WON_SUB
 	result_screen.show_result(_run_won, stats, combos, sub)
 	_set_screen(PauseLogic.Screen.RESULT)
+
+
+# --- v1.1 bağlama noktaları (S3 sözleşmesi) -------------------------------------------------
+# Çağrı satırları S3'te bir kez yerleştirildi; her D fazı YALNIZ kendi bölgesinin gövdesini doldurur, başka işlevi
+# yeniden yazmaz (docs/plan/v1.1-plan.md "Paylaşılan dosyalar"). Gövdeler boş: v1 davranışı aynen korunur.
+
+
+## Açılışta bir kez, `world` ve `ui` kurulduktan sonra: yeni görünümleri ve ekranı kurar.
+## D1: enemy_shadows, ghosts (+ oyuncu rig kurulumu). D2: pickup_renderer. D3: scores_screen, highscores.load_file.
+func _v11_build_world() -> void:
+	pass
+
+
+## `_bind` sonunda (sim null olabilir): sinyal bağlama/çözme. D1: oyuncu olayları. D2: eklenti olayları ve FX.
+@warning_ignore("unused_parameter")
+func _v11_bind(new_sim: GameSim) -> void:
+	pass
+
+
+## Her karede `_update_views` sonunda. view_dt = ekran PLAYING iken dt, değilse 0 (plan A4).
+## D1: oyuncu/FX/hayalet güncellemesi, vuruş donması, Lord yavaş çekimi. D2: pickup_renderer.refresh.
+@warning_ignore("unused_parameter")
+func _v11_update_views(view_dt: float) -> void:
+	pass
+
+
+## `run_ended` işleyicisinde (sonuç ekranından önce). D3: skor kaydı (tek yazma), gecikme başlatma.
+@warning_ignore("unused_parameter")
+func _v11_on_run_ended(won: bool, stats: Dictionary) -> void:
+	pass
+
+
+## `_set_screen` sonunda (next = PauseLogic.Screen). D3: SCORES ekranı, sonuç ekranı gecikmesi.
+@warning_ignore("unused_parameter")
+func _v11_on_screen(next: int) -> void:
+	pass
 
 
 # --- girdi ve sistem bildirimleri -----------------------------------------------------------
@@ -469,6 +515,7 @@ func _events():
 func _on_run_ended(won: bool, stats: Dictionary) -> void:
 	_run_won = won
 	_run_stats = stats
+	_v11_on_run_ended(won, stats)
 
 
 func _on_player_damaged(_amount: float, _hp: float) -> void:

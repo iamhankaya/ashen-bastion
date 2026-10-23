@@ -5,6 +5,7 @@ extends Control
 ## Sürüm etiketine 3 dokunuş: yalnız debug derlemede `debug_stress_requested` (stres koşusu, U1-10).
 
 signal play_requested
+signal scores_requested
 signal sound_toggled(on: bool)
 signal vibration_toggled(on: bool)
 signal debug_stress_requested
@@ -17,6 +18,8 @@ const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
 
 var play_button: Button
+## v1.1: EN İYİ SKORLAR düğmesi (D3-5 kurar; iskelette null).
+var scores_button: Button
 var sound_button: Button
 var vibration_button: Button
 var version_label: Label
@@ -162,6 +165,12 @@ func _build() -> void:
 	col.add_child(version_label)
 	add_child(col)
 	set_settings(_sound_on, _vibration_on)
+
+
+## Güvenli alan payı: Vector4(sol, üst, sağ, alt); null = UiKit.current_safe_extra. Gövde D3-5'te.
+@warning_ignore("unused_parameter")
+func apply_safe_area(extra: Variant = null) -> void:
+	Stub.todo(&"MainMenu.apply_safe_area")
 
 
 func set_settings(sound: bool, vib: bool) -> void:

@@ -118,8 +118,13 @@ func _build() -> void:
 
 
 ## Sonucu göster. combos: UiKit.combo_rows() çıktısı. subtitle boşsa varsayılan.
+@warning_ignore("unused_parameter")
 func show_result(
-	p_won: bool, p_stats: Dictionary, combos: Array[Dictionary] = [], subtitle: String = ""
+	p_won: bool,
+	p_stats: Dictionary,
+	combos: Array[Dictionary] = [],
+	subtitle: String = "",
+	record: Dictionary = {}
 ) -> void:
 	won = p_won
 	stats = p_stats
@@ -141,6 +146,18 @@ func show_result(
 	_t = 0.0
 	_apply(0.0)
 	visible = true
+
+
+## İçeriğin alt kenarı (test için). Gövde D3-4'te.
+func content_bottom() -> float:
+	Stub.todo(&"ResultScreen.content_bottom")
+	return 0.0
+
+
+## Güvenli alan payı: Vector4(sol, üst, sağ, alt); null = UiKit.current_safe_extra. Gövde D3-4'te.
+@warning_ignore("unused_parameter")
+func apply_safe_area(extra: Variant = null) -> void:
+	Stub.todo(&"ResultScreen.apply_safe_area")
 
 
 ## Animasyonu bitir (dokunma ile atlama).

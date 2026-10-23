@@ -43,6 +43,11 @@ func tick(dt: float) -> void:
 
 
 ## Ekran okuyucu/test için metin: "Şarjör 4 / 6" ya da "Şarjör dolduruluyor".
+@warning_ignore("unused_parameter")
+func set_unlimited(on: bool) -> void:
+	Stub.todo(&"MagazineDrum.set_unlimited")
+
+
 func describe() -> String:
 	return "Şarjör dolduruluyor" if reloading else "Şarjör %d / %d" % [count, cap]
 

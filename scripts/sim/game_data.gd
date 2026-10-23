@@ -76,6 +76,7 @@ const RIG_KEYS: PackedStringArray = [
 	"muzzle",
 	"arm_scale",
 	"sway",
+	"walk",
 ]
 const SWAY_KEYS: PackedStringArray = ["hem_from_y", "scarf_rect", "amp", "lag"]
 const SKILL_KEYS: PackedStringArray = [
@@ -107,6 +108,7 @@ const ENEMY_KEYS: PackedStringArray = [
 	"tint",
 	"charge",
 	"summon",
+	"anim",
 ]
 const CHARGE_KEYS: PackedStringArray = ["every", "duration", "speed"]
 const SUMMON_KEYS: PackedStringArray = [
@@ -175,6 +177,8 @@ const ERROR_CODES: PackedStringArray = [
 	"no_character",
 	"rhythm_count",
 	"unknown_key",
+	"pickup_weight",
+	"score_tiers",
 ]
 
 var root_dir: String = ""
@@ -186,6 +190,9 @@ var enemy_ids: Array[StringName] = []
 var waves: Dictionary = {}
 ## data/ruins.json (isteğe bağlı): harabe tanımları [{id, sprite, display_scale, foot, footprint{w,h}, weight, solid}].
 var ruins: Array[Dictionary] = []
+var pickup_cfg: Dictionary = {}  # v1.1 pickups.json ham sözlüğü {spawn, kinds}; dosya yoksa {}
+var pickup_ids: Array[StringName] = []  # `kinds` DİZİ sırasında (PickupPool.kind_idx bu sıra)
+var score_table: ScoreTable = ScoreTable.new()  # v1.1 score.json; dosya yoksa varsayılan tablo
 
 var _characters: Dictionary = {}  # StringName -> CharacterDef
 var _skills: Dictionary = {}  # StringName -> SkillDef
@@ -198,6 +205,8 @@ var _raw_waves: Variant = null
 var _waves_failed: bool = false
 var _raw_ruins: Variant = null
 var _ruins_failed: bool = false
+var _pickups: Dictionary = {}  # StringName -> PickupDef
+var _v11: Dictionary = {}  # DataV11 ham durumu (pickups/score + yükleme başarısızlık bayrakları)
 
 static var _default: GameData = null
 
@@ -233,6 +242,10 @@ func get_enemy(id: StringName) -> EnemyDef:
 	return _enemies.get(id)
 
 
+func get_pickup(id: StringName) -> PickupDef:
+	return _pickups.get(id)
+
+
 func skills_of_kind(kind: StringName) -> Array[SkillDef]:
 	var out: Array[SkillDef] = []
 	for id in skill_ids:
@@ -251,7 +264,8 @@ func validate(registry: Dictionary = {}, complete: bool = false) -> PackedString
 	_validate_skills(out, reg)
 	_validate_enemies(out)
 	_validate_characters(out)
-	_validate_waves(out)
+	WavesValidator.run(self, out)
+	DataV11.validate(self, out)
 	if not _ruins_failed and _raw_ruins != null:
 		RuinsValidator.run(self, _raw_ruins, out)
 	if complete:
@@ -284,6 +298,7 @@ func _load_all() -> void:
 			for x in _raw_ruins:
 				if x is Dictionary:
 					ruins.append(x)
+	DataV11.load_tables(self)
 	for e in _raw_characters:
 		var d: Variant = e["data"]
 		if d is Dictionary and _valid_id(d.get("id")) and not _characters.has(StringName(d["id"])):
@@ -759,6 +774,7 @@ func _validate_enemy(out: PackedStringArray, file: String, d: Dictionary) -> voi
 			_num(out, file + " charge", d["charge"], "speed", 1, 5000)
 		else:
 			_err(out, "bad_type", file, "'charge' nesne olmalı")
+	DataV11.validate_enemy(self, out, file, d)
 	if d.has("summon"):
 		if d["summon"] is Dictionary:
 			var sm: Dictionary = d["summon"]
@@ -838,6 +854,7 @@ func _validate_rig(out: PackedStringArray, ctx: String, r: Dictionary) -> void:
 	else:
 		for i in 2:
 			_pair(out, ctx, {"shoulders": r["shoulders"][i]}, "shoulders", 0, 1)
+	DataV11.validate_walk(self, out, ctx, r)
 	if not r.has("sway"):
 		_err(out, "missing_field", ctx, "'sway' yok")
 	elif not (r["sway"] is Dictionary):
@@ -862,129 +879,11 @@ func _validate_rig(out: PackedStringArray, ctx: String, r: Dictionary) -> void:
 				_err(out, "out_of_range", ctx + " sway", "'scarf_rect' x0<x1 ve y0<y1 olmalı")
 
 
-# --- dalgalar ------------------------------------------------------------------------------
-
-
-func _validate_waves(out: PackedStringArray) -> void:
-	if (
-		_waves_failed
-		or (_raw_waves == null and not FileAccess.file_exists(root_dir.path_join("waves.json")))
-	):
-		return  # missing_file / bad_json zaten bildirildi
-	if not (_raw_waves is Dictionary):
-		_err(out, "not_object", "waves.json", "kök nesne olmalı")
-		return
-	var w: Dictionary = _raw_waves
-	for k in w.keys():
-		if not ["rows", "after_lord", "end_time"].has(k):
-			_err(out, "wave_unknown_key", "waves.json", "bilinmeyen anahtar '%s'" % k)
-	var end_time := DEFAULT_END_TIME
-	if w.has("end_time"):
-		if _num(out, "waves.json", w, "end_time", 60, 7200):
-			end_time = float(w["end_time"])
-	if not w.has("rows"):
-		_err(out, "missing_field", "waves.json", "'rows' yok")
-	elif not (w["rows"] is Array):
-		_err(out, "bad_type", "waves.json", "'rows' dizi olmalı")
-	else:
-		for i in (w["rows"] as Array).size():
-			_validate_wave_row(out, "waves.json rows[%d]" % i, w["rows"][i], end_time)
-	if w.has("after_lord"):
-		if not (w["after_lord"] is Dictionary):
-			_err(out, "bad_type", "waves.json", "'after_lord' nesne olmalı")
-		else:
-			var al: Dictionary = w["after_lord"]
-			for k in al.keys():
-				if not ["piyade_rate_mult", "karga_stop"].has(k):
-					_err(
-						out,
-						"wave_unknown_key",
-						"waves.json after_lord",
-						"bilinmeyen anahtar '%s'" % k
-					)
-			_num(out, "waves.json after_lord", al, "piyade_rate_mult", 0, 1)
-			if not al.has("karga_stop") or not (al["karga_stop"] is bool):
-				_err(out, "bad_type", "waves.json after_lord", "'karga_stop' bool olmalı")
-
-
-func _validate_wave_row(out: PackedStringArray, ctx: String, row: Variant, end_time: float) -> void:
-	if not (row is Dictionary):
-		_err(out, "not_object", ctx, "satır nesne olmalı")
-		return
-	var r: Dictionary = row
-	if not r.has("kind") or not (r["kind"] is String) or not WAVE_KINDS.has(r["kind"]):
-		_err(out, "wave_kind", ctx, "'kind' rate|group|burst|boss olmalı")
-		return
-	var kind: String = r["kind"]
-	var allowed: Array = ["kind", "type"]
-	var type_ok := _str(out, ctx, r, "type")
-	var etype: EnemyDef = _enemies.get(StringName(r["type"])) if type_ok else null
-	if type_ok and etype == null:
-		_err(out, "unknown_enemy", ctx, "tür '%s' yok" % r["type"])
-	match kind:
-		"rate", "group":
-			allowed.append_array(["from", "to", kind, "every"])
-			var f_ok := _num(out, ctx, r, "from", 0, end_time)
-			var t_ok := _num(out, ctx, r, "to", 0, end_time)
-			if f_ok and t_ok and float(r["from"]) >= float(r["to"]):
-				_err(out, "wave_range", ctx, "'from' < 'to' olmalı")
-			if kind == "rate":
-				if (
-					_pair(out, ctx, r, "rate", 0, 1000)
-					and float(r["rate"][0]) > float(r["rate"][1])
-				):
-					_err(out, "wave_range", ctx, "'rate' [a,b] için a <= b olmalı")
-			else:
-				if (
-					_pair(out, ctx, r, "group", 1, 400)
-					and float(r["group"][0]) > float(r["group"][1])
-				):
-					_err(out, "wave_range", ctx, "'group' [a,b] için a <= b olmalı")
-				_pair(out, ctx, r, "every", 0.1, 600)
-			if etype != null and not SPAWNABLE_AI.has(String(etype.ai)):
-				_err(
-					out,
-					"wave_enemy_ai",
-					ctx,
-					"'%s' (ai %s) rate/group ile doğmaz" % [etype.id, etype.ai]
-				)
-		"burst":
-			allowed.append_array(["at", "count", "ring"])
-			_num(out, ctx, r, "at", 0, end_time)
-			_num(out, ctx, r, "count", 1, MAX_BURST_COUNT, true)
-			if not r.has("ring") or not (r["ring"] is bool):
-				_err(out, "bad_type", ctx, "'ring' bool olmalı")
-			if etype != null and not SPAWNABLE_AI.has(String(etype.ai)):
-				_err(
-					out,
-					"wave_enemy_ai",
-					ctx,
-					"'%s' (ai %s) burst ile doğmaz" % [etype.id, etype.ai]
-				)
-		"boss":
-			allowed.append_array(["at", "warn"])
-			var warn := 5.0
-			if r.has("warn") and _num(out, ctx, r, "warn", 0, 30):
-				warn = float(r["warn"])
-			if _num(out, ctx, r, "at", 0, end_time):
-				var at := float(r["at"])
-				if at < warn:
-					_err(out, "wave_boss_time", ctx, "'at' >= 'warn' olmalı")
-				if etype != null and etype.ai == &"lord" and not is_equal_approx(at, end_time):
-					_err(out, "wave_boss_time", ctx, "lord 'at' = end_time (%s) olmalı" % end_time)
-				if etype != null and etype.ai == &"elite" and at >= end_time:
-					_err(out, "wave_boss_time", ctx, "elit 'at' < end_time olmalı")
-			if etype != null and etype.ai != &"elite" and etype.ai != &"lord":
-				_err(out, "wave_enemy_ai", ctx, "boss türü elite|lord olmalı")
-	for k in r.keys():
-		if not allowed.has(k):
-			_err(out, "wave_unknown_key", ctx, "bilinmeyen anahtar '%s'" % k)
-
-
 # --- içerik tamamlandı ---------------------------------------------------------------------
 
 
 func _validate_complete(out: PackedStringArray) -> void:
+	DataV11.validate_complete(self, out)
 	var n := 0
 	for s in skills_of_kind(SkillDef.KIND_ACTIVE):
 		if s.tags.has(RHYTHM_TAG):

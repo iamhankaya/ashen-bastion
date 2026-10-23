@@ -19,3 +19,14 @@ signal boss_warning(kind: StringName)  # olaydan 5 sn önce; UI bandı 2,4 sn (s
 signal boss_spawned(type_id: StringName)
 signal explosion(pos: Vector2, radius: float)
 signal run_ended(won: bool, stats: Dictionary)
+
+# --- v1.1 (eklentiler ve skor) ---
+signal pickup_spawned(kind_id: StringName, pos: Vector2)
+signal pickup_collected(kind_id: StringName, pos: Vector2)
+signal pickup_expired(kind_id: StringName)
+signal buff_started(kind: StringName, duration: float)  # kind: &"damage"|&"fire_rate"|&"unlimited"; yenilemede de yayınlanır
+signal buff_ended(kind: StringName)
+signal bomb_planted(pos: Vector2, radius: float, fuse: float)
+signal bomb_exploded(pos: Vector2, radius: float)
+signal score_changed(score: int, mult: int, gain: int)
+signal streak_changed(mult: int, left: float)

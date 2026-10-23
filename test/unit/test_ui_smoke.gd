@@ -172,3 +172,94 @@ func test_game_controller_screen_flow() -> void:
 	c.go_menu()
 	assert_eq(c.screen, PauseLogic.Screen.MENU)
 	assert_null(c.sim)
+
+
+# --- v1.1 iskeleti: HUD öğeleri gizli, denetleyici çağrı satırları yerinde ---------------------------
+
+
+class SpyController:
+	extends GameController
+	var calls: Array = []
+
+	func _v11_build_world() -> void:
+		calls.append(["build_world"])
+
+	func _v11_bind(new_sim: GameSim) -> void:
+		calls.append(["bind", new_sim])
+
+	func _v11_update_views(view_dt: float) -> void:
+		calls.append(["update_views", view_dt])
+
+	func _v11_on_run_ended(won: bool, stats: Dictionary) -> void:
+		calls.append(["run_ended", won, stats])
+
+	func _v11_on_screen(next: int) -> void:
+		calls.append(["screen", next])
+
+
+func test_hud_v11_elements_exist_hidden_and_sit_in_the_safe_layer() -> void:
+	var h := Hud.new()
+	add_child_autofree(h)
+	for c in [h.score_block, h.buff_row, h.offscreen_arrow, h.float_text]:
+		assert_not_null(c)
+		assert_false(c.visible, "%s gizli doğar (v1 HUD davranışı aynen)" % c.name)
+		assert_true(h.safe.is_ancestor_of(c), "%s güvenli katman içinde" % c.name)
+		assert_eq(c.mouse_filter, Control.MOUSE_FILTER_IGNORE)
+	# DESIGN §3.2 / §2.4: skor sütunu sağ 36, üst 284; rozet satırı sol alt, alt 72.
+	assert_eq(h.score_block.anchor_left, 1.0)
+	assert_eq(h.score_block.offset_right, -36.0)
+	assert_eq(h.score_block.offset_top, 284.0)
+	assert_eq(h.buff_row.anchor_top, 1.0)
+	assert_eq(h.buff_row.offset_bottom, -72.0)
+	assert_eq(h.buff_row.offset_bottom - h.buff_row.offset_top, 108.0)
+	assert_eq(h.buff_row.offset_left, 0.0)
+	assert_eq(h.buff_row.offset_right, 231.0 + 3 * 120.0 - 12.0)
+	h.apply_safe_area(Vector4(40, 20, 10, 5))
+	assert_true(h.safe.is_ancestor_of(h.score_block), "çentik payı yeni öğelere de uygulanır")
+
+
+func test_hud_bind_and_refresh_with_v11_elements_leave_no_stub_calls() -> void:
+	var h := Hud.new()
+	add_child_autofree(h)
+	var sim := _sim()
+	h.bind(sim)
+	for i in 3:
+		h.refresh(0.016)
+	h.bind(null)
+	assert_eq(Stub.calls().size(), 0, "gizli öğeler iskelete düşmez: %s" % [Stub.calls()])
+
+
+func test_controller_v11_call_lines_are_placed_once() -> void:
+	var c := SpyController.new()
+	c.process_mode = Node.PROCESS_MODE_DISABLED
+	add_child_autofree(c)
+	assert_eq(c.calls[0], ["build_world"], "açılışta bir kez, world ve ui kurulduktan sonra")
+	assert_eq(c.calls.count(["build_world"]), 1)
+	assert_true(c.calls.has(["bind", null]), "go_menu -> _bind(null)")
+	assert_true(c.calls.has(["screen", PauseLogic.Screen.MENU]))
+	assert_not_null(c.highscores)
+	c.calls.clear()
+	c.start_run()
+	assert_eq(c.calls[0], ["bind", c.sim], "_bind sonunda, sim ile")
+	assert_true(
+		c.calls.has(["update_views", 0.0]),
+		"start_run ilk güncelleme: ekran henüz PLAYING değil -> view_dt 0"
+	)
+	assert_eq(c.calls[c.calls.size() - 1], ["screen", PauseLogic.Screen.PLAYING])
+	c.calls.clear()
+	c._update_views(0.5)
+	assert_eq(c.calls, [["update_views", 0.5]], "PLAYING iken view_dt = dt")
+	c.pause_game()
+	c.calls.clear()
+	c._update_views(0.5)
+	assert_eq(c.calls, [["update_views", 0.0]], "duraklatmada view_dt = 0")
+	c.calls.clear()
+	c._on_run_ended(false, {"time": 1.0})
+	assert_eq(c.calls, [["run_ended", false, {"time": 1.0}]])
+	assert_false(c._run_won)
+	assert_eq(Stub.calls().size(), 0)
+	Stub.reset()
+
+
+func after_each() -> void:
+	Stub.reset()

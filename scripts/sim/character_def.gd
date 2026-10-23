@@ -13,6 +13,8 @@ var collision_radius: float = 22.0
 var starting_skill: StringName = &""
 var attack_range: float = 700.0  # JSON anahtarı "range"
 var rig: Dictionary = {}
+## rig.walk (kareli yürüme): frames 0 ya da yok = prosedürel yedek. Şema: docs/data-schema.md
+var walk: Dictionary = {"frames": 0}
 
 
 static func from_dict(d: Dictionary) -> CharacterDef:
@@ -29,4 +31,7 @@ static func from_dict(d: Dictionary) -> CharacterDef:
 	c.attack_range = float(d.get("range", 700.0))
 	var r: Variant = d.get("rig", {})
 	c.rig = r if r is Dictionary else {}
+	var w: Variant = c.rig.get("walk", null)
+	if w is Dictionary:
+		c.walk = w
 	return c

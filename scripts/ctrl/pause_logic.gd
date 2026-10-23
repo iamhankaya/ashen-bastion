@@ -4,10 +4,12 @@ extends RefCounted
 ## Kurallar: LEVEL_UP'ta sim donuk; arka plana alınınca/odak kaybında oyun otomatik duraklar;
 ## Android geri tuşu: oyunda duraklat, duraklatmada devam, diyalogda vazgeç, sonuçta ana menü, menüde çık.
 
-enum Screen { MENU, PLAYING, LEVEL_UP, PAUSED, CONFIRM, RESULT }
+enum Screen { MENU, PLAYING, LEVEL_UP, PAUSED, CONFIRM, RESULT, SCORES }
 enum Back { NONE, PAUSE, RESUME, CANCEL_CONFIRM, TO_MENU, QUIT }
 
 const MAX_STEPS_PER_FRAME := 3
+## Seviye atlama ön vurgusu (sn): LEVEL_UP ekranından önce kısa vurgu.
+const LEVEL_UP_PREROLL := 0.18
 
 
 ## Bu bildirim (Node.NOTIFICATION_*) bu ekranda oyunu otomatik duraklatmalı mı?
@@ -29,7 +31,7 @@ static func back_action(screen: int) -> int:
 			return Back.RESUME
 		Screen.CONFIRM:
 			return Back.CANCEL_CONFIRM
-		Screen.RESULT:
+		Screen.RESULT, Screen.SCORES:
 			return Back.TO_MENU
 		Screen.MENU:
 			return Back.QUIT
@@ -51,6 +53,11 @@ static func screen_after_step(screen: int, sim_state: int) -> int:
 		GameSim.State.WON, GameSim.State.LOST:
 			return Screen.RESULT
 	return screen
+
+
+## Oyun bitince sonuç ekranından önceki gecikme (sn): ölüm 1,3 / kazanma 1,8.
+static func result_delay(won: bool) -> float:
+	return Motion.sec(Motion.WIN_TOTAL if won else Motion.DEATH_TOTAL)
 
 
 ## Bir ekrandan oyuna dönüşte 600 ms girdi kilidi gerekir mi? (devam / seviye atlama sonrası)
