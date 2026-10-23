@@ -206,6 +206,7 @@ const METHODS := {
 		"pose_of": ["kind,hz,bob,rot_rad,sq,t,phase0", V4],
 	},
 	"EnemyShadowLayer": {"write": ["buf,n", N]},
+	"EnemyRenderer": {"set_ghosts": ["g", N]},
 	"AshGhostRenderer":
 	{
 		"bind": ["sim,enemy_renderer", N],
@@ -282,7 +283,15 @@ const METHODS := {
 	{
 		"_v11_build_world": ["", N],
 		"_v11_bind": ["new_sim", N],
+		"_v11_bind_player": ["new_sim", N],
+		"_v11_bind_pickups": ["new_sim", N],
+		"_v11_bind_score": ["new_sim", N],
 		"_v11_update_views": ["view_dt", N],
+		"_v11_update_player": ["view_dt", N],
+		"_v11_update_pickups": ["view_dt", N],
+		"_v11_process": ["delta", N],
+		"_v11_hit_stop": ["delta", B],
+		"_v11_after_step": ["", N],
 		"_v11_on_run_ended": ["won,stats", N],
 		"_v11_on_screen": ["next", N],
 	},
@@ -638,6 +647,10 @@ func test_v11_value_classes_have_their_contract_fields() -> void:
 		"aura_mask"
 	]:
 		assert_true(p in pa, "PlayerAnim.%s" % p)
+	var er := EnemyRenderer.new()
+	for p in ["last_anim_instances", "last_frame_selects", "last_shadow_instances", "shadows"]:
+		assert_true(p in er, "EnemyRenderer.%s" % p)
+	er.free()
 	var ea := EnemyAnim.new()
 	assert_true("last_anim_instances" in ea and "last_frame_selects" in ea)
 	var hs := Highscores.new("user://x.json")

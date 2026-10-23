@@ -56,64 +56,19 @@ func _node(n: Node) -> Node:
 	return n
 
 
-## [çağrı, beklenen kimlik]. Boşta no-op olan gövdeler için önce "iş var" durumu kurulur.
+## [çağrı, beklenen kimlik]. Faz başına ayrı işlev: her D fazı YALNIZ kendi işlevini düzenler (birleştirme çakışması olmasın).
+## Boşta no-op olan gövdeler için önce "iş var" durumu kurulur. Uyguladığın yöntemin satırını sil.
 func _v11_cases() -> Array:
+	return _cases_d1() + _cases_d2() + _cases_d3()
+
+
+## D1: oyuncu/düşman animasyonu, gölge, hayalet, FX
+func _cases_d1() -> Array:
 	var sim := GameSim.new(1, &"gunslinger")
-	var pool := PickupPool.new()
-	pool.count = 1
-	var bombs := BombPool.new()
-	var buffs := BuffManager.new()
-	buffs.left_steps[0] = 3
-	var director := PickupDirector.new({}, RandomNumberGenerator.new())
-	director.armed = true
-	var keeper := ScoreKeeper.new(ScoreTable.new())
-	keeper.armed = true
-	var busy := GameSim.new(1, &"gunslinger")
-	busy.debug_spawn_pickup(&"kizil_iksir", Vector2.ZERO)
-	busy.bombs.count = 1
-	var ints := PackedInt32Array()
 	var anim := PlayerAnim.new()
-	var score_block: ScoreBlock = _node(ScoreBlock.new())
-	score_block.visible = true
-	var buff_row: BuffRow = _node(BuffRow.new())
-	buff_row.visible = true
-	var arrow: OffscreenArrow = _node(OffscreenArrow.new())
-	arrow.visible = true
-	var floaty: FloatText = _node(FloatText.new())
-	floaty.visible = true
-	var scores: HighscoreScreen = _node(HighscoreScreen.new())
-	var hs := Highscores.new("user://yok.json")
 	var fx := FxRenderer.new()
 	_nodes.append(fx)
 	return [
-		[func() -> void: pool.tick(ints), &"PickupPool.tick"],
-		[func() -> void: bombs.plant(Vector2.ZERO, 48, 320.0, 4), &"BombPool.plant"],
-		[func() -> void: bombs.remove(0), &"BombPool.remove"],
-		[func() -> void: buffs.start(0, 720), &"BuffManager.start"],
-		[func() -> void: buffs.active(0), &"BuffManager.active"],
-		[func() -> void: buffs.ratio(0), &"BuffManager.ratio"],
-		[func() -> void: buffs.tick(ints), &"BuffManager.tick"],
-		[func() -> void: buffs.damage_mult(), &"BuffManager.damage_mult"],
-		[func() -> void: buffs.fire_rate_mult(), &"BuffManager.fire_rate_mult"],
-		[func() -> void: buffs.unlimited(), &"BuffManager.unlimited"],
-		[func() -> void: director.step(sim), &"PickupDirector.step"],
-		[func() -> void: director.skip_to(600), &"PickupDirector.skip_to"],
-		[func() -> void: director.progress_hash(), &"PickupDirector.progress_hash"],
-		[func() -> void: keeper.on_kill(&"curumus_piyade", 1), &"ScoreKeeper.on_kill"],
-		[func() -> void: keeper.on_evolution(), &"ScoreKeeper.on_evolution"],
-		[func() -> void: keeper.on_lord(), &"ScoreKeeper.on_lord"],
-		[func() -> void: keeper.break_streak(1), &"ScoreKeeper.break_streak"],
-		[func() -> void: keeper.tick(1), &"ScoreKeeper.tick"],
-		[func() -> void: keeper.streak_left(1), &"ScoreKeeper.streak_left"],
-		[
-			func() -> void: sim.bomb_blast(Vector2.ZERO, 320.0, 600.0, 0.08, 600.0),
-			&"PickupSystem.blast"
-		],
-		[func() -> void: busy.debug_collect_pickups(), &"PickupSystem.collect"],
-		[func() -> void: busy._tick_bombs(), &"PickupSystem.tick_bombs"],
-		[func() -> void: busy._apply_buffs(), &"PickupSystem.apply_buffs"],
-		[func() -> void: busy._buffs_ended(PackedInt32Array([0])), &"PickupSystem.buffs_ended"],
-		[func() -> void: Magazine.new().set_unlimited(true), &"Magazine.set_unlimited"],
 		[func() -> void: anim.configure({}), &"PlayerAnim.configure"],
 		[func() -> void: anim.reset(), &"PlayerAnim.reset"],
 		[func() -> void: anim.update(0.016, Vector2.ZERO, false, -1.0), &"PlayerAnim.update"],
@@ -131,6 +86,7 @@ func _v11_cases() -> Array:
 			func() -> void: _node(EnemyShadowLayer.new()).write(PackedFloat32Array(), 0),
 			&"EnemyShadowLayer.write"
 		],
+		[func() -> void: _node(EnemyRenderer.new()).set_ghosts(null), &"EnemyRenderer.set_ghosts"],
 		[func() -> void: _node(AshGhostRenderer.new()).bind(sim, null), &"AshGhostRenderer.bind"],
 		[
 			func() -> void: _node(AshGhostRenderer.new()).update_ghosts(0.016),
@@ -140,8 +96,6 @@ func _v11_cases() -> Array:
 			func() -> void: _node(AshGhostRenderer.new()).ghost_count(),
 			&"AshGhostRenderer.ghost_count"
 		],
-		[func() -> void: _node(PickupRenderer.new()).bind(sim), &"PickupRenderer.bind"],
-		[func() -> void: _node(PickupRenderer.new()).refresh(0.016), &"PickupRenderer.refresh"],
 		[
 			func() -> void: fx.add_ring(Vector2.ZERO, 100.0, 0.5, Color.WHITE, 4.0),
 			&"FxRenderer.add_ring"
@@ -152,13 +106,54 @@ func _v11_cases() -> Array:
 			&"FxRenderer.add_particle"
 		],
 		[func() -> void: fx.add_char(Vector2.ZERO, 40.0), &"FxRenderer.add_char"],
-		[func() -> void: score_block.bind(sim), &"ScoreBlock.bind"],
-		[func() -> void: score_block.refresh(0.016), &"ScoreBlock.refresh"],
-		[func() -> void: ScoreBlock.eased(0.0, 100, 0.016), &"ScoreBlock.eased"],
-		[func() -> void: ScoreBlock.should_pop(50, 1.0), &"ScoreBlock.should_pop"],
-		[func() -> void: ScoreBlock.is_big_gain(400), &"ScoreBlock.is_big_gain"],
-		[func() -> void: ScoreBlock.tier_of(2), &"ScoreBlock.tier_of"],
-		[func() -> void: ScoreBlock.format_score(1234), &"ScoreBlock.format_score"],
+	]
+
+
+## D2: eklentiler, etkiler, bomba, eklenti HUD
+func _cases_d2() -> Array:
+	var sim := GameSim.new(1, &"gunslinger")
+	var pool := PickupPool.new()
+	pool.count = 1
+	var bombs := BombPool.new()
+	var buffs := BuffManager.new()
+	buffs.left_steps[0] = 3
+	var director := PickupDirector.new({}, RandomNumberGenerator.new())
+	director.armed = true
+	var busy := GameSim.new(1, &"gunslinger")
+	busy.debug_spawn_pickup(&"kizil_iksir", Vector2.ZERO)
+	busy.bombs.count = 1
+	var ints := PackedInt32Array()
+	var buff_row: BuffRow = _node(BuffRow.new())
+	buff_row.visible = true
+	var arrow: OffscreenArrow = _node(OffscreenArrow.new())
+	arrow.visible = true
+	var floaty: FloatText = _node(FloatText.new())
+	floaty.visible = true
+	return [
+		[func() -> void: pool.tick(ints), &"PickupPool.tick"],
+		[func() -> void: bombs.plant(Vector2.ZERO, 48, 320.0, 4), &"BombPool.plant"],
+		[func() -> void: bombs.remove(0), &"BombPool.remove"],
+		[func() -> void: buffs.start(0, 720), &"BuffManager.start"],
+		[func() -> void: buffs.active(0), &"BuffManager.active"],
+		[func() -> void: buffs.ratio(0), &"BuffManager.ratio"],
+		[func() -> void: buffs.tick(ints), &"BuffManager.tick"],
+		[func() -> void: buffs.damage_mult(), &"BuffManager.damage_mult"],
+		[func() -> void: buffs.fire_rate_mult(), &"BuffManager.fire_rate_mult"],
+		[func() -> void: buffs.unlimited(), &"BuffManager.unlimited"],
+		[func() -> void: director.step(sim), &"PickupDirector.step"],
+		[func() -> void: director.skip_to(600), &"PickupDirector.skip_to"],
+		[func() -> void: director.progress_hash(), &"PickupDirector.progress_hash"],
+		[
+			func() -> void: sim.bomb_blast(Vector2.ZERO, 320.0, 600.0, 0.08, 600.0),
+			&"PickupSystem.blast"
+		],
+		[func() -> void: busy.debug_collect_pickups(), &"PickupSystem.collect"],
+		[func() -> void: busy._tick_bombs(), &"PickupSystem.tick_bombs"],
+		[func() -> void: busy._apply_buffs(), &"PickupSystem.apply_buffs"],
+		[func() -> void: busy._buffs_ended(PackedInt32Array([0])), &"PickupSystem.buffs_ended"],
+		[func() -> void: Magazine.new().set_unlimited(true), &"Magazine.set_unlimited"],
+		[func() -> void: _node(PickupRenderer.new()).bind(sim), &"PickupRenderer.bind"],
+		[func() -> void: _node(PickupRenderer.new()).refresh(0.016), &"PickupRenderer.refresh"],
 		[func() -> void: buff_row.bind(sim), &"BuffRow.bind"],
 		[func() -> void: buff_row.refresh(0.016), &"BuffRow.refresh"],
 		[func() -> void: BuffRow.badge_x(1), &"BuffRow.badge_x"],
@@ -177,6 +172,32 @@ func _v11_cases() -> Array:
 			func() -> void: _node(MagazineDrum.new()).set_unlimited(true),
 			&"MagazineDrum.set_unlimited"
 		],
+	]
+
+
+## D3: skor, highscore, ekranlar
+func _cases_d3() -> Array:
+	var sim := GameSim.new(1, &"gunslinger")
+	var keeper := ScoreKeeper.new(ScoreTable.new())
+	keeper.armed = true
+	var score_block: ScoreBlock = _node(ScoreBlock.new())
+	score_block.visible = true
+	var scores: HighscoreScreen = _node(HighscoreScreen.new())
+	var hs := Highscores.new("user://yok.json")
+	return [
+		[func() -> void: keeper.on_kill(&"curumus_piyade", 1), &"ScoreKeeper.on_kill"],
+		[func() -> void: keeper.on_evolution(), &"ScoreKeeper.on_evolution"],
+		[func() -> void: keeper.on_lord(), &"ScoreKeeper.on_lord"],
+		[func() -> void: keeper.break_streak(1), &"ScoreKeeper.break_streak"],
+		[func() -> void: keeper.tick(1), &"ScoreKeeper.tick"],
+		[func() -> void: keeper.streak_left(1), &"ScoreKeeper.streak_left"],
+		[func() -> void: score_block.bind(sim), &"ScoreBlock.bind"],
+		[func() -> void: score_block.refresh(0.016), &"ScoreBlock.refresh"],
+		[func() -> void: ScoreBlock.eased(0.0, 100, 0.016), &"ScoreBlock.eased"],
+		[func() -> void: ScoreBlock.should_pop(50, 1.0), &"ScoreBlock.should_pop"],
+		[func() -> void: ScoreBlock.is_big_gain(400), &"ScoreBlock.is_big_gain"],
+		[func() -> void: ScoreBlock.tier_of(2), &"ScoreBlock.tier_of"],
+		[func() -> void: ScoreBlock.format_score(1234), &"ScoreBlock.format_score"],
 		[func() -> void: hs.load_file(), &"Highscores.load_file"],
 		[func() -> void: hs.submit({"score": 1}), &"Highscores.submit"],
 		[func() -> void: hs.save(), &"Highscores.save"],

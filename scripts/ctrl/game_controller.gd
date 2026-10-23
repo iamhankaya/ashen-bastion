@@ -334,7 +334,8 @@ func _process(delta: float) -> void:
 			_stress_label.text = _stress.status_text()
 		_update_views(delta)
 		return
-	if sim != null and PauseLogic.sim_should_step(screen, sim.state):
+	_v11_process(delta)
+	if sim != null and not _v11_hit_stop(delta) and PauseLogic.sim_should_step(screen, sim.state):
 		_accum += delta
 		var n := PauseLogic.steps_for(_accum, GameSim.STEP)
 		var done := 0
@@ -362,6 +363,7 @@ func _update_music() -> void:
 
 
 func _after_step() -> void:
+	_v11_after_step()
 	var next := PauseLogic.screen_after_step(screen, sim.state)
 	if next == screen:
 		return
@@ -431,16 +433,63 @@ func _v11_build_world() -> void:
 	pass
 
 
-## `_bind` sonunda (sim null olabilir): sinyal bağlama/çözme. D1: oyuncu olayları. D2: eklenti olayları ve FX.
-@warning_ignore("unused_parameter")
+## `_bind` sonunda (sim null olabilir): faz başına alt işlevlere dağıtır (her D yalnız kendi gövdesini doldurur).
 func _v11_bind(new_sim: GameSim) -> void:
+	_v11_bind_player(new_sim)
+	_v11_bind_pickups(new_sim)
+	_v11_bind_score(new_sim)
+
+
+## D1: oyuncu olayları (shot_fired, reload_*, player_damaged, level_up, run_ended).
+@warning_ignore("unused_parameter")
+func _v11_bind_player(new_sim: GameSim) -> void:
+	pass
+
+
+## D2: eklenti olayları ve FX (pickup_*, buff_*, bomb_*; bomb_exploded -> kamera + HitStop).
+@warning_ignore("unused_parameter")
+func _v11_bind_pickups(new_sim: GameSim) -> void:
+	pass
+
+
+## D3: skor olayları (score_changed, streak_changed).
+@warning_ignore("unused_parameter")
+func _v11_bind_score(new_sim: GameSim) -> void:
 	pass
 
 
 ## Her karede `_update_views` sonunda. view_dt = ekran PLAYING iken dt, değilse 0 (plan A4).
-## D1: oyuncu/FX/hayalet güncellemesi, vuruş donması, Lord yavaş çekimi. D2: pickup_renderer.refresh.
-@warning_ignore("unused_parameter")
 func _v11_update_views(view_dt: float) -> void:
+	_v11_update_player(view_dt)
+	_v11_update_pickups(view_dt)
+
+
+## D1: oyuncu/FX/hayalet güncellemesi, Lord yavaş çekimi.
+@warning_ignore("unused_parameter")
+func _v11_update_player(view_dt: float) -> void:
+	pass
+
+
+## D2: pickup_renderer.refresh.
+@warning_ignore("unused_parameter")
+func _v11_update_pickups(view_dt: float) -> void:
+	pass
+
+
+## `_process` başında (stres koşusu dışında), her karede. D3: ScreenDelay.tick geri sayımı.
+@warning_ignore("unused_parameter")
+func _v11_process(delta: float) -> void:
+	pass
+
+
+## true = bu karede vuruş donması: sim adımlanmaz ve `_accum` artmaz. D1-3: HitStop.tick(delta).
+@warning_ignore("unused_parameter")
+func _v11_hit_stop(delta: float) -> bool:
+	return false
+
+
+## `_after_step` başında (ekran geçişinden önce). D3: gecikme başlatma, seviye ön vurgusu.
+func _v11_after_step() -> void:
 	pass
 
 

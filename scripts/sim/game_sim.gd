@@ -910,9 +910,7 @@ func _collect_pickups() -> void:
 
 ## ScoreKeeper.gained -> score olayı + bus.score_changed.
 func _on_score_gained(gain: int, source: StringName) -> void:
-	var total := score.total()
-	log_event(SimEvents.SCORE, {"gain": gain, "total": total, "mult": score.mult, "source": source})
-	bus.score_changed.emit(total, score.mult, gain)
+	V11State.on_score_gained(self, gain, source)
 
 
 func _on_streak_changed(mult: int, left: float) -> void:

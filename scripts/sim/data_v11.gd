@@ -81,6 +81,9 @@ const SCORE_TOP_KEYS: PackedStringArray = [
 const SCORE_STREAK_KEYS: PackedStringArray = ["window", "tiers"]
 const SCORE_BONUS_MAX := 1000000
 const SCORE_DISPLAY_CAP_MAX := 99999999
+const SCORE_MAX_TIERS := 20
+const SCORE_MAX_MULT := 100
+const SCORE_MAX_THRESHOLD := 100000
 
 
 ## pickups.json / score.json isteğe bağlıdır (yoksa boş tablo); "içerik tamamlandı" modunda zorunludur.
@@ -396,6 +399,9 @@ static func _validate_score_tiers(out: PackedStringArray, st: Dictionary) -> voi
 	if not (tiers is Array) or (tiers as Array).is_empty():
 		GameData._err(out, "bad_type", ctx, "'tiers' dolu dizi olmalı")
 		return
+	if (tiers as Array).size() > SCORE_MAX_TIERS:
+		GameData._err(out, "score_tiers", ctx, "en çok %d basamak" % SCORE_MAX_TIERS)
+		return
 	var prev_min := -1
 	var prev_mult := 0
 	for i in (tiers as Array).size():
@@ -413,6 +419,17 @@ static func _validate_score_tiers(out: PackedStringArray, st: Dictionary) -> voi
 		var mu := int(row[1])
 		if i == 0 and (mn != 0 or mu != 1):
 			GameData._err(out, "score_tiers", ctx, "ilk basamak [0, 1] olmalı")
+			return
+		if mu > SCORE_MAX_MULT or mn > SCORE_MAX_THRESHOLD:
+			GameData._err(
+				out,
+				"score_tiers",
+				ctx,
+				(
+					"tiers[%d]: çarpan ≤ %d, eşik ≤ %d olmalı"
+					% [i, SCORE_MAX_MULT, SCORE_MAX_THRESHOLD]
+				)
+			)
 			return
 		if mn <= prev_min or mu <= prev_mult:
 			GameData._err(

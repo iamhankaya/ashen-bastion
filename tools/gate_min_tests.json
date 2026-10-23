@@ -39,7 +39,7 @@
   "test/unit/test_difficulty.gd": 3,
   "test/unit/test_enemy_detour.gd": 3,
   "test/unit/test_fx_renderer.gd": 3,
-  "test/unit/test_game_data.gd": 42,
+  "test/unit/test_game_data.gd": 43,
   "test/unit/test_game_sim.gd": 32,
   "test/unit/test_hit_stop.gd": 8,
   "test/unit/test_hud_boss_bar.gd": 4,

@@ -64,6 +64,15 @@ static func check(sim: GameSim, out: PackedStringArray) -> void:
 		out.append("sınırsız şarjörde magazine.count != cap")
 
 
+## ScoreKeeper.gained -> score olayı + bus.score_changed.
+static func on_score_gained(sim: GameSim, gain: int, source: StringName) -> void:
+	var total := sim.score.total()
+	sim.log_event(
+		SimEvents.SCORE, {"gain": gain, "total": total, "mult": sim.score.mult, "source": source}
+	)
+	sim.bus.score_changed.emit(total, sim.score.mult, gain)
+
+
 ## run_ended sözlüğüne eklenen alanlar: score, score_parts, best_mult.
 static func end_stats(sim: GameSim) -> Dictionary:
 	return {

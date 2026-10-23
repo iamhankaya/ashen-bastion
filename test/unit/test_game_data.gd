@@ -569,6 +569,21 @@ func test_score_tiers_rules() -> void:
 	assert_true(_has_code(_sc_errs(d), "missing_field"))
 
 
+func test_score_tiers_are_bounded() -> void:
+	var d := _score()
+	d["streak"]["tiers"] = [[0, 1], [10, 999999999]]
+	assert_true(_has_code(_sc_errs(d), "score_tiers"), "çarpan tavanı")
+	d["streak"]["tiers"] = [[0, 1], [10000000, 2]]
+	assert_true(_has_code(_sc_errs(d), "score_tiers"), "eşik tavanı")
+	var many: Array = []
+	for i in 21:
+		many.append([i * 10, i + 1])
+	d["streak"]["tiers"] = many
+	assert_true(_has_code(_sc_errs(d), "score_tiers"), "en çok 20 basamak")
+	many.resize(20)
+	assert_eq(_sc_errs(d), PackedStringArray(), "20 basamak geçerli")
+
+
 func test_score_numeric_bounds_and_keys() -> void:
 	for w in [0.4, 30.5]:
 		var d := _score()
