@@ -10,6 +10,7 @@ const CHARACTER := &"gunslinger"
 const RUN_OPTS := {"end_mode": "lord", "end_time": 1200.0}
 const WON_SUB := "Şafak söktü; kale seni yutamadı."
 const DAMAGE_VIBRATE_MS := 25
+const BOMB_SHAKE := 18.0
 
 var screen: int = PauseLogic.Screen.MENU
 var sim: GameSim = null
@@ -40,6 +41,8 @@ var scores_screen: HighscoreScreen
 var pickup_renderer: PickupRenderer
 var enemy_shadows: EnemyShadowLayer
 var ghosts: AshGhostRenderer
+var _pickup_sim: GameSim = null
+var _escape_label: Label = null
 
 var audio: AudioDirector
 var _stress: StressRun = null
@@ -480,9 +483,23 @@ func _v11_bind_player(new_sim: GameSim) -> void:
 
 
 ## D2: eklenti olayları ve FX (pickup_*, buff_*, bomb_*; bomb_exploded -> kamera + HitStop).
-@warning_ignore("unused_parameter")
 func _v11_bind_pickups(new_sim: GameSim) -> void:
-	pass
+	if pickup_renderer == null:
+		pickup_renderer = PickupRenderer.new()
+		pickup_renderer.name = "Pickups"
+		world.add_child(pickup_renderer)
+		world.move_child(pickup_renderer, gem_renderer.get_index() + 1)  # taşlardan sonra, düşmanlardan önce
+	if _pickup_sim != null and _pickup_sim.bus.pickup_collected.is_connected(_on_pickup_collected):
+		_pickup_sim.bus.pickup_collected.disconnect(_on_pickup_collected)
+		_pickup_sim.bus.bomb_exploded.disconnect(_on_bomb_exploded)
+	_pickup_sim = new_sim
+	pickup_renderer.bind(new_sim)
+	_v11_build_escape_debug()
+	if _escape_label != null and new_sim == null:
+		_escape_label.visible = false
+	if new_sim != null:
+		new_sim.bus.pickup_collected.connect(_on_pickup_collected)
+		new_sim.bus.bomb_exploded.connect(_on_bomb_exploded)
 
 
 ## D3: skor olayları (score_changed, streak_changed).
@@ -506,9 +523,85 @@ func _v11_update_player(view_dt: float) -> void:
 
 
 ## D2: pickup_renderer.refresh.
-@warning_ignore("unused_parameter")
 func _v11_update_pickups(view_dt: float) -> void:
-	pass
+	if pickup_renderer != null:
+		pickup_renderer.refresh(view_dt)
+	_v11_update_escape_debug()
+
+
+## F-ashen-bastion-021 (yalnız debug derleme): çıkmaz kaçışı AÇIK/KAPALI etiketi + sayaç; dokunmak bayrağı çevirir
+## (cihazda iki durum karşılaştırılır). Etiket oyun/duraklatma ekranında görünür.
+func _v11_build_escape_debug() -> void:
+	if _escape_label != null or not OS.is_debug_build():
+		return
+	_escape_label = Label.new()
+	_escape_label.name = "EscapeDebug"
+	_escape_label.position = Vector2(300, 2334)
+	_escape_label.size = Vector2(480, 64)
+	_escape_label.add_theme_font_size_override(&"font_size", 24)
+	_escape_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
+	_escape_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
+	_escape_label.add_theme_constant_override(&"outline_size", 6)
+	_escape_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_escape_label.gui_input.connect(_on_escape_label_input)
+	_escape_label.visible = false
+	ui.add_child(_escape_label)
+
+
+func escape_debug_text() -> String:
+	var live := EnemyEscape.escaping_count(sim) if sim != null else 0
+	return (
+		"çıkmaz kaçışı: %s (dokun)\nkaçışta %d  girilen %d"
+		% ["AÇIK" if EnemyEscape.enabled else "KAPALI", live, EnemyEscape.begun_total]
+	)
+
+
+func toggle_escape_fix() -> void:
+	EnemyEscape.enabled = not EnemyEscape.enabled
+
+
+func _v11_update_escape_debug() -> void:
+	if _escape_label == null:
+		return
+	_escape_label.visible = (
+		sim != null and screen in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
+	)
+	if _escape_label.visible:
+		_escape_label.text = escape_debug_text()
+
+
+func _on_escape_label_input(event: InputEvent) -> void:
+	if (
+		(event is InputEventMouseButton and event.pressed)
+		or (event is InputEventScreenTouch and event.pressed)
+	):
+		toggle_escape_fix()
+
+
+## Toplama başlığı: pickups.json `toast` (boşsa yok), oyuncunun üstünde kayar.
+func _on_pickup_collected(kind_id: StringName, _pos: Vector2) -> void:
+	if sim == null:
+		return
+	var def := sim.data.get_pickup(kind_id)
+	if def == null or def.toast == "":
+		return
+	var screen_pos := (
+		get_viewport().get_canvas_transform() * (sim.player_pos + Vector2(0.0, -140.0))
+	)
+	hud.float_text.show_text(UiKit.upper_tr(def.toast), screen_pos)
+
+
+## Bomba patlaması: kamera 18 px + vuruş donması 0,06 sn (FX halkası/ses mevcut `explosion` yolundan gelir).
+func _on_bomb_exploded(_pos: Vector2, _radius: float) -> void:
+	camera.shake(BOMB_SHAKE)
+	_v11_request_hit_stop(Motion.sec(Motion.HITSTOP_BOMB))
+
+
+## Vuruş donması isteği: D1-3'ün `hit_stop` (HitStop) üyesi varsa ona iletir; yoksa yok sayılır.
+func _v11_request_hit_stop(sec: float) -> void:
+	var hs: Variant = get("hit_stop")
+	if hs is HitStop:
+		(hs as HitStop).request(sec)
 
 
 ## `_process` başında (stres koşusu dışında), her karede. D3: ScreenDelay.tick geri sayımı.

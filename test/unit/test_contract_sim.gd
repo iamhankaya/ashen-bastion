@@ -382,17 +382,14 @@ func test_debug_spawn_pickup_places_a_real_pickup_and_reports_it() -> void:
 	assert_eq(Stub.calls().size(), 0)
 
 
-func test_debug_collect_pickups_is_idle_without_pickups_and_hits_the_skeleton_with_one() -> void:
+func test_debug_collect_pickups_is_idle_without_pickups_and_collects_with_one() -> void:
 	var s := _sim()
 	s.debug_collect_pickups()
 	assert_eq(Stub.calls().size(), 0, "boşta no-op")
 	s.debug_spawn_pickup(&"kizil_iksir", s.player_pos)
 	s.debug_collect_pickups()
-	assert_eq(
-		Stub.calls(),
-		[&"PickupSystem.collect"] as Array[StringName],
-		"iskelet gövde başarısızlık kaydeder"
-	)
+	assert_eq(s.pickups.count, 0, "D2-1: gerçek toplama")
+	assert_eq(Stub.calls().size(), 0)
 
 
 func test_skeleton_hooks_are_idle_in_a_plain_run_and_never_reach_stubs() -> void:
