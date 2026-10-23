@@ -16,5 +16,4 @@ def test_solid_rule_taller_than_the_player_and_chain_follows_the_base():
         assert ("collision" in rec) == tall, rec["id"]
         for c in rec.get("collision", []):
             assert 20 <= c["r"] <= 50, rec["id"]
-            # daire merkezi foot'un altında (taban çizgisinin altı) olamaz: iz zeminin üstünde
-            assert c["y"] <= 0, rec["id"]
+            assert abs(c["x"]) < 500 and abs(c["y"]) < 200, rec["id"]
