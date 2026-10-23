@@ -52,7 +52,7 @@ Kritik 0, yüksek 0.
 yok. F-ver3-001 testleri `karakterizasyon (F-xxx)` olarak **yeşil**: mevcut davranışı (7, 6, 1, 6/6, 4/4 takılan) sabitler; düzeltme gelince `assert_eq(stuck, 0)` olarak tersine çevrilir (testlerin açıklamasında yazılı).
 
 ### Test sonuçları
-Temiz klon (`git clone --branch vlad/T20261023-83` GitHub'dan, ayrı dizin; head `14c4f4d`'ten önceki test commit'i, bu rapor ve `user-verify.md` yalnız belge ekler): `GATE_RENDER=1 GATE_EXPORT=1 bash tools/gate.sh`:
+Temiz klon (`git clone --branch vlad/T20261023-83` GitHub'dan, ayrı dizin; head `3fd8c30` (testler); sonraki commit yalnız rapor ve `user-verify.md` belgelerini ekler): `GATE_RENDER=1 GATE_EXPORT=1 bash tools/gate.sh`:
 - import, gdformat/gdlint, `to_upper/to_lower` taraması, veri doğrulama: temiz
 - pytest: **40 geçti** (CI + art + audio)
 - GUT: **65 betik, 502 test, 502 geçti, 0 kırmızı**, 18 282 doğrulama (≈188 sn)
