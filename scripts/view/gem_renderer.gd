@@ -23,6 +23,7 @@ func _init() -> void:
 	multimesh = mm
 	texture = PlaceholderArt.gem_texture()
 	_buf.resize(_cap * STRIDE)
+	apply_cull_fix()
 
 
 func bind(sim: GameSim) -> void:
@@ -63,6 +64,11 @@ func refresh() -> void:
 		_buf[o + 11] = 1.0
 	multimesh.buffer = _buf
 	multimesh.visible_instance_count = count
+
+
+## Kesme dikdörtgeni düzeltmesini (RenderFix) uygular; ayar değişince yeniden çağrılır.
+func apply_cull_fix() -> void:
+	RenderFix.apply(self)
 
 
 func visible_count() -> int:

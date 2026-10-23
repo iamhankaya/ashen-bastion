@@ -65,3 +65,24 @@ func test_no_contact_keeps_timer_ready() -> void:
 	var s := KitDev.sim()
 	assert_eq(s.damage.contact_tick(s, 1.0 / 60.0), 0.0)
 	assert_eq(s.damage.contact_timer, 0.0)
+
+
+func test_contact_multiplier_is_computed_at_tick_time_not_spawn_time() -> void:
+	var s := _contact_sim(1)
+	var base := s.enemies.contact[0]
+	s.debug_set_time(600.0)  # 10. dk: enemy_dmg_mult = 1,4 (düşman t=0'da doğdu)
+	assert_almost_eq(
+		s.damage.contact_tick(s, 1.0 / 60.0), base * Difficulty.enemy_dmg_mult(600.0), 1e-4
+	)
+
+
+func test_unscaled_enemy_contact_ignores_the_difficulty_multiplier() -> void:
+	var s := KitDev.sim()
+	s.debug_spawn(&"curumus_piyade", Vector2(10, 0))
+	var i := EnemyPool.index_of(s.alive_ids()[0])
+	s.enemies.def_of(i).scales_with_time = false
+	s.grid.clear()
+	s.grid.insert(s.alive_ids()[0], s.enemies.pos[i])
+	s.debug_set_time(600.0)
+	assert_almost_eq(s.damage.contact_tick(s, 1.0 / 60.0), s.enemies.contact[i], 1e-4)
+	s.enemies.def_of(i).scales_with_time = true

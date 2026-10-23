@@ -6,8 +6,10 @@ extends RefCounted
 const THEME_PATH := "res://themes/ashen-bastion-theme.tres"
 const ICON_DIR := "res://assets/ui/icons/"
 const FRAME_DIR := "res://assets/ui/frames/"
-const SAFE_EDGE := 24.0  # U1 güvenli kenar sabiti (tam safe_area U2-11'de)
+const SAFE_EDGE := 36.0  # varsayılan yan/üst boşluk; çentik/yuvarlak köşe safe_extra ile eklenir
 const SIDE := 36.0
+const DEFAULT_TOP := 96.0  # DESIGN-UI §5: üst 96 / yan 36 / alt 72
+const DEFAULT_BOTTOM := 72.0
 
 const VOID := Color("#0d0910")
 const MOR_900 := Color("#171020")
@@ -36,6 +38,30 @@ const OVERLAY_DIM := Color(0.051, 0.035, 0.063, 0.8)
 
 static var _theme: Theme = null
 static var _tex_cache: Dictionary = {}
+
+
+## Cihaz güvenli alanının (DisplayServer.get_display_safe_area) varsayılan boşlukların ÖTESİNDE kalan payı,
+## görünüm (viewport) pikseli cinsinden: (sol, üst, sağ, alt). Güvenli alan bilinmiyorsa (boş) sıfır.
+## win: pencere piksel boyutu; safe: pencere pikselinde güvenli dikdörtgen; view: viewport boyutu.
+static func safe_extra(win: Vector2i, safe: Rect2i, view: Vector2) -> Vector4:
+	if win.x <= 0 or win.y <= 0 or safe.size.x <= 0 or safe.size.y <= 0 or view.x <= 0.0:
+		return Vector4.ZERO
+	var k := view.x / float(win.x)
+	var left := float(safe.position.x) * k
+	var top := float(safe.position.y) * k
+	var right := float(win.x - safe.end.x) * k
+	var bottom := float(win.y - safe.end.y) * k
+	return Vector4(
+		maxf(0.0, left - SIDE),
+		maxf(0.0, top - DEFAULT_TOP),
+		maxf(0.0, right - SIDE),
+		maxf(0.0, bottom - DEFAULT_BOTTOM)
+	)
+
+
+## Çalışma anı güvenli alan payı (masaüstü/headless'ta sıfır).
+static func current_safe_extra(view: Vector2) -> Vector4:
+	return safe_extra(DisplayServer.window_get_size(), DisplayServer.get_display_safe_area(), view)
 
 
 static func theme() -> Theme:

@@ -28,6 +28,7 @@ func _init() -> void:
 	multimesh = mm
 	texture = PlaceholderArt.enemy_texture()
 	_buf.resize(_cap * STRIDE)
+	apply_cull_fix()
 	if ResourceLoader.exists(SHADER_PATH):
 		var mat := ShaderMaterial.new()
 		mat.shader = load(SHADER_PATH)
@@ -96,6 +97,11 @@ func refresh() -> void:
 		n += 1
 	multimesh.buffer = _buf
 	multimesh.visible_instance_count = n
+
+
+## Kesme dikdörtgeni düzeltmesini (RenderFix) uygular; ayar değişince yeniden çağrılır.
+func apply_cull_fix() -> void:
+	RenderFix.apply(self)
 
 
 func visible_count() -> int:

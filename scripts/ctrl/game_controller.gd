@@ -34,6 +34,7 @@ var menu: MainMenu
 var audio: AudioDirector
 var _stress: StressRun = null
 var _stress_label: Label = null
+var _render_label: Label = null
 var _accum: float = 0.0
 var _run_won: bool = false
 var _run_stats: Dictionary = {}
@@ -115,6 +116,57 @@ func _build_ui() -> void:
 	menu.sound_toggled.connect(_on_sound)
 	menu.vibration_toggled.connect(_on_vibration)
 	menu.debug_stress_requested.connect(start_stress)
+	_build_render_debug()
+
+
+## F-ashen-bastion-002 (B): yalnız debug derlemede. Düşman/taş görünür-sayı etiketi; dokunmak kesme
+## dikdörtgeni düzeltmesini (RenderFix) açar/kapatır. Cihazda iki durum karşılaştırılır.
+func _build_render_debug() -> void:
+	if not OS.is_debug_build():
+		return
+	_render_label = Label.new()
+	_render_label.name = "RenderDebug"
+	_render_label.position = Vector2(300, 2236)
+	_render_label.size = Vector2(480, 96)
+	_render_label.add_theme_font_size_override(&"font_size", 26)
+	_render_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
+	_render_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
+	_render_label.add_theme_constant_override(&"outline_size", 6)
+	_render_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_render_label.gui_input.connect(_on_render_label_input)
+	_render_label.visible = false
+	ui.add_child(_render_label)
+
+
+func render_debug_text() -> String:
+	if sim == null:
+		return ""
+	return (
+		"düşman %d/%d  taş %d/%d\nkesme düzeltmesi: %s (dokun)"
+		% [
+			enemy_renderer.visible_count(),
+			sim.enemies.count,
+			gem_renderer.visible_count(),
+			sim.gems.count,
+			"AÇIK" if RenderFix.enabled else "KAPALI",
+		]
+	)
+
+
+func toggle_cull_fix() -> void:
+	_settings().set_cull_fix(not RenderFix.enabled)
+	enemy_renderer.apply_cull_fix()
+	gem_renderer.apply_cull_fix()
+	projectile_renderer.apply_cull_fix()
+
+
+func _on_render_label_input(event: InputEvent) -> void:
+	var tap: bool = (
+		(event is InputEventMouseButton and event.pressed)
+		or (event is InputEventScreenTouch and event.pressed)
+	)
+	if tap:
+		toggle_cull_fix()
 
 
 # --- ekran geçişleri ------------------------------------------------------------------------
@@ -212,6 +264,10 @@ func _set_screen(next: int) -> void:
 		sim != null and next != PauseLogic.Screen.MENU and next != PauseLogic.Screen.RESULT
 	)
 	joystick.visible = next == PauseLogic.Screen.PLAYING
+	if _render_label != null:
+		_render_label.visible = (
+			sim != null and next in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
+		)
 	level_up.visible = next == PauseLogic.Screen.LEVEL_UP
 	pause_screen.visible = next == PauseLogic.Screen.PAUSED
 	result_screen.visible = next == PauseLogic.Screen.RESULT
@@ -281,6 +337,8 @@ func _update_views(dt: float) -> void:
 	gem_renderer.refresh()
 	projectile_renderer.refresh()
 	hud.refresh(dt)
+	if _render_label != null and _render_label.visible:
+		_render_label.text = render_debug_text()
 
 
 func _show_level_up() -> void:

@@ -3,6 +3,8 @@ extends Node
 
 var sound_on: bool = true
 var vibration_on: bool = true
+## F-ashen-bastion-002 kesme dikdörtgeni düzeltmesi (RenderFix); yalnız debug APK'da arayüzden değişir.
+var cull_fix: bool = true
 
 
 func _ready() -> void:
@@ -20,6 +22,8 @@ func load_settings(path: String = "user://settings.cfg") -> void:
 	var d: Dictionary = json.data
 	sound_on = bool(d.get("ses", true))
 	vibration_on = bool(d.get("titresim", true))
+	cull_fix = bool(d.get("kesme_duzeltmesi", true))
+	RenderFix.enabled = cull_fix
 
 
 ## Yazılamazsa false döner (üretim kodunda push_error kullanılmaz).
@@ -27,7 +31,9 @@ func save_settings(path: String = "user://settings.cfg") -> bool:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
 		return false
-	f.store_string(JSON.stringify({"ses": sound_on, "titresim": vibration_on}))
+	f.store_string(
+		JSON.stringify({"ses": sound_on, "titresim": vibration_on, "kesme_duzeltmesi": cull_fix})
+	)
 	return true
 
 
@@ -49,6 +55,13 @@ func apply_audio() -> void:
 	var idx := AudioServer.get_bus_index(&"Master")
 	if idx >= 0:
 		AudioServer.set_bus_mute(idx, not sound_on)
+
+
+func set_cull_fix(on: bool) -> void:
+	cull_fix = on
+	RenderFix.enabled = on
+	save_settings()
+	Events.settings_changed.emit()
 
 
 ## vibration_on ve Android ise Input.vibrate_handheld(ms).

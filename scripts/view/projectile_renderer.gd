@@ -26,6 +26,7 @@ func _init() -> void:
 	multimesh = mm
 	texture = PlaceholderArt.bullet_texture()
 	_buf.resize(_cap * STRIDE)
+	apply_cull_fix()
 	var mat := CanvasItemMaterial.new()
 	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	material = mat
@@ -79,6 +80,10 @@ func refresh() -> void:
 		_buf[o + 11] = c.a
 	multimesh.buffer = _buf
 	multimesh.visible_instance_count = count
+
+
+func apply_cull_fix() -> void:
+	RenderFix.apply(self)
 
 
 func visible_count() -> int:

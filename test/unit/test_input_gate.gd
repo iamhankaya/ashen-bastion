@@ -9,7 +9,7 @@ func _gate() -> InputGate:
 func test_first_finger_drives_move() -> void:
 	var g := _gate()
 	g.touch(0, true, Vector2(500, 1500))
-	g.drag(0, Vector2(650, 1500))
+	g.drag(0, Vector2(500.0 + InputGate.MAX_RADIUS, 1500))
 	assert_true(g.is_active())
 	assert_almost_eq(g.move().x, 1.0, 0.0001)
 	assert_almost_eq(g.move().y, 0.0, 0.0001)

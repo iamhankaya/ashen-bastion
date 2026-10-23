@@ -3,7 +3,7 @@ extends Control
 ## Oyun HUD'ı (docs/ui/mockups/02-hud-oyun, 03-hud-doldurma, 08-hud-anatomi). Oyun kuralı yok; sim'i okur.
 ## Üst: seviye rozeti, XP çubuğu, süre MM:SS, duraklat (tek etkileşimli öğe). Altında can çubuğu + yazı,
 ## aktif (kare) ve pasif (daire) yuva satırları. Sol alt: 6 yuvalı şarjör tamburu. Can < %25: kenar vinyeti.
-## Konumlar 1080×2400 referans pikseli; üst/yan kenar UiKit.SAFE_EDGE (24 px) sabitine dayanır.
+## Konumlar 1080×2400 referans pikseli; üst/yan kenar UiKit.SAFE_EDGE (36 px) + cihaz güvenli alanı payı (UiKit.safe_extra).
 
 signal pause_pressed
 
@@ -34,6 +34,8 @@ var drum: MagazineDrum
 var boss_band: PanelContainer
 var boss_label: Label
 var vignette: Vignette
+## Cihaz güvenli alanı payı kadar içeri çekilmiş katman (rozet, çubuklar, yuvalar, tambur, duraklat).
+var safe: Control
 
 var _sim: GameSim = null
 var _xp_shown: float = 0.0
@@ -116,12 +118,19 @@ func _build() -> void:
 	UiKit.fill(vignette)
 	add_child(vignette)
 
+	safe = Control.new()
+	safe.name = "Safe"
+	safe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.fill(safe)
+	add_child(safe)
+	apply_safe_area()
+
 	var root := Control.new()
 	root.name = "Layer"
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.modulate = Color(1, 1, 1, HUD_ALPHA)
 	UiKit.fill(root)
-	add_child(root)
+	safe.add_child(root)
 
 	level_badge = LevelBadge.new()
 	level_badge.name = "LevelBadge"
@@ -160,7 +169,7 @@ func _build() -> void:
 	pause_button.add_theme_stylebox_override(&"pressed", circle_p)
 	_place(pause_button, 1.0, Rect2(-UiKit.SIDE - PAUSE, TOP + 44.0, PAUSE, PAUSE))
 	pause_button.pressed.connect(func() -> void: pause_pressed.emit())
-	add_child(pause_button)  # tam opak ve vinyetin üstünde
+	safe.add_child(pause_button)  # tam opak ve vinyetin üstünde
 
 	var heart := TextureRect.new()
 	heart.name = "Heart"
@@ -168,7 +177,7 @@ func _build() -> void:
 	heart.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	heart.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place(heart, 0.0, Rect2(UiKit.SAFE_EDGE - 6.0, TOP + 106.0, 56, 56))
+	_place(heart, 0.0, Rect2(UiKit.SIDE - 6.0, TOP + 106.0, 56, 56))
 	hp_bar = ProgressBar.new()
 	hp_bar.name = "HpBar"
 	hp_bar.theme_type_variation = &"ProgressBarHP"
@@ -225,6 +234,21 @@ func _build() -> void:
 	boss_band.add_child(boss_label)
 	boss_band.visible = false
 	add_child(boss_band)
+
+
+## Güvenli alan payını (çentik, yuvarlak köşe) uygular; payı DisplayServer.get_display_safe_area'dan alır.
+func apply_safe_area(extra: Variant = null) -> void:
+	var e: Vector4
+	if extra is Vector4:
+		e = extra
+	else:
+		e = UiKit.current_safe_extra(
+			get_viewport_rect().size if is_inside_tree() else Vector2(1080, 2400)
+		)
+	safe.offset_left = e.x
+	safe.offset_top = e.y
+	safe.offset_right = -e.z
+	safe.offset_bottom = -e.w
 
 
 ## Sim'e bağlan (yeni oyun). Sinyallerden yalnız görsel geri bildirim alınır.

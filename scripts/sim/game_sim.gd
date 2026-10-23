@@ -282,7 +282,7 @@ func spawn_enemy(type_id: StringName, pos: Vector2) -> int:
 		type_id,
 		pos,
 		Difficulty.enemy_hp_mult(time) if scaled else 1.0,
-		Difficulty.enemy_dmg_mult(time) if scaled else 1.0,
+		1.0,  # temas çarpanı doğma anında değil tick anında uygulanır (DamageSystem.contact_tick)
 		Difficulty.enemy_speed_mult(time) if scaled else 1.0
 	)
 	if id < 0:
