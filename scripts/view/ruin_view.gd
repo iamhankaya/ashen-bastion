@@ -6,6 +6,10 @@ extends RefCounted
 
 const KEEP_RADIUS := 3  # chunk; bundan uzaktaki sprite'lar serbest bırakılır
 const TINT := Color(0.82, 0.76, 0.86)
+## Dekor (katı olmayan alçak parça) zemin katmanıdır: oyuncu/düşman/mermi her zaman üstünde, y-sıralamaya girmez.
+## Katı yapılar oyuncuyla y-sıralıdır (arkasından geçerken örter). Böylece "üstünden geçilen" ile "geçilemeyen"
+## görsel olarak ayrışır.
+const DECOR_Z := -50
 
 var _actors: Node2D = null
 var _map: MapSim = null
@@ -47,8 +51,7 @@ func follow(center: Vector2) -> void:
 	for i in _sprites.keys():
 		if keep.has(i):
 			continue
-		var p := _map.ob_pos[i]
-		var oc := MapSim.chunk_of(p)
+		var oc := MapSim.chunk_of(_map.ob_pos[i])
 		if absi(oc.x - c.x) > KEEP_RADIUS or absi(oc.y - c.y) > KEEP_RADIUS:
 			var s: Sprite2D = _sprites[i]
 			if is_instance_valid(s):
@@ -73,6 +76,8 @@ func _make(i: int) -> void:
 	var k := float(def.get("display_scale", 1.0))
 	s.scale = Vector2(k, k)
 	s.modulate = TINT
-	s.position = _map.ob_pos[i]
+	s.position = _map.ob_foot[i]
+	if _map.ob_solid[i] == 0:
+		s.z_index = DECOR_Z
 	_actors.add_child(s)
 	_sprites[i] = s

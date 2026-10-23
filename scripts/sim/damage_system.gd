@@ -36,6 +36,9 @@ func damage_enemy(sim: GameSim, id: int, amount: float, kind: StringName) -> voi
 		_kill(sim, id, i)
 
 
+const GEM_CLEARANCE := 16.0
+
+
 func _kill(sim: GameSim, id: int, i: int) -> void:
 	var p := sim.enemies.pos[i]
 	var type_id := sim.enemies.type_id_of(i)
@@ -48,7 +51,8 @@ func _kill(sim: GameSim, id: int, i: int) -> void:
 	if sim.logging():
 		sim.log_event(SimEvents.KILL, {"enemy_id": id, "enemy_type": type_id, "pos": p})
 	if xp_value > 0:
-		sim.gems.drop(p, xp_value)
+		# Harabe içinde ölen düşmanın (elit/uçan/hayalet muaf) taşı dışarı alınır: katı yapının içinde toplanamaz.
+		sim.gems.drop(sim.map.resolve(p, GEM_CLEARANCE), xp_value)
 		if sim.logging():
 			sim.log_event(SimEvents.GEM_DROPPED, {"value": xp_value})
 	sim.bus.enemy_killed.emit(type_id, p)

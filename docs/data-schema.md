@@ -102,7 +102,11 @@ kayıtlarının sahibi görevlerdedir; ayar yalnız denge görevinde yapılır.
 ## Harabeler — `ruins.json` (isteğe bağlı)
 
 Dizi; her kayıt: `id` (benzersiz), `sprite` (`res://assets/gfx/map/ruins/*.png` ya da `placeholder:`), `display_scale`
-(0,1..20), `foot` `[x, y]` (0..1, sprite'ta ayak noktası), `footprint {w, h}` (çarpışma dairesi çapı = `w`), `weight`
-(chunk içi seçim ağırlığı), `solid` (bool: oyuncuyu ve yer düşmanlarını iter; mermiler her zaman geçer). Dosya yoksa harita
+(0,1..20), `foot` `[x, y]` (0..1, sprite'ta ayak noktası), `footprint {w, h}` (görsel taban izi ölçüsü), `weight`
+(chunk içi seçim ağırlığı), `solid` (bool: oyuncuyu ve yer düşmanlarını iter; mermiler her zaman geçer) ve katı
+kayıtlarda `collision` `[{x, y, r}, …]` (1..32 daire; `foot` noktasına göre dünya px; sprite'ın taban izini kaplayan
+daire zinciri; yoksa foot'ta `footprint.w/2` yarıçaplı tek daire). Sarmalayan çember ≤ 400 px. `collision`'ı elle
+düzenlemeyin: `python3 tools/art/ruin_collision.py` (kural: görsel yüksekliği ≥ 240 px olan yapı katıdır, alçak
+parçalar dekordur; bkz. `docs/dev/ruins.md`). Dosya yoksa harita
 boştur. Doğrulama: `scripts/sim/ruins_validator.gd`; sprite ve ölçüler `tools/art/process_art.py` çıktısından
 (`assets/gfx/map/ruins_manifest.json`) üretilir.

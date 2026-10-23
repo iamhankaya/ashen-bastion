@@ -22,11 +22,42 @@ static func make_rng(seed_value: int) -> RandomNumberGenerator:
 static func move(policy: StringName, sim: GameSim) -> Vector2:
 	if policy == IDLE:
 		return Vector2.ZERO
+	var want := _kite_dir(sim)
 	if policy == GREEDY:
 		var g := _nearest_gem_dir(sim)
 		if g != Vector2.ZERO:
-			return g
-	return _kite_dir(sim)
+			want = g
+	return _around_walls(sim, want)
+
+
+## Katı harabeler artık gerçekten engeldir: istenen yön engele dayanıyorsa (ilerleme < %40) teğet yönde kayar
+## (duvar dolanma). Taraf sim üzerinde 4 sn sabit tutulur (salınım olmasın), sonra hedefe yaklaştıran yeniden seçilir.
+## Engel yoksa istenen yön aynen döner.
+static func _around_walls(sim: GameSim, want: Vector2) -> Vector2:
+	if want == Vector2.ZERO or sim.map == null:
+		return want
+	var r := sim.character.collision_radius
+	var probe := 24.0
+	var from := sim.player_pos
+	var got := sim.map.slide(from, from + want * probe, r) - from
+	if got.dot(want) >= probe * 0.4:
+		return want
+	var side := 0.0
+	if sim.has_meta(&"bot_side") and sim.time - float(sim.get_meta(&"bot_side_t")) < 4.0:
+		side = float(sim.get_meta(&"bot_side"))
+	if side == 0.0:
+		var best_gain := -1.0e9
+		side = 1.0
+		for cand in [1.0, -1.0]:
+			var t: Vector2 = want.orthogonal() * cand
+			var moved := sim.map.slide(from, from + t * probe, r) - from
+			var gain := moved.dot(want) + moved.length() * 0.5
+			if gain > best_gain:
+				best_gain = gain
+				side = cand
+		sim.set_meta(&"bot_side", side)
+		sim.set_meta(&"bot_side_t", sim.time)
+	return want.orthogonal() * side
 
 
 ## Bekleyen kartlardan birini seçer: evrim varsa onu, yoksa bot RNG'siyle. true = seçim yapıldı.
@@ -96,7 +127,21 @@ static func _nearest_gem_dir(sim: GameSim) -> Vector2:
 	for i in sim.gems.count:
 		var d: Vector2 = sim.gems.pos[i] - sim.player_pos
 		var l2 := d.length_squared()
-		if l2 < best:
+		if l2 < best and _path_clear(sim, sim.player_pos, sim.gems.pos[i]):
 			best = l2
 			dir = d
 	return dir.normalized() if dir != Vector2.ZERO else Vector2.ZERO
+
+
+## Düz hat katı harabe dairesinden geçmiyor mu (20 px örnekleme). Engelin arkasındaki taşa yönelip duvara
+## yapışmak yerine bot erişilebilir taşı seçer.
+static func _path_clear(sim: GameSim, a: Vector2, b: Vector2) -> bool:
+	if sim.map == null:
+		return true
+	var r := sim.character.collision_radius
+	var n := ceili(a.distance_to(b) / 20.0)
+	for k in range(1, n + 1):
+		var p := a.lerp(b, float(k) / float(n))
+		if sim.map.resolve(p, r) != p:
+			return false
+	return true

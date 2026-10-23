@@ -213,7 +213,7 @@ func _make_card(ch: Variant) -> Button:
 	col.add_theme_constant_override(&"separation", 10)
 	row.add_child(col)
 	var title: String = ch.title if ch is Choice else "Şifa"
-	var t := UiKit.label(title, &"LabelTimer", 46)
+	var t := UiKit.label(UiKit.upper_tr(title), &"LabelTimer", 46)  # Cinzel'de küçük harf yok
 	t.add_theme_color_override(&"font_color", UiKit.KEMIK_100)
 	col.add_child(t)
 	var meta := HBoxContainer.new()

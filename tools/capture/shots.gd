@@ -2,11 +2,26 @@ extends SceneTree
 ## Ekran görüntüsü öz-kontrolü (masaüstü render; commit'lenmez çıktı). Kullanım:
 ##   xvfb-run -a -s "-screen 0 1080x2400x24" godot --path . --rendering-driver opengl3 --resolution 1080x2400 \
 ##     -s res://tools/capture/shots.gd -- <çıktı_dizini> [senaryo,senaryo]
-## Senaryolar: menu, game, crowd, boss, lord, levelup, pause, win, lose, contrast, ruins, stress
+## Senaryolar: menu, game, crowd, boss, lord, levelup, pause, win, lose, contrast, ruins, stress,
+##   names (i içeren beceri adları kartta), winc3 / winc0 (kombolu/kombosuz sonuç), ruinwalk (çarpışma daireleri + yürüyüş)
 
 var out_dir := "/tmp/shots/"
 var scenarios: PackedStringArray = ["menu", "game", "crowd"]
 var c: Node
+
+
+## Çarpışma dairelerini ve oyuncu dairesini dünya üstüne çizer (yalnız ekran görüntüsü öz-kontrolü).
+class CollisionOverlay:
+	extends Node2D
+	var map: MapSim
+	var sim: GameSim
+
+	func _draw() -> void:
+		for o in map.obstacles_near(sim.player_pos):
+			draw_arc(Vector2(o.x, o.y), o.z, 0.0, TAU, 32, Color(1, 0.85, 0, 0.9), 3.0)
+		draw_arc(
+			sim.player_pos, sim.character.collision_radius, 0.0, TAU, 24, Color(0.2, 1, 0.4, 1), 3.0
+		)
 
 
 func _initialize() -> void:
@@ -25,6 +40,15 @@ func shot(n: String) -> void:
 	var img := root.get_texture().get_image()
 	img.save_png(out_dir + n + ".png")
 	print("shot ", n, " ", img.get_width(), "x", img.get_height())
+
+
+## Haritadaki en büyük katı harabenin sarmalayan çember merkezi.
+func _big_ruin(m: MapSim) -> Vector2:
+	var best := -1
+	for i in m.count:
+		if m.ob_solid[i] == 1 and m.ob_pos[i].x > 900.0 and (best < 0 or m.ob_r[i] > m.ob_r[best]):
+			best = i
+	return m.ob_pos[best] if best >= 0 else Vector2(1800, 0)
 
 
 func frames(n: int) -> void:
@@ -104,11 +128,7 @@ func _run() -> void:
 			"ruins":
 				await fresh()
 				c.sim.map.ensure(Vector2(1800, 0))
-				var target := Vector2(1800, 0)
-				for o in c.sim.map.obstacles_near(Vector2(1800, 0)):
-					if o.x > 900.0 and o.z > 100.0:
-						target = Vector2(o.x, o.y)
-						break
+				var target := _big_ruin(c.sim.map)
 				c.sim.player_pos = target + Vector2(0, 380)
 				c.sim.debug_fill(&"curumus_piyade", 25, 520.0)
 				c.sim.debug_grant(&"son_mermi_patlar", 4)
@@ -118,6 +138,58 @@ func _run() -> void:
 				advance(150)
 				await frames(3)
 				await shot("ruins")
+			"ruinwalk":
+				await fresh()
+				var m: MapSim = c.sim.map
+				m.ensure(Vector2(1800, 0))
+				var tgt := _big_ruin(m)
+				c.sim.player_pos = m.resolve(tgt + Vector2(0, 420), 22.0)
+				var ov := CollisionOverlay.new()
+				ov.map = m
+				ov.sim = c.sim
+				ov.z_index = 50
+				c.world.add_child(ov)
+				for k in 160:  # üstüne doğru yürü, sonra eğik bas (kayma)
+					var d: Vector2 = (tgt - c.sim.player_pos).normalized()
+					c.sim.step(d if k < 110 else d.rotated(deg_to_rad(40.0)))
+					ov.queue_redraw()
+				c._after_step()
+				await frames(3)
+				await shot("ruinwalk")
+			"names":
+				await fresh()
+				var ids := [&"barut_kesesi", &"son_mermi_patlar", &"kiyamet_mermisi"]
+				var chs: Array = []
+				for id in ids:
+					var ch := Choice.new()
+					ch.kind = Choice.KIND_NEW
+					ch.skill_id = id
+					ch.to_level = 1
+					ch.title = c.sim.data.get_skill(id).display_name
+					ch.desc = "Açıklama"
+					chs.append(ch)
+				var heal := Choice.new()
+				heal.kind = Choice.KIND_HEAL
+				heal.title = "Şifa"
+				chs.append(heal)
+				c.level_up.show_choices(chs, 7, c.sim.data)
+				await frames(40)
+				await shot("names")
+			"winc3", "winc0":
+				await fresh()
+				var evos: Array = []
+				if sc == "winc3":
+					evos = [&"kiyamet_mermisi", &"mermi_firtinasi", &"son_mermi_patlar"]
+				var rows := UiKit.combo_rows(evos, c.sim.data)
+				c.ui.visible = true
+				c.result_screen.show_result(
+					sc == "winc3",
+					{"time": 1290.0, "level": 31, "kills": 4210, "evolutions": evos},
+					rows
+				)
+				c.result_screen.finish_count()
+				await frames(30)
+				await shot(sc)
 			"levelup":
 				await fresh()
 				c.sim.debug_add_xp(30)

@@ -12,7 +12,7 @@ const COUNT_TIME := 0.6
 const BUTTON_DELAY := 0.8
 const W := 936.0
 const MAX_COMBOS := 5
-const EMPTY_TEXT := "Bu seferlik kombo kurulmadı. Bir aktif beceriyi en üst seviyeye çıkarıp eşini bul."
+const EMPTY_TEXT := "Bu seferlik kombo yok."
 const LOST_SUB := "Kale seni yuttu."
 const WON_SUB := "Düşmüş Kale Lordu devrildi."
 
@@ -91,7 +91,7 @@ func _build() -> void:
 	col.add_child(gap2)
 	var combo_panel := PanelContainer.new()
 	combo_panel.theme_type_variation = &"PanelRaised"
-	combo_panel.custom_minimum_size = Vector2(0, 460)
+	combo_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN  # içeriğe göre boyutlanır (boşken kısa satır)
 	combo_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var cv := VBoxContainer.new()
 	cv.add_theme_constant_override(&"separation", 24)
@@ -102,16 +102,11 @@ func _build() -> void:
 	combo_panel.add_child(cv)
 	col.add_child(combo_panel)
 
+	var gap3 := Control.new()  # düğmeler içeriğin hemen altında (alta sabit değil): panel↔düğme ölü boşluk yok
+	gap3.custom_minimum_size = Vector2(0, 24)
+	col.add_child(gap3)
 	var btns := VBoxContainer.new()
 	btns.add_theme_constant_override(&"separation", 27)
-	btns.anchor_left = 0.5
-	btns.anchor_right = 0.5
-	btns.anchor_top = 1.0
-	btns.anchor_bottom = 1.0
-	btns.offset_left = -W * 0.5
-	btns.offset_right = W * 0.5
-	btns.offset_top = -170.0 - 156.0 - 27.0 - 132.0
-	btns.offset_bottom = -170.0
 	replay_button = UiKit.button("TEKRAR OYNA", &"primary", 156.0)
 	replay_button.add_theme_font_size_override(&"font_size", 52)
 	replay_button.pressed.connect(func() -> void: replay_requested.emit())
@@ -119,7 +114,7 @@ func _build() -> void:
 	menu_button.pressed.connect(func() -> void: menu_requested.emit())
 	btns.add_child(replay_button)
 	btns.add_child(menu_button)
-	add_child(btns)
+	col.add_child(btns)
 
 
 ## Sonucu göster. combos: UiKit.combo_rows() çıktısı. subtitle boşsa varsayılan.
@@ -225,7 +220,7 @@ func _combo_row(c: Dictionary) -> Control:
 	var v := VBoxContainer.new()
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_theme_constant_override(&"separation", 2)
-	v.add_child(UiKit.label(str(c.get("name", "")), &"LabelTimer", 40))
+	v.add_child(UiKit.label(UiKit.upper_tr(str(c.get("name", ""))), &"LabelTimer", 40))
 	v.add_child(UiKit.label(str(c.get("pair", "")), &"", 28, UiKit.KEMIK_300))
 	row.add_child(v)
 	return row
