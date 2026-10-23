@@ -104,7 +104,7 @@ Ana görsel (`ana-gorsel-atis.png`, yeşil arka plan silinmiş halde) ekranın o
 - Yuvalar sabit: yeni beceri soldan sağa dolar. **Evrim:** ham beceri yuvası sekizgen evrim çerçevesine döner, ikon yeni evrim ikonuna; 300 ms amber parlama (bir kez).
 
 ### 6.3 Seviye Atlama — `04-seviye-atlama`
-Oyun duraklar, sahne %80 koyulaşır, **portre alanı** üstte (y 60–1100): karakter büyük portresi (v1'de ana görsel yer tutucu; kullanıcı portre promptu ile gelecek — kutu 760×1000 sağa dayalı, sol üstte "GUNSLINGER / SEVİYE N"). Altta **3 kart** (984×324, aralık 27): ikon çerçevesi 180 px, ad (Cinzel 46), etiket (`YENİ` mor, `YÜKSELT` bordo, `EVRİM` amber dolgu) + seviye geçişi (`Sv. 4 → 5`), açıklama 1–2 satır (≤ 60 karakter).
+Oyun duraklar, sahne %80 koyulaşır, **portre alanı** üstte: kullanıcının ürettiği `art/ref/portre-seviye-atlama.png` (1024×1536, 2:3, arka planlı) tam genişlikte (1080×1620) ekranın üstüne yerleşir; yüz ve tabanca üst yarıda kalır. Üstte koyu geçiş (başlık okunurluğu), y≈760'tan itibaren alta doğru #0D0910'a solan perde kartların arkasını örter; sol üstte "GUNSLINGER / SEVİYE N" (3 px gölge). Altta **3 kart** (984×324, aralık 27): ikon çerçevesi 180 px, ad (Cinzel 46), etiket (`YENİ` mor, `YÜKSELT` bordo, `EVRİM` amber dolgu) + seviye geçişi (`Sv. 4 → 5`), açıklama 1–2 satır (≤ 60 karakter).
 - **Etkileşim:** karta dokun = seçilir ve ekran kapanır (onay adımı yok; hız önemli). **Kazara dokunmayı önlemek için** ekran açıldıktan sonra **500 ms giriş kilidi**; bu sürede kartlar %60 opak, kilit bitince tam opak + hafif nabız. Basılı tutma yok. Kart pressed: 6 px aşağı + parlak kenar.
 - **Evrim kartı:** sekizgen çerçeve, amber kenarlık + ışıma, açıklama hangi çifte dayandığını yazar. Bir evrim kartı varsa her zaman 3 seçenekten biridir ve en alta konur (parmağın en kolay ulaştığı yer) — *öneri*; ilk iki sıra rastgele.
 - **Kenar durumları:** (a) 3'ten az seçenek kaldı (tüm yuvalar dolu/maks.) → kalan sayıda kart, ortaya hizalı; (b) hiç seçenek yok → ekran açılmaz, yerine "Şifa" sabit kartı (+%25 can, ikon `hud-can`) tek kart olarak gösterilir (*öneri; oyun tasarımı kararı*); (c) yuvalar dolu ve yeni beceri yok: yalnızca yükseltme kartları.
@@ -171,7 +171,7 @@ Projede önceden UI yoktu; yeni sistem, tek token kaynağı `tokens.json`.
 
 - **Varsayım:** 1 dp = 2,75 px (cihaz yoğunluğu doğrulanmadı; gerçek cihaz testi kullanıcıda).
 - **Varsayım:** Konsept sayfasındaki 5 renk örneği piksel olarak okundu; UI kademeleri bu tonlardan türetildi (kullanıcı onayı ister).
-- Seviye atlama portresi için kullanıcıdan gelecek görselin kırpma oranı bilinmiyor: yer tutucu 760×1000 (3:4), farklı gelirse portre kutusu ölçeklenir.
+- Seviye atlama portresi geldi (`art/ref/portre-seviye-atlama.png`) ve maketle yerleştirildi; `object-fit: cover` ile 2:3 oranı 1080×1620'ye oturur, farklı ekran oranında alt/üst kırpılır (yüz üst-orta bölgede güvende).
 - Ayarlar ekranı spec'te yok; yalnızca Ses ve Titreşim anahtarları önerildi (menü + duraklatma). Müzik/efekt ayrı kaydırıcı v1 dışı.
 - "Şifa" yedek kartı (seçenek kalmadığında) ve evrim kartının hep son sırada olması **oyun tasarımı kararıdır**; öneri olarak yazıldı.
 - Düşman/harita görselleri yer tutucu daire/dikdörtgen; yalnızca HUD yerleşimini göstermek içindir.
