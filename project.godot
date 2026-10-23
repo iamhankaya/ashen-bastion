@@ -7,7 +7,7 @@ config/name="Ashen Bastion"
 run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
-config/icon="res://icon.svg"
+config/icon="res://assets/icon/main_192x192.png"
 
 [autoload]
 
