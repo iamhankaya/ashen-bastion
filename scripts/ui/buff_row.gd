@@ -156,7 +156,7 @@ func _draw_badge(k: int, x: float, s: float, a: float, low: bool, left_steps: in
 		)
 	var f := UiKit.font_semibold()
 	var fs := roundi(float(SECS_SIZE) * s)
-	var txt := seconds_text(left_steps)
+	var txt := seconds_text(left_steps) if left_steps > 0 else ""
 	var tw := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 	var tp := c + Vector2(-tw * 0.5, r * 0.62)
 	draw_string(

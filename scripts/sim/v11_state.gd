@@ -25,6 +25,8 @@ static func hash_items(sim: GameSim) -> PackedInt64Array:
 		h.append(sim.bombs.fuse_steps[i])
 	h.append(sim.pickup_director.next_step)
 	h.append(sim.rng_pickup.state)
+	h.append(1 if sim.magazine.unlimited else 0)
+	h.append(sim.magazine._loop_index)
 	for id in sim.enemies.alive_ids():  # F-021 kaçış durumu (yer düşmanı)
 		var k := EnemyPool.index_of(id)
 		h.append(sim.enemies.stuck_n[k])

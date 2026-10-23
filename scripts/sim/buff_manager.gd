@@ -39,6 +39,7 @@ func any_active() -> bool:
 
 ## true = yeni etki, false = yenileme (süre tazelenir, yığılmaz; çarpan güncellenir).
 func start(kind: int, duration_steps: int, m: float = 1.0) -> bool:
+	duration_steps = maxi(duration_steps, 1)
 	var fresh := left_steps[kind] <= 0
 	left_steps[kind] = duration_steps
 	total_steps[kind] = duration_steps

@@ -61,6 +61,8 @@ func step(sim: GameSim) -> void:
 	if sim.pickups.count >= _max_alive:
 		return  # dolu: tür/konum çekilmez
 	var kind := _pick_kind()
+	if kind >= sim.data.pickup_ids.size():
+		return  # bozuk veri (doğrulayıcı raporlar): hizasız tür doğurulmaz
 	var angle := _rng.randf() * TAU
 	var dist := _rng.randf_range(_dist.x, _dist.y)
 	var p := sim.map.resolve(sim.player_pos + Vector2.from_angle(angle) * dist, _clearance)
