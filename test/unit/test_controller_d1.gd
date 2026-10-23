@@ -203,3 +203,17 @@ func test_lord_death_slowmo_and_blasts_run_inside_the_win_delay() -> void:
 	assert_between(t, 1.1, 1.4, "yavaş çekim 1,2 sn gerçek süre, gecikmeden önce biter")
 	assert_eq(gc.fx_renderer._ex_head, head0 + 3, "3 patlama gecikme içinde patladı")
 	assert_eq(gc.screen, PauseLogic.Screen.PLAYING, "kazanma gecikmesi 1,8 sn: hâlâ PLAYING")
+
+
+func test_bomb_explosion_requests_hit_stop_and_leaves_char_without_duplicate_rings() -> void:
+	var gc := _ctrl()
+	gc.start_run()
+	var steps := gc.sim.step_count
+	gc.sim.bus.bomb_exploded.emit(Vector2(10, 10), 320.0)
+	assert_almost_eq(gc.hit_stop.left, 0.06, 1e-6, "bomba vuruş donması 0,06 sn")
+	assert_eq(gc.camera._shake, GameController.BOMB_SHAKE)
+	assert_eq(gc.fx_renderer.char_count(), 1, "zemin kömürü")
+	assert_eq(gc.fx_renderer.ring_count(), 1, "tek şok halkası (denetleyici ek halka eklemez)")
+	for i in 3:
+		gc._process(DT)
+	assert_eq(gc.sim.step_count, steps, "donarken sim adımlanmaz")

@@ -69,68 +69,7 @@ func _cases_d1() -> Array:
 
 ## D2: eklentiler, etkiler, bomba, eklenti HUD
 func _cases_d2() -> Array:
-	var sim := GameSim.new(1, &"gunslinger")
-	var pool := PickupPool.new()
-	pool.count = 1
-	var bombs := BombPool.new()
-	var buffs := BuffManager.new()
-	buffs.left_steps[0] = 3
-	var director := PickupDirector.new({}, RandomNumberGenerator.new())
-	director.armed = true
-	var busy := GameSim.new(1, &"gunslinger")
-	busy.debug_spawn_pickup(&"kizil_iksir", Vector2.ZERO)
-	busy.bombs.count = 1
-	var ints := PackedInt32Array()
-	var buff_row: BuffRow = _node(BuffRow.new())
-	buff_row.visible = true
-	var arrow: OffscreenArrow = _node(OffscreenArrow.new())
-	arrow.visible = true
-	var floaty: FloatText = _node(FloatText.new())
-	floaty.visible = true
-	return [
-		[func() -> void: pool.tick(ints), &"PickupPool.tick"],
-		[func() -> void: bombs.plant(Vector2.ZERO, 48, 320.0, 4), &"BombPool.plant"],
-		[func() -> void: bombs.remove(0), &"BombPool.remove"],
-		[func() -> void: buffs.start(0, 720), &"BuffManager.start"],
-		[func() -> void: buffs.active(0), &"BuffManager.active"],
-		[func() -> void: buffs.ratio(0), &"BuffManager.ratio"],
-		[func() -> void: buffs.tick(ints), &"BuffManager.tick"],
-		[func() -> void: buffs.damage_mult(), &"BuffManager.damage_mult"],
-		[func() -> void: buffs.fire_rate_mult(), &"BuffManager.fire_rate_mult"],
-		[func() -> void: buffs.unlimited(), &"BuffManager.unlimited"],
-		[func() -> void: director.step(sim), &"PickupDirector.step"],
-		[func() -> void: director.skip_to(600), &"PickupDirector.skip_to"],
-		[func() -> void: director.progress_hash(), &"PickupDirector.progress_hash"],
-		[
-			func() -> void: sim.bomb_blast(Vector2.ZERO, 320.0, 600.0, 0.08, 600.0),
-			&"PickupSystem.blast"
-		],
-		[func() -> void: busy.debug_collect_pickups(), &"PickupSystem.collect"],
-		[func() -> void: busy._tick_bombs(), &"PickupSystem.tick_bombs"],
-		[func() -> void: busy._apply_buffs(), &"PickupSystem.apply_buffs"],
-		[func() -> void: busy._buffs_ended(PackedInt32Array([0])), &"PickupSystem.buffs_ended"],
-		[func() -> void: Magazine.new().set_unlimited(true), &"Magazine.set_unlimited"],
-		[func() -> void: _node(PickupRenderer.new()).bind(sim), &"PickupRenderer.bind"],
-		[func() -> void: _node(PickupRenderer.new()).refresh(0.016), &"PickupRenderer.refresh"],
-		[func() -> void: buff_row.bind(sim), &"BuffRow.bind"],
-		[func() -> void: buff_row.refresh(0.016), &"BuffRow.refresh"],
-		[func() -> void: BuffRow.badge_x(1), &"BuffRow.badge_x"],
-		[func() -> void: BuffRow.seconds_text(600), &"BuffRow.seconds_text"],
-		[func() -> void: BuffRow.blinking(2.0), &"BuffRow.blinking"],
-		[func() -> void: arrow.bind(sim), &"OffscreenArrow.bind"],
-		[func() -> void: arrow.refresh(0.016), &"OffscreenArrow.refresh"],
-		[
-			func() -> void:
-				OffscreenArrow.place(Vector2.ZERO, Vector2.ZERO, Vector2(1080, 2400), Rect2(), 50.0),
-			&"OffscreenArrow.place"
-		],
-		[func() -> void: floaty.show_text("x", Vector2.ZERO), &"FloatText.show_text"],
-		[func() -> void: floaty.refresh(0.016), &"FloatText.refresh"],
-		[
-			func() -> void: _node(MagazineDrum.new()).set_unlimited(true),
-			&"MagazineDrum.set_unlimited"
-		],
-	]
+	return []
 
 
 ## D3: skor, highscore, ekranlar — hepsi uygulandı (D3-1..D3-5); iskelet kaydı kalmadı.

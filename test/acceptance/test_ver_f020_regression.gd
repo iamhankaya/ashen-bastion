@@ -151,9 +151,9 @@ func _real_cases(seed_value: int, n: int, angle_off: float, seconds: int) -> Dic
 	return tot
 
 
-func test_karakterizasyon_f_ver3_001_single_enemy_stuck_in_concave_real_ruins() -> void:
-	## Katı harabeler çoğunlukla geçilir (137/144), ama içbükey çok daireli yapılarda (ncirc 9–11) tek düşman kalıcı takılır.
-	## Düzeltilince `stuck` 0 olmalı: bu testi tersine çevir (assert_eq(stuck, 0)).
+func test_f_ver3_001_f021_single_enemy_never_stuck_in_concave_real_ruins() -> void:
+	## F-021 düzeltmesi (çıkmaz kaçışı, EnemyEscape): içbükey çok daireli yapılarda (ncirc 9–11) tek düşman artık takılmaz.
+	## (Eski karakterizasyon: 144 durumda 7 takılma.)
 	var tot := {"cases": 0, "stuck": 0, "camp": 0, "flips": 0, "rev": 0}
 	for s in SEEDS:
 		for off in [0.0, 0.6, -0.6]:
@@ -164,11 +164,11 @@ func test_karakterizasyon_f_ver3_001_single_enemy_stuck_in_concave_real_ruins() 
 			tot["rev"] = maxi(tot["rev"], r["rev"])
 	gut.p("TEK (yeni tohumlar, düz+eğik): %s" % str(tot))
 	assert_gt(tot["cases"], 40)
-	assert_eq(tot["stuck"], 7, "F-ver3-001: bilinen takılma sayısı (değişirse güncelle/ters çevir)")
+	assert_eq(tot["stuck"], 0, "F-021: içbükey cepte takılan tek düşman kalmadı")
 
 
-func test_karakterizasyon_f_ver3_001_group_of_8_stacks_at_concave_real_ruins() -> void:
-	## Aynı içbükey yapılarda 8'li grup yüzeyde yığılır. Düzeltilince stuck=0 ve camp=0 olmalı.
+func test_f_ver3_001_f021_group_of_8_does_not_stack_at_concave_real_ruins() -> void:
+	## Aynı içbükey yapılarda 8'li grup artık yüzeyde yığılmaz (eski karakterizasyon: 6 takılan grup, 31 yığılan).
 	var tot := {"cases": 0, "stuck": 0, "camp": 0, "flips": 0, "rev": 0}
 	for s in SEEDS:
 		for off in [0.0, 0.6]:
@@ -179,12 +179,12 @@ func test_karakterizasyon_f_ver3_001_group_of_8_stacks_at_concave_real_ruins() -
 			tot["rev"] = maxi(tot["rev"], r["rev"])
 	gut.p("GRUP 8 (yeni tohumlar): %s" % str(tot))
 	assert_gt(tot["cases"], 30)
-	assert_eq(tot["stuck"], 6, "F-ver3-001: bilinen takılan grup sayısı")
-	assert_lte(tot["camp"], 31, "F-ver3-001: yığılan düşman sayısı daha kötüye gitmez")
+	assert_eq(tot["stuck"], 0, "F-021: takılan grup kalmadı")
+	assert_eq(tot["camp"], 0, "F-021: yüzeyde yığılan düşman kalmadı")
 
 
-func test_karakterizasyon_f_ver3_001_camping_player_locks_group_only_at_concave_ruins() -> void:
-	# Kamp: oyuncu sabit, 8'li grup 60 sn sonra bile oyuncuya yapışık (yüzeyde asılı kalan yok).
+func test_f_ver3_001_f021_camping_player_does_not_lock_group_at_concave_ruins() -> void:
+	# Kamp: oyuncu sabit, 8'li grup 60 sn içinde oyuncuya ulaşır (eski karakterizasyon: 1 takılan durum).
 	var tot := {"cases": 0, "stuck": 0, "camp": 0, "flips": 0, "rev": 0}
 	for s in [4, 5, 6]:
 		var r := _real_cases(s, 8, 0.0, 60)
@@ -192,8 +192,8 @@ func test_karakterizasyon_f_ver3_001_camping_player_locks_group_only_at_concave_
 			tot[k] += r[k]
 	gut.p("KAMP 60sn: %s" % str(tot))
 	assert_gt(tot["cases"], 10)
-	assert_eq(tot["stuck"], 1, "F-ver3-001: 60 sn kampta takılan durum (yalnız içbükey yapı)")
-	assert_lte(tot["camp"], 8)
+	assert_eq(tot["stuck"], 0, "F-021: 60 sn kampta takılan durum yok")
+	assert_eq(tot["camp"], 0)
 	assert_eq(tot["flips"], 0, "takılmayan durumlarda taraf salınımı yok")
 
 
@@ -229,9 +229,9 @@ func test_concave_gap_between_two_ruins_enemy_passes_when_passable() -> void:
 	assert_eq(stuck, 0, "dar boşluktan geçemeyen: %d/%d" % [stuck, cases])
 
 
-func test_karakterizasyon_f_ver3_001_concave_cup_traps_enemy_inside_pocket() -> void:
-	# U kap: arka duvar oyuncuyla düşman arasında, yan duvarlar -y'ye açık. Düşman kabın içinde; yan duvarın uç
-	# noktasını geçip dolanmalı.
+func test_f_ver3_001_f021_concave_cup_enemy_escapes_the_pocket() -> void:
+	# U kap: arka duvar oyuncuyla düşman arasında, yan duvarlar -y'ye açık. Düşman kabın içinde; kaçış modu yan
+	# duvarın yüzeyini izleyip uç noktayı geçer ve oyuncuya ulaşır (eski karakterizasyon: 6/6 takılma).
 	var walls: Array = []
 	walls += _wall(Vector2(-350, 0), Vector2(350, 0))
 	walls += _wall(Vector2(-350, 0), Vector2(-350, -500))
@@ -252,11 +252,11 @@ func test_karakterizasyon_f_ver3_001_concave_cup_traps_enemy_inside_pocket() -> 
 					% [n, px, r["reached"], r["first"], r["flips"], r["rev"]]
 				)
 			)
-	assert_eq(stuck, cases, "F-ver3-001: kap tuzağı (hepsi takılır; düzelince 0 olmalı)")
+	assert_eq(stuck, 0, "F-021: kap tuzağından çıkamayan: %d/%d" % [stuck, cases])
 
 
-func test_karakterizasyon_f_ver3_001_concave_l_corner_traps_enemy() -> void:
-	# L köşe: iki duvar 90° birleşir; düşman iç köşede, oyuncu köşenin dışında karşı çaprazda.
+func test_f_ver3_001_f021_concave_l_corner_enemy_escapes() -> void:
+	# L köşe: iki duvar 90° birleşir; düşman iç köşede, oyuncu köşenin dışında karşı çaprazda (eski: 4/4 takılma).
 	var walls: Array = []
 	walls += _wall(Vector2(0, 0), Vector2(700, 0))
 	walls += _wall(Vector2(0, 0), Vector2(0, 700))
@@ -276,7 +276,7 @@ func test_karakterizasyon_f_ver3_001_concave_l_corner_traps_enemy() -> void:
 					% [n, s, r["reached"], r["first"], r["flips"], r["rev"]]
 				)
 			)
-	assert_eq(stuck, cases, "F-ver3-001: L köşe tuzağı (hepsi takılır; düzelince 0 olmalı)")
+	assert_eq(stuck, 0, "F-021: L köşeden çıkamayan: %d/%d" % [stuck, cases])
 
 
 func test_exempt_kinds_still_ignore_ruins_after_f020() -> void:

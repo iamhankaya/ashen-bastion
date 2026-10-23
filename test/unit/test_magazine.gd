@@ -133,3 +133,64 @@ func test_signals_fire() -> void:
 	assert_signal_emitted(m, "reload_started")
 	m.tick(2.0, StatBlock.new())
 	assert_signal_emitted(m, "reload_finished")
+
+
+func test_unlimited_keeps_count_and_cycles_rhythm_index() -> void:
+	var m := _mag()
+	m.set_unlimited(true)
+	var seen: Array[int] = []
+	var lasts := 0
+	for _k in 14:
+		var r := m.consume()
+		assert_true(r["ok"])
+		seen.append(r["index"])
+		if r["is_last"]:
+			lasts += 1
+		assert_eq(m.count, m.cap, "sayaç düşmez")
+	assert_eq(seen, [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2])
+	assert_eq(lasts, 2, "ritim: son mermi her cap'te bir")
+
+
+func test_unlimited_continues_cycle_from_current_position() -> void:
+	var m := _mag()
+	m.consume()
+	m.consume()
+	m.set_unlimited(true)  # count 4: sıradaki 3. mermi
+	assert_eq(m.count, 6)
+	assert_eq(m.consume()["index"], 3)
+
+
+func test_unlimited_cancels_reload_and_emits_finished() -> void:
+	var m := _mag()
+	m.count = 0
+	m.start_reload(StatBlock.new())
+	var finished := [0]
+	m.reload_finished.connect(func() -> void: finished[0] += 1)
+	m.set_unlimited(true)
+	assert_false(m.reloading)
+	assert_eq(m.count, m.cap)
+	assert_eq(finished[0], 1)
+	assert_eq(m.consume()["index"], 1, "doldururken alınırsa döngü 1'den")
+
+
+func test_unlimited_disables_reload_tick_and_refund_and_restores_full_on_end() -> void:
+	var m := _mag()
+	m.set_unlimited(true)
+	m.tick(0.5, StatBlock.new())
+	assert_false(m.reloading)
+	m.refund(3)
+	assert_eq(m.count, m.cap)
+	m.set_unlimited(false)
+	assert_eq(m.count, m.cap)
+	assert_false(m.reloading, "bitişte doldurma tetiklenmez")
+	assert_eq(m.consume()["index"], 1)
+	assert_eq(m.count, 5, "normal tüketim geri gelir")
+
+
+func test_set_unlimited_is_idempotent() -> void:
+	var m := _mag()
+	m.consume()
+	m.set_unlimited(true)
+	m.consume()
+	m.set_unlimited(true)
+	assert_eq(m.consume()["index"], 3, "ikinci çağrı döngüyü sıfırlamaz")
