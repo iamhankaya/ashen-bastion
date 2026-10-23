@@ -295,6 +295,39 @@ def _band_x(alpha_full: np.ndarray, top: int, h: int) -> float:
     return _centroid_x(alpha_full, y0, y1)
 
 
+# ---------------------------------------------------------------- ayak kayması ölçümü
+def foot_contacts(cell_alpha: np.ndarray, band: int = 8) -> list[float]:
+    """Hücrenin alt `band` pikselinde zemine değen ayak parçalarının merkez x'leri (hücre ortasına göre, strip px)."""
+    cw = cell_alpha.shape[1]
+    cols = (cell_alpha[-band:] > 0.5).any(axis=0)
+    return [((a + b - 1) / 2.0) - cw / 2.0 for a, b in _runs(np.nonzero(cols)[0])]
+
+
+def foot_slide(res: StripResult, stride: float, world_per_px: float, tol: float = 3.0) -> dict:
+    """Basan ayağın hücre içindeki konumu kareden kareye `stride/N` (dünya px) geriye gitmeli (gövde hücre ortasında
+    sabit, dünya zeminde ayak sabit). Her ardışık çift (döngü kapanışı dahil) için en uygun ayak çifti seçilir;
+    hata = |(b - a) + adım|. `ok_pairs`: hata <= tol olanlar. Çift ayak desteğinde iki aday olduğundan ölçüm cömerttir
+    (kalan hata gerçek kayma payıdır). Döngüde en çok 2 devir (ayak değişimi) çifti tolerans dışı olabilir."""
+    cw, ch = res.manifest["cell"]
+    n = res.manifest["frames"]
+    step = stride / n
+    cont = [[c * world_per_px for c in foot_contacts(res.strip[:, f * cw:(f + 1) * cw, 3] / 255.0)] for f in range(n)]
+    errs = []
+    for f in range(n):
+        g = (f + 1) % n
+        best = min((abs((b - a) + step) for a in cont[f] for b in cont[g]), default=float("inf"))
+        errs.append(float(best))
+    ok = sum(1 for e in errs if e <= tol)
+    return {
+        "step_px": round(step, 2),
+        "contacts_world_px": [[round(c, 1) for c in row] for row in cont],
+        "pair_err_px": [round(e, 1) if np.isfinite(e) else None for e in errs],
+        "ok_pairs": ok,
+        "total_pairs": n,
+        "pass": ok >= n - 2,
+    }
+
+
 # ---------------------------------------------------------------- önizleme
 def write_preview(res: StripResult, out_path: Path, kind: str) -> Path:
     """Şeridi yeşil ve koyu mor zeminde alt alta çizer; ayak çizgisi (kırmızı), merkez (turkuaz), kare numarası."""
@@ -346,6 +379,8 @@ def main(argv=None) -> int:
     ap.add_argument("--kind", choices=["player", "enemy"], default="player")
     ap.add_argument("--stand", help="duruş görseli (RGBA PNG): ölçek ve duruş hücresi")
     ap.add_argument("--target-height", type=float, help="duruş görseli yoksa hedef kare boyu (px)")
+    ap.add_argument("--stride", type=float, help="ayak kayması ölçümü için çevrim uzunluğu (dünya px; varsayılan oyuncu 136, düşman 72)")
+    ap.add_argument("--display-height", type=float, help="görüntü boyu (dünya px; varsayılan oyuncu 200)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--preview", action="store_true")
@@ -364,6 +399,11 @@ def main(argv=None) -> int:
         ap.error("--sheet ya da --frames gerekli")
     stand = np.asarray(Image.open(args.stand).convert("RGBA")) if args.stand else None
     res = build_strip(cells, stand, args.kind, args.drop_dup_last, args.target_height, group_size)
+    disp = args.display_height or (200.0 if args.kind == "player" else None)
+    if stand is not None and disp:
+        stand_h = res.manifest["cell"][1] / res.manifest["display_scale_hint"]
+        cycle = args.stride or (136.0 if args.kind == "player" else 72.0)
+        res.manifest["quality"]["foot_slide"] = foot_slide(res, cycle, disp / stand_h)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(res.strip, "RGBA").save(out)
@@ -374,6 +414,9 @@ def main(argv=None) -> int:
         p = write_preview(res, Path(args.preview_dir) / (out.stem + "_preview.png"), args.kind)
         print("önizleme:", p)
     q = res.manifest["quality"]
+    fs = q.get("foot_slide")
+    if fs:
+        print("ayak kayması: %d/%d çift ≤3 px (adım %.1f px) → %s" % (fs["ok_pairs"], fs["total_pairs"], fs["step_px"], "GEÇTİ" if fs["pass"] else "KALDI"))
     print("kare=%d hücre=%s ölçek=%.4f ayak_sapma@1536=%.1f px boy_sapma=%s%%" % (
         res.manifest["frames"], res.manifest["cell"], res.scale, q["foot_dev_px_1536"], [float(v) for v in q["height_dev_pct"]]))
     return 0

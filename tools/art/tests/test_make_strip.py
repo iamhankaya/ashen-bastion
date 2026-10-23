@@ -215,3 +215,32 @@ def test_stray_fragments_from_the_neighbour_frame_are_removed():
     a[100:112, 2:8] = 1.0  # komşu kareden taşan palto ucu
     out = ms.keep_main_parts(a)
     assert out[105, 4] == 0.0 and out[50, 60] == 1.0
+
+
+# ----------------------------------------------------------------- ayak kayması
+def _slide_cells(step_px: int, n: int = 6, drift: int = 0):
+    """Basan ayağı kare başına `step_px` geriye giden sentetik kareler (gövde sabit, ayak bloğu kayar)."""
+    cells = []
+    for f in range(n):
+        cell = np.zeros((CELL_H, CELL_W, 3), np.uint8)
+        cell[:] = GREEN
+        cell[20:110, 40:60] = (150, 60, 60)  # gövde (sabit)
+        x = 50 + 40 - (f % 3) * step_px + (f // 3) * drift  # her yarım çevrimde ayak değişir: konum başa döner
+        cell[CELL_H - 20:CELL_H - 8, x - 6:x + 6] = (60, 40, 20)
+        cells.append(cell)
+    return cells
+
+
+def test_foot_slide_passes_for_a_locked_planted_foot():
+    cells = _slide_cells(step_px=14)
+    res = ms.build_strip(cells, stand_rgba=stand_image(), kind="player")
+    fs = ms.foot_slide(res, stride=6 * 14 * res.scale, world_per_px=1.0)
+    assert fs["ok_pairs"] >= 4 and fs["pass"], fs
+
+
+def test_foot_slide_fails_when_the_planted_foot_does_not_follow_the_stride():
+    cells = _slide_cells(step_px=14)
+    res = ms.build_strip(cells, stand_rgba=stand_image(), kind="player")
+    fs = ms.foot_slide(res, stride=300.0, world_per_px=1.0)
+    assert not fs["pass"], fs
+    assert fs["ok_pairs"] < 4

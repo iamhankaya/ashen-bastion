@@ -35,3 +35,11 @@ Varlık listesi ve hedef boyutlar `art_manifest.json`'dadır. `--preview` kontak
 - Katman ayrımı temiz olmadığından tam sanat `background`, `foreground` tamamen saydam. Sanat tuvalin %64'ü (ortadaki 288 px maske penceresine sığar), çevre aynı sanatın bulanık/koyu hâli.
 - `monochrome`: kaba elle çizilmiş çokgen silüet (şapkalı karakter) + ay halkası, 264 px güvenli bölgede; beyaz + alfa.
 - Testler: `tests/test_icons.py` (boyut/kanal/güvenli bölge/taze çıktı eşitliği).
+
+## Yürüme şeridi (`make_strip.py`, v1.1 D4)
+`python tools/art/make_strip.py --sheet <png> [--rows N|y0:y1] [--cells N] [--grid CxR] [--drop-dup-last] --kind player|enemy --stand <png> --out <şerit.png> --manifest <json> [--preview]`
+(ya da `--frames a.png b.png ...`). Başlık şeridi/ayırıcı atılır; kareler **ortak ölçekle** (duruş alfa boyu / karelerin ortanca boyu)
+ayak çizgisi alt kenarda, yatay hiza gövde üst yarısının ağırlık merkezine göre hizalanır. Oyuncu şeridi N yürüme + 1 duruş hücresi
+(indeks N), düşman şeridi yalnız N hücre. Manifest: `frames, cell, scale, display_scale_hint, shoulder_dev (oyuncu), quality{foot_dev_px_1536,
+height_dev_pct, width_dev_pct, foot_slide}`. `foot_slide` basan ayağın kare başına `stride/N` geriye gidip gitmediğini ölçer (kapı: ≥N−2 çift ≤3 px).
+Kalite kapısı sonuçları ve komutlar: `docs/dev/v1.1-d4/README.md`. Testler: `tests/test_make_strip.py` (sentetik 7 hücreli sayfa).

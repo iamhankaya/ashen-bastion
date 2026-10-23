@@ -1,6 +1,7 @@
 shader_type canvas_item;
 // Gövde ikincil hareketi + rim konturu + hasar/ölüm tonları. Parametreler karakter verisinden (rig.sway):
-//   etek (hem_from_y altı) yatay kayar (sway, amp px) ve yürürken adım fazıyla ±3 px ek salınır (walk_phase);
+//   etek (hem_from_y altı) yatay kayar (sway, amp px) ve prosedürel yürürken adım fazıyla ±3 px ek salınır (walk_phase;
+//   kare modunda bu terim kapalı: kareler ayağı taşır);
 //   atkı bölgesi (scarf_rect) zamanla dalgalanır (scarf_amp: kod her kare yazar).
 // Anlık tepkiler: hit (kemik-beyaz parlama), tint_amt/tint (bordo/altın ton), desat (ölümde solma).
 // Kare modu (D4): cells > 1 ise doku yatay şerittir; frame_a/frame_b hücreleri frame_mix ile harmanlanır (yalnız duruş geçişi).
@@ -39,7 +40,8 @@ void vertex() {
 	vec2 su = (UV - pad_frac) / max(vec2(1.0) - 2.0 * pad_frac, vec2(0.001));
 	float k = clamp((su.y - hem_from_y) / max(1.0 - hem_from_y, 0.001), 0.0, 1.0);
 	VERTEX.x += sway * amp * k * k;
-	VERTEX.x += sin(walk_phase * 6.2831853 * 2.0) * 3.0 * k * k;
+	// Adım fazı etek salınımı yalnız prosedürel yürümede: kare modunda ayak/etek hareketi karelerde (ayak kaymasın).
+	VERTEX.x += sin(walk_phase * 6.2831853 * 2.0) * (cells > 1.5 ? 0.0 : 3.0) * k * k;
 	vec2 inside = step(scarf_rect.xy, su) * step(su, scarf_rect.zw);
 	float m = inside.x * inside.y;
 	float depth = clamp((scarf_rect.z - su.x) / max(scarf_rect.z - scarf_rect.x, 0.001), 0.0, 1.0);
