@@ -749,3 +749,104 @@ func test_a12_walking_frame_rate_follows_distance_not_time() -> void:
 	assert_almost_eq(
 		counts[150.0] / counts[300.0], 0.5, 0.1, "yarı hız: yarı kare hızı (mesafe tabanlı)"
 	)
+
+
+# --- A24: kare yok/var kipleri -------------------------------------------------------------------------------
+
+const STRIP_DIR := "user://v11_strip_tests"
+
+
+## N+1 hücreli renkli sentetik yürüme şeridi yazar; yolunu döndürür.
+func _strip(n: int) -> String:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(STRIP_DIR))
+	var cw := 64
+	var ch := 96
+	var img := Image.create_empty(cw * (n + 1), ch, false, Image.FORMAT_RGBA8)
+	for c in n + 1:
+		img.fill_rect(
+			Rect2i(c * cw + 8, 8, cw - 16, ch - 8),
+			Color.from_hsv(float(c) / float(n + 1), 0.8, 0.9)
+		)
+	var path := "%s/strip_%d.png" % [STRIP_DIR, n]
+	img.save_png(ProjectSettings.globalize_path(path))
+	return path
+
+
+func _view_run(frames: int) -> Dictionary:
+	# Taze GameData: sim.character.rig değişikliği paylaşılan önbelleğe sızmaz.
+	var sim := SimKit.make(3, {"data_kind": "real", "pickups": false, "log_events": false})
+	SimKit.godmode(sim)
+	var w: Dictionary = sim.character.rig["walk"]
+	w["frames"] = frames
+	if frames > 0:
+		w["strip"] = _strip(frames)
+		w["cell"] = [64, 96]
+		w["shoulder_dev"] = []
+	var v := PlayerView.new()
+	add_child_autofree(v)
+	v.bind(sim)
+	for i in 180:
+		sim.step(Vector2.RIGHT)
+		v.update_view(1.0 / 60.0)
+	for i in 60:
+		sim.step(Vector2.ZERO)
+		v.update_view(1.0 / 60.0)
+	return {"sim": sim, "view": v}
+
+
+func after_all() -> void:
+	var abs_dir := ProjectSettings.globalize_path(STRIP_DIR)
+	if not DirAccess.dir_exists_absolute(abs_dir):
+		return
+	for f in DirAccess.get_files_at(abs_dir):
+		DirAccess.remove_absolute(abs_dir.path_join(f))
+	DirAccess.remove_absolute(abs_dir)
+
+
+func test_a24_frames_zero_runs_procedural_fallback_without_errors() -> void:
+	if V11Slice.require(self, "D1"):
+		return
+	var r := _view_run(0)
+	assert_gt(r["sim"].player_pos.x, 100.0, "oyuncu yürüdü")
+	assert_not_null(r["view"].body)
+	var a := _anim(0)
+	var st := {"bob": 0.0}
+	_run(
+		a,
+		2.0,
+		Vector2(FAST, 0),
+		false,
+		-1.0,
+		func(_t: float) -> void: st["bob"] = maxf(st["bob"], absf(a.bob_px))
+	)
+	assert_gt(st["bob"], 5.0, "kare yok: prosedürel bob çalışır")
+	assert_eq(a.frame_b, 0, "kare seçimi kullanılmaz")
+	assert_almost_eq(a.frame_mix, 0.0, 1e-4)
+
+
+func test_a24_synthetic_six_and_seven_frame_strips_cycle_all_cells() -> void:
+	if V11Slice.require(self, "D1") or V11Slice.require(self, "D4"):
+		return
+	for n in [6, 7]:
+		var a := _anim(n)
+		var seen := {}
+		_run(a, 0.2, Vector2(FAST, 0))
+		_run(a, 2.5, Vector2(FAST, 0), false, -1.0, func(_t: float) -> void: seen[a.frame_a] = true)
+		assert_eq(
+			seen.size(), n, "N=%d: yürürken %d kare de görünür (%s)" % [n, n, str(seen.keys())]
+		)
+		for k in seen:
+			assert_between(
+				int(k), 0, n - 1, "yürüme karesi 0..N-1 (duruş hücresi N yürürken seçilmez)"
+			)
+		var step := WalkCycle.foot_shift_per_frame(136.0, n)
+		assert_almost_eq(step, 136.0 / float(n), 1e-4)
+
+
+func test_a24_view_runs_with_synthetic_six_and_seven_frame_strips() -> void:
+	if V11Slice.require(self, "D1") or V11Slice.require(self, "D4"):
+		return
+	for n in [6, 7]:
+		var r := _view_run(n)
+		assert_gt(r["sim"].player_pos.x, 100.0, "N=%d: oyuncu yürüdü, görünüm hatasız" % n)
+		assert_not_null(r["view"].body)

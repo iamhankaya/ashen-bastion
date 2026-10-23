@@ -122,3 +122,15 @@ func test_pool_caps_and_budget_constants() -> void:
 	assert_eq(PauseLogic.LEVEL_UP_PREROLL, ExpectedTablesV11.DELAY_LEVELUP)
 	assert_eq(GameSim.RNG_STREAMS.back(), &"pickup", "beşinci akış sonda")
 	assert_eq(GameSim.RNG_STREAMS.size(), 5)
+
+
+func test_pickup_icons_load_as_textures_at_a_readable_size() -> void:
+	for id in _data.pickup_ids:
+		var def: PickupDef = _data.get_pickup(id)
+		var tex := (
+			ArtLoader.texture(def.icon) if def.icon.ends_with(".png") else load(def.icon)
+			as Texture2D
+		)
+		assert_not_null(tex, "%s: ikon yüklenir (%s)" % [id, def.icon])
+		if tex != null:
+			assert_gte(tex.get_width(), 50, "%s: ikon >= 50 px (54-80 px okunurluk)" % id)
