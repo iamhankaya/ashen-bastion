@@ -86,7 +86,7 @@ func _build() -> void:
 	head.anchor_right = 1.0
 	head.offset_top = 150.0
 	head.add_theme_constant_override(&"separation", 0)
-	var tag := UiKit.label("KÜL VE ÇELİK", &"LabelAccent", 36)
+	var tag := UiKit.label("ASH AND STEEL", &"LabelAccent", 36)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tag.add_theme_constant_override(&"shadow_offset_y", 0)
 	head.add_child(tag)
