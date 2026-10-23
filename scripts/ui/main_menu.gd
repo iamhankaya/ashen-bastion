@@ -13,6 +13,7 @@ signal debug_stress_requested
 const VERSION := "0.1"
 const HERO_PATH := "res://assets/gfx/ui/ana_gorsel.png"
 const W := 936.0
+const TOGGLE_FONT := 36  # "TİTREŞİM: KAPALI" 454 px'e sığar; sütun 936'dan taşmaz (F-ashen-bastion-022)
 const TOGGLE_W := 454.0  # iki anahtar eşit genişlikte (etiket uzunluğu yerleşimi kaydırmaz)
 const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
@@ -166,10 +167,12 @@ func _build() -> void:
 	sound_button = UiKit.button("", &"secondary")
 	sound_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sound_button.custom_minimum_size.x = TOGGLE_W
+	sound_button.add_theme_font_size_override(&"font_size", TOGGLE_FONT)
 	sound_button.pressed.connect(_on_sound)
 	vibration_button = UiKit.button("", &"secondary")
 	vibration_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vibration_button.custom_minimum_size.x = TOGGLE_W
+	vibration_button.add_theme_font_size_override(&"font_size", TOGGLE_FONT)
 	vibration_button.pressed.connect(_on_vibration)
 	row.add_child(sound_button)
 	row.add_child(vibration_button)

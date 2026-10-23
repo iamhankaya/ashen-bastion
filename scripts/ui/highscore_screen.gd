@@ -49,19 +49,21 @@ var _built: bool = false
 ## Sonuç çipi: "KAZANDI" (amber kenar + çizilmiş onay) / "YENİLDİ" (bordo dolgu).
 class ResultChip:
 	extends Control
+	const FONT_SIZE := 26  # min metin 26 px (V-05)
+	const HEIGHT := 40.0
 	var won: bool = false
 	var text: String = ""
 
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		custom_minimum_size = Vector2(0, 34)
+		custom_minimum_size = Vector2(0, HEIGHT)
 
 	func configure(p_won: bool) -> void:
 		won = p_won
 		text = "KAZANDI" if won else "YENİLDİ"
 		var f := UiKit.font_bold()
-		var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
-		size = Vector2(tw + (58.0 if won else 36.0), 34.0)
+		var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+		size = Vector2(tw + (62.0 if won else 38.0), HEIGHT)
 		custom_minimum_size = size
 		queue_redraw()
 
@@ -69,17 +71,17 @@ class ResultChip:
 		var sb: StyleBoxFlat
 		var col := UiKit.AMBER if won else UiKit.KEMIK_100
 		if won:
-			sb = UiKit.stylebox(Color(UiKit.VOID, 0.0), UiKit.AMBER, 3, 17)
+			sb = UiKit.stylebox(Color(UiKit.VOID, 0.0), UiKit.AMBER, 3, 20)
 		else:
-			sb = UiKit.stylebox(UiKit.BORDO_500, UiKit.BORDO_400, 2, 17)
+			sb = UiKit.stylebox(UiKit.BORDO_500, UiKit.BORDO_400, 2, 20)
 		draw_style_box(sb, Rect2(Vector2.ZERO, size))
-		var x := 18.0
+		var x := 19.0
 		if won:
-			var pts := PackedVector2Array([Vector2(14, 18), Vector2(19, 24), Vector2(29, 11)])
+			var pts := PackedVector2Array([Vector2(14, 21), Vector2(20, 28), Vector2(31, 12)])
 			draw_polyline(pts, col, 3.0, true)
-			x = 38.0
+			x = 40.0
 		draw_string(
-			UiKit.font_bold(), Vector2(x, 25.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, col
+			UiKit.font_bold(), Vector2(x, 29.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, col
 		)
 
 
@@ -367,6 +369,8 @@ func _layout() -> void:
 	(empty_box.get_node("Ring") as Control).position = Vector2((_w - 160.0) * 0.5, 0)
 	_abs(empty_title, 0.0, 220.0, _w, 80.0)
 	empty_title.position = Vector2(0, 220.0)
+	# autowrap'lı Label'ın en küçük yüksekliği, genişlik 1 px'ken hesaplanıp (2202 px) takılabiliyordu: genişlik taban olarak verilir
+	empty_text.custom_minimum_size = Vector2(_w - 120.0, 0.0)
 	_abs(empty_text, 60.0, 330.0, _w - 120.0, 140.0)
 
 
