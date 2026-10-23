@@ -10,10 +10,17 @@ func test_lord_spawns_even_when_the_pool_is_full() -> void:
 	var sim := SimKit.make(201, {"data_kind": "fixture_waves", "start_time": 1198.0})
 	SimKit.godmode(sim)
 	assert_eq(sim.debug_fill(&"curumus_piyade", 400, 1100.0), 400)
-	SimKit.run(sim, 400)
+	# Havuz HER adım başında yeniden doldurulur: doğal boşalma (geri taşıma/öldürme) Lord'a yer açamaz, Lord yeniden
+	# denemeyle de doğamaz (satır bir kez denenir); yalnız `_make_room` açarsa test geçer (F-ver-006).
+	for i in 400:
+		if sim.enemies.count < EnemyPool.CAP:
+			sim.debug_fill(&"curumus_piyade", EnemyPool.CAP - sim.enemies.count, 1100.0)
+		SimKit.godmode(sim)
+		sim.step(Vector2.ZERO)
 	assert_true(
 		_lord_spawned(sim), "havuz doluyken Lord yine de doğar (en uzak sıradan düşman yer açar)"
 	)
+	assert_eq(SimKit.count_events(sim, SimEvents.BOSS_SPAWN), 1, "Lord bir kez doğar")
 
 
 func test_lord_spawns_when_time_was_skipped_past_it() -> void:
