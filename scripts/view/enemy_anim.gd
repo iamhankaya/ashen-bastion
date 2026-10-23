@@ -44,6 +44,9 @@ var last_pos := PackedVector2Array()
 var gen_seen := PackedInt32Array()
 var enrage_t0 := PackedFloat32Array()
 var step_seen := PackedInt32Array()
+## Lord çağırma (E8): önceki kare ai_timer'ı (INF = ilk kare) ve vuruş anı (sim.time).
+var timer_seen := PackedFloat32Array()
+var slam_t0 := PackedFloat32Array()
 
 
 func _init() -> void:
@@ -55,6 +58,10 @@ func _init() -> void:
 	enrage_t0.resize(CAP)
 	enrage_t0.fill(-1.0)
 	step_seen.resize(CAP)
+	timer_seen.resize(CAP)
+	timer_seen.fill(INF)
+	slam_t0.resize(CAP)
+	slam_t0.fill(-10.0)
 	_ensure_lut()
 
 
@@ -78,9 +85,7 @@ static func speed_mult(p0: float) -> float:
 
 
 func bind(data: GameData, atlas: EnemyAtlas) -> void:
-	for arr in [
-		kind_t, frames_t, special_t
-	]:
+	for arr in [kind_t, frames_t, special_t]:
 		arr.clear()
 	for arr in [
 		hz_t,
@@ -169,6 +174,8 @@ func sync_slot(i: int, gen: int, pos: Vector2) -> void:
 	last_pos[i] = pos
 	enrage_t0[i] = -1.0
 	step_seen[i] = 0
+	timer_seen[i] = INF
+	slam_t0[i] = -10.0
 
 
 ## Mesafe tabanlı yürüme fazı: walk += min(|Δpos|, 60) / cycle. Konumu değişmeyen düşman ilerlemez.
