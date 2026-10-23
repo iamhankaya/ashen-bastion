@@ -914,7 +914,7 @@ func _on_score_gained(gain: int, source: StringName) -> void:
 
 
 func _on_streak_changed(mult: int, left: float) -> void:
-	bus.streak_changed.emit(mult, left)
+	V11State.on_streak_changed(self, mult, left)
 
 
 # --- şarjör sinyalleri -----------------------------------------------------------------------

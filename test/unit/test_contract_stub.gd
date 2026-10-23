@@ -178,19 +178,10 @@ func _cases_d2() -> Array:
 ## D3: skor, highscore, ekranlar
 func _cases_d3() -> Array:
 	var sim := GameSim.new(1, &"gunslinger")
-	var keeper := ScoreKeeper.new(ScoreTable.new())
-	keeper.armed = true
 	var score_block: ScoreBlock = _node(ScoreBlock.new())
 	score_block.visible = true
 	var scores: HighscoreScreen = _node(HighscoreScreen.new())
-	var hs := Highscores.new("user://yok.json")
 	return [
-		[func() -> void: keeper.on_kill(&"curumus_piyade", 1), &"ScoreKeeper.on_kill"],
-		[func() -> void: keeper.on_evolution(), &"ScoreKeeper.on_evolution"],
-		[func() -> void: keeper.on_lord(), &"ScoreKeeper.on_lord"],
-		[func() -> void: keeper.break_streak(1), &"ScoreKeeper.break_streak"],
-		[func() -> void: keeper.tick(1), &"ScoreKeeper.tick"],
-		[func() -> void: keeper.streak_left(1), &"ScoreKeeper.streak_left"],
 		[func() -> void: score_block.bind(sim), &"ScoreBlock.bind"],
 		[func() -> void: score_block.refresh(0.016), &"ScoreBlock.refresh"],
 		[func() -> void: ScoreBlock.eased(0.0, 100, 0.016), &"ScoreBlock.eased"],
@@ -198,12 +189,6 @@ func _cases_d3() -> Array:
 		[func() -> void: ScoreBlock.is_big_gain(400), &"ScoreBlock.is_big_gain"],
 		[func() -> void: ScoreBlock.tier_of(2), &"ScoreBlock.tier_of"],
 		[func() -> void: ScoreBlock.format_score(1234), &"ScoreBlock.format_score"],
-		[func() -> void: hs.load_file(), &"Highscores.load_file"],
-		[func() -> void: hs.submit({"score": 1}), &"Highscores.submit"],
-		[func() -> void: hs.save(), &"Highscores.save"],
-		[func() -> void: Highscores.sanitize({}), &"Highscores.sanitize"],
-		[func() -> void: Highscores.better({}, {}), &"Highscores.better"],
-		[func() -> void: Highscores.format_date(0, 0), &"Highscores.format_date"],
 		[
 			func() -> void: scores.show_scores([] as Array[Dictionary]),
 			&"HighscoreScreen.show_scores"

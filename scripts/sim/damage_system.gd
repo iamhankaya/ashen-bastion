@@ -46,10 +46,14 @@ func _kill(sim: GameSim, id: int, i: int) -> void:
 	var is_lord := sim.enemies.def_of(i).ai == &"lord"
 	sim.enemies.kill(id)
 	sim.kills += 1
-	if is_lord and sim.end_mode == GameSim.END_MODE_LORD:
-		sim.lord_killed = true
 	if sim.logging():
 		sim.log_event(SimEvents.KILL, {"enemy_id": id, "enemy_type": type_id, "pos": p})
+	# Skor: yalnız gerçek öldürme (SpawnDirector._make_room sessiz kaldırması buraya girmez). Lord'un kendi puanı
+	# ayrıca işlenir, ardından lord modunda bonusu.
+	sim.score.on_kill(type_id, sim.step_count)
+	if is_lord and sim.end_mode == GameSim.END_MODE_LORD:
+		sim.lord_killed = true
+		sim.score.on_lord()
 	if xp_value > 0:
 		# Harabe içinde ölen düşmanın (elit/uçan/hayalet muaf) taşı dışarı alınır: katı yapının içinde toplanamaz.
 		sim.gems.drop(sim.map.resolve(p, GEM_CLEARANCE), xp_value)
@@ -89,6 +93,7 @@ func contact_tick(sim: GameSim, dt: float) -> float:
 	if touching > 0:
 		contact_timer = CONTACT_INTERVAL
 		sim.hp -= total
+		sim.score.break_streak(sim.step_count)  # player_damaged'dan önce
 		sim.log_event(
 			SimEvents.DAMAGE,
 			{"target": -1, "amount": total, "raw": total, "kind": &"contact", "source": &""}
