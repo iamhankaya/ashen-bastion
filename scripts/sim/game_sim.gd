@@ -344,6 +344,8 @@ func state_hash() -> int:
 		h.append(_q(enemies.hp[i]))
 		h.append(_q(enemies.ai_timer[i]))
 		h.append(_q(enemies.ai_aux[i]))
+		h.append(_q(enemies.ai_dir[i].x))
+		h.append(_q(enemies.ai_dir[i].y))
 	h.append(projectiles.count)
 	h.append(gems.count)
 	h.append(gems.total_value())

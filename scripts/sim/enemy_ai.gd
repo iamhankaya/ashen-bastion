@@ -46,6 +46,9 @@ func step(sim: GameSim) -> void:
 				charging = charging or e.ai_aux[i] > 0.0
 		if d2 > recycle2 and not is_lord:
 			e.pos[i] = sim.spawn_director.recycle_position(sim)
+			if kind == EnemyPool.KIND_GROUND:
+				e.ai_timer[i] = 0.0  # yeni konumda eski dolanma modu geçersiz
+				e.ai_dir[i] = e.pos[i]
 		elif charging and spd > 0.0:
 			e.pos[i] = p + e.ai_dir[i] * spd * dt  # şarj: kilitli yönde düz çizgi
 		elif d2 > 1.0:
@@ -69,7 +72,7 @@ func step(sim: GameSim) -> void:
 						e.ai_aux[i] = -e.ai_aux[i]
 					e.ai_dir[i] = e.pos[i]  # ilerleme çapası
 				if e.ai_timer[i] > 0.0:
-					if e.pos[i] != before:
+					if pushed:
 						e.ai_timer[i] = DETOUR_TIME  # hâlâ itiliyor: modu tazele
 				elif pushed:
 					_pick_side(e, i, e.pos[i] - before, to)
