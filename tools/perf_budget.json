@@ -1,28 +1,9 @@
 {
-  "scenario": {
-    "source": "scripts/debug/stress_scenario.gd",
-    "seed": 20261023,
-    "steps": 600,
-    "enemies": 400,
-    "projectiles": 500,
-    "note": "GameSim.work sayaçlarının adım başına ortalaması (kümülatif sayaç farkı / adım). Tavan = U1-1 ölçümü + %25. Zaman (ms) eşik değildir."
-  },
-  "per_step_max": {
-    "hash_inserts": 500,
-    "hash_queries": 640,
-    "cells_scanned": 2600,
-    "collision_tests": 270,
-    "enemy_updates": 500,
-    "proj_updates": 630,
-    "explosions": 1
-  },
-  "measured_per_step": {
-    "hash_inserts": 400.0,
-    "hash_queries": 501.14,
-    "cells_scanned": 2079.41,
-    "collision_tests": 214.69,
-    "enemy_updates": 399.88,
-    "proj_updates": 500.18,
-    "explosions": 0.0
-  }
+  "hash_inserts": 500,
+  "hash_queries": 640,
+  "cells_scanned": 2650,
+  "collision_tests": 470,
+  "enemy_updates": 500,
+  "proj_updates": 630,
+  "explosions": 1
 }

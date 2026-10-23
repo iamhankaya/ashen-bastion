@@ -4,7 +4,8 @@ Bütçe iddiası yoktur; ölçüm üç katmanlıdır (plan "Sistem tasarımı > 
 
 1. **Gate'te deterministik iş sayaçları** — `GameSim.work` (`hash_inserts`, `hash_queries`, `cells_scanned`,
    `collision_tests`, `enemy_updates`, `proj_updates`, `explosions`; kümülatif, adım başına ortalaması alınır).
-   Tavanlar `tools/perf_budget.json` (`per_step_max`) içindedir; U1-1 ölçümü +%25. Stres senaryosu:
+   Tavanlar `tools/perf_budget.json` içindedir (düz sözlük `{sayaç: adım başına tavan}`); iki senaryonun (bizimki ve
+   `test_acc_perf_counters` stres sahnesi) büyük ölçümü +%25. Stres senaryosu:
    `scripts/debug/stress_scenario.gd` (tohum 20261023, 400 düşman + ~500 mermi, 600 adım, başlangıç zamanı 900 sn).
 2. **Masaüstü mikro-ölçüm** — `godot --headless -s res://tools/perf/micro.gd`. Zaman yalnızca bilgidir.
 3. **Cihaz içi** — debug APK'da 60 sn stres koşusu (`scripts/debug/stress_run.gd`), sonuç `user://perf.json`.
@@ -15,8 +16,8 @@ Bütçe iddiası yoktur; ölçüm üç katmanlıdır (plan "Sistem tasarımı > 
 |---|---|---|
 | hash_inserts | 400,0 | 500 |
 | hash_queries | 501,1 | 640 |
-| cells_scanned | 2079,4 | 2600 |
-| collision_tests | 214,7 | 270 |
+| cells_scanned | 2079,4 (tester: 2082) | 2650 |
+| collision_tests | 214,7 (tester senaryosu: 361–375) | 470 |
 | enemy_updates | 399,9 | 500 |
 | proj_updates | 500,2 | 630 |
 

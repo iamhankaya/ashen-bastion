@@ -526,13 +526,17 @@ func _fire(g: int, tid: int) -> void:
 	ctx.gun = g
 	ctx.index_in_mag = res["index"]
 	ctx.is_last = res["is_last"]
-	ctx.origin = PlayerRig.muzzle_world(
-		g, player_pos, gun_aim[g], player_facing_left, character.rig
-	)
+	# Namlu aim açısına bağlı, aim namluya bağlı: iki yineleme yeter. Atış yönü = son aim; origin = muzzle_world(aim).
 	var target_pos := enemies.pos[EnemyPool.index_of(tid)]
-	ctx.dir = (target_pos - ctx.origin).normalized()
-	if ctx.dir == Vector2.ZERO:
-		ctx.dir = Vector2.from_angle(gun_aim[g])
+	var aim := (target_pos - player_pos).angle()
+	var origin := player_pos
+	for k in 2:
+		origin = PlayerRig.muzzle_world(g, player_pos, aim, cos(aim) < 0.0, character.rig)
+		aim = (target_pos - origin).angle()
+	ctx.dir = Vector2.from_angle(aim)
+	ctx.origin = PlayerRig.muzzle_world(g, player_pos, aim, ctx.dir.x < 0.0, character.rig)
+	if g == 0:
+		player_facing_left = ctx.dir.x < 0.0
 	ctx.damage = gun_damage * stats.bullet_dmg_mult
 	for st in loadout.actives():
 		if st.behavior != null:
@@ -789,8 +793,9 @@ func _on_reload_started(duration: float) -> void:
 func _on_reload_finished() -> void:
 	log_event(SimEvents.RELOAD_END)
 	bus.reload_finished.emit()
-	gun_cd[0] = 0.0
-	gun_cd[1] = gun_interval / stats.fire_rate_mult * 0.5
+	# İlk kurşun doldurmanın bittiği adımdan bir sonraki adımda çıkar (tick aynı adımda bir STEP düşer).
+	gun_cd[0] = STEP * 1.5
+	gun_cd[1] = STEP * 1.5 + gun_interval / stats.fire_rate_mult * 0.5
 	for st in loadout.actives():
 		if st.behavior != null:
 			st.behavior.on_reload_end()

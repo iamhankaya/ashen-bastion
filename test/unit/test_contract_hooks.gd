@@ -17,7 +17,9 @@ const SKILL_IDS: Array[String] = [
 	"zincirleme_patlama",
 ]
 ## Gerçek gövdesi olan davranışlar (uygulama-1). Yeni uygulanan beceri buraya eklenir.
-const IMPLEMENTED: Array[String] = ["cift_tabanca", "seken_mermi", "son_mermi_patlar"]
+const IMPLEMENTED: Array[String] = [
+	"cift_tabanca", "seken_mermi", "son_mermi_patlar", "zincirleme_patlama"
+]
 const API_EXTRA: Array[String] = ["magazine", "rng_combat"]
 
 

@@ -4,10 +4,10 @@ extends GutTest
 
 func test_work_counters_stay_under_budget() -> void:
 	var budget: Dictionary = KitDev.read_json("res://tools/perf_budget.json")
-	var caps: Dictionary = budget["per_step_max"]
+	var caps: Dictionary = budget
 	var sc := StressScenario.new()
 	var base := sc.sim.work.duplicate()
-	var steps: int = budget["scenario"]["steps"]
+	var steps := StressScenario.STEPS
 	for i in steps:
 		sc.step(i)
 	for k in caps.keys():

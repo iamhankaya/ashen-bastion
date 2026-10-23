@@ -103,7 +103,10 @@ func roll_choices(rng: RandomNumberGenerator) -> Array[Choice]:
 	for st in _actives + _passives:
 		if st.level < st.def.max_level:
 			pool.append(_card(Choice.KIND_UPGRADE, st.def, st.level, st.level + 1))
+	var consumed := _consumed_actives()
 	for def in data.skills_of_kind(SkillDef.KIND_ACTIVE):
+		if consumed.has(def.id):
+			continue  # evrime dönüşen ham aktif tekrar "yeni" olarak sunulmaz
 		if state_of(def.id) == null and _actives.size() < ACTIVE_SLOTS:
 			pool.append(_card(Choice.KIND_NEW, def, 0, 1))
 	for def in data.skills_of_kind(SkillDef.KIND_PASSIVE):
@@ -124,6 +127,15 @@ func roll_choices(rng: RandomNumberGenerator) -> Array[Choice]:
 		heal.desc = "Azami canın %25'i kadar can yenilenir."
 		heal.icon = "placeholder:heal"
 		out.append(heal)
+	return out
+
+
+## Sahip olunan evrimlerin yerini aldığı ham aktifler.
+func _consumed_actives() -> Dictionary:
+	var out := {}
+	for st in _actives:
+		if st.def.kind == SkillDef.KIND_EVOLUTION:
+			out[StringName(str(st.def.requires.get("active", "")))] = true
 	return out
 
 

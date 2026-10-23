@@ -3,9 +3,9 @@ extends RefCounted
 ## `waves` verisine göre doğurma, uzak düşmanı geri taşıma konumu, spawn kaybı sayacı.
 ## U1: rate ve group satırları. burst/boss/lord satırları U2'dedir (burada yok sayılır).
 
-## Doğma halkası: kamera yarı-köşegeni + 80 px.
-const RING_RADIUS := 1400.0
-const GROUP_SPREAD := 120.0
+## Doğma halkası: kamera yarı-köşegeni (√(540²+1200²) ≈ 1315,9) + 80 px.
+const RING_RADIUS := 1395.9
+const GROUP_SPREAD := 36.0
 
 var waves: Dictionary = {}
 var _rows: Array = []

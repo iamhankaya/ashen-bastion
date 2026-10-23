@@ -66,3 +66,20 @@ func test_upgrading_cift_tabanca_changes_fire_interval() -> void:
 	sim.debug_grant(&"cift_tabanca", 5)
 	assert_eq(sim.gun_damage, 28.0)
 	assert_almost_eq(sim.gun_interval, 0.22, 1e-6)
+
+
+func test_zincirleme_patlama_chains_every_second_bullet_with_explosion_per_bounce() -> void:
+	var b: SkillBehavior = SkillRegistry.BEHAVIORS[&"zincirleme_patlama"].new()
+	b.setup(null, null, 1)
+	var odd := ShotContext.new()
+	odd.index_in_mag = 1
+	b.modify_shot(odd)
+	assert_eq(odd.flags, 0)
+	var even := ShotContext.new()
+	even.index_in_mag = 2
+	b.modify_shot(even)
+	assert_eq(even.bounces, 8)
+	assert_true(bool(even.flags & ProjectilePool.FLAG_RICOCHET))
+	assert_true(bool(even.flags & ProjectilePool.FLAG_EXPLODE_ON_BOUNCE))
+	assert_eq(even.ex_dmg, 40.0)
+	assert_eq(even.ex_radius, 90.0)
