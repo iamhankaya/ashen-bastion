@@ -58,7 +58,9 @@ func test_death_load_kills_a_few_each_period_and_refills() -> void:
 	sc.sim.bus.enemy_killed.connect(func(_t: StringName, _p: Vector2) -> void: kills[0] += 1)
 	for i in 100:
 		sc.step(i)
-	assert_gte(kills[0], StressScenario.DEATH_KILLS * 5, "100 adımda 5 dönem × 5 ölüm (+ oyun içi ölümler)")
+	assert_gte(
+		kills[0], StressScenario.DEATH_KILLS * 5, "100 adımda 5 dönem × 5 ölüm (+ oyun içi ölümler)"
+	)
 	assert_eq(sc.sim.enemies.count, StressScenario.ENEMIES, "havuz yeniden dolar")
 	assert_eq(sc.sim.check_invariants(), PackedStringArray())
 	var plain := StressScenario.new()

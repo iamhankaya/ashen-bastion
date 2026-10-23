@@ -199,18 +199,18 @@ func advance_walk(i: int, pos: Vector2, cycle: float) -> void:
 static func flap_frame(frames: int, t: float, p0: float) -> int:
 	if frames <= 1:
 		return 0
-	var len_ := 2 * frames - 2
-	var k := (int(t * FLAP_FPS + p0 * float(len_))) % len_
-	return k if k < frames else len_ - k
+	var cycle_len := 2 * frames - 2
+	var k := (int(t * FLAP_FPS + p0 * float(cycle_len))) % cycle_len
+	return k if k < frames else cycle_len - k
 
 
 ## (theta, sx, sy, bob_px) — ayak noktası etrafında; öteleme (0, −bob). Ham poz: vuruş/lean/özel durum renderer'da biner.
 static func pose_of(
-	kind: int, hz: float, bob: float, rot_rad: float, sq: float, t: float, phase0_: float
+	kind: int, hz: float, bob: float, rot_rad: float, sq: float, t: float, p0: float
 ) -> Vector4:
 	if kind == Kind.NONE:
 		return Vector4(0.0, 1.0, 1.0, 0.0)
-	var f := hz * speed_mult(phase0_) * t + phase0_
+	var f := hz * speed_mult(p0) * t + p0
 	var s1 := lut_sin(f)
 	var theta := 0.0
 	var bob_px := 0.0

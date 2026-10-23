@@ -94,7 +94,9 @@ func bind(sim: GameSim, enemy_renderer: EnemyRenderer) -> void:
 				var r := enemy_renderer.atlas.rects
 				rects.append(r[i] if i < r.size() else Vector4.ZERO)
 			(material as ShaderMaterial).set_shader_parameter("cell_rect", rects)
-			(material as ShaderMaterial).set_shader_parameter("atlas_tex", enemy_renderer.atlas.texture)
+			(material as ShaderMaterial).set_shader_parameter(
+				"atlas_tex", enemy_renderer.atlas.texture
+			)
 
 
 func apply_cull_fix() -> void:

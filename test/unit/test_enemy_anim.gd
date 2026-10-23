@@ -92,7 +92,9 @@ func test_slot_reuse_gets_a_new_phase_and_resets_walk() -> void:
 func test_pose_of_identity_for_none_and_bounds_for_others() -> void:
 	var p := EnemyAnim.pose_of(EnemyAnim.Kind.NONE, 1.0, 5.0, 0.1, 0.05, 3.0, 0.3)
 	assert_eq(p, Vector4(0.0, 1.0, 1.0, 0.0))
-	for kind in [EnemyAnim.Kind.CRAWL, EnemyAnim.Kind.FLAP, EnemyAnim.Kind.FLOAT, EnemyAnim.Kind.STOMP]:
+	for kind in [
+		EnemyAnim.Kind.CRAWL, EnemyAnim.Kind.FLAP, EnemyAnim.Kind.FLOAT, EnemyAnim.Kind.STOMP
+	]:
 		for k in 400:
 			var t := float(k) * 0.037
 			var ph := float(k % 17) / 17.0

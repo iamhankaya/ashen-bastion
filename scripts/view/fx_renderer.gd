@@ -409,7 +409,16 @@ func _draw_v11() -> void:
 		var r := _ring_r[i] * (1.0 - pow(1.0 - k, 3.0))
 		var col := _ring_col[i]
 		col.a *= (1.0 - k)
-		draw_arc(_ring_pos[i], maxf(r, 1.0), 0.0, TAU, 48, col, maxf(_ring_w[i] * (1.0 - 0.6 * k), 1.0), true)
+		draw_arc(
+			_ring_pos[i],
+			maxf(r, 1.0),
+			0.0,
+			TAU,
+			48,
+			col,
+			maxf(_ring_w[i] * (1.0 - 0.6 * k), 1.0),
+			true
+		)
 	for i in MAX_SHELLS:
 		var left := _shell_left[i]
 		if left <= 0.0:

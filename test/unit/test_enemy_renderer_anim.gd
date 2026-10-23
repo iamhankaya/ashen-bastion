@@ -38,13 +38,7 @@ func test_transform_matches_pose_of_for_each_type() -> void:
 		var t := sim.enemies.type_idx[i]
 		var an := r.anim
 		var pose := EnemyAnim.pose_of(
-			an.kind_of(t),
-			an.hz_t[t],
-			an.bob_t[t],
-			an.rot_t[t],
-			an.sq_t[t],
-			sim.time,
-			an.phase0[i]
+			an.kind_of(t), an.hz_t[t], an.bob_t[t], an.rot_t[t], an.sq_t[t], sim.time, an.phase0[i]
 		)
 		var q := r.quad_size(t)
 		var foot := q.y * 0.5
@@ -52,8 +46,7 @@ func test_transform_matches_pose_of_for_each_type() -> void:
 		var th := pose.x + lean
 		var p := sim.enemies.pos[i]
 		var want := Vector2(
-			p.x + foot * pose.z * sin(th),
-			p.y + foot - foot * pose.z * cos(th) - pose.w
+			p.x + foot * pose.z * sin(th), p.y + foot - foot * pose.z * cos(th) - pose.w
 		)
 		assert_lt(_origin(r).distance_to(want), 0.01 + 0.0, "%s merkez" % id)
 		var b := r.multimesh.buffer
@@ -132,8 +125,9 @@ func test_lord_is_not_knocked_back_and_hit_squash_keeps_volume() -> void:
 	sim.enemies.flash[j] = 1.0
 	r.refresh()
 	var k := _slot_of(r, j)
-	var ratio := (absf(r.multimesh.buffer[k * S]) / absf(bp0[k * S])) * (
-		r.multimesh.buffer[k * S + 5] / bp0[k * S + 5]
+	var ratio := (
+		(absf(r.multimesh.buffer[k * S]) / absf(bp0[k * S]))
+		* (r.multimesh.buffer[k * S + 5] / bp0[k * S + 5])
 	)
 	assert_between(ratio, 0.98, 1.02)
 
@@ -215,7 +209,9 @@ func test_flying_shadow_shrinks_and_fades_with_height() -> void:
 	assert_gte(amin, 0.38 * 0.69)
 	assert_lt(amin, amax)
 	var foot := r.quad_size(t).y * 0.5
-	assert_almost_eq(ys[0], sim.enemies.pos[i].y + foot + r.anim.hover_of(t), 1.0, "gölge hover kadar aşağıda")
+	assert_almost_eq(
+		ys[0], sim.enemies.pos[i].y + foot + r.anim.hover_of(t), 1.0, "gölge hover kadar aşağıda"
+	)
 
 
 func test_flap_cell_follows_ping_pong_sequence() -> void:

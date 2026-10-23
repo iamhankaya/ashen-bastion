@@ -15,7 +15,9 @@ func test_world_layers_follow_the_plan_order() -> void:
 	var order: Array[String] = []
 	for c in gc.world.get_children():
 		order.append(String(c.name))
-	var want := ["Ground", "CharLayer", "Shadows", "Gems", "Enemies", "Ghosts", "Actors", "Projectiles", "Fx"]
+	var want := [
+		"Ground", "CharLayer", "Shadows", "Gems", "Enemies", "Ghosts", "Actors", "Projectiles", "Fx"
+	]
 	var last := -1
 	for n in want:
 		var k := order.find(n)
@@ -29,7 +31,10 @@ func test_world_layers_follow_the_plan_order() -> void:
 func test_view_dt_is_dt_only_while_playing() -> void:
 	var gc := _ctrl()
 	for scr in [
-		PauseLogic.Screen.MENU, PauseLogic.Screen.PAUSED, PauseLogic.Screen.LEVEL_UP, PauseLogic.Screen.RESULT
+		PauseLogic.Screen.MENU,
+		PauseLogic.Screen.PAUSED,
+		PauseLogic.Screen.LEVEL_UP,
+		PauseLogic.Screen.RESULT
 	]:
 		gc.screen = scr
 		assert_eq(gc._v11_view_dt(DT), 0.0, "ekran %d" % scr)

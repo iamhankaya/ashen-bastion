@@ -60,7 +60,9 @@ class ReloadRing:
 	func _draw() -> void:
 		var k := 1.0 + 0.5 * (1.0 - pulse) if pulse > 0.0 else 1.0
 		var fade := pulse if pulse > 0.0 else 1.0
-		draw_arc(Vector2.ZERO, radius * k, 0.0, TAU, 40, Color(0.05, 0.035, 0.06, 0.7 * fade), 8.0, true)
+		draw_arc(
+			Vector2.ZERO, radius * k, 0.0, TAU, 40, Color(0.05, 0.035, 0.06, 0.7 * fade), 8.0, true
+		)
 		if progress > 0.0:
 			var a0 := -PI * 0.5
 			var col := Color("#e8a24a")
@@ -101,19 +103,50 @@ class Aura:
 	var time: float = 0.0
 
 	func _draw() -> void:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, PlayerView.AURA_SIZE.y / PlayerView.AURA_SIZE.x))
+		draw_set_transform(
+			Vector2.ZERO, 0.0, Vector2(1.0, PlayerView.AURA_SIZE.y / PlayerView.AURA_SIZE.x)
+		)
 		var rx := PlayerView.AURA_SIZE.x * 0.5
 		if mask & 1:  # hasar: bordo halka + 0,8 Hz nabız
 			var pulse := 0.5 + 0.5 * sin(time * TAU * 0.8)
-			draw_arc(Vector2.ZERO, rx, 0.0, TAU, 40, Color(0.878, 0.345, 0.31, 0.55 + 0.35 * pulse), 4.0, true)
-			draw_arc(Vector2.ZERO, rx + 6.0 * pulse, 0.0, TAU, 40, Color(0.878, 0.345, 0.31, 0.25 * pulse), 3.0, true)
+			draw_arc(
+				Vector2.ZERO,
+				rx,
+				0.0,
+				TAU,
+				40,
+				Color(0.878, 0.345, 0.31, 0.55 + 0.35 * pulse),
+				4.0,
+				true
+			)
+			draw_arc(
+				Vector2.ZERO,
+				rx + 6.0 * pulse,
+				0.0,
+				TAU,
+				40,
+				Color(0.878, 0.345, 0.31, 0.25 * pulse),
+				3.0,
+				true
+			)
 		if mask & 2:  # atış hızı: bronz dönen yaylar
 			for k in 3:
 				var a0 := time * 3.0 + k * TAU / 3.0
-				draw_arc(Vector2.ZERO, rx + 4.0, a0, a0 + 0.9, 10, Color(0.824, 0.706, 0.494, 0.9), 4.0, true)
+				draw_arc(
+					Vector2.ZERO,
+					rx + 4.0,
+					a0,
+					a0 + 0.9,
+					10,
+					Color(0.824, 0.706, 0.494, 0.9),
+					4.0,
+					true
+				)
 		if mask & 4:  # sınırsız: amber çift halka
 			draw_arc(Vector2.ZERO, rx, 0.0, TAU, 40, Color(0.91, 0.635, 0.29, 0.85), 3.0, true)
-			draw_arc(Vector2.ZERO, rx + 9.0, 0.0, TAU, 40, Color(0.91, 0.635, 0.29, 0.45), 2.0, true)
+			draw_arc(
+				Vector2.ZERO, rx + 9.0, 0.0, TAU, 40, Color(0.91, 0.635, 0.29, 0.45), 2.0, true
+			)
 		if level_ring >= 0.0:
 			var u := clampf(level_ring / 180.0, 0.0, 1.0)
 			var col := Color("#A98BEF")
@@ -138,7 +171,9 @@ class MuzzleFlash:
 			draw_circle(points[g], (14.0 * k + 4.0) * s, Color(1.0, 0.75, 0.35, 0.55 * k))
 			draw_circle(points[g], (7.0 * k + 2.0) * s, Color(1.0, 0.95, 0.8, 0.95 * k))
 			var spike := Vector2.from_angle(rot[g]) * (16.0 * k + 6.0) * s
-			draw_line(points[g] - spike * 0.4, points[g] + spike, Color(1.0, 0.9, 0.6, 0.8 * k), 3.0, true)
+			draw_line(
+				points[g] - spike * 0.4, points[g] + spike, Color(1.0, 0.9, 0.6, 0.8 * k), 3.0, true
+			)
 
 
 func _init() -> void:

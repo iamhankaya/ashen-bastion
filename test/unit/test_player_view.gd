@@ -70,7 +70,9 @@ func test_muzzle_view_matches_sim_muzzle_when_standing() -> void:
 		v.update_view(DT)
 	for g in 2:
 		var aim := float(sim.gun_aim[g])
-		var want := PlayerRig.muzzle_world(g, sim.player_pos, aim, cos(aim) < 0.0, sim.character.rig)
+		var want := PlayerRig.muzzle_world(
+			g, sim.player_pos, aim, cos(aim) < 0.0, sim.character.rig
+		)
 		assert_lt(v.muzzle_view(g).distance_to(want), 2.0, "namlu g=%d" % g)
 
 
@@ -82,7 +84,9 @@ func test_shot_starts_recoil_and_muzzle_flash_from_the_view_muzzle() -> void:
 	assert_gt(v.muzzle_flash.left[0], 0.0)
 	assert_almost_eq(v.muzzle_flash.left[0], Motion.sec(Motion.MUZZLE_FLASH), 1e-4)
 	assert_lt(
-		(v.position + v.muzzle_flash.points[0]).distance_to(v.muzzle_view(0)), 3.0, "alev görünüm namlusunda"
+		(v.position + v.muzzle_flash.points[0]).distance_to(v.muzzle_view(0)),
+		3.0,
+		"alev görünüm namlusunda"
 	)
 	var before := v.anim.arm_back[0]
 	v.update_view(DT)

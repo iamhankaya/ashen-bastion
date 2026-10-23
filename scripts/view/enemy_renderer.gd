@@ -288,9 +288,9 @@ func refresh() -> void:
 					bob = bobs[t] * s1
 					sym = 1.0 + sqs[t] * s1
 					if frames > 1:
-						var len_ := 2 * frames - 2
-						var k := int(time * EnemyAnim.FLAP_FPS + p0 * len_) % len_
-						cell += float(k if k < frames else len_ - k)
+						var cycle_len := 2 * frames - 2
+						var k := int(time * EnemyAnim.FLAP_FPS + p0 * cycle_len) % cycle_len
+						cell += float(k if k < frames else cycle_len - k)
 						sel_n += 1
 				elif kind == EnemyAnim.Kind.FLOAT:
 					theta = rots[t] * lut[int(f * 0.6 * 256.0) & 255]

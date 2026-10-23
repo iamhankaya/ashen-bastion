@@ -616,7 +616,9 @@ func _on_enemy_killed_fx(type_id: StringName, pos: Vector2) -> void:
 	_lord_slow_left = Motion.sec(Motion.LORD_SLOWMO)
 	for k in 3:
 		_lord_blast_t.append(0.1 + 0.3 * float(k) + randf() * 0.1)
-		_lord_blast_pos.append(pos + Vector2(randf_range(-120.0, 120.0), randf_range(-120.0, 120.0)))
+		_lord_blast_pos.append(
+			pos + Vector2(randf_range(-120.0, 120.0), randf_range(-120.0, 120.0))
+		)
 
 
 func _tick_lord_blasts(vdt: float) -> void:
