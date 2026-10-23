@@ -1,0 +1,439 @@
+{
+ "scale": 0.45,
+ "source": "art/ref/harita/harabe-parcalari.png",
+ "count": 24,
+ "ruins": [
+  {
+   "id": "ruin_01",
+   "file": "res://assets/gfx/map/ruins/ruin_01.png",
+   "size": [
+    225,
+    169
+   ],
+   "foot": [
+    0.7354,
+    0.909
+   ],
+   "src_bbox": [
+    1,
+    47,
+    502,
+    423
+   ]
+  },
+  {
+   "id": "ruin_02",
+   "file": "res://assets/gfx/map/ruins/ruin_02.png",
+   "size": [
+    178,
+    220
+   ],
+   "foot": [
+    0.5038,
+    0.9154
+   ],
+   "src_bbox": [
+    495,
+    12,
+    891,
+    500
+   ]
+  },
+  {
+   "id": "ruin_03",
+   "file": "res://assets/gfx/map/ruins/ruin_03.png",
+   "size": [
+    218,
+    194
+   ],
+   "foot": [
+    0.7051,
+    0.9165
+   ],
+   "src_bbox": [
+    839,
+    8,
+    1323,
+    440
+   ]
+  },
+  {
+   "id": "ruin_04",
+   "file": "res://assets/gfx/map/ruins/ruin_04.png",
+   "size": [
+    107,
+    186
+   ],
+   "foot": [
+    0.643,
+    0.9213
+   ],
+   "src_bbox": [
+    1296,
+    12,
+    1533,
+    425
+   ]
+  },
+  {
+   "id": "ruin_05",
+   "file": "res://assets/gfx/map/ruins/ruin_05.png",
+   "size": [
+    129,
+    165
+   ],
+   "foot": [
+    0.4826,
+    0.9178
+   ],
+   "src_bbox": [
+    3,
+    375,
+    290,
+    742
+   ]
+  },
+  {
+   "id": "ruin_06",
+   "file": "res://assets/gfx/map/ruins/ruin_06.png",
+   "size": [
+    244,
+    153
+   ],
+   "foot": [
+    0.712,
+    0.9064
+   ],
+   "src_bbox": [
+    249,
+    453,
+    792,
+    794
+   ]
+  },
+  {
+   "id": "ruin_07",
+   "file": "res://assets/gfx/map/ruins/ruin_07.png",
+   "size": [
+    178,
+    156
+   ],
+   "foot": [
+    0.6116,
+    0.917
+   ],
+   "src_bbox": [
+    749,
+    431,
+    1145,
+    778
+   ]
+  },
+  {
+   "id": "ruin_08",
+   "file": "res://assets/gfx/map/ruins/ruin_08.png",
+   "size": [
+    59,
+    151
+   ],
+   "foot": [
+    0.4312,
+    0.9195
+   ],
+   "src_bbox": [
+    1122,
+    433,
+    1253,
+    769
+   ]
+  },
+  {
+   "id": "ruin_09",
+   "file": "res://assets/gfx/map/ruins/ruin_09.png",
+   "size": [
+    66,
+    149
+   ],
+   "foot": [
+    0.5718,
+    0.9095
+   ],
+   "src_bbox": [
+    1268,
+    422,
+    1414,
+    753
+   ]
+  },
+  {
+   "id": "ruin_10",
+   "file": "res://assets/gfx/map/ruins/ruin_10.png",
+   "size": [
+    67,
+    152
+   ],
+   "foot": [
+    0.5051,
+    0.9097
+   ],
+   "src_bbox": [
+    1388,
+    464,
+    1536,
+    802
+   ]
+  },
+  {
+   "id": "ruin_11",
+   "file": "res://assets/gfx/map/ruins/ruin_11.png",
+   "size": [
+    44,
+    40
+   ],
+   "foot": [
+    0.2398,
+    0.907
+   ],
+   "src_bbox": [
+    10,
+    878,
+    108,
+    968
+   ]
+  },
+  {
+   "id": "ruin_12",
+   "file": "res://assets/gfx/map/ruins/ruin_12.png",
+   "size": [
+    46,
+    36
+   ],
+   "foot": [
+    0.2116,
+    0.898
+   ],
+   "src_bbox": [
+    46,
+    901,
+    148,
+    981
+   ]
+  },
+  {
+   "id": "ruin_13",
+   "file": "res://assets/gfx/map/ruins/ruin_13.png",
+   "size": [
+    97,
+    62
+   ],
+   "foot": [
+    0.4827,
+    0.9031
+   ],
+   "src_bbox": [
+    17,
+    744,
+    232,
+    882
+   ]
+  },
+  {
+   "id": "ruin_14",
+   "file": "res://assets/gfx/map/ruins/ruin_14.png",
+   "size": [
+    77,
+    61
+   ],
+   "foot": [
+    0.4525,
+    0.9089
+   ],
+   "src_bbox": [
+    159,
+    857,
+    331,
+    993
+   ]
+  },
+  {
+   "id": "ruin_15",
+   "file": "res://assets/gfx/map/ruins/ruin_15.png",
+   "size": [
+    67,
+    57
+   ],
+   "foot": [
+    0.6359,
+    0.9059
+   ],
+   "src_bbox": [
+    242,
+    740,
+    390,
+    866
+   ]
+  },
+  {
+   "id": "ruin_16",
+   "file": "res://assets/gfx/map/ruins/ruin_16.png",
+   "size": [
+    76,
+    70
+   ],
+   "foot": [
+    0.2709,
+    0.8967
+   ],
+   "src_bbox": [
+    325,
+    856,
+    495,
+    1012
+   ]
+  },
+  {
+   "id": "ruin_17",
+   "file": "res://assets/gfx/map/ruins/ruin_17.png",
+   "size": [
+    78,
+    45
+   ],
+   "foot": [
+    0.6465,
+    0.8895
+   ],
+   "src_bbox": [
+    404,
+    761,
+    577,
+    862
+   ]
+  },
+  {
+   "id": "ruin_18",
+   "file": "res://assets/gfx/map/ruins/ruin_18.png",
+   "size": [
+    114,
+    68
+   ],
+   "foot": [
+    0.6136,
+    0.8941
+   ],
+   "src_bbox": [
+    478,
+    854,
+    732,
+    1004
+   ]
+  },
+  {
+   "id": "ruin_19",
+   "file": "res://assets/gfx/map/ruins/ruin_19.png",
+   "size": [
+    70,
+    42
+   ],
+   "foot": [
+    0.5208,
+    0.8935
+   ],
+   "src_bbox": [
+    612,
+    788,
+    767,
+    882
+   ]
+  },
+  {
+   "id": "ruin_20",
+   "file": "res://assets/gfx/map/ruins/ruin_20.png",
+   "size": [
+    121,
+    89
+   ],
+   "foot": [
+    0.6102,
+    0.9062
+   ],
+   "src_bbox": [
+    720,
+    798,
+    988,
+    996
+   ]
+  },
+  {
+   "id": "ruin_21",
+   "file": "res://assets/gfx/map/ruins/ruin_21.png",
+   "size": [
+    99,
+    94
+   ],
+   "foot": [
+    0.5728,
+    0.9051
+   ],
+   "src_bbox": [
+    933,
+    795,
+    1154,
+    1005
+   ]
+  },
+  {
+   "id": "ruin_22",
+   "file": "res://assets/gfx/map/ruins/ruin_22.png",
+   "size": [
+    54,
+    66
+   ],
+   "foot": [
+    0.5846,
+    0.9011
+   ],
+   "src_bbox": [
+    1141,
+    850,
+    1262,
+    997
+   ]
+  },
+  {
+   "id": "ruin_23",
+   "file": "res://assets/gfx/map/ruins/ruin_23.png",
+   "size": [
+    68,
+    116
+   ],
+   "foot": [
+    0.6846,
+    0.9214
+   ],
+   "src_bbox": [
+    1155,
+    659,
+    1307,
+    916
+   ]
+  },
+  {
+   "id": "ruin_24",
+   "file": "res://assets/gfx/map/ruins/ruin_24.png",
+   "size": [
+    108,
+    116
+   ],
+   "foot": [
+    0.4104,
+    0.9112
+   ],
+   "src_bbox": [
+    1292,
+    751,
+    1531,
+    1008
+   ]
+  }
+ ]
+}

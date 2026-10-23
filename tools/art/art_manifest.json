@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "gfx_manifest": "assets/gfx/manifest.json",
+  "assets": [
+    {"id": "gunslinger_body", "kind": "sprite", "src": "art/ref/parca-govde-kolsuz.png",
+     "out": "assets/gfx/char/gunslinger_body.png", "max_side": 320},
+    {"id": "gunslinger_arm", "kind": "sprite", "src": "art/ref/parca-kol-tabanca.png",
+     "out": "assets/gfx/char/gunslinger_arm.png", "max_side": 240},
+    {"id": "curumus_piyade", "kind": "sprite", "src": "art/ref/dusmanlar/curumus-piyade.png",
+     "out": "assets/gfx/enemies/curumus_piyade.png", "max_side": 192},
+    {"id": "sovalye_hayaleti", "kind": "sprite", "src": "art/ref/dusmanlar/sovalye-hayaleti.png",
+     "out": "assets/gfx/enemies/sovalye_hayaleti.png", "max_side": 224,
+     "smoke_cleanup": {"open_r": 4, "grow": 5, "max_v": 120, "min_d": 2, "opaque_below": 0.9}},
+    {"id": "kale_lordu", "kind": "sprite", "src": "art/ref/dusmanlar/kale-lordu.png",
+     "out": "assets/gfx/enemies/kale_lordu.png", "max_side": 384,
+     "smoke_cleanup": {"open_r": 4, "grow": 5, "max_v": 120, "min_d": 2, "opaque_below": 0.9}},
+    {"id": "les_kargasi", "kind": "three_poses", "src": "art/ref/dusmanlar/les-kargalari.png",
+     "out": "assets/gfx/enemies/les_kargasi.png", "frame_width": 192, "frames": 3, "merge_r": 1, "min_area": 20000},
+    {"id": "ground", "kind": "tile", "src": "art/ref/harita/zemin-doku.png",
+     "out": "assets/gfx/map/ground.png", "size": 768, "blend_band": 24},
+    {"id": "ruins", "kind": "components", "src": "art/ref/harita/harabe-parcalari.png",
+     "out_dir": "assets/gfx/map/ruins", "manifest_out": "assets/gfx/map/ruins_manifest.json",
+     "id_prefix": "ruin", "scale": 0.45, "merge_r": 1, "min_area": 1500, "count": [20, 30]}
+  ]
+}
