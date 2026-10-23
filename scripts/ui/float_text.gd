@@ -41,7 +41,7 @@ func _free_slot_pos(want: Vector2) -> Vector2:
 	for _pass in POOL:
 		var moved := false
 		for i in POOL:
-			if _left[i] <= 0.0 or absf(_pos[i].x - p.x) >= ROW_REACH_X:
+			if i == _head or _left[i] <= 0.0 or absf(_pos[i].x - p.x) >= ROW_REACH_X:  # _head ezilecek
 				continue
 			if absf(_pos[i].y - p.y) < ROW:
 				p.y = _pos[i].y + ROW

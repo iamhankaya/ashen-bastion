@@ -67,7 +67,7 @@
   "test/unit/test_fix_shadow.gd": 6,
   "test/unit/test_fix_ui.gd": 4,
   "test/unit/test_fix_view.gd": 5,
-  "test/unit/test_float_text.gd": 7,
+  "test/unit/test_float_text.gd": 8,
   "test/unit/test_fx_renderer.gd": 3,
   "test/unit/test_fx_v11.gd": 10,
   "test/unit/test_game_data.gd": 43,

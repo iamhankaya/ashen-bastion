@@ -89,3 +89,14 @@ func test_a_lone_pickup_keeps_its_position() -> void:
 	f.refresh(0.016)
 	f.show_text("Hasar arttı", Vector2(540.0, 2000.0))
 	assert_almost_eq(f.draw_y(1), 2000.0, 0.01, "uzaktaki başlık kaymaz")
+
+
+func test_fourth_text_is_not_pushed_by_the_slot_it_overwrites() -> void:
+	var f := FloatText.new()
+	add_child_autofree(f)
+	for k in 3:
+		f.show_text("T%d" % k, Vector2(540.0, 900.0))
+	f.show_text("T3", Vector2(540.0, 900.0))
+	assert_lte(
+		f._pos[0].y, 900.0 + 2.0 * FloatText.ROW, "en eski yuvayı ezen başlık gereksiz itilmez"
+	)
