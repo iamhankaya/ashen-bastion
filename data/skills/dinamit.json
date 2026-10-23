@@ -1,0 +1,48 @@
+{
+  "id": "dinamit",
+  "kind": "active",
+  "name": "Dinamit",
+  "icon": "placeholder:dinamit",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "dinamit",
+  "levels": [
+    {
+      "cooldown": 3.5,
+      "count": 1,
+      "damage": 60,
+      "radius": 130
+    },
+    {
+      "cooldown": 3.2,
+      "count": 1,
+      "damage": 75,
+      "radius": 140
+    },
+    {
+      "cooldown": 2.9,
+      "count": 2,
+      "damage": 90,
+      "radius": 150
+    },
+    {
+      "cooldown": 2.6,
+      "count": 2,
+      "damage": 110,
+      "radius": 165
+    },
+    {
+      "cooldown": 2.2,
+      "count": 3,
+      "damage": 135,
+      "radius": 180
+    }
+  ],
+  "desc": [
+    "Düşmana dinamit fırlatır; fitil yanınca patlar.",
+    "Daha güçlü ve geniş patlama.",
+    "İki dinamit fırlatır.",
+    "Daha güçlü ve geniş patlama.",
+    "Üç dinamit fırlatır."
+  ]
+}

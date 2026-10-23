@@ -40,8 +40,11 @@ func _kill(sim: GameSim, id: int, i: int) -> void:
 	var p := sim.enemies.pos[i]
 	var type_id := sim.enemies.type_id_of(i)
 	var xp_value := sim.enemies.def_of(i).xp
+	var is_lord := sim.enemies.def_of(i).ai == &"lord"
 	sim.enemies.kill(id)
 	sim.kills += 1
+	if is_lord and sim.end_mode == GameSim.END_MODE_LORD:
+		sim.lord_killed = true
 	if sim.logging():
 		sim.log_event(SimEvents.KILL, {"enemy_id": id, "enemy_type": type_id, "pos": p})
 	if xp_value > 0:

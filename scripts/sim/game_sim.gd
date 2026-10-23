@@ -40,10 +40,14 @@ const RETARGET_INTERVAL := 0.1
 const DRY_FIRE_INTERVAL := 0.5
 const GEM_PULL_SPEED := 700.0
 const BOUNCE_RANGE := 300.0
+## Mermi çarpışma sorgusunun ızgara yarıçapı payı; bundan büyük düşmanlar (_big_ids) ayrıca denetlenir.
+const SMALL_ENEMY_RADIUS := 40.0
 const DEFAULT_START_SKILL_RANGE := 700.0
 const RNG_STREAMS: Array[StringName] = [&"spawn", &"choice", &"map", &"combat"]
 
 var bus: SimBus = SimBus.new()
+## Yalnız görsel/işitsel efekt bildirimleri (sim kararları bağlı değil).
+var fx: SimFx = SimFx.new()
 var data: GameData = null
 var character: CharacterDef = null
 var end_mode: String = END_MODE_LORD
@@ -72,6 +76,10 @@ var evolved_log: Array[StringName] = []
 var event_log: Array = []
 var work: Dictionary = {}
 var spawn_dropped: int = 0
+## Kale Lordu öldü (end_mode lord): _phase_status hp<=0'dan ÖNCE WON yapar.
+var lord_killed: bool = false
+## Şu an hasar veren merminin bayrakları (on_kill kancaları kaynağı görebilsin diye); mermi dışı kaynak 0.
+var kill_source_flags: int = 0
 
 # Alt sistemler ve temel silah durumu.
 var grid: SpatialHash = SpatialHash.new()
@@ -112,6 +120,7 @@ var _trace_phases: bool = false
 var _retarget_cd: float = 0.0
 var _dry_cd: PackedFloat32Array = PackedFloat32Array([0.0, 0.0])
 var _max_enemy_radius: float = 40.0
+var _big_ids: PackedInt32Array = PackedInt32Array()
 var _scratch: PackedInt32Array = PackedInt32Array()
 var _explode_buf: PackedInt32Array = PackedInt32Array()
 var _bounce_buf: PackedInt32Array = PackedInt32Array()
@@ -216,7 +225,20 @@ func choose(index: int) -> bool:
 
 
 func spawn_projectile(p: Vector2, v: Vector2, dmg: float, o: Dictionary = {}) -> int:
-	return projectiles.spawn(p, v, dmg, o)
+	var idx := projectiles.spawn(p, v, dmg, o)
+	if idx >= 0 and _log_events:
+		log_event(
+			SimEvents.SHOT,
+			{
+				"gun": -1,
+				"origin": p,
+				"dir": v.normalized(),
+				"dmg": dmg,
+				"index_in_mag": 0,
+				"is_last": false
+			}
+		)
+	return idx
 
 
 ## Zırhı yok sayar; area_mult / explosion_dmg_mult uygular.
@@ -482,9 +504,13 @@ func _phase_player_move(move: Vector2) -> void:
 func _phase_rebuild_hash() -> void:
 	_trace(2)
 	grid.clear()
+	_big_ids.clear()
 	for i in EnemyPool.CAP:
 		if enemies.alive[i] == 1:
-			grid.insert(EnemyPool.make_id(enemies.gen[i], i), enemies.pos[i])
+			var id := EnemyPool.make_id(enemies.gen[i], i)
+			grid.insert(id, enemies.pos[i])
+			if enemies.radius[i] > SMALL_ENEMY_RADIUS:
+				_big_ids.append(id)
 
 
 ## (4) hedefleme + ateş (tabanca 0 sonra 1).
@@ -492,9 +518,9 @@ func _phase_targeting_fire() -> void:
 	_trace(3)
 	var need := _retarget_cd <= 0.0
 	for g in 2:
-		if gun_target[g] >= 0 and not enemies.is_alive(gun_target[g]):
+		if gun_target[g] < 0 or not enemies.is_alive(gun_target[g]):
 			gun_target[g] = -1
-			need = true
+			need = true  # hedefsiz/ölü hedef: bir sonraki düşman gecikmesiz seçilir
 	if need:
 		_retarget_cd = RETARGET_INTERVAL
 		var rng_px := character.attack_range * stats.range_mult
@@ -604,29 +630,41 @@ func _phase_projectiles() -> void:
 		pr.pos[i] += pr.vel[i] * STEP
 		pr.life[i] -= STEP
 		var consumed := false
-		grid.query_circle(pr.pos[i], BULLET_RADIUS + _max_enemy_radius, _scratch)
-		for id in _scratch:
-			if not enemies.is_alive(id) or pr.has_hit(i, id):
-				continue
-			w_collision_tests += 1
-			var ei := EnemyPool.index_of(id)
-			var reach := BULLET_RADIUS + enemies.radius[ei]
-			if enemies.pos[ei].distance_squared_to(pr.pos[i]) <= reach * reach:
-				if _projectile_hit(i, id):
-					consumed = true
-					break
+		_scratch.clear()
+		if (pr.flags[i] & ProjectilePool.FLAG_LOB) == 0:
+			grid.query_circle(pr.pos[i], BULLET_RADIUS + SMALL_ENEMY_RADIUS, _scratch)
+			consumed = _projectile_vs(i, _scratch)
+			if not consumed and not _big_ids.is_empty():
+				consumed = _projectile_vs(i, _big_ids)  # elit/Lord: ızgara sorgusu dışında doğrudan denetlenir
 		if not consumed and pr.life[i] <= 0.0:
 			if pr.flags[i] & ProjectilePool.FLAG_EXPLODE_ON_EXPIRE:
 				explode(pr.pos[i], pr.ex_radius[i], pr.ex_dmg[i], &"projectile")
 			consumed = true
+		kill_source_flags = 0
 		if consumed:
 			pr.remove(i)
 		i -= 1
 
 
+## Mermi `pi` aday düşmanlara (artan id sırası) çarpıyor mu; true = mermi tükendi.
+func _projectile_vs(pi: int, ids: PackedInt32Array) -> bool:
+	var pr := projectiles
+	for id in ids:
+		if not enemies.is_alive(id) or pr.has_hit(pi, id):
+			continue
+		w_collision_tests += 1
+		var ei := EnemyPool.index_of(id)
+		var reach := BULLET_RADIUS + enemies.radius[ei]
+		if enemies.pos[ei].distance_squared_to(pr.pos[pi]) <= reach * reach:
+			if _projectile_hit(pi, id):
+				return true
+	return false
+
+
 ## Mermi düşmana değdi. true = mermi tükendi.
 func _projectile_hit(pi: int, id: int) -> bool:
 	var pr := projectiles
+	kill_source_flags = pr.flags[pi]
 	damage.damage_enemy(self, id, pr.dmg[pi], &"bullet")
 	pr.mark_hit(pi, id)
 	for st in loadout.actives():
@@ -722,6 +760,9 @@ func _phase_status() -> void:
 		pending_levels += 1
 		log_event(SimEvents.LEVEL_UP, {"level": level})
 		bus.level_up.emit(level)
+	if lord_killed:
+		_end_run(true)  # Lord ölümü hp<=0'dan önce işlenir
+		return
 	if hp <= 0.0:
 		_end_run(false)  # bekleyen seçimler iptal edilir, seviye sayısı korunur
 		return

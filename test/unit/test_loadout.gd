@@ -1,6 +1,11 @@
 extends GutTest
 ## Loadout: yuvalar, upgrade/new, evrim koşulu, roll_choices kuralları, StatBlock pasif toplamı.
 
+## 6 aktif yuva dolu; hiçbir evrim çifti hazır değil.
+const FULL_ACTIVES: Array[StringName] = [
+	&"cift_tabanca", &"seken_mermi", &"son_mermi_patlar", &"dinamit", &"sarapnel", &"keskin_nisan"
+]
+
 var data: GameData
 
 
@@ -119,15 +124,15 @@ func test_card_kinds_and_levels() -> void:
 func test_heal_card_when_nothing_to_offer() -> void:
 	var l := _loadout()
 	# tüm becerileri maksimuma çıkar; 6 pasif yuvası dolu ve hepsi maks.
-	for id in [&"cift_tabanca", &"seken_mermi", &"son_mermi_patlar"]:
+	for id in FULL_ACTIVES:
 		for i in 5:
 			l.add_or_upgrade(id)
 	for id in [
 		&"agir_kursun",
-		&"barut_kesesi",
+		&"saglam_yelek",
 		&"cevik_cizme",
 		&"fazladan_mermi",
-		&"hizli_doldurma",
+		&"miknatis",
 		&"hizli_parmak"
 	]:
 		for i in 5:
@@ -140,12 +145,10 @@ func test_heal_card_when_nothing_to_offer() -> void:
 
 func test_fewer_than_three_cards_when_few_candidates() -> void:
 	var l := _loadout()
-	for id in [&"cift_tabanca", &"seken_mermi", &"son_mermi_patlar"]:
+	for id in FULL_ACTIVES:
 		for i in 5:
 			l.add_or_upgrade(id)
-	for id in [
-		&"agir_kursun", &"barut_kesesi", &"cevik_cizme", &"fazladan_mermi", &"hizli_doldurma"
-	]:
+	for id in [&"agir_kursun", &"saglam_yelek", &"cevik_cizme", &"fazladan_mermi", &"miknatis"]:
 		for i in 5:
 			l.add_or_upgrade(id)
 	l.add_or_upgrade(&"hizli_parmak")  # 6. pasif, seviye 1 -> tek aday

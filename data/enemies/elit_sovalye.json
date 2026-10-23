@@ -1,0 +1,15 @@
+{
+  "id": "elit_sovalye",
+  "name": "Elit Şövalye",
+  "hp": 6500,
+  "speed": 85,
+  "dmg": 28,
+  "radius": 66,
+  "armor": 5,
+  "xp": 160,
+  "ai": "elite",
+  "scales_with_time": false,
+  "sprite": "placeholder:elit_sovalye",
+  "display_height": 270,
+  "tint": "#e8a24a"
+}

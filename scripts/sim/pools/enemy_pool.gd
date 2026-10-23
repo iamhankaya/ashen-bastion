@@ -20,6 +20,10 @@ var contact: PackedFloat32Array = PackedFloat32Array()
 var armor: PackedFloat32Array = PackedFloat32Array()
 var radius: PackedFloat32Array = PackedFloat32Array()
 var max_hp: PackedFloat32Array = PackedFloat32Array()
+## Yapay zekâ durumu (elit karga şarjı, Lord çağırması): geri sayım, yardımcı değer, kilitli yön.
+var ai_timer: PackedFloat32Array = PackedFloat32Array()
+var ai_aux: PackedFloat32Array = PackedFloat32Array()
+var ai_dir: PackedVector2Array = PackedVector2Array()
 
 var _type_ids: Array[StringName] = []
 var _defs: Array[EnemyDef] = []
@@ -38,6 +42,9 @@ func _init(data: GameData = null) -> void:
 	armor.resize(CAP)
 	radius.resize(CAP)
 	max_hp.resize(CAP)
+	ai_timer.resize(CAP)
+	ai_aux.resize(CAP)
+	ai_dir.resize(CAP)
 	_free.resize(CAP)
 	for k in CAP:
 		_free[k] = CAP - 1 - k  # en düşük indeks yığının tepesinde
@@ -86,6 +93,14 @@ func spawn(
 	contact[i] = def.dmg * contact_mult
 	armor[i] = def.armor
 	radius[i] = def.radius
+	ai_aux[i] = 0.0
+	ai_dir[i] = Vector2.ZERO
+	if not def.charge.is_empty():
+		ai_timer[i] = float(def.charge.get("every", 4.0))
+	elif not def.summon.is_empty():
+		ai_timer[i] = float(def.summon.get("every", 8.0))
+	else:
+		ai_timer[i] = 0.0
 	count += 1
 	return make_id(gen[i], i)
 

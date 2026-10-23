@@ -34,6 +34,51 @@
         0.05,
         0.5
       ]
+    },
+    {
+      "kind": "burst",
+      "type": "curumus_piyade",
+      "at": 480,
+      "count": 50,
+      "ring": true
+    },
+    {
+      "kind": "burst",
+      "type": "curumus_piyade",
+      "at": 720,
+      "count": 50,
+      "ring": true
+    },
+    {
+      "kind": "burst",
+      "type": "curumus_piyade",
+      "at": 960,
+      "count": 50,
+      "ring": true
+    },
+    {
+      "kind": "boss",
+      "type": "elit_piyade",
+      "at": 300,
+      "warn": 5
+    },
+    {
+      "kind": "boss",
+      "type": "elit_sovalye",
+      "at": 600,
+      "warn": 5
+    },
+    {
+      "kind": "boss",
+      "type": "elit_karga",
+      "at": 900,
+      "warn": 5
+    },
+    {
+      "kind": "boss",
+      "type": "kale_lordu",
+      "at": 1200,
+      "warn": 5
     }
   ],
   "after_lord": {

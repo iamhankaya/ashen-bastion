@@ -26,10 +26,10 @@ tabloyu koda karşı doğrular (aşağıdaki tablo makine okunur: bir satır = b
 `spawn_projectile(p, v, dmg, o) -> int`, `explode(pos, radius, dmg, source)` (zırhı yok sayar; `area_mult` /
 `explosion_dmg_mult` uygular), `hitscan(origin, dir, range_px, dmg) -> int` (çizgi üzerindeki hepsi, mesafe sırasıyla),
 `damage_enemy(id, amount, kind)`, `pick_highest_hp(from, range_px) -> int` (eşitlikte en düşük indeks), `magazine`
-(`refund`), `rng_combat`.
+(`refund`), `rng_combat`, `fx` (yalnız görsel bildirimler: `beam_fired`, `volley_fired`), `kill_source_flags` (on_kill'de öldüren merminin bayrakları).
 
 Mermi bayrakları (`ProjectilePool.FLAG_*`): `EXPLODES` (isabette), `EXPLODE_ON_EXPIRE` (dinamit), `EXPLODE_ON_BOUNCE`
-(zincirleme_patlama), `RICOCHET`, `RADIAL` (yalnız görsel). `o` sözlüğü: `pierce, bounces, life (=1.2), flags, ex_radius,
+(zincirleme_patlama), `RICOCHET`, `RADIAL` (yalnız görsel), `LOB` (yay atış: düşmana çarpmaz, ömrü bitince patlar), `SHRAPNEL` (öldürdüğü düşman yeniden şarapnel saçmaz). `o` sözlüğü: `pierce, bounces, life (=1.2), flags, ex_radius,
 ex_dmg, push, gun`. Pierce/bounce'ta mermi bir düşmana yalnızca bir kez vurur (mermi başına `hit_ids`, `HIT_SLOTS = 12`).
 
 ## Beceri → kanca eşlemesi
@@ -37,13 +37,13 @@ ex_dmg, push, gun`. Pierce/bounce'ta mermi bir düşmana yalnızca bir kez vurur
 | Beceri | Kancalar | SkillApi | Bayraklar | Alanlar |
 |---|---|---|---|---|
 | `cift_tabanca` | `modify_shot` | | | |
-| `dinamit` | `tick` | `spawn_projectile` | `EXPLODE_ON_EXPIRE` | |
+| `dinamit` | `tick` | `spawn_projectile` | `LOB`, `EXPLODE_ON_EXPIRE` | |
 | `doldurma_sacilmasi` | `on_reload_start` | `spawn_projectile` | `RADIAL` | |
 | `gurleyen_yelpaze` | `tick` | `spawn_projectile` | | `push` |
 | `keskin_nisan` | `tick` | `pick_highest_hp`, `hitscan` | | |
 | `kiyamet_mermisi` | `on_last_bullet` | `explode`, `magazine` | `EXPLODES` | `ex_radius`, `ex_dmg` |
 | `mermi_firtinasi` | `on_reload_start`, `on_reload_tick` | `spawn_projectile` | `RADIAL` | |
-| `sarapnel` | `on_kill` | `spawn_projectile`, `rng_combat` | | |
+| `sarapnel` | `on_kill` | `spawn_projectile`, `rng_combat` | `SHRAPNEL` | |
 | `seken_mermi` | `modify_shot` | | `RICOCHET` | `bounces` |
 | `son_mermi_patlar` | `on_last_bullet` | | `EXPLODES` | `ex_radius`, `ex_dmg` |
 | `yelpaze_atis` | `tick` | `spawn_projectile` | | |

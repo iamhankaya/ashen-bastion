@@ -3,6 +3,9 @@ extends RefCounted
 ## Bir becerinin kancaları. Varsayılan gövdeler boş (no-op). Kanca imzası değişmez, yalnız sona eklenir.
 ## Kanca eşlemesi: docs/dev/skill-hooks.md
 
+## Sim'e zayıf bağ (sim -> loadout -> davranış döngüsü sızıntı yapmasın). Davranışlar setup'ta `_bind` çağırır.
+var _api_ref: WeakRef = null
+
 
 func setup(api: GameSim, def: SkillDef, level: int) -> void:
 	pass
@@ -41,3 +44,12 @@ func on_hit(enemy_id: int, proj_id: int) -> void:
 ## Şarjörsüz, soğumalı silahlar.
 func tick(dt: float) -> void:
 	pass
+
+
+func _bind(api: GameSim) -> void:
+	_api_ref = weakref(api) if api != null else null
+
+
+## Bağlı sim (yoksa null).
+func api() -> GameSim:
+	return _api_ref.get_ref() as GameSim if _api_ref != null else null
