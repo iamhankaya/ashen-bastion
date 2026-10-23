@@ -1,0 +1,15 @@
+{
+  "id": "sovalye_hayaleti",
+  "name": "Şövalye Hayaleti",
+  "hp": 220,
+  "speed": 70,
+  "dmg": 18,
+  "radius": 36,
+  "armor": 3,
+  "xp": 5,
+  "ai": "ghost",
+  "scales_with_time": true,
+  "sprite": "res://assets/gfx/enemies/sovalye_hayaleti.png",
+  "display_height": 150,
+  "tint": "#ffffff"
+}

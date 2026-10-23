@@ -1,0 +1,261 @@
+{
+ "version": 1,
+ "files": {
+  "assets/gfx/char/gunslinger_arm.png": {
+   "source": "art/ref/parca-kol-tabanca.png",
+   "size": [
+    240,
+    71
+   ],
+   "frames": 1
+  },
+  "assets/gfx/char/gunslinger_body.png": {
+   "source": "art/ref/parca-govde-kolsuz.png",
+   "size": [
+    177,
+    320
+   ],
+   "frames": 1
+  },
+  "assets/gfx/enemies/curumus_piyade.png": {
+   "source": "art/ref/dusmanlar/curumus-piyade.png",
+   "size": [
+    155,
+    192
+   ],
+   "frames": 1
+  },
+  "assets/gfx/enemies/kale_lordu.png": {
+   "source": "art/ref/dusmanlar/kale-lordu.png",
+   "size": [
+    384,
+    354
+   ],
+   "frames": 1
+  },
+  "assets/gfx/enemies/les_kargasi.png": {
+   "source": "art/ref/dusmanlar/les-kargalari.png",
+   "size": [
+    576,
+    115
+   ],
+   "frames": 3
+  },
+  "assets/gfx/enemies/sovalye_hayaleti.png": {
+   "source": "art/ref/dusmanlar/sovalye-hayaleti.png",
+   "size": [
+    224,
+    206
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ground.png": {
+   "source": "art/ref/harita/zemin-doku.png",
+   "size": [
+    768,
+    768
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_01.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    225,
+    169
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_02.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    178,
+    220
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_03.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    218,
+    194
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_04.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    107,
+    186
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_05.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    129,
+    165
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_06.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    244,
+    153
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_07.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    178,
+    156
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_08.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    59,
+    151
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_09.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    66,
+    149
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_10.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    67,
+    152
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_11.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    44,
+    40
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_12.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    46,
+    36
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_13.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    97,
+    62
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_14.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    77,
+    61
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_15.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    67,
+    57
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_16.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    76,
+    70
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_17.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    78,
+    45
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_18.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    114,
+    68
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_19.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    70,
+    42
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_20.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    121,
+    89
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_21.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    99,
+    94
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_22.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    54,
+    66
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_23.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    68,
+    116
+   ],
+   "frames": 1
+  },
+  "assets/gfx/map/ruins/ruin_24.png": {
+   "source": "art/ref/harita/harabe-parcalari.png",
+   "size": [
+    108,
+    116
+   ],
+   "frames": 1
+  },
+  "assets/gfx/ui/ana_gorsel.png": {
+   "source": "art/ref/ana-gorsel-atis.png",
+   "size": [
+    784,
+    1100
+   ],
+   "frames": 1
+  }
+ }
+}

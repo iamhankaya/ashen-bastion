@@ -1,0 +1,38 @@
+{
+  "id": "keskin_nisan",
+  "kind": "active",
+  "name": "Keskin Nişan",
+  "icon": "placeholder:keskin_nisan",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "keskin_nisan",
+  "levels": [
+    {
+      "cooldown": 3.0,
+      "damage": 90
+    },
+    {
+      "cooldown": 2.8,
+      "damage": 120
+    },
+    {
+      "cooldown": 2.6,
+      "damage": 150
+    },
+    {
+      "cooldown": 2.4,
+      "damage": 190
+    },
+    {
+      "cooldown": 2.0,
+      "damage": 240
+    }
+  ],
+  "desc": [
+    "En dayanıklı düşmana her şeyi delen tek atış.",
+    "Hasar artar, daha sık.",
+    "Hasar artar, daha sık.",
+    "Hasar artar, daha sık.",
+    "Keskin nişan en üst seviyede."
+  ]
+}

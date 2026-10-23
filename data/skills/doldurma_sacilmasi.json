@@ -1,0 +1,40 @@
+{
+  "id": "doldurma_sacilmasi",
+  "kind": "active",
+  "name": "Doldurma Saçılması",
+  "icon": "placeholder:doldurma_sacilmasi",
+  "max_level": 5,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "doldurma_sacilmasi",
+  "levels": [
+    {
+      "count": 8,
+      "damage": 10
+    },
+    {
+      "count": 10,
+      "damage": 12
+    },
+    {
+      "count": 12,
+      "damage": 14
+    },
+    {
+      "count": 14,
+      "damage": 16
+    },
+    {
+      "count": 16,
+      "damage": 18
+    }
+  ],
+  "desc": [
+    "Doldurma başlarken etrafa kurşun saçar.",
+    "Daha fazla ve güçlü kurşun.",
+    "Daha fazla ve güçlü kurşun.",
+    "Daha fazla ve güçlü kurşun.",
+    "Kurşun yağmuru en üst seviyede."
+  ]
+}

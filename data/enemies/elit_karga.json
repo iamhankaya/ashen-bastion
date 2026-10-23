@@ -1,0 +1,20 @@
+{
+  "id": "elit_karga",
+  "name": "Elit Karga",
+  "hp": 9000,
+  "speed": 170,
+  "dmg": 30,
+  "radius": 52,
+  "armor": 3,
+  "xp": 260,
+  "ai": "elite",
+  "scales_with_time": false,
+  "sprite": "res://assets/gfx/enemies/les_kargasi.png",
+  "display_height": 260,
+  "tint": "#e0584f",
+  "charge": {
+    "every": 4.0,
+    "duration": 0.8,
+    "speed": 380
+  }
+}

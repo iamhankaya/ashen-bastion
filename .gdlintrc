@@ -1,0 +1,1 @@
+disable: [max-line-length, function-arguments-number, too-many-public-methods, max-public-methods, max-returns, no-elif-return, duplicated-load, class-definitions-order, private-method-call, comparison-with-itself, unused-argument]

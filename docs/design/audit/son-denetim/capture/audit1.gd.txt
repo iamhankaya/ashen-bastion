@@ -1,0 +1,93 @@
+extends SceneTree
+var OUT := ""
+var c
+var L: Array = []
+func shot(n: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(OUT + n + ".png")
+func fr(n: int) -> void:
+	for i in n: await process_frame
+func rects(tag: String, node: Node) -> void:
+	var out: Array = []
+	_col(node, out)
+	L.append("RECTS %s %s" % [tag, JSON.stringify(out)])
+func _col(n: Node, out: Array) -> void:
+	if n is Control and n.is_visible_in_tree() and (n is Button or n is Label or n is Range):
+		var r: Rect2 = n.get_global_rect()
+		out.append([n.get_class(), (n.text if "text" in n else ""), snappedf(r.position.x,1), snappedf(r.position.y,1), snappedf(r.size.x,1), snappedf(r.size.y,1)])
+	for ch in n.get_children(): _col(ch, out)
+func _initialize() -> void:
+	OUT = OS.get_cmdline_user_args()[0]
+	_run()
+func fresh() -> void:
+	if c != null:
+		c.queue_free(); await process_frame
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await fr(3)
+func adv(n: int, mv := Vector2.ZERO) -> void:
+	var s = c.sim
+	for i in n:
+		if s.state == GameSim.State.LEVEL_UP: s.choose(0)
+		if s.state != GameSim.State.RUNNING: break
+		s.hp = s.max_hp
+		s.step(mv)
+	c._after_step()
+func _run() -> void:
+	await fresh()
+	rects("menu", c.menu)
+	await shot("a-menu")
+	c.start_run(); await fr(3)
+	adv(200, Vector2(0.5,0.3)); await fr(3)
+	rects("hud", c.hud)
+	await shot("b-hud-normal")
+	# gerçekçi geç oyun: doğal doğuş, 11 dk
+	c.sim.debug_set_time(600.0)
+	adv(900, Vector2(0.5,0.4)); await fr(3)
+	L.append("late alive=%d" % c.sim.enemies.count if "enemies" in c.sim else "late")
+	await shot("c-hud-gec")
+	# düşük can
+	c.sim.hp = c.sim.max_hp * 0.2
+	c.sim.step(Vector2.ZERO); c._after_step(); c.sim.hp = c.sim.max_hp * 0.2
+	await fr(10)
+	await shot("d-dusuk-can")
+	# boss bandı
+	c.hud.show_boss_band(&"ara_boss") ; await fr(20)
+	await shot("e-boss-bandi")
+	# evrim kartı
+	await fresh(); c.start_run(); await fr(3)
+	c.sim.debug_grant(&"seken_mermi", 5); c.sim.debug_grant(&"barut_kesesi", 1)
+	var ids: Array[StringName] = [&"zincirleme_patlama", &"yelpaze_atis", &"hizli_doldurma"]
+	c.sim.debug_force_choices(ids)
+	c.sim.debug_add_xp(40); adv(3) if false else null
+	for i in 5:
+		c.sim.step(Vector2.ZERO); 
+	c._after_step(); await fr(60)
+	L.append("lvl screen=%d" % c.screen)
+	rects("levelup_evo", c.level_up)
+	await shot("f-evrim-karti")
+	# seviye kartı kilitli
+	# pause + onay
+	await fresh(); c.start_run(); await fr(3); adv(100)
+	c.pause_game(); await fr(15)
+	rects("pause", c.pause_screen)
+	await shot("g-duraklat")
+	c.pause_screen.open_confirm(0); await fr(15)
+	rects("confirm", c.pause_screen)
+	await shot("h-onay")
+	# kazan: evrimli
+	await fresh(); c.start_run(); await fr(3)
+	c.sim.debug_grant(&"seken_mermi", 5); c.sim.debug_grant(&"barut_kesesi", 1)
+	adv(30)
+	c._run_stats = {"time": 1234.0, "level": 17, "kills": 4821, "evolutions": [&"zincirleme_patlama", &"kiyamet_mermisi", &"mermi_firtinasi"]}
+	c._run_won = true
+	c.sim.end_mode = GameSim.END_MODE_TIMER; c.sim.end_time = c.sim.time + 0.5
+	adv(60); await fr(40)
+	c._run_stats = {"time": 1234.0, "level": 17, "kills": 4821, "evolutions": [&"zincirleme_patlama", &"kiyamet_mermisi", &"mermi_firtinasi"]}
+	c._show_result(); await fr(60)
+	rects("win", c.result_screen)
+	await shot("i-kazandin-kombolu")
+	var f := FileAccess.open(OUT + "log.txt", FileAccess.WRITE)
+	f.store_string("\n".join(L)); f.close()
+	quit()

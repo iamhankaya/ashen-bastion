@@ -93,7 +93,7 @@ Kullanıcının kendi telefonunda (Xiaomi Redmi Note 13 Pro) oynayacağı, Vampi
 - Düşmanlar (VLAD kararı): her tür için tek sabit görsel; hareket kodla (sallanma, squash/stretch, yön çevirme, vurulunca beyaz parlama). Düşmanlara iskelet rig uygulanmaz (300+ düşman performansı). Ara bosslar normal düşmanların büyütülmüş, renk/ışık değiştirilmiş elit sürümleridir; son düşmanın (Kale Lordu) kendi görseli vardır.
 - Harita (VLAD kararı): yukarıdan görünen, döşenebilir (tileable) zemin dokusu + ayrı ayrı yerleştirilen harabe parçaları (duvar, kule, kemer, moloz). Harabeler göz hizası/3/4 görünümlü dikey nesnelerdir; derinlik sıralaması (y-sort) ve çarpışma alanı alır. Tek parça büyük boyalı harita kullanılmaz.
 - Kullanıcıdan gelen tüm görseller düz yeşil arka planla gelir; yeşil arka plan silinir, delikler şeffaf kalır, kenardaki yeşil yansıma temizlenir.
-- Diğer görseller (VLAD kararı): beceri/evrim ikonları Claude Design ile (vektör, aynı palet); mermi, namlu alevi, patlama, XP taşı ve ışık/sis efektleri kodla/shader ile; seviye atlama portresi kullanıcıdan (portre promptu); menü ana görseli `art/ref/ana-gorsel-atis.png`.
+- Diğer görseller (VLAD kararı): beceri/evrim ikonları Claude Design ile (vektör, aynı palet); mermi, namlu alevi, patlama, XP taşı ve ışık/sis efektleri kodla/shader ile; seviye atlama portresi `art/ref/portre-seviye-atlama.png`; menü ana görseli `art/ref/ana-gorsel-atis.png`.
 - Görseller hazır olmadan geliştirme geçici (placeholder) görsellerle ilerler; oyunun eğlenceli olup olmadığı görsellerden bağımsız test edilir. Görseller geldikçe değiştirilir.
 - Karakter telefonda ~80–100 px boyunda görünecek; ince uzun çizgi okunmazsa sprite ölçeği büyütülür (prototipte karar).
 

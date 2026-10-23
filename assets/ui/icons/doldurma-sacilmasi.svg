@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" fill="none" stroke-linejoin="round" stroke-linecap="round" role="img" aria-label="Doldurma Saçılması"><title>Doldurma Saçılması</title>
+<circle cx="48" cy="48" r="14" fill="#2E211C" stroke="#D2B47E" stroke-width="4"/><circle cx="48" cy="48" r="4" fill="#E8A24A"/><g stroke="#D2B47E" stroke-width="4"><path d="M48 28 V10"/><path d="M48 68 V86"/><path d="M28 48 H10"/><path d="M68 48 H86"/><path d="M34 34 L21 21"/><path d="M62 62 L75 75"/><path d="M62 34 L75 21"/><path d="M34 62 L21 75"/></g><g fill="#EFE7D6"><circle cx="48" cy="8" r="3"/><circle cx="48" cy="88" r="3"/><circle cx="8" cy="48" r="3"/><circle cx="88" cy="48" r="3"/></g>
+</svg>

@@ -1,0 +1,34 @@
+{
+  "id": "fazladan_mermi",
+  "kind": "passive",
+  "name": "Fazladan Mermi",
+  "icon": "placeholder:fazladan_mermi",
+  "max_level": 5,
+  "tags": [
+    "rhythm"
+  ],
+  "levels": [
+    {
+      "mag_add": 1
+    },
+    {
+      "mag_add": 2
+    },
+    {
+      "mag_add": 3
+    },
+    {
+      "mag_add": 4
+    },
+    {
+      "mag_add": 5
+    }
+  ],
+  "desc": [
+    "Şarjör +1 mermi.",
+    "Şarjör +2 mermi.",
+    "Şarjör +3 mermi.",
+    "Şarjör +4 mermi.",
+    "Şarjör +5 mermi."
+  ]
+}

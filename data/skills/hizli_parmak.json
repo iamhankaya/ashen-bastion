@@ -1,0 +1,32 @@
+{
+  "id": "hizli_parmak",
+  "kind": "passive",
+  "name": "Hızlı Parmak",
+  "icon": "placeholder:hizli_parmak",
+  "max_level": 5,
+  "tags": [],
+  "levels": [
+    {
+      "fire_rate_mult": 0.08
+    },
+    {
+      "fire_rate_mult": 0.16
+    },
+    {
+      "fire_rate_mult": 0.24
+    },
+    {
+      "fire_rate_mult": 0.32
+    },
+    {
+      "fire_rate_mult": 0.4
+    }
+  ],
+  "desc": [
+    "Atış hızı +%8.",
+    "Atış hızı +%16.",
+    "Atış hızı +%24.",
+    "Atış hızı +%32.",
+    "Atış hızı +%40."
+  ]
+}

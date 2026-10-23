@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" fill="none" stroke-linejoin="round" stroke-linecap="round" role="img" aria-label="Hızlı Doldurma"><title>Hızlı Doldurma</title>
+<circle cx="48" cy="50" r="26" fill="#2E211C" stroke="#D2B47E" stroke-width="4"/>
+<circle cx="48" cy="50" r="5" fill="#D2B47E"/>
+<g fill="#171020" stroke="#7A6045" stroke-width="3"><circle cx="48" cy="34" r="6"/><circle cx="62" cy="42" r="6"/><circle cx="62" cy="58" r="6"/><circle cx="48" cy="66" r="6"/><circle cx="34" cy="58" r="6"/><circle cx="34" cy="42" r="6"/></g>
+<path d="M16 34 A36 36 0 0 1 60 14" stroke="#E8A24A" stroke-width="6"/>
+<path d="M62 6 L66 18 L52 20 Z" fill="#E8A24A" stroke="#E8A24A" stroke-width="2"/>
+<path d="M80 66 A36 36 0 0 1 36 86" stroke="#E8A24A" stroke-width="6"/>
+<path d="M34 94 L30 82 L44 80 Z" fill="#E8A24A" stroke="#E8A24A" stroke-width="2"/>
+</svg>

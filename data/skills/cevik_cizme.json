@@ -1,0 +1,32 @@
+{
+  "id": "cevik_cizme",
+  "kind": "passive",
+  "name": "Çevik Çizme",
+  "icon": "placeholder:cevik_cizme",
+  "max_level": 5,
+  "tags": [],
+  "levels": [
+    {
+      "move_speed_mult": 0.06
+    },
+    {
+      "move_speed_mult": 0.12
+    },
+    {
+      "move_speed_mult": 0.18
+    },
+    {
+      "move_speed_mult": 0.24
+    },
+    {
+      "move_speed_mult": 0.3
+    }
+  ],
+  "desc": [
+    "Hareket hızı +%6.",
+    "Hareket hızı +%12.",
+    "Hareket hızı +%18.",
+    "Hareket hızı +%24.",
+    "Hareket hızı +%30."
+  ]
+}

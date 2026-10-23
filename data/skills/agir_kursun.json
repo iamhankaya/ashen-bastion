@@ -1,0 +1,32 @@
+{
+  "id": "agir_kursun",
+  "kind": "passive",
+  "name": "Ağır Kurşun",
+  "icon": "placeholder:agir_kursun",
+  "max_level": 5,
+  "tags": [],
+  "levels": [
+    {
+      "bullet_dmg_mult": 0.1
+    },
+    {
+      "bullet_dmg_mult": 0.2
+    },
+    {
+      "bullet_dmg_mult": 0.3
+    },
+    {
+      "bullet_dmg_mult": 0.4
+    },
+    {
+      "bullet_dmg_mult": 0.5
+    }
+  ],
+  "desc": [
+    "Mermi hasarı +%10.",
+    "Mermi hasarı +%20.",
+    "Mermi hasarı +%30.",
+    "Mermi hasarı +%40.",
+    "Mermi hasarı +%50."
+  ]
+}

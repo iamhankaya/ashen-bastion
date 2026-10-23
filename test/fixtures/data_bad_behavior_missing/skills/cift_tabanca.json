@@ -1,0 +1,38 @@
+{
+  "id": "cift_tabanca",
+  "kind": "active",
+  "name": "Çift Tabanca",
+  "icon": "placeholder:cift_tabanca",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "yok_boyle_bir",
+  "levels": [
+    {
+      "damage": 15,
+      "interval": 0.3
+    },
+    {
+      "damage": 18,
+      "interval": 0.28
+    },
+    {
+      "damage": 21,
+      "interval": 0.26
+    },
+    {
+      "damage": 24,
+      "interval": 0.24
+    },
+    {
+      "damage": 28,
+      "interval": 0.22
+    }
+  ],
+  "desc": [
+    "İki tabanca ortak şarjörden otomatik ateş eder.",
+    "Hasar ve atış hızı artar.",
+    "Hasar ve atış hızı artar.",
+    "Hasar ve atış hızı artar.",
+    "Hasar ve atış hızı en üst seviyede."
+  ]
+}

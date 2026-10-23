@@ -1,0 +1,43 @@
+{
+  "id": "sarapnel",
+  "kind": "active",
+  "name": "Şarapnel",
+  "icon": "placeholder:sarapnel",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "sarapnel",
+  "levels": [
+    {
+      "chance": 0.25,
+      "pellets": 3,
+      "damage": 18
+    },
+    {
+      "chance": 0.3,
+      "pellets": 4,
+      "damage": 22
+    },
+    {
+      "chance": 0.35,
+      "pellets": 4,
+      "damage": 26
+    },
+    {
+      "chance": 0.4,
+      "pellets": 5,
+      "damage": 30
+    },
+    {
+      "chance": 0.5,
+      "pellets": 6,
+      "damage": 36
+    }
+  ],
+  "desc": [
+    "Öldürülen düşman bazen şarapnel saçar.",
+    "Şans ve parça artar.",
+    "Şans ve hasar artar.",
+    "Şans ve parça artar.",
+    "Şarapnel en üst seviyede."
+  ]
+}

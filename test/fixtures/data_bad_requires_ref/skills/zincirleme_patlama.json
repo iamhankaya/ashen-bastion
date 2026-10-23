@@ -1,0 +1,28 @@
+{
+  "id": "zincirleme_patlama",
+  "kind": "evolution",
+  "name": "Zincirleme Patlama",
+  "icon": "placeholder:zincirleme_patlama",
+  "max_level": 1,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "zincirleme_patlama",
+  "levels": [
+    {
+      "every_n": 2,
+      "bounces": 8,
+      "ex_damage": 40,
+      "ex_radius": 90
+    }
+  ],
+  "desc": [
+    "Her 2. kurşun seker, her sekmede patlar."
+  ],
+  "requires": {
+    "active": "olmayan",
+    "active_level": 5,
+    "passive": "barut_kesesi",
+    "passive_min_level": 1
+  }
+}
