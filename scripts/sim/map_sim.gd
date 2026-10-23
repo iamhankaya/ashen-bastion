@@ -1,9 +1,15 @@
 class_name MapSim
 extends RefCounted
-## Chunk başına deterministik harabe yerleşimi ve dairesel engeller. Görsel yok.
-## Chunk 1024 px; oyuncunun çevresindeki 2 chunk yarıçapı tembel üretilir; her chunk `hash(seed, cx, cy)` ile üretilir
+## Chunk başına deterministik harabe yerleşimi ve taban izine uyan çarpışma daireleri. Görsel yok.
+## Chunk 1024 px; oyuncunun çevresindeki 2 chunk yarıçapı tembel üretilir; her chunk `_mix(seed, cx, cy)` ile üretilir
 ## (üretim sırasından bağımsız, aynı tohum = aynı harita). Başlangıç çevresi boş. Mermiler engelden geçer; yalnız oyuncu
-## ve "ground" düşmanlar engelden iter (resolve). Engel daireleri 256 px'lik ızgara hücrelerinde aranır.
+## ve "ground" düşmanlar engelden iter (resolve; elit/Lord/uçan/hayalet muaf — bilinçli, bkz. docs/dev/ruins.md).
+##
+## Katı harabe = `data/ruins.json` `collision` dairelerinin birleşimi (`foot` noktasına göre dünya px). Engel kaydı:
+## `ob_pos`/`ob_r` = bu dairelerin sarmalayan (bounding) çemberi (yerleşim ve çakışma denetimi), `ob_foot` = sprite
+## çapası. Katı harabenin sarmalayan çemberi chunk kenarından `ob_r + MIN_GAP/2` içeride tutulur; bu yüzden komşu
+## chunk'ların katı harabeleri hiçbir üretim sırasında çakışmaz (komşu içeriğine bakmadan, F-ver-002).
+## Daireler 256 px'lik ızgara hücrelerinde aranır; `resolve` varlığın kapladığı tüm hücrelere bakar.
 
 const CHUNK := 1024.0
 const CHUNK_RADIUS := 2
@@ -12,21 +18,33 @@ const START_CLEAR := 420.0
 const SOLID_RANGE := Vector2i(1, 3)
 const DECOR_RANGE := Vector2i(3, 6)
 const MIN_GAP := 70.0
-const CELL_PAD := 90.0  # hücre kaydında engel çapına eklenen pay (en büyük varlık yarıçapı)
+const RESOLVE_PASSES := 4  # birleşik daire kümesinde iç içe itme yakınsaması
+const MAX_SUBSTEP := 12.0  # slide: alt adım uzunluğu (en küçük daire yarıçapı 24 + oyuncu 22'nin çok altında)
+const PUSH_EPS := 0.01
 
 ## Engel dizileri (üretim sırası). Dekorlar da burada (solid = 0), çarpışma ızgarasında değiller.
+## ob_pos/ob_r: sarmalayan çember; ob_foot: sprite çapası (dekorda ob_pos ile aynı).
 var count: int = 0
 var ob_pos: PackedVector2Array = PackedVector2Array()
 var ob_r: PackedFloat32Array = PackedFloat32Array()
+var ob_foot: PackedVector2Array = PackedVector2Array()
 var ob_ruin: PackedInt32Array = PackedInt32Array()
 var ob_solid: PackedByteArray = PackedByteArray()
+## Çarpışma daireleri (yalnız katı engeller; üretim sırası), dünya koordinatı.
+var circ_pos: PackedVector2Array = PackedVector2Array()
+var circ_r: PackedFloat32Array = PackedFloat32Array()
 
 var _seed: int = 0
 var _defs: Array[Dictionary] = []
 var _solid_defs: Array[int] = []
 var _decor_defs: Array[int] = []
+var _def_circles: Array[PackedVector3Array] = []  # def -> foot'a göre (x, y, r) daireleri
+var _def_center: Array[Vector2] = []  # def -> sarmalayan çember merkezi (foot'a göre)
+var _def_bound: PackedFloat32Array = PackedFloat32Array()  # def -> sarmalayan çember yarıçapı
 var _chunks: Dictionary = {}  # chunk anahtarı -> PackedInt32Array (engel indeksleri)
-var _cells: Dictionary = {}  # hücre anahtarı -> PackedInt32Array (katı engel indeksleri)
+var _cells: Dictionary = {}  # hücre anahtarı -> PackedInt32Array (daire indeksleri)
+var circ_first: PackedInt32Array = PackedInt32Array()  # engel -> ilk daire indeksi
+var circ_count: PackedInt32Array = PackedInt32Array()  # engel -> daire sayısı (dekor 0)
 var _last_chunk: Vector2i = Vector2i(1 << 30, 1 << 30)
 
 
@@ -36,10 +54,22 @@ func _init(p_seed: int = 0, defs: Array = []) -> void:
 		if d is Dictionary:
 			_defs.append(d)
 	for i in _defs.size():
-		if bool(_defs[i].get("solid", false)):
+		var solid := bool(_defs[i].get("solid", false))
+		if solid:
 			_solid_defs.append(i)
 		else:
 			_decor_defs.append(i)
+		var circles := circles_of_def(_defs[i]) if solid else PackedVector3Array()
+		var center := Vector2.ZERO
+		var bound := float((_defs[i].get("footprint", {}) as Dictionary).get("w", 100.0)) * 0.5
+		if not circles.is_empty():
+			center = _bounds_center(circles)
+			bound = 0.0
+			for c in circles:
+				bound = maxf(bound, Vector2(c.x, c.y).distance_to(center) + c.z)
+		_def_circles.append(circles)
+		_def_center.append(center)
+		_def_bound.append(bound)
 
 
 ## Harabe tanımı (data/ruins.json kaydı) — engel `ob_ruin` indeksi.
@@ -67,7 +97,7 @@ func chunk_obstacles(c: Vector2i) -> PackedInt32Array:
 	return _chunks.get(_chunk_key(c), PackedInt32Array())
 
 
-## Dairesel katı engeller: Array[Vector3] (x, y, yarıçap), merkez çevresindeki chunk'lar.
+## Katı çarpışma daireleri: Array[Vector3] (x, y, yarıçap), merkez çevresindeki chunk'lar.
 func obstacles_near(center: Vector2) -> Array[Vector3]:
 	ensure(center)
 	var out: Array[Vector3] = []
@@ -76,28 +106,89 @@ func obstacles_near(center: Vector2) -> Array[Vector3]:
 		for dx in range(-CHUNK_RADIUS, CHUNK_RADIUS + 1):
 			for i in chunk_obstacles(Vector2i(c.x + dx, c.y + dy)):
 				if ob_solid[i] == 1:
-					out.append(Vector3(ob_pos[i].x, ob_pos[i].y, ob_r[i]))
+					for k in range(circ_first[i], circ_first[i] + circ_count[i]):
+						out.append(Vector3(circ_pos[k].x, circ_pos[k].y, circ_r[k]))
 	return out
 
 
-## `pos`'ta `radius` yarıçaplı daire katı engellerden dışarı itilir; yeni konumu döndürür.
+## `pos`'ta `radius` yarıçaplı daire katı engellerden dışarı itilir; yeni konumu döndürür. Varlığın kapladığı tüm
+## hücrelere bakılır (komşu hücre kaçağı yok). Birleşik daire kümesinde birkaç geçişle yakınsar; itme daire
+## normali boyuncadır, yani hareketin yüzeye dik bileşeni silinir, teğet bileşeni kalır (kenar boyunca kayma).
 func resolve(pos: Vector2, radius: float) -> Vector2:
 	if _cells.is_empty():
 		return pos
-	var found: Variant = _cells.get(_cell_key(pos))
-	if found == null:
-		return pos
-	var list: PackedInt32Array = found
-	for i in list:
-		var d := pos - ob_pos[i]
-		var min_d := ob_r[i] + radius
-		var l2 := d.length_squared()
-		if l2 < min_d * min_d:
-			if l2 < 0.0001:
-				pos = ob_pos[i] + Vector2(min_d, 0.0)
-			else:
-				pos = ob_pos[i] + d * (min_d / sqrt(l2))
+	for _pass in RESOLVE_PASSES:
+		var moved := false
+		var cx0 := floori((pos.x - radius) / CELL)
+		var cx1 := floori((pos.x + radius) / CELL)
+		var cy0 := floori((pos.y - radius) / CELL)
+		var cy1 := floori((pos.y + radius) / CELL)
+		for cy in range(cy0, cy1 + 1):
+			for cx in range(cx0, cx1 + 1):
+				var found: Variant = _cells.get(cx * 1000003 + cy)
+				if found == null:
+					continue
+				var list: PackedInt32Array = found
+				for i in list:
+					var d := pos - circ_pos[i]
+					var min_d := circ_r[i] + radius
+					var l2 := d.length_squared()
+					if l2 >= (min_d - PUSH_EPS) * (min_d - PUSH_EPS):
+						continue
+					moved = true
+					if l2 < 0.0001:
+						pos = circ_pos[i] + Vector2(min_d, 0.0)
+					else:
+						pos = circ_pos[i] + d * (min_d / sqrt(l2))
+		if not moved:
+			break
 	return pos
+
+
+## `from`'dan `to`'ya hareket: en çok MAX_SUBSTEP uzunluklu alt adımlarla ilerler, her adımda resolve eder
+## (hızlı hareket ince engeli atlayamaz). Başlangıç konumu engel dışında varsayılır.
+func slide(from: Vector2, to: Vector2, radius: float) -> Vector2:
+	var n := maxi(1, ceili(from.distance_to(to) / MAX_SUBSTEP))
+	var step := (to - from) / float(n)
+	var pos := from
+	for _k in n:
+		pos = resolve(pos + step, radius)
+	return pos
+
+
+## Harabe tanımının çarpışma daireleri (foot'a göre x, y, r). `collision` yoksa foot'ta tek daire (footprint.w/2).
+static func circles_of_def(def: Dictionary) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	var raw: Variant = def.get("collision")
+	if raw is Array:
+		for c in raw:
+			if c is Dictionary:
+				out.append(
+					Vector3(float(c.get("x", 0.0)), float(c.get("y", 0.0)), float(c.get("r", 1.0)))
+				)
+	if out.is_empty():
+		var w := float((def.get("footprint", {}) as Dictionary).get("w", 100.0))
+		out.append(Vector3(0.0, 0.0, w * 0.5))
+	return out
+
+
+## Dairelerin sarmalayan çemberi (merkez, yarıçap) — foot'a göre. Merkez: daire sınırlarının kutu ortası.
+static func bounds_of_def(def: Dictionary) -> Vector3:
+	var circles := circles_of_def(def)
+	var center := _bounds_center(circles)
+	var bound := 0.0
+	for c in circles:
+		bound = maxf(bound, Vector2(c.x, c.y).distance_to(center) + c.z)
+	return Vector3(center.x, center.y, bound)
+
+
+static func _bounds_center(circles: PackedVector3Array) -> Vector2:
+	var lo := Vector2(1.0e9, 1.0e9)
+	var hi := Vector2(-1.0e9, -1.0e9)
+	for c in circles:
+		lo = Vector2(minf(lo.x, c.x - c.z), minf(lo.y, c.y - c.z))
+		hi = Vector2(maxf(hi.x, c.x + c.z), maxf(hi.y, c.y + c.z))
+	return (lo + hi) * 0.5
 
 
 func _generate(c: Vector2i) -> void:
@@ -118,9 +209,13 @@ func _generate(c: Vector2i) -> void:
 		for k in n_solid + n_decor:
 			var solid := k < n_solid
 			var di := _pick(rng, _solid_defs if solid else _decor_defs)
-			var def := _defs[di]
-			var r := float((def.get("footprint", {}) as Dictionary).get("w", 100.0)) * 0.5
-			var p := origin + Vector2(rng.randf(), rng.randf()) * CHUNK
+			var r := _def_bound[di]
+			var u := Vector2(rng.randf(), rng.randf())
+			var p := origin + u * CHUNK
+			if solid:
+				# sarmalayan çember chunk kenarından r + MIN_GAP/2 içeride: komşu chunk'larla çakışma imkânsız
+				var m := minf(r + MIN_GAP * 0.5, CHUNK * 0.5)
+				p = origin + Vector2(m, m) + u * (CHUNK - 2.0 * m)
 			if p.length() < START_CLEAR + r:
 				continue
 			if solid and _overlaps_solid(p, r, made):
@@ -129,11 +224,18 @@ func _generate(c: Vector2i) -> void:
 			count += 1
 			ob_pos.append(p)
 			ob_r.append(r)
+			ob_foot.append(p - _def_center[di])
 			ob_ruin.append(di)
 			ob_solid.append(1 if solid else 0)
 			made.append(idx)
+			circ_first.append(circ_pos.size())
 			if solid:
-				_register_cells(idx)
+				var foot := p - _def_center[di]
+				for cc in _def_circles[di]:
+					circ_pos.append(foot + Vector2(cc.x, cc.y))
+					circ_r.append(cc.z)
+					_register_cell(circ_pos.size() - 1)
+			circ_count.append(circ_pos.size() - circ_first[idx])
 	_chunks[key] = made
 
 
@@ -156,24 +258,19 @@ func _pick(rng: RandomNumberGenerator, pool: Array[int]) -> int:
 	return pool[pool.size() - 1]
 
 
-func _register_cells(idx: int) -> void:
-	var reach := ob_r[idx] + CELL_PAD
-	var lo := ob_pos[idx] - Vector2(reach, reach)
-	var hi := ob_pos[idx] + Vector2(reach, reach)
+func _register_cell(ci: int) -> void:
+	var lo := circ_pos[ci] - Vector2(circ_r[ci], circ_r[ci])
+	var hi := circ_pos[ci] + Vector2(circ_r[ci], circ_r[ci])
 	for cy in range(floori(lo.y / CELL), floori(hi.y / CELL) + 1):
 		for cx in range(floori(lo.x / CELL), floori(hi.x / CELL) + 1):
 			var k := cx * 1000003 + cy
 			var arr: PackedInt32Array = _cells.get(k, PackedInt32Array())
-			arr.append(idx)
+			arr.append(ci)
 			_cells[k] = arr
 
 
 static func _chunk_key(c: Vector2i) -> int:
 	return c.x * 1000003 + c.y
-
-
-static func _cell_key(p: Vector2) -> int:
-	return floori(p.x / CELL) * 1000003 + floori(p.y / CELL)
 
 
 ## Sürümler/platformlar arası kararlı tamsayı karıştırma (Variant hash'ine bağlı değil).

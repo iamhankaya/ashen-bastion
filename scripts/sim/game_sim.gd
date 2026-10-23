@@ -500,9 +500,10 @@ func _phase_player_move(move: Vector2) -> void:
 	_trace(1)
 	last_move = move
 	if move.length_squared() > 0.0:
-		player_pos += move * character.move_speed * stats.move_speed_mult * STEP
-		map.ensure(player_pos)
-		player_pos = map.resolve(player_pos, character.collision_radius)
+		var from := player_pos
+		var to := from + move * character.move_speed * stats.move_speed_mult * STEP
+		map.ensure(to)
+		player_pos = map.slide(from, to, character.collision_radius)
 		if move.x < -0.1:
 			player_facing_left = true
 		elif move.x > 0.1:
@@ -867,7 +868,11 @@ func _on_reload_finished() -> void:
 
 
 func _stream_seed(stream: StringName) -> int:
-	return hash([_seed, String(stream)])
+	# Variant hash'i motor sürümüne bağlıdır; ad baytları + tohum elle yazılmış 64 bit karıştırmayla birleşir.
+	var x := _seed & 0x7FFFFFFFFFFFFFFF
+	for b in String(stream).to_utf8_buffer():
+		x = MapSim._mix(x, b, 0x51ED27)
+	return MapSim._mix(x, String(stream).length(), 0x2545F4)
 
 
 ## Pasif değişince istatistikleri, azami canı ve şarjör kapasitesini yeniler.

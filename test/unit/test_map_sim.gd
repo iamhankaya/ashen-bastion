@@ -64,10 +64,16 @@ func test_resolve_pushes_circle_out_of_solid_obstacle() -> void:
 			found = i
 			break
 	assert_ne(found, -1)
-	var center := m.ob_pos[found]
-	var r := m.ob_r[found]
+	var k := m.circ_first[found]  # ilk çarpışma dairesi
+	var center := m.circ_pos[k]
+	var r := m.circ_r[k]
 	var out := m.resolve(center + Vector2(10, 0), 22.0)
-	assert_almost_eq(out.distance_to(center), r + 22.0, 0.5)
+	assert_gte(
+		out.distance_to(center),
+		r + 22.0 - 0.05,
+		"daire dışına itilir (komşu daireler daha fazla itebilir)"
+	)
+	assert_eq(m.resolve(out, 22.0), out, "itilmiş konum kararlı")
 	var far := Vector2(-4000, -4000)  # başlangıçtan ve chunk'lardan uzak, engelsiz
 	assert_eq(m.resolve(far, 22.0), far, "engelden uzak konum değişmez")
 
