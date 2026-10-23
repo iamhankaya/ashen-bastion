@@ -76,7 +76,7 @@ fi
 if [ "${GATE_RENDER:-0}" = "1" ]; then
   step "10. Render smoke"
   if command -v xvfb-run >/dev/null; then
-    xvfb-run -a "$GODOT_BIN" --rendering-driver opengl3 --quit-after 5 > .gate/render.log 2>&1 || fail "render smoke"
+    xvfb-run -a "$GODOT_BIN" --rendering-driver opengl3 --audio-driver Dummy --quit-after 60 > .gate/render.log 2>&1 || fail "render smoke"
     scan_log .gate/render.log
   else
     echo "shader derlemesi doğrulanmadı: xvfb-run yok"

@@ -40,6 +40,24 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	for t in _fades:
+		if t != null and t.is_valid():
+			t.kill()
+	for p in _players:
+		p.stop()
+	if _stinger != null:
+		_stinger.stop()
+	# Ses iş parçacığı durdurulan oynatmaları bir sonraki karışımda bırakır; kapanışta sızıntı raporlanmasın diye kısa bekleme.
+	if not _players.is_empty():
+		OS.delay_msec(150)
+	for p in _players:
+		p.stream = null
+		p.free()
+	_players.clear()
+	if _stinger != null:
+		_stinger.stream = null
+		_stinger.free()
+		_stinger = null
 	Sfx.teardown()
 	_reset_bus_volume()
 
