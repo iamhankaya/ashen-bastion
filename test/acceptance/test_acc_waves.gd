@@ -82,7 +82,7 @@ func test_boss_warns_5s_before_and_spawns_on_time() -> void:
 		return
 	assert_between(int(w[0]["step"]), 298, 302, "uyarı 295. sn (başlangıçtan 5 sn sonra)")
 	assert_between(int(b[0]["step"]), 598, 602, "boss 300. sn")
-	assert_eq(b[0]["type"], &"elit_piyade")
+	assert_eq(b[0]["enemy_type"], &"elit_piyade")
 	assert_between(int(b[0]["step"]) - int(w[0]["step"]), 298, 302, "uyarı olaydan 5 sn önce")
 
 
@@ -95,7 +95,7 @@ func test_boss_is_not_scaled_when_definition_says_so() -> void:
 	var b := SimKit.events(sim, SimEvents.SPAWN)
 	var id := -1
 	for e in b:
-		if e["type"] == &"elit_piyade":
+		if e["enemy_type"] == &"elit_piyade":
 			id = int(e["id"])
 	assert_ne(id, -1, "300. sn'de elit_piyade doğmalı")
 	var def := sim.data.get_enemy(&"elit_piyade")
@@ -150,7 +150,7 @@ func test_debug_set_time_rescales_difficulty() -> void:
 	var def := sim.data.get_enemy(&"curumus_piyade")
 	var checked := 0
 	for e in SimKit.events(sim, SimEvents.SPAWN):
-		if e["type"] == &"curumus_piyade":
+		if e["enemy_type"] == &"curumus_piyade":
 			var hp := SimKit.enemy_hp(sim, int(e["id"]))
 			if hp > 0.0 and def != null:
 				checked += 1
@@ -202,12 +202,12 @@ func test_lord_spawns_at_end_time_with_warning_and_summons() -> void:
 	assert_eq(warn.size(), 1)
 	if spawn.is_empty():
 		return
-	assert_eq(spawn[0]["type"], &"kale_lordu")
+	assert_eq(spawn[0]["enemy_type"], &"kale_lordu")
 	assert_between(int(spawn[0]["step"]), 358, 362, "Lord 1200. sn'de")
 	var lord_step := int(spawn[0]["step"])
 	var per_step := {}
 	for e in SimKit.events(sim, SimEvents.SPAWN):
-		if e["type"] == &"curumus_piyade" and int(e["step"]) > lord_step:
+		if e["enemy_type"] == &"curumus_piyade" and int(e["step"]) > lord_step:
 			per_step[int(e["step"])] = int(per_step.get(int(e["step"]), 0)) + 1
 	var batches := 0
 	var skip_until := 0

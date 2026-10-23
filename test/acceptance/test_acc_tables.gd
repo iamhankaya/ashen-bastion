@@ -143,8 +143,8 @@ func test_waves_rows_1_to_3_match_table() -> void:
 	if not karga.is_empty():
 		assert_eq(float(karga["from"]), 90.0)
 		assert_eq(float(karga["to"]), 1200.0)
-		assert_eq(karga["group"], [6, 14])
-		assert_eq(karga["every"], [26, 12])
+		assert_eq(karga["group"], [6.0, 14.0])
+		assert_eq(karga["every"], [26.0, 12.0])
 	var sov := _row("rate", "sovalye_hayaleti")
 	assert_false(sov.is_empty(), "şövalye hayaleti rate satırı yok")
 	if not sov.is_empty():
