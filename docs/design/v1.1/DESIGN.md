@@ -11,13 +11,13 @@ Maketler: `mock/` (statik HTML + Chromium ekran görüntüsü, 1080×2400). AI g
 | # | Karar | Gerekçe |
 |---|---|---|
 | K1 | "Resim gibi süzülme"nin nedeni: oyuncu zıplaması 4 px (%2) ve %4 squash; düşmanda yürüme hareketi hiç yok (tek `transform`, yalnız yöne bakma + vurulma parlaması); yerle temas gölgesi yok. Çözüm sırası: **(1) yer gölgesi, (2) ağırlık merkezi eğimi + daha büyük bob/squash, (3) tepki (vurulma/ölüm), (4) vurgu anları.** | Gölge ve eğim olmadan genlik artırmak "daha çok zıplayan resim" üretir. |
-| K2 | Animasyonların **tamamı ek görselsiz** (a) tasarlandı; (b) kare ihtiyaçları isteğe bağlı kalite yükseltmesidir ve öncelik sırasıyla `prompts.md`'de. | Görsel üretimi kullanıcıya bağlı; tasarım onu beklemeden uygulanabilir olmalı. |
+| K2 | Animasyonlar **ek görselsiz (a) uygulanabilir** tasarlandı; **ek olarak** kareli YÜRÜME DÖNGÜSÜ (§1.7) eklendi: prosedürel sekme tek başına ayak kaymasını gideremez. Kareler gelene kadar prosedürel yedek çalışır; gelince prosedürel katman üstüne biner. Diğer (b) kareler isteğe bağlıdır. | Kullanıcı geri bildirimi: ayaklar zemine basmıyor. Görsel üretimi kullanıcıya bağlı; tasarım onu beklemeden uygulanabilir olmalı. |
 | K3 | Düşman hareketi **MultiMesh örnek dönüşümünden** (dönme, ölçek, öteleme) ve mevcut `INSTANCE_CUSTOM.r` (vurulma değeri) türetilir; ölüm için ayrı küçük bir "hayalet" MultiMesh. Sim'e dokunulmaz (itme yalnız görseldir). | 300+ düşman bütçesi; çarpışma/yol bulma bozulmaz. |
 | K4 | Eklentiler yerde **80 px ikon + parlama + gölge + kayan nabız**; nadirlik = renk + parlama biçimi + nabız hızı (tek başına renk değil). | DESIGN-UI ilke 5 ve §2 "renk tek başına anlam taşımaz". |
 | K5 | Süreli etki göstergesi **sol alt, tamburun sağında** (108 px yuvarlak rozet, kalan süre yayı + saniye sayısı). | Üst bölge dolu (süre, can, yuvalar, boss satırı); alt-sol zaten bilgi bölgesi ve dokunulmaz; sağ-alt başparmak bölgesidir. |
 | K6 | Skor HUD'da **sağ sütun, Duraklat'ın altı** (y 284–436). Süre altı ortası yuva satırlarıyla çakışır (x 36–558). | `02-hud-anatomi.png`. |
-| K7 | "Kombo" oyunda "evrim" demek (Kurulan kombolar). Skor çarpanına **SERİ** adı verildi. | İsim çakışması önlenir. **[AÇIK-6]** |
-| K8 | Bomba: **toplanınca toplama noktasında 0,8 sn fitil, sonra yarıçaplı patlama; oyuncuya zarar yok.** Alternatif: oyuncunun üstünde anında. | Yarıçap göstergesi anlam kazanır; konumlanma oyunu. **[AÇIK-1]** |
+| K7 | "Kombo" oyunda "evrim" demek (Kurulan kombolar). Skor çarpanına **SERİ** adı verildi. | İsim çakışması önlenir. |
+| K8 | Bomba: **toplanınca toplama noktasında 0,8 sn fitil, sonra yarıçaplı patlama; oyuncuya zarar yok.** Alternatif: oyuncunun üstünde anında. | Yarıçap göstergesi anlam kazanır; konumlanma oyunu. |
 
 ---
 
@@ -44,7 +44,7 @@ Mevcut: `BOB_PX 4`, `SQUASH 0,04`, `BOB_HZ 2,2` (|sin| → 4,4 adım/sn), `RECOI
 | ID | Hareket | Tetikleyici | Zamanlama / eğri | Genlik | Sınıf |
 |---|---|---|---|---|---|
 | P1 | **Nefes (duruş)** | hız < 5 px/sn | 2,4 sn sinüs, sürekli | gövde sy 1,000→1,015; kol ±1,5°; atkı `scarf_amp` 3 px | (a) |
-| P2 | **Yürüme sekmesi + squash/stretch** | hız ≥ 5 px/sn; frekans = 2,2 Hz × clamp(hız/300, 0,5, 1) | `h = |sin(πφ)|^0,8` (temasta keskin); temas anında 60 ms squash | bob **9 px** (4'ten); temas: sx 1,05 / sy 0,93; havada: sx 0,97 / sy 1,04 | (a) |
+| P2 | **Yürüme sekmesi + squash/stretch** (**yedek**; kare gelince §1.7.3'e göre 0) | hız ≥ 5 px/sn; frekans = 2,2 Hz × clamp(hız/300, 0,5, 1) | `h = |sin(πφ)|^0,8` (temasta keskin); temas anında 60 ms squash | bob **9 px** (4'ten); temas: sx 1,05 / sy 0,93; havada: sx 0,97 / sy 1,04 | (a) |
 | P3 | **Gövde eğimi (lean)** | harekette | hız yönüne eğim, 120 ms lag (cubic-out); adım senkronlu ±2° sallanma | `6° × clamp(vx/300, −1, 1)` + ±2° | (a) |
 | P4 | **Yön çevirme (turn)** | `facing_left` değişince, 8 px histerezis | 70 ms: `scale.x` 1 → 0,25 → −1 (orta noktada ayna), cubic-in-out | min |sx| 0,25 | (a) |
 | P5 | **Etek/atkı ikincil hareketi** | sürekli | etek: mevcut `sway` + adım fazlı sinüs; atkı: koşuda `scarf_amp` 6,5 px, duruşta 3 px | etek ±3 px ek; atkı 3–6,5 px | (a) shader |
@@ -67,7 +67,7 @@ Ortak: örnek dönüşümü `rotate(θ) · scale(sx, sy)` ayak noktası etrafın
 
 | ID | Tür | Hareket | Tetikleyici | Zamanlama / eğri | Genlik | Sınıf |
 |---|---|---|---|---|---|---|
-| E1 | **Çürümüş Piyade** (104 px, 95 px/sn) | Sürünen yürüyüş | sürekli | 1,1 Hz; `θ = 5°(0,6 sin φ + 0,4 sin 2φ)` (topallama); bob \|sin\|; ileri eğim 4° | bob 5 px; sx/sy ±%5; θ ±5° | (a) |
+| E1 | **Çürümüş Piyade** (104 px, 95 px/sn) | Sürünen yürüyüş (**yedek**; kare gelince §1.7: bob/θ kare+biner) | sürekli | 1,1 Hz; `θ = 5°(0,6 sin φ + 0,4 sin 2φ)` (topallama); bob \|sin\|; ileri eğim 4° | bob 5 px; sx/sy ±%5; θ ±5° | (a) |
 | E2 | **Leş Kargası** (64 px) | Uçuş salınımı | sürekli | kanat: mevcut 3 kare, **[0,1,2,1] ping-pong @ 12 kare/sn** (şimdi 9 kare/sn döngü); gövde 3 Hz dikey salınım; yatış = yanal hızın ±12°'si | ±7 px, ±12°; hızda sx 1,10 | (a) |
 | E3 | **Şövalye Hayaleti** (150 px, 70 px/sn) | Süzülme | sürekli | 0,7 Hz sinüs dikey; 0,9 Hz sy ±%3 "ağır adım"; yavaş θ ±2,5°; α 0,9–1,0 | ±6 px | (a) |
 | E4 | **Elitler** (230–270 px) | Tür hareketi, yavaşlatılmış | sürekli | frekans × √(h₀/h) (≈ ×0,67); genlik % olarak aynı (px büyür); **adım temasında toz** (FxRenderer puff, sn'de ≤ 4) ve yakında (<400 px) kamera 1,5 px | — | (a) |
@@ -93,19 +93,66 @@ Ortak: örnek dönüşümü `rotate(θ) · scale(sx, sy)` ayak noktası etrafın
 
 | Sıra | İhtiyaç | Neden (a) yetmez | Kare sayısı / boyut | Prompt |
 |---|---|---|---|---|
-| B1 | Piyade yürüme karesi "adım B" | Dönme-eğim bacak değişimini veremez; en sık görülen düşman | 1 ek kare (mevcut = A), 1312×1199 | `prompts.md` §B1 |
+| **C1** | **Oyuncu kolsuz gövde yürüme döngüsü** | prosedürel hareket ayak kaymasını gideremez | **6 kare**, kare başı 1024×1536 | `prompts.md` §C1 |
+| **C2** | **Çürümüş Piyade yürüme döngüsü** | aynı; en sık görülen düşman (+ elit piyade) | **6 kare**, kare başı 1312×1199 | §C2 |
 | B2 | Oyuncu ölüm yığılma karesi ×2 | −75° devrilme "tahta" gibi durur | 2 kare, 1536×1024 | §B2 |
 | B3 | Doldurma kolları ×2 (silindir açık / kapanıyor) | Namlu küçük, silindir hareketi görünmez | 2 kol karesi, 1774×887 (mevcut kolla aynı) | §B3 |
 | B4 | Lord "kollar yukarı" karesi | Çağırma ön hazırlığı görsel olarak güçlenir | 1 kare, 1312×1199 | §B4 |
 | B5 | Eklenti ikonları (hero kalite) | SVG önerisi (`mock/pickups/`) yeterli; AI ancak parlak sürüm ister | 6 ikon, 512×512 | §B5 |
 
-**Atlas etkisi (B1/B4):** `EnemyAtlas` çok kareli dosyayı (`frames` > 1) zaten destekler; manifest `frames` artırılır. Kare seçimi: piyade A/B = yürüme fazı `φ`'nin işaretine göre (2,2 kare/sn ≈ 1,1 Hz).
+**Atlas etkisi:** bkz. §1.7.5 (C2 ile `frames: 6`). B1 (tek "adım B" karesi) C2 ile **geçersiz kılındı**.
 
 ### 1.6 Sim/denetleyiciden beklenenler (tasarım gereksinimi, kod değil)
 
 - Okunabilir olması yeterli: `EnemyPool.ai_timer` (elit karga şarjı, Lord çağırması), `ai_aux` (öfke) — **yeni sinyal gerekmez**.
 - Yeni sinyaller (eklentiler ve skor için): `pickup_collected(kind, pos)`, `buff_started(kind, duration)`, `buff_ended(kind)`, `bomb_planted(pos, radius, fuse)`, `bomb_exploded(pos, radius)`, `score_changed(score, mult, gain)`, `streak_changed(mult, left)`.
 - Denetleyici: ölüm/kazanma sonrası sonuç ekranını **1,3 / 1,8 sn geciktir** (dokunma = hemen göster); sim durumu `LOST/WON` kalır, yalnız görünüm zamanı akar.
+
+### 1.7 Kareli yürüme döngüsü (prosedürel ile birlikte)
+
+Neden: prosedürel bob/eğim "ayak zemine basıyor" hissini vermez; ayak kayması yalnız **bacak karesi + mesafe tabanlı kare ilerlemesi** ile çözülür. Maket: `mock/10-yurume-dongusu-kareler.png` (kaba çizgi kılavuzu).
+
+**1.7.1 Kapsam**
+
+| Karakter | Kare | Not |
+|---|---|---|
+| Gunslinger **kolsuz gövde** | **6 kare** yürüme + duruş karesi = mevcut `gunslinger_body.png` | Kollar/tabancalar mevcut rig'de ayrı kalır |
+| Çürümüş Piyade | **6 kare** | Elit Piyade aynı kareleri `tint` + ölçekle kullanır |
+| Şövalye Hayaleti, elit şövalye | kare yok | süzülür (E3), [AÇIK-2] |
+| Leş Kargası | mevcut 3 kare | E2 |
+
+6 kare = çevrimde (2 adım): **1 sağ temas · 2 sağ aşağı · 3 geçiş (en yüksek) · 4 sol temas · 5 sol aşağı · 6 geçiş.** Gövde yüksekliği 1/4 sapma: temas 0, aşağı **+5 px** (oyuncu @200 px) / +3 px (piyade), geçiş **−5 / −3 px**. Bu dikey hareket **karenin içinde çizilidir**; ayak çizgisi tüm karelerde aynı yatay zemin çizgisindedir.
+
+**1.7.2 Ayak kayması yok kuralı (mesafe tabanlı ilerleme)**
+
+Kare, zamana değil **kat edilen mesafeye** bağlanır:
+`faz += |Δkonum| / çevrim_uzunluğu` ; `kare = floor(faz × 6) mod 6`
+- Oyuncu: adım uzunluğu **68 px** (mevcut 4,4 adım/sn @ 300 px/sn), çevrim **136 px** (≈ 0,68 × boy) → tam hızda ≈ **13 kare/sn**; yarı hızda 6,6 kare/sn. Çevrim uzunluğu `gunslinger.json: rig.walk.stride` (veri).
+- Piyade: çevrim **72 px** (≈ 0,7 × 104), 95 px/sn'de ≈ **8 kare/sn**; Elit Piyade (230 px) çevrimi ölçekle **160 px** (0,7 × boy) → 110 px/sn'de ≈ 4 kare/sn (ağır).
+- **Durma:** hız < 5 px/sn → en yakın temas karesine (1 ya da 4) **80 ms** içinde geçip duruş karesine çapraz geçiş (2 kare 80 ms'de çapraz solma). Başlarken duruştan kare 1'e doğrudan.
+- Düşmanda `Δkonum` = havuz `pos` farkı (kare başına `last_pos` dizisi, 400 giriş) → harabeye takılan düşman adım atmaz (kayma yok). **Kalabalık senkronsuzluğu:** başlangıç fazı `hash(id)`.
+- **Kabul ölçütü:** kayıt/ekran görüntüsü dizisinde basan ayağın zemin noktası kareden kareye `çevrim/6 ÷ 2 ≈ 22,7 px` (oyuncu) geriye kayar ve **yer sabit görünür**; ±3 px içinde.
+
+**1.7.3 Prosedürel ile birlikte çalışma**
+
+| Durum | Davranış |
+|---|---|
+| Kare **yok** (şimdi) | §1.2/§1.3'teki prosedürel sekme + eğim + squash **yedek** olarak çalışır (bob 9 px, vb.) |
+| Kare **var** | Kare animasyonu ayak ve dikey hareketi taşır: **prosedürel bob 0 px**, yürüme squash'ı 0 (karede var). Üstüne **biner** (kapatılmaz): P3 gövde eğimi 6° (%60'a indirilir 3,6°; kare zaten ileri eğik), P4 yön çevirme, P5 etek/atkı shader'ı, P6 geri tepme, P10 hasar sarsıntısı + parlama, P11–P13, E5 vurulma, E6 ölüm. Hepsi mevcut `Rig`/örnek dönüşümü üzerinde, kare dokusundan bağımsız |
+| Geçiş | `rig.walk.frames` (kare sayısı) > 0 ise kare modu; yoksa yedek. Kod dalı tek bayrak: aynı veri dosyasıyla iki mod |
+
+**1.7.4 Oyuncu rig'inde kare kullanımı ve omuz pivotu**
+
+- `Body` doku kaynağı: yatay şerit (6 kare, her biri duruşla aynı tuval); mesh UV'si kareye göre kaydırılır (`frame` uniform'ı `player_sway.gdshader`'a eklenir) — etek/atkı shader'ı (`sway`, `scarf_rect`) kare başına **aynı normalize bölgeyi** kullanır, bu yüzden karelerde etek ve atkı bölgesi aynı konumda çizilmelidir.
+- **Omuz pivotu izlenebilir olmalı:** `rig.shoulders` kesri kareler boyunca **sabit** (hedef: ±2 px @200 px boy = ±%1). Sapma varsa yedek: `rig.walk.shoulders[6]` kare başına ölçülmüş kesir tablosu (araçla ölçülür); kollar bu tabloyu okur (`PlayerRig.shoulder_world` tek kaynak olduğu için sim ile aynı fonksiyon kare indeksini alır). Sim tarafında namlu konumu **kare 0 (duruş) omzuna** göre kalır (tutarlılık; fark görsel ±2 px'tir).
+- Ayak çizgisi: tüm karelerde tuvalin alt kenarından aynı uzaklık; `Rig` pivotu (ayak) kare değişince kaymaz.
+
+**1.7.5 Düşman kare seçimi (MultiMesh) ve performans**
+
+- Mevcut `EnemyAtlas` çok kareli şeridi (`frames` > 1) zaten hücrelere böler; `EnemyRenderer.refresh` kareyi `cell + frame` ile `INSTANCE_CUSTOM.g`'ye yazar (kargada `(int(anim_t) + i) % fr`). Yürüme için: `frame = floor(faz[i] × 6) mod 6`, `faz[i]` düşman başına PackedFloat32Array (400) — **faz kayması** başlangıçta `hash(id)`, sonra mesafeyle ilerler.
+- Manifest: `curumus_piyade.png` → `frames: 6` (yatay şerit, her kare mevcut tuval oranında). Atlas: 6 → **11 hücre** (kargayla 3, Lord 1, hayalet 1): 3 sütun × **4 satır** = 1248×1664 RGBA ≈ **8,3 MB** (şimdi ≈ 4,1 MB); `cell_rect[16]` sınırı yeter (11), 16'yı aşarsa uniform dizisi büyütülür. Hücre başına rim payı korunur.
+- Ek maliyet: tür başına tablo + 1 çarpma/toplama/floor per düşman; `last_pos` farkı +400 vektör çıkarma → hedef ≤ 0,15 ms/kare (cihazda doğrula). Elit piyade aynı hücreleri paylaşır (ek bellek yok).
+- Çizim sayısı değişmez (tek MultiMesh + gölge MultiMesh).
 
 ---
 
@@ -342,20 +389,19 @@ Tip: skor 60 (Cinzel 700) · skor hero 120 (Cinzel 900) · rozet saniye 26 (Inte
 | `06-ana-menu.png` | yeni düğme ile menü |
 | `07-animasyon-oyuncu-pozlar.png` · `08-animasyon-dusman-pozlar.png` | anahtar pozlar (gerçek görsellerle CSS dönüşümü, yaklaşık) |
 | `09-animasyon-egriler.png` | zaman eğrileri |
+| `10-yurume-dongusu-kareler.png` | oyuncu + piyade 6'şar karelik yürüme şeridi (kaba çizgi kılavuzu) |
 | `pickups/*.svg` | eklenti ikon önerileri (96×96, DESIGN-UI §9 diliyle) |
 | `*.html`, `mock.css` | kaynak (`docs/ui/mockups/ui.css`'i kullanır) |
 
 Maket notları: Chromium ile üretildi (`--headless --screenshot`), Godot render'ı değildir; HUD sayıları kod (`hud.gd` TOP=96) değerleridir. Maketler ve kaynak `.gdignore` ile Godot dışı bırakıldı. Pose maketleri CSS dönüşümüdür; mesh/shader etkileri (etek, atkı, kül) gösterilmemiştir.
 
-## 8. Açık noktalar (kullanıcı kararı gerekir)
+## 8. Kapanan kararlar ve açık noktalar
 
-1. **Bomba davranışı:** önerilen "toplanınca toplama noktasında 0,8 sn fitil" mi, yoksa "oyuncunun üstünde anında" mı? (Etki: yarıçap önizleme ve oyun hissi.)
-2. **Eklenti doğma kuralı** (aralık, ağırlık) ve sayılar *öneri*; kesin değer plan/denge fazı.
-3. **Ekran dışı eklenti oku**: v1.1'e dahil mi (öneri: evet, küçük) ya da yalnız yerdeki görünüm mü?
-4. **Skorları sil** seçeneği v1.1'de yok; istenirse En İyi Skorlar'a "SIFIRLA" (onay diyaloglu) eklenebilir.
-5. **Seri hasarda bozulsun mu?** (öneri: evet; yalnız 3 sn zaman aşımı daha az cezalandırıcıdır.)
-6. **İsimlendirme:** "kombo" = evrim; çarpana "SERİ" dedik. Sonuç dökümündeki "kombo/evrim" satırı "Evrim bonusu" yazıldı. Onay?
-7. **Sonuç gecikmesi:** ölüm 1,3 sn / kazanma 1,8 sn (dokunma ile atlanır). Onay?
-8. **Sonuç ekranından "SIRALAMAYI GÖR"** bağlantısı v1.1'de yok (düğme bütçesi); istenirse rekor bandına 132 px'lik dokunulabilir hale getirilir.
-9. **Cihaz doğrulaması** gerekenler: düşman animasyon maliyeti (≤0,4 ms), ∞ glifi, gölge MultiMesh maliyeti, kenar oku güvenli alan.
-10. (b) görseller isteğe bağlı: B1 en değerli; hiçbiri uygulamayı bloke etmez.
+**Kapanan (VLAD onayı):** (1) Bomba: toplanınca toplama noktasında 0,8 sn fitil + alan hasarı; (3) ekran dışı eklenti oku v1.1'de; (4)(8) skorları sil ve sonuçtan sıralamaya bağlantı v1.1 dışı; (5) SERİ hasar alınca bozulur; (6) "SERİ" / "Evrim bonusu" adlandırması uygun; (7) sonuç gecikmesi ölüm 1,3 sn / kazanma 1,8 sn, dokunma atlar; (10) düğmeler içeriğin altında kalır (en erken y 1500).
+
+**Açık:**
+1. **Eklenti doğma kuralı** (aralık, ağırlık) ve tüm etki/puan sayıları *öneri*; kesin değer plan/denge fazı.
+2. **Şövalye Hayaleti ve elit şövalye** bilinçli **süzülür** (prosedürel, kare yok) varsayıldı; ek mesaj "yeniden kullanılabilir döngü" diyordu — yalnız **elit piyade** piyade karelerini renk/ölçekle paylaşır. Zırhlı yürüyen şövalye döngüsü isterseniz ayrı prompt eklenir.
+3. **Kare hazır olana dek** prosedürel yedek kalır; ilk teslim sırası: oyuncu 6 kare → piyade 6 kare (kullanıcıya bağlı).
+4. **Cihazda doğrulanacaklar:** düşman animasyon maliyeti (≤0,4 ms/kare), gölge MultiMesh, kare seçimi ek maliyeti, atlas bellek artışı (§1.7.5), ∞ glifi, kenar oku güvenli alanı.
+5. Karga için kare eklenmedi (mevcut 3 kare yeterli); hayalet/elit şövalye yalnız süzülür.
