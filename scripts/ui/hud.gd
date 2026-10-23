@@ -21,6 +21,16 @@ const CRITICAL := 0.25
 const BAR_EASE := 0.18
 const BOSS_BAND_TIME := 2.4
 const HUD_ALPHA := 0.85
+## Elit/Lord can satırı: pasif yuva satırının altında, ortada, oyuncu canından ayrı (N2). Ad üstte (≥26 px),
+## çubuk altta; Lord daha kalın ve ayrı renkte. Birden çok elit varsa en yüksek maks. canlı gösterilir, ada "+N" eklenir.
+const BOSS_W := 700.0
+const BOSS_Y := TOP + 352.0
+const BOSS_NAME_H := 34.0
+const BOSS_GAP := 2.0
+const BOSS_BAR_ELITE := 28.0
+const BOSS_BAR_LORD := 36.0
+const BOSS_NAME_SIZE := 28
+const BOSS_NAME_SIZE_LORD := 32
 
 var level_badge: LevelBadge
 var xp_bar: ProgressBar
@@ -32,9 +42,13 @@ var active_slots: Array[SkillSlot] = []
 var passive_slots: Array[SkillSlot] = []
 var drum: MagazineDrum
 var boss_band: PanelContainer
-## Elit/Lord canı çubuğu (yalnız biri canlıyken görünür).
+## Elit/Lord canı satırı (elit ya da Lord canlıyken görünür): ad etiketi + çubuk.
+var boss_row: Control
 var boss_bar: ProgressBar
 var boss_name: Label
+## Gösterilen hedef: Lord mu, ve ondan başka kaç elit canlı (ada "+N" olarak eklenir).
+var boss_is_lord: bool = false
+var boss_extra: int = 0
 var boss_label: Label
 var vignette: Vignette
 ## Cihaz güvenli alanı payı kadar içeri çekilmiş katman (rozet, çubuklar, yuvalar, tambur, duraklat).
@@ -45,6 +59,7 @@ var _xp_shown: float = 0.0
 var _hp_critical: bool = false
 var _boss_left: float = 0.0
 var _boss_scan: int = 0
+var _boss_style: int = -1  # 0 elit, 1 Lord (stil değişince yeniden kurulur)
 
 
 ## Seviye rozeti (daire + sayı).
@@ -214,23 +229,34 @@ func _build() -> void:
 		root.add_child(s)
 		passive_slots.append(s)
 
+	boss_row = Control.new()
+	boss_row.name = "BossRow"
+	boss_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	boss_row.visible = false
+	_place(
+		boss_row, 0.5, Rect2(-BOSS_W * 0.5, BOSS_Y, BOSS_W, BOSS_NAME_H + BOSS_GAP + BOSS_BAR_LORD)
+	)
+	root.add_child(boss_row)
+	boss_name = UiKit.label("", &"LabelAccent", BOSS_NAME_SIZE, UiKit.KEMIK_100)
+	boss_name.name = "BossName"
+	boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	boss_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	boss_name.offset_right = BOSS_W
+	boss_name.offset_bottom = BOSS_NAME_H
+	boss_name.add_theme_constant_override(&"shadow_offset_y", 2)
+	boss_row.add_child(boss_name)
 	boss_bar = ProgressBar.new()
 	boss_bar.name = "BossBar"
 	boss_bar.show_percentage = false
 	boss_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	boss_bar.max_value = 1.0
 	boss_bar.step = 0.0
-	boss_bar.add_theme_stylebox_override(
-		&"fill", UiKit.stylebox(UiKit.BORDO_500, UiKit.BORDO_400, 0, 14)
-	)
 	boss_bar.visible = false
-	_place(boss_bar, 0.0, Rect2(420.0, TOP + 124.0, 460.0, 32.0))
-	root.add_child(boss_bar)
-	boss_name = UiKit.label("", &"", 24, UiKit.KEMIK_100)
-	boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	boss_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	UiKit.fill(boss_name)
-	boss_bar.add_child(boss_name)
+	boss_bar.offset_top = BOSS_NAME_H + BOSS_GAP
+	boss_bar.offset_right = BOSS_W
+	boss_bar.offset_bottom = BOSS_NAME_H + BOSS_GAP + BOSS_BAR_ELITE
+	boss_row.add_child(boss_bar)
+	_style_boss(false)
 
 	drum = MagazineDrum.new()
 	drum.name = "MagazineDrum"
@@ -346,7 +372,8 @@ func show_boss_band(kind: StringName) -> void:
 	_boss_left = BOSS_BAND_TIME
 
 
-## Her 6. karede düşman havuzunu tarar; elit/Lord varsa en yüksek maks. canlısının canını gösterir.
+## Her 6. karede düşman havuzunu tarar; Lord varsa Lord'u, yoksa en yüksek maks. canlı elit'i gösterir. Diğer canlı
+## elitler ada "+N" olarak eklenir (hepsine ayrı çubuk yok: üstte yer yok, hedef en tehlikeli olandır).
 func _refresh_boss_bar() -> void:
 	_boss_scan += 1
 	if _boss_scan % 6 != 0:
@@ -354,14 +381,52 @@ func _refresh_boss_bar() -> void:
 	var e := _sim.enemies
 	var best := -1
 	var best_max := 0.0
+	var lord := false
+	var n := 0
 	for i in EnemyPool.CAP:
-		if e.alive[i] == 1 and e.is_elite(i) and e.max_hp[i] > best_max:
-			best = i
-			best_max = e.max_hp[i]
+		if e.alive[i] == 1 and e.is_elite(i):
+			n += 1
+			var is_lord := e.def_of(i).ai == &"lord"
+			if (is_lord and not lord) or (is_lord == lord and e.max_hp[i] > best_max):
+				best = i
+				best_max = e.max_hp[i]
+				lord = is_lord
+	boss_row.visible = best >= 0
 	boss_bar.visible = best >= 0
 	if best >= 0:
+		boss_is_lord = lord
+		boss_extra = n - 1
+		_style_boss(lord)
 		boss_bar.value = clampf(e.hp[best] / maxf(e.max_hp[best], 1.0), 0.0, 1.0)
-		boss_name.text = e.def_of(best).display_name
+		boss_name.text = boss_title(e.def_of(best).display_name, boss_extra)
+
+
+## Cinzel'de küçük harf yok: ad Türkçe büyük harfe çevrilir; birden çok elit varsa "+N".
+static func boss_title(display_name: String, extra: int) -> String:
+	var t := UiKit.upper_tr(display_name)
+	return t if extra <= 0 else "%s  +%d" % [t, extra]
+
+
+## Elit: bronz, ince; Lord: amber dolgu + kemik çerçeve, daha kalın ve daha büyük ad (final dövüşü "boss" gibi okunur).
+func _style_boss(lord: bool) -> void:
+	var style := 1 if lord else 0
+	if style == _boss_style:
+		return
+	_boss_style = style
+	var h := BOSS_BAR_LORD if lord else BOSS_BAR_ELITE
+	boss_bar.offset_bottom = boss_bar.offset_top + h
+	var bg := UiKit.stylebox(
+		Color(UiKit.VOID, 0.8), UiKit.KEMIK_100 if lord else UiKit.BRONZ_300, 3 if lord else 2, 8
+	)
+	var fill := UiKit.stylebox(
+		UiKit.AMBER if lord else UiKit.BRONZ_500, UiKit.BORDO_400 if lord else UiKit.BRONZ_300, 0, 6
+	)
+	boss_bar.add_theme_stylebox_override(&"background", bg)
+	boss_bar.add_theme_stylebox_override(&"fill", fill)
+	boss_name.add_theme_font_size_override(
+		&"font_size", BOSS_NAME_SIZE_LORD if lord else BOSS_NAME_SIZE
+	)
+	boss_name.add_theme_color_override(&"font_color", UiKit.AMBER if lord else UiKit.KEMIK_100)
 
 
 func _xp_ratio() -> float:

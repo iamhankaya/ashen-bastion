@@ -225,7 +225,7 @@ func _combo_row(c: Dictionary) -> Control:
 	var v := VBoxContainer.new()
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_theme_constant_override(&"separation", 2)
-	v.add_child(UiKit.label(str(c.get("name", "")), &"LabelTimer", 40))
+	v.add_child(UiKit.label(UiKit.upper_tr(str(c.get("name", ""))), &"LabelTimer", 40))
 	v.add_child(UiKit.label(str(c.get("pair", "")), &"", 28, UiKit.KEMIK_300))
 	row.add_child(v)
 	return row

@@ -1,7 +1,8 @@
 class_name UiKit
 extends RefCounted
 ## UI yardımcıları: token renkleri (docs/ui/tokens.json), tema, yazı tipleri, düğme/etiket kurucuları,
-## ikon çözümü ve biçimleyiciler. Metinler zaten büyük harfle yazılır (kodla büyütme yok: Türkçe i/İ).
+## ikon çözümü ve biçimleyiciler. Sabit metinler büyük harfle yazılır; Cinzel'de küçük harf yoktur (küçük `i` noktasız
+## `I` çizilir), bu yüzden veriden gelen (dinamik) adlar Cinzel etiketine `upper_tr` ile Türkçe büyük harfe çevrilerek verilir.
 
 const THEME_PATH := "res://themes/ashen-bastion-theme.tres"
 const ICON_DIR := "res://assets/ui/icons/"
@@ -36,6 +37,20 @@ const XP_PARLAK := Color("#a98bef")
 const MERMI_BOS := Color("#3a2e28")
 const OVERLAY_DIM := Color(0.051, 0.035, 0.063, 0.8)
 
+## Türkçe büyük harf dönüşümü (ASCII dışı küçük harfler): i→İ, ı→I öncelikli; motorun yerel büyütmesi kullanılmaz.
+const UPPER_MAP := {
+	0x69: 0x130,  # i → İ
+	0x131: 0x49,  # ı → I
+	0xE7: 0xC7,  # ç → Ç
+	0x11F: 0x11E,  # ğ → Ğ
+	0xF6: 0xD6,  # ö → Ö
+	0x15F: 0x15E,  # ş → Ş
+	0xFC: 0xDC,  # ü → Ü
+	0xE2: 0xC2,  # â → Â
+	0xEE: 0xCE,  # î → Î
+	0xFB: 0xDB,  # û → Û
+}
+
 static var _theme: Theme = null
 static var _tex_cache: Dictionary = {}
 
@@ -62,6 +77,19 @@ static func safe_extra(win: Vector2i, safe: Rect2i, view: Vector2) -> Vector4:
 ## Çalışma anı güvenli alan payı (masaüstü/headless'ta sıfır).
 static func current_safe_extra(view: Vector2) -> Vector4:
 	return safe_extra(DisplayServer.window_get_size(), DisplayServer.get_display_safe_area(), view)
+
+
+## Türkçe büyük harf: "Barut Kesesi" → "BARUT KESESİ", "Şifa" → "ŞİFA", "mermi" → "MERMİ".
+static func upper_tr(text: String) -> String:
+	var out := ""
+	for k in text.length():
+		var c := text.unicode_at(k)
+		if UPPER_MAP.has(c):
+			c = UPPER_MAP[c]
+		elif c >= 0x61 and c <= 0x7A:
+			c -= 32
+		out += char(c)
+	return out
 
 
 static func theme() -> Theme:
