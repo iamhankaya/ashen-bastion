@@ -73,3 +73,32 @@ sahnenin çalıştığını, draw call sayısının düşük (tür başına tek 
   Cihaz FPS'i kullanıcıda (docs/dev/user-verify.md §4).
 - **F-ashen-bastion-002:** `RenderFix` (özel kesme dikdörtgeni) varsayılan AÇIK; debug APK'da etiketle kapatılabilir.
 - Yedek merdiveni (yukarıdaki) hâlâ geçerli; ilk adım: `ProjectilePool.CAP`/`alive_cap` düşürme.
+
+## v1.1 D1 animasyon ölçümü (T20261023-89)
+
+Ölçüm üç katmanlıdır (plan A3): (1) gate iş sayaçları — `EnemyRenderer.last_anim_instances ≤ canlı`,
+`last_frame_selects ≤ canlı`, `last_shadow_instances == canlı` (`test_enemy_renderer_anim.gd`); (2) masaüstü mikro-ölçüm
+`godot --headless -s res://tools/perf/anim_micro.gd` (300 düşman: 150 piyade + 100 karga + 50 hayalet, kare başına 6 ölüm olayı;
+**zaman yalnız bilgidir**); (3) debug APK stres koşusu: `StressRun` artık `view_ms_avg/view_ms_p95` (GameController
+`_update_views` süresi) yazar ve senaryo her 20 adımda 5 ölüm yükü bindirir (`StressScenario(…, death_load)`); cihaz sonucunu
+kullanıcı paylaşır.
+
+Bulut, headless, Godot 4.7.2 (300 düşman, ms/kare):
+
+| Parça | v1 | v1.1 | Bütçe (ek) |
+|---|---|---|---|
+| `EnemyRenderer.refresh` (hareket + gölge + kare) | 0,13 | 0,37 | ≤ 0,4 + 0,15 ek |
+| `PlayerView.update_view` (rig + anim) | – | 0,03 | ≤ 0,05 |
+| `FxRenderer.update_fx` | – | 0,01 | ≤ 0,15 |
+| `AshGhostRenderer.update_ghosts` (48 hayalet) | – | 0,06 | – |
+
+İlk yazım 0,98 ms idi (işlev çağrıları: `pose_of`, `lut_sin`, `kind_of`); sıcak yol düz tablolar + satır içi LUT'a çevrildi,
+değişmeyen sıfırlar tampona bir kez yazılır (0,98 → 0,37). `EnemyAnim.pose_of` referans/test işlevi olarak kalır, renderer
+ile eşitliği `test_transform_matches_pose_of_for_each_type` sınar. Masaüstü sayıları cihazı temsil etmez.
+
+### Yedek merdiveni (sırayla; ölçüm cihazda gerekçelendirirse)
+
+1. >200 canlıda yalnız bob (θ/squash atla): `refresh` içinde `kind` dalında `theta/sym` hesabını koşullu yap.
+2. Tek/çift indeksleri iki karede bir güncelle (yarı düşman hareketi bayat kalır, gölge her kare).
+3. Animasyonu `INSTANCE_CUSTOM`'a taşı: `b`/`a` kanallarını tür başı uniform dizilerine (kontur/elit tür indeksiyle) boşalt,
+   `a` = faz yap, hareketi vertex shader'da hesapla (GPU; `GATE_RENDER=1` ve cihaz doğrulaması gerekir).

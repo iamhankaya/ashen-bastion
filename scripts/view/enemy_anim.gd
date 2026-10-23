@@ -74,9 +74,18 @@ static func _ensure_lut() -> void:
 
 
 ## sin(2π·x) LUT'tan (x: tur sayısı, her değer sarılır); 256 giriş, hata < %2,5.
+## x >= 0 için `int(x·256) & 255` (renderer'ın satır içi yolu ile aynı indeks); negatif x fposmod ile sarılır.
 static func lut_sin(x: float) -> float:
 	_ensure_lut()
-	return _lut[int(fposmod(x, 1.0) * LUT_SIZE) & (LUT_SIZE - 1)]
+	if x < 0.0:
+		x = fposmod(x, 1.0)
+	return _lut[int(x * LUT_SIZE) & (LUT_SIZE - 1)]
+
+
+## Sıcak yol (EnemyRenderer) satır içi arama için paylaşılan tablo (salt okunur).
+static func lut_table() -> PackedFloat32Array:
+	_ensure_lut()
+	return _lut
 
 
 ## Slot başına hız çarpanı: phase0'dan ±%15.

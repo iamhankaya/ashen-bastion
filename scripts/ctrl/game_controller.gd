@@ -255,11 +255,13 @@ func _stop_stress() -> void:
 
 func _on_stress_finished(result: Dictionary) -> void:
 	_stress_label.text = (
-		"STRES BİTTİ\nort %.1f ms (%.0f FPS)\np95 %.1f ms\nçizim %d  nesne %d\nbellek %.0f MB\nuser://perf.json"
+		"STRES BİTTİ\nort %.1f ms (%.0f FPS)\np95 %.1f ms\ngörünüm ort %.2f p95 %.2f ms\nçizim %d  nesne %d\nbellek %.0f MB\nuser://perf.json"
 		% [
 			result["avg_frame_ms"],
 			result["avg_fps"],
 			result["p95_frame_ms"],
+			result["view_ms_avg"],
+			result["view_ms_p95"],
 			result["draw_calls_max"],
 			result["objects"],
 			result["static_memory_mb"],
@@ -343,7 +345,9 @@ func _process(delta: float) -> void:
 		_stress.advance(delta)
 		if not _stress.is_done():
 			_stress_label.text = _stress.status_text()
+		var t0 := Time.get_ticks_usec()
 		_update_views(delta)
+		_stress.record_view(float(Time.get_ticks_usec() - t0) / 1000.0)  # D1-4: view_ms
 		return
 	_v11_process(delta)
 	if sim != null and not _v11_hit_stop(delta) and PauseLogic.sim_should_step(screen, sim.state):
