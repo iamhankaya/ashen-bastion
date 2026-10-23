@@ -20,6 +20,9 @@ const RIM_SCREEN_PX := 2.1
 const RING_PULSE := 0.15  # doldurma bitişinde halka 1→1,5 + solma
 const AURA_SIZE := Vector2(80.0, 28.0)
 const FLASH_STEP := 1.0 / 30.0  # 3 karelik titreşim
+## Kare modunda görünüm omzu sim omzundan en çok bu kadar (px) uzaklaşır (eğim omzu ayaktan ~0,8H yukarıda kaydırır);
+## kalan sapma gövde dikişinde kalır. Plan D4-2: omuz uyumu ≤5 px.
+const SHOULDER_TOL := 4.5
 
 var far_arm: Sprite2D
 var body: MeshInstance2D
@@ -47,8 +50,11 @@ var _real: bool = false
 var _hit_dir: Vector2 = Vector2.ZERO
 var _ring_pulse: float = 0.0
 var _flicker: float = 0.0
-## D4 kare şeridini yükleyince açar; o zamana dek rig.walk.frames > 0 olsa da prosedürel yedek çalışır (A24).
+## Kare şeridi yüklendi ve geçerli (rig.walk.frames > 0 + şerit hücre düzeni uyumlu): kare modu. Aksi halde, frames > 0
+## olsa bile prosedürel yedek çalışır (A24).
 var _strip_ready: bool = false
+## Kare modunda gövde kutusu = tek hücre (dünya px, dolgu hariç); duruş görseliyle aynı ölçek, ayak = alt kenar.
+var _cell_world: Vector2 = Vector2.ZERO
 var _rng := RandomNumberGenerator.new()
 
 
@@ -264,8 +270,13 @@ static func body_size(rig: Dictionary) -> Vector2:
 
 
 ## Omuz noktası (Player yerel; gövde merkezi orijinde) — PlayerRig ile aynı geometri (tek kaynak).
-static func shoulder_local(rig: Dictionary, gun: int, facing_left: bool) -> Vector2:
-	return PlayerRig.shoulder_world(gun, Vector2.ZERO, facing_left, rig)
+## `frame` verilirse (kare modu) o karenin omuz sapması eklenir; -2 = duruş geometrisi.
+static func shoulder_local(
+	rig: Dictionary, gun: int, facing_left: bool, frame: int = -2
+) -> Vector2:
+	if frame == -2:
+		return PlayerRig.shoulder_world(gun, Vector2.ZERO, facing_left, rig)
+	return PlayerRig.shoulder_world_f(gun, Vector2.ZERO, facing_left, rig, frame)
 
 
 ## Kol dönüşü için dikey ayna: cos(rotation) < 0 ise -1 (kol görseli sağa bakar).
@@ -336,9 +347,14 @@ func _aura_mask() -> int:
 	return m
 
 
+## Gövde kutusu: kare modunda hücre, aksi halde duruş kutusu.
+func _body_box() -> Vector2:
+	return _cell_world if _strip_ready else body_size(_rig)
+
+
 func _apply_pose(dt: float, moved: Vector2) -> void:
-	var size := body_size(_rig)
-	var half_h := size.y * 0.5
+	var size := _body_box()
+	var half_h := body_size(_rig).y * 0.5  # Rig pivotu (ayak) duruş kutusundan; kutu yüksekliği değişse de ayak sabit
 	var sgn := signf(anim.turn_x)
 	# Rig: ayak pivotu; bob/itme/gömülme dönüşümde, dönüş ve solma burada
 	var rp := Vector2(0.0, half_h - anim.bob_px + anim.sink_px)
@@ -425,6 +441,8 @@ func _aims() -> PackedFloat32Array:
 
 
 ## Kol Rig'in çocuğudur: dünya açısını korumak için dönüşü Rig dönüşünden çıkarır; omuz Rig yerelinde görünüm omzudur.
+## Kare modunda omuz = duruş omzu + gösterilen karenin sapması (çapraz solmada iki kare harmanlanır) ve görünüm omzu sim
+## omzundan SHOULDER_TOL'den fazla uzaklaşmaz (eğimin omuz kaydırması gövde dikişine bırakılır).
 func _place_arm(arm: Sprite2D, gun: int, aim: float) -> void:
 	var flip := arm_flip(aim)
 	var kx := _arm_len / maxf(_arm_orig.x, 1.0)
@@ -432,10 +450,35 @@ func _place_arm(arm: Sprite2D, gun: int, aim: float) -> void:
 	var local_aim := aim - rig_node.rotation
 	arm.rotation = local_aim - anim.arm_rot[gun] * flip
 	arm.scale = Vector2(kx * anim.arm_len[gun], ky * flip)
-	var sh := shoulder_local(_rig, gun, _facing_left)
+	var sh := _shoulder_now(gun)
 	var half_h := body_size(_rig).y * 0.5
 	var in_rig := Vector2(sh.x, (sh.y - half_h) * anim.sy)
-	arm.position = in_rig - Vector2.from_angle(local_aim) * anim.arm_back[gun]
+	var pos := in_rig - Vector2.from_angle(local_aim) * anim.arm_back[gun]
+	if _strip_ready:
+		pos = _clamp_shoulder(gun, pos)
+	arm.position = pos
+
+
+## Gösterilen karenin omzu (Player yerel). Kare modu dışında duruş omzu.
+func _shoulder_now(gun: int) -> Vector2:
+	if not _strip_ready:
+		return shoulder_local(_rig, gun, _facing_left)
+	var a := shoulder_local(_rig, gun, _facing_left, anim.frame_a)
+	if anim.frame_mix <= 0.0 or anim.frame_b == anim.frame_a:
+		return a
+	return a.lerp(shoulder_local(_rig, gun, _facing_left, anim.frame_b), anim.frame_mix)
+
+
+## Görünüm omzunu (Rig dönüşümü sonrası dünya) sim omzuna en çok SHOULDER_TOL kadar yaklaştırır.
+func _clamp_shoulder(gun: int, pos_in_rig: Vector2) -> Vector2:
+	var view_local := rig_node.transform * pos_in_rig
+	var sim_local := shoulder_local(_rig, gun, _facing_left)
+	var off := view_local - sim_local
+	var d := off.length()
+	if d <= SHOULDER_TOL:
+		return pos_in_rig
+	var target := sim_local + off * (SHOULDER_TOL / d)
+	return rig_node.transform.affine_inverse() * target
 
 
 func _anim_rig(rig: Dictionary) -> Dictionary:
@@ -443,22 +486,61 @@ func _anim_rig(rig: Dictionary) -> Dictionary:
 	if _strip_ready or not (w is Dictionary) or int(w.get("frames", 0)) <= 0:
 		return rig
 	var out := rig.duplicate(true)
-	out["walk"]["frames"] = 0  # şerit yok → prosedürel yedek (A24)
+	out["walk"]["frames"] = 0  # şerit yok/geçersiz → prosedürel yedek (A24)
 	return out
+
+
+## rig.walk geçerliyse hücre hücre dolgulu şerit dokusu; değilse null (prosedürel yedek). Geçerlilik: frames 2..12, şerit
+## dosyası var, genişlik (frames+1) hücreye ve `cell` boyutuna tam uyuyor.
+func _load_strip(rig: Dictionary) -> Texture2D:
+	var w: Variant = rig.get("walk", null)
+	if not (w is Dictionary):
+		return null
+	var n := int(w.get("frames", 0))
+	var cell: Variant = w.get("cell", null)
+	if n < 2 or n > DataV11.WALK_MAX_FRAMES or not (cell is Array) or cell.size() < 2:
+		return null
+	var tex := ArtLoader.padded_cells(str(w.get("strip", "")), n + 1, PAD)
+	if tex == null:
+		return null
+	var want := Vector2((n + 1) * (int(cell[0]) + 2 * PAD), int(cell[1]) + 2 * PAD)
+	if tex.get_size() != want or int(cell[0]) < 1 or int(cell[1]) < 1:
+		push_warning("PlayerView: yürüme şeridi 'cell' ile uyuşmuyor: %s" % w.get("strip", ""))
+		return null
+	return tex
 
 
 func _apply_rig(rig: Dictionary) -> void:
 	_rig = rig
 	_height = float(rig.get("display_height", DEFAULT_HEIGHT))
 	_arm_len = float(rig.get("arm_scale", 0.62)) * _height
-	var size := body_size(rig)
+	var stand := body_size(rig)
+	var size := stand
 	# Görseller: gerçek dosya varsa dolgulu (rim için) doku, yoksa geçici şekil.
 	var body_tex := ArtLoader.padded(str(rig.get("body", "")), PAD)
 	var arm_tex := ArtLoader.padded(str(rig.get("arm", "")), PAD)
 	_real = body_tex != null and arm_tex != null
+	var strip_tex: Texture2D = _load_strip(rig) if _real else null
+	_strip_ready = strip_tex != null
+	_cell_world = Vector2.ZERO
+	var cells := 1
 	var pad_frac := Vector2.ZERO
 	_pad_world = Vector2.ZERO
-	if _real:
+	if _strip_ready:
+		var w: Dictionary = rig["walk"]
+		cells = int(w["frames"]) + 1
+		var cell_px := Vector2(float(w["cell"][0]), float(w["cell"][1]))
+		var stand_px := body_tex.get_size() - Vector2(PAD, PAD) * 2.0  # duruş görseli: dünya ölçeği
+		var k := size.y / maxf(stand_px.y, 1.0)
+		_cell_world = cell_px * k
+		_pad_world = Vector2(PAD, PAD) * k
+		body.texture = strip_tex
+		pad_frac = Vector2(PAD, PAD) / (cell_px + Vector2(PAD, PAD) * 2.0)
+		size = _cell_world
+		_arm_orig = arm_tex.get_size() - Vector2(PAD, PAD) * 2.0
+		for arm in [near_arm, far_arm]:
+			arm.texture = arm_tex
+	elif _real:
 		body.texture = body_tex
 		var ts := body_tex.get_size()
 		pad_frac = Vector2(PAD, PAD) / ts
@@ -486,7 +568,7 @@ func _apply_rig(rig: Dictionary) -> void:
 				)
 		mat.set_shader_parameter("body_tex", body.texture)
 		mat.set_shader_parameter("pad_frac", pad_frac)
-		mat.set_shader_parameter("cells", 1.0)
+		mat.set_shader_parameter("cells", float(cells))
 		var texel_world := (
 			size.y / maxf(body.texture.get_size().y - 2.0 * (PAD if _real else 0), 1.0)
 		)
@@ -513,11 +595,11 @@ func _apply_rig(rig: Dictionary) -> void:
 			arm.modulate = Color.WHITE
 		elif arm == far_arm:
 			arm.modulate = FAR_ARM_TINT
-	shadow.size = Vector2(size.x * 0.9, size.x * 0.28)
-	shadow.position = Vector2(0, size.y * 0.5)
-	aura.position = Vector2(0, size.y * 0.5)
-	glow.position = Vector2(0, size.y * 0.42)
-	glow.radius = size.y * 0.8
+	shadow.size = Vector2(stand.x * 0.9, stand.x * 0.28)
+	shadow.position = Vector2(0, stand.y * 0.5)
+	aura.position = Vector2(0, stand.y * 0.5)
+	glow.position = Vector2(0, stand.y * 0.42)
+	glow.radius = stand.y * 0.8
 	glow.queue_redraw()
 	reload_ring.radius = RING_RADIUS
 
