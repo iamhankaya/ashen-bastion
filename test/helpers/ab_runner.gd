@@ -33,15 +33,14 @@ static func run(opts: Dictionary) -> Dictionary:
 	var collected := {}
 	var starts := {}
 	var death := {"cause": "", "step": -1}
-	sim.bus.pickup_collected.connect(
-		func(kind: StringName, _pos: Vector2) -> void:
-			collected[String(kind)] = int(collected.get(String(kind), 0)) + 1
-	)
-	sim.bus.buff_started.connect(
-		func(kind: StringName, _d: float) -> void:
-			starts[String(kind)] = int(starts.get(String(kind), 0)) + 1
-	)
-	sim.bus.player_damaged.connect(func(_a: float, _h: float) -> void: _note_cause(sim, death))
+	var on_pickup := func(kind: StringName, _pos: Vector2) -> void:
+		collected[String(kind)] = int(collected.get(String(kind), 0)) + 1
+	var on_buff := func(kind: StringName, _d: float) -> void:
+		starts[String(kind)] = int(starts.get(String(kind), 0)) + 1
+	var on_damage := func(_a: float, _h: float) -> void: _note_cause(sim, death)
+	sim.bus.pickup_collected.connect(on_pickup)
+	sim.bus.buff_started.connect(on_buff)
+	sim.bus.player_damaged.connect(on_damage)
 
 	var steps := 0
 	var violations := PackedStringArray()
@@ -88,6 +87,10 @@ static func run(opts: Dictionary) -> Dictionary:
 		check_count += 1
 		for v in sim.check_invariants():
 			violations.append("adım %d (son): %s" % [sim.step_count, v])
+	# Lambdalar sim'i yakalar (sim -> bus -> lambda -> sim döngüsü): bırakılmazsa koşu sonunda sızar.
+	sim.bus.pickup_collected.disconnect(on_pickup)
+	sim.bus.buff_started.disconnect(on_buff)
+	sim.bus.player_damaged.disconnect(on_damage)
 	var result := ["running", "level_up", "won", "lost"][sim.state] as String
 	var buff_uptime := {}
 	for k in BuffManager.COUNT:
