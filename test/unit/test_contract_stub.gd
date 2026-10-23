@@ -62,51 +62,9 @@ func _v11_cases() -> Array:
 	return _cases_d1() + _cases_d2() + _cases_d3()
 
 
-## D1: oyuncu/düşman animasyonu, gölge, hayalet, FX
+## D1: oyuncu/düşman animasyonu, gölge, hayalet, FX — hepsi uygulandı (T20261023-89); satırlar silindi.
 func _cases_d1() -> Array:
-	var sim := GameSim.new(1, &"gunslinger")
-	var anim := PlayerAnim.new()
-	var fx := FxRenderer.new()
-	_nodes.append(fx)
-	return [
-		[func() -> void: anim.configure({}), &"PlayerAnim.configure"],
-		[func() -> void: anim.reset(), &"PlayerAnim.reset"],
-		[func() -> void: anim.update(0.016, Vector2.ZERO, false, -1.0), &"PlayerAnim.update"],
-		[func() -> void: anim.on_shot(0), &"PlayerAnim.on_shot"],
-		[func() -> void: anim.on_damaged(5.0, Vector2.LEFT), &"PlayerAnim.on_damaged"],
-		[func() -> void: anim.on_level_up(), &"PlayerAnim.on_level_up"],
-		[func() -> void: anim.on_buffs(1), &"PlayerAnim.on_buffs"],
-		[func() -> void: anim.on_died(Vector2.LEFT), &"PlayerAnim.on_died"],
-		[func() -> void: anim.on_won(), &"PlayerAnim.on_won"],
-		[func() -> void: anim.death_done(), &"PlayerAnim.death_done"],
-		[func() -> void: EnemyAnim.new().bind(null, null), &"EnemyAnim.bind"],
-		[func() -> void: EnemyAnim.new().sync_slot(0, 0, Vector2.ZERO), &"EnemyAnim.sync_slot"],
-		[func() -> void: EnemyAnim.pose_of(0, 1.0, 5.0, 0.1, 0.05, 1.0, 0.0), &"EnemyAnim.pose_of"],
-		[
-			func() -> void: _node(EnemyShadowLayer.new()).write(PackedFloat32Array(), 0),
-			&"EnemyShadowLayer.write"
-		],
-		[func() -> void: _node(EnemyRenderer.new()).set_ghosts(null), &"EnemyRenderer.set_ghosts"],
-		[func() -> void: _node(AshGhostRenderer.new()).bind(sim, null), &"AshGhostRenderer.bind"],
-		[
-			func() -> void: _node(AshGhostRenderer.new()).update_ghosts(0.016),
-			&"AshGhostRenderer.update_ghosts"
-		],
-		[
-			func() -> void: _node(AshGhostRenderer.new()).ghost_count(),
-			&"AshGhostRenderer.ghost_count"
-		],
-		[
-			func() -> void: fx.add_ring(Vector2.ZERO, 100.0, 0.5, Color.WHITE, 4.0),
-			&"FxRenderer.add_ring"
-		],
-		[func() -> void: fx.add_shell(Vector2.ZERO, Vector2.UP), &"FxRenderer.add_shell"],
-		[
-			func() -> void: fx.add_particle(&"dust", Vector2.ZERO, Vector2.UP, 0.5),
-			&"FxRenderer.add_particle"
-		],
-		[func() -> void: fx.add_char(Vector2.ZERO, 40.0), &"FxRenderer.add_char"],
-	]
+	return []
 
 
 ## D2: eklentiler, etkiler, bomba, eklenti HUD

@@ -286,6 +286,8 @@ func _run() -> void:
 				await frames(3)
 				await shot("stress")
 				print("PERF ", FileAccess.get_file_as_string("user://perf.json"))
+			"d1_walk", "d1_hit", "d1_die", "d1_ash", "d1_crowd":
+				await _d1(sc)
 			"contrast":
 				await fresh()
 				for t in [&"curumus_piyade", &"les_kargasi", &"sovalye_hayaleti"]:
@@ -294,3 +296,48 @@ func _run() -> void:
 				await frames(3)
 				await shot("contrast")
 	quit()
+
+
+## v1.1 D1 görünüm öz-kontrolü: yürüme/vuruş/ölüm/kül/kalabalık gölgesi. Görünüm süresi `_update_views` ile ilerler.
+func _d1(sc: String) -> void:
+	await fresh()
+	var sim: GameSim = c.sim
+	sim.debug_set_time(900.0)
+	sim.debug_fill(&"curumus_piyade", 30, 330.0)
+	sim.debug_fill(&"les_kargasi", 10, 420.0)
+	sim.debug_fill(&"sovalye_hayaleti", 6, 470.0)
+	sim.debug_spawn(&"elit_piyade", sim.player_pos + Vector2(300, -250))
+	match sc:
+		"d1_walk":
+			for k in 40:
+				sim.step(Vector2(1.0, 0.0))
+				c._update_views(1.0 / 60.0)
+				await process_frame
+			await shot(sc)
+		"d1_hit":
+			advance(20)
+			sim.bus.player_damaged.emit(10.0, 90.0)
+			for k in 4:
+				c._update_views(1.0 / 60.0)
+			await shot(sc)
+		"d1_die":
+			advance(20)
+			sim.bus.player_damaged.emit(10.0, 90.0)
+			sim.bus.run_ended.emit(false, {})
+			for k in 40:
+				c._update_views(1.0 / 60.0)
+			await shot(sc)
+		"d1_ash":
+			advance(10)
+			var ids := sim.alive_ids()
+			for k in mini(ids.size(), 14):
+				var i := EnemyPool.index_of(ids[k])
+				sim.bus.enemy_killed.emit(sim.enemies.type_id_of(i), sim.enemies.pos[i])
+			for k in 9:
+				c._update_views(1.0 / 60.0)
+			await shot(sc)
+		"d1_crowd":
+			sim.debug_fill(&"curumus_piyade", 200, 360.0)
+			advance(30)
+			await frames(3)
+			await shot(sc)

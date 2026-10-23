@@ -22,8 +22,9 @@ func test_enemy_renderer_counts_alive_and_writes_flash() -> void:
 	assert_eq(r.multimesh.instance_count, EnemyPool.CAP)
 	var buf := r.multimesh.buffer
 	assert_eq(buf.size(), EnemyPool.CAP * EnemyRenderer.STRIDE)
-	assert_almost_eq(buf[3], sim.enemies.pos[first].x, 0.01)
-	assert_almost_eq(buf[7], sim.enemies.pos[first].y, 0.01)
+	# v1.1: hareket dönüşüme yazılır (bob/itme/squash); merkez sim konumundan en çok ±16 px ayrışır.
+	assert_almost_eq(buf[3], sim.enemies.pos[first].x, 16.0)
+	assert_almost_eq(buf[7], sim.enemies.pos[first].y, 16.0)
 	assert_almost_eq(buf[12], 0.75, 0.001, "parlama INSTANCE_CUSTOM.r'de")
 
 
@@ -67,7 +68,7 @@ func test_player_view_rig_nodes_and_arm_flip() -> void:
 	var v := PlayerView.new()
 	add_child_autofree(v)
 	v.bind(sim)
-	for n in ["FarArm", "Body", "NearArm", "ReloadRing", "Shadow"]:
+	for n in ["Rig/FarArm", "Rig/Body", "Rig/NearArm", "ReloadRing", "Shadow"]:
 		assert_not_null(v.get_node_or_null(n), n)
 	assert_lt(v.far_arm.z_index, v.body.z_index)
 	assert_gt(v.near_arm.z_index, v.body.z_index)
