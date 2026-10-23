@@ -4,11 +4,12 @@ extends RefCounted
 ## bus, havuzların açık alanları) bakar; iç yapıya bakmaz.
 ##
 ## Veri türleri (opts["data_kind"]):
-##   "quiet"          gerçek data/, doğurma çizelgesi BOŞ, eklentiler KAPALI (pickups.json yok; varsayılan)
-##   "quiet_pickups"  gerçek data/, doğurma çizelgesi BOŞ, eklentiler AÇIK (v1.1 eklenti testleri)
+##   "quiet"          gerçek data/, doğurma çizelgesi BOŞ (varsayılan). Eklenti tablosu veriyle gelir (açık);
+##                    eklentisiz koşu için opts["pickups"] = false verilir (D2 birim testleri bu sözleşmeye göre yazıldı)
+##   "quiet_pickups"  "quiet" ile aynı (v1.1 kabul testlerinde niyeti açıkça belirtmek için takma ad)
 ##   "real"           gerçek data/ (waves.json ve pickups.json dahil)
-##   "fixture"        test/fixtures/data_valid, doğurma çizelgesi boş, eklentiler kapalı
-##   "fixture_waves"  test/fixtures/data_valid (waves.json dahil), eklentiler kapalı
+##   "fixture"        test/fixtures/data_valid, doğurma çizelgesi boş
+##   "fixture_waves"  test/fixtures/data_valid (waves.json dahil)
 
 const CHAR := &"gunslinger"
 const STEP := GameSim.STEP
@@ -44,13 +45,13 @@ static func data_for(kind: String) -> GameData:
 		"real":
 			return GameData.load_default()
 		"quiet":
-			return _cached("quiet", REAL_DIR, true, false)
+			return _cached("quiet", REAL_DIR, true, true)
 		"quiet_pickups":
 			return _cached("quiet_pickups", REAL_DIR, true, true)
 		"fixture":
-			return _cached("fixture", FIXTURE_DIR, true, false)
+			return _cached("fixture", FIXTURE_DIR, true, true)
 		"fixture_waves":
-			return _cached("fixture_waves", FIXTURE_DIR, false, false)
+			return _cached("fixture_waves", FIXTURE_DIR, false, true)
 	return GameData.load_default()
 
 

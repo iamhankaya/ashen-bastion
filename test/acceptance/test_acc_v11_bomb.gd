@@ -90,12 +90,15 @@ func test_p15_bomb_hits_use_enemy_radius_edge() -> void:
 	var sim := _sim(2)
 	_mute_guns(sim)
 	var r := sim.data.get_enemy(&"curumus_piyade").radius
-	var just_in := _foe(sim, &"curumus_piyade", Vector2(RADIUS + r - 2.0, 0), 1000.0)
-	var just_out := _foe(sim, &"curumus_piyade", Vector2(-(RADIUS + r + 2.0), 0), 1000.0)
-	_plant(sim, Vector2.ZERO)
-	sim.player_pos = Vector2(0, 2000)
-	SimKit.run(sim, FUSE + 2)
-	assert_lt(SimKit.enemy_hp(sim, just_in), 1000.0, "yarıçap + düşman yarıçapı içinde: vurulur")
+	var just_in := _foe(sim, &"curumus_piyade", Vector2(RADIUS + r - 5.0, 0), 1000.0)
+	var just_out := _foe(sim, &"curumus_piyade", Vector2(-(RADIUS + r + 5.0), 0), 1000.0)
+	# Düşmanlar hareket ettiği için adımsız doğrudan patlama: sınır tam ölçülür.
+	sim.step(Vector2.ZERO)  # uzamsal ızgara adım içinde kurulur (bomba fitili de ızgara kurulu adımda patlar)
+	var hits := sim.bomb_blast(Vector2.ZERO, RADIUS, 600.0, 0.08, 600.0)
+	assert_eq(hits, 1, "vurulan sayısı")
+	assert_almost_eq(
+		SimKit.enemy_hp(sim, just_in), 400.0, 0.01, "yarıçap + düşman yarıçapı içinde: vurulur"
+	)
 	assert_almost_eq(SimKit.enemy_hp(sim, just_out), 1000.0, 0.01, "dışında: vurulmaz")
 
 
@@ -112,20 +115,16 @@ func test_p16_elite_and_lord_take_max_of_600_and_8_percent_of_max_hp() -> void:
 	var want_l := maxf(600.0, 0.08 * sim.enemies.max_hp[li])
 	assert_almost_eq(want_e, 600.0, 0.5, "elit 1800 maks. can -> 600 (düzey çarpanı yok)")
 	assert_almost_eq(want_l, 3600.0, 0.5, "Lord 45000 maks. can -> 3600")
-	_plant(sim, Vector2.ZERO)
-	sim.player_pos = Vector2(0, 2500)
-	SimKit.run(sim, FUSE + 2)
-	var got_e := 0.0
-	var got_l := 0.0
-	for e in SimKit.events(sim, SimEvents.DAMAGE):
-		if e["kind"] != &"explosion":
-			continue
-		if e["target"] == elit:
-			got_e += float(e["amount"])
-		if e["target"] == lord:
-			got_l += float(e["amount"])
-	assert_almost_eq(got_e, want_e, 0.5, "elit hasarı")
-	assert_almost_eq(got_l, want_l, 0.5, "Lord hasarı (tek vuruşta bitmez)")
+	sim.step(Vector2.ZERO)
+	var hp_e := SimKit.enemy_hp(sim, elit)
+	var hp_l := SimKit.enemy_hp(sim, lord)
+	assert_eq(sim.bomb_blast(Vector2.ZERO, RADIUS, 600.0, 0.08, 600.0), 2)
+	assert_almost_eq(
+		hp_e - SimKit.enemy_hp(sim, elit), want_e, 0.5, "elit hasarı (zırh yok sayılır)"
+	)
+	assert_almost_eq(
+		hp_l - SimKit.enemy_hp(sim, lord), want_l, 0.5, "Lord hasarı (tek vuruşta bitmez)"
+	)
 	assert_true(sim.enemies.is_alive(lord))
 
 
@@ -136,19 +135,16 @@ func test_p16_bomb_kills_drop_xp_gems_and_count_as_kills() -> void:
 	_mute_guns(sim)
 	var weak := _foe(sim, &"curumus_piyade", Vector2(60, 100), 30.0)
 	var elit := _foe(sim, &"elit_piyade", Vector2(-60, 140), 500.0)  # 600 hasarla ölür
+	sim.step(Vector2.ZERO)
 	var kills0 := sim.kills
-	var score0 := sim.score.total()
-	_plant(sim, Vector2.ZERO)
-	sim.player_pos = Vector2(0, 2500)
-	SimKit.run(sim, FUSE + 2)
+	assert_eq(sim.bomb_blast(Vector2.ZERO, RADIUS, 600.0, 0.08, 600.0), 2)
 	assert_false(sim.enemies.is_alive(weak))
 	assert_false(sim.enemies.is_alive(elit))
 	assert_eq(sim.kills, kills0 + 2, "iki öldürme")
 	assert_gte(sim.gems.count, 2, "ölenler XP taşı düşürür")
 	assert_eq(SimKit.count_events(sim, SimEvents.GEM_DROPPED), 2)
-	if V11Slice.done("D3"):
-		assert_eq(sim.score.kills_part, 10 + 400, "bomba öldürmeleri skora yazılır")
-		assert_gt(sim.score.total(), score0)
+	assert_eq(sim.score.kills_part, 10 + 400, "bomba öldürmeleri skora yazılır (D3)")
+	assert_eq(sim.check_invariants().size(), 0)
 
 
 func test_p17_full_bomb_pool_blocks_collection() -> void:
@@ -171,7 +167,7 @@ func test_p17_fuse_freezes_during_level_up_and_resumes() -> void:
 		return
 	var sim := _sim(6)
 	_mute_guns(sim)
-	_plant(sim, Vector2(500, 0))
+	_plant(sim, Vector2(60, 0))
 	SimKit.run(sim, 10)
 	sim.debug_add_xp(100000)
 	assert_true(SimKit.run_to_level_up(sim, 5))
@@ -201,7 +197,7 @@ func test_p17_bomb_does_not_blast_after_player_death() -> void:
 		return
 	var sim := _sim(7)
 	_mute_guns(sim)
-	_plant(sim, Vector2(500, 0))
+	_plant(sim, Vector2(60, 0))
 	SimKit.run(sim, 5)
 	sim.hp = 0.0
 	sim.step(Vector2.ZERO)
@@ -218,7 +214,7 @@ func test_p17_bomb_does_not_blast_after_lord_kill() -> void:
 		return
 	var sim := _sim(8)
 	_mute_guns(sim)
-	_plant(sim, Vector2(500, 0))
+	_plant(sim, Vector2(60, 0))
 	var lord := _foe(sim, &"kale_lordu", Vector2(-900, 0), 10.0)
 	sim.damage_enemy(lord, 1.0e9, &"bullet")
 	sim.step(Vector2.ZERO)

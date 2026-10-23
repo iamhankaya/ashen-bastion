@@ -17,7 +17,7 @@ class World:
 
 func _world(seed_value: int = 1, extra: Dictionary = {}) -> World:
 	var w := World.new()
-	var o := {"data_kind": "quiet", "log_events": false}
+	var o := {"data_kind": "quiet", "pickups": false, "log_events": false}
 	o.merge(extra, true)
 	w.sim = SimKit.make(seed_value, o)
 	w.sim.gun_cd = PackedFloat32Array([1.0e9, 1.0e9])

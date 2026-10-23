@@ -79,7 +79,7 @@ func test_p9_ofke_barutu_multiplies_shot_damage_for_exactly_720_steps() -> void:
 	var during := _shot_dmgs(sim, t0, sim.step_count)
 	assert_gt(during.size(), 10)
 	assert_eq(_count_off(during, base_dmg * 1.5), 0, "etkinken her shot.dmg = 1,5 x önceki")
-	SimKit.run(sim, 80)
+	SimKit.run(sim, 200)
 	var ends := SimKit.events(sim, SimEvents.BUFF_END)
 	assert_eq(ends.size(), 1, "bitişte tek buff_end")
 	if not ends.is_empty():
@@ -204,10 +204,30 @@ func test_p13_unlimited_keeps_magazine_full_and_rhythm_cycling() -> void:
 		"son_mermi_patlar ritmi sürer"
 	)
 	assert_eq(sim.check_invariants().size(), 0)
-	SimKit.run(sim, 10)
+	assert_true(
+		SimKit.run_until(
+			sim, func() -> bool: return SimKit.count_events(sim, SimEvents.BUFF_END) > 0, 20
+		)
+	)
+	var end_step := int(SimKit.last_event(sim, SimEvents.BUFF_END).get("step", 0))
+	SimKit.run(sim, 90)
 	assert_eq(SimKit.count_events(sim, SimEvents.BUFF_END), 1)
-	assert_eq(sim.magazine.count, cap, "bitişte count == cap")
-	assert_eq(SimKit.count_events(sim, SimEvents.RELOAD_START), 0, "bitişte doldurma tetiklenmez")
+	assert_eq(
+		SimKit.count_events(sim, SimEvents.RELOAD_START) > 0,
+		true,
+		"normal akışta doldurma yine başlar"
+	)
+	var first_after := {}
+	for e in SimKit.events(sim, SimEvents.SHOT):
+		if int(e["step"]) >= end_step:
+			first_after = e
+			break
+	assert_eq(first_after.get("index_in_mag"), 1, "bitişte count = cap: sonraki atış 1. mermi")
+	var reload_before_end := 0
+	for e in SimKit.events(sim, SimEvents.RELOAD_START):
+		if int(e["step"]) <= end_step:
+			reload_before_end += 1
+	assert_eq(reload_before_end, 0, "bitişte doldurma tetiklenmez")
 	assert_gt(sim.step_count, t0)
 
 

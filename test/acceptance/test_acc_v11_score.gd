@@ -9,7 +9,7 @@ const KILL_ALL := 1.0e9
 
 
 func _sim(seed_value: int = 1, extra: Dictionary = {}) -> GameSim:
-	var o := {"data_kind": "quiet"}
+	var o := {"data_kind": "quiet", "pickups": false}
 	o.merge(extra, true)
 	var sim := SimKit.make(seed_value, o)
 	sim.gun_cd = PackedFloat32Array([1.0e9, 1.0e9])

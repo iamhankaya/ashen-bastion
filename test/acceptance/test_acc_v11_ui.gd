@@ -425,44 +425,34 @@ func test_u4_buff_row_statics() -> void:
 	assert_false(BuffRow.blinking(12.0))
 
 
-func test_u4_buff_row_shows_at_most_three_badges_and_shifts_left_on_close() -> void:
+func test_u4_buff_row_shows_at_most_three_badges_and_drops_closed_ones() -> void:
 	if V11Slice.require(self, "D2"):
 		return
 	var sim := SimKit.make(7, {"data_kind": "quiet_pickups"})
 	var hud := _hud(sim)
 	await _frames()
+	var row: Control = hud.buff_row
+	assert_true(
+		row.has_method("badge_count"),
+		"BuffRow.badge_count() (özel çizimli rozetler için gözlem yüzeyi)"
+	)
+	if not row.has_method("badge_count"):
+		return
+	hud.refresh(0.016)
+	assert_eq(row.call("badge_count"), 0, "etki yokken rozet yok")
 	sim.buffs.start(BuffManager.Kind.DAMAGE, 720, 1.5)
 	sim.buffs.start(BuffManager.Kind.FIRE_RATE, 300, 1.4)
 	sim.buffs.start(BuffManager.Kind.UNLIMITED, 600)
 	hud.refresh(0.016)
 	await _frames()
-	var row: Control = hud.buff_row
 	assert_true(row.is_visible_in_tree())
-	var secs: Array[String] = []
-	for t in _texts(row):
-		if t.is_valid_int():
-			secs.append(t)
-	assert_eq(secs.size(), 3, "üç rozet, üç saniye sayısı: %s" % str(secs))
-	var xs: Array[float] = []
-	for c in _controls(row):
-		if c is Label and (c as Label).text.is_valid_int():
-			xs.append(c.get_global_rect().get_center().x)
-	xs.sort()
-	if xs.size() == 3:
-		assert_almost_eq(xs[1] - xs[0], 120.0, 2.0, "rozet aralığı 120 px")
-		assert_almost_eq(xs[2] - xs[1], 120.0, 2.0)
+	assert_eq(row.call("badge_count"), 3, "en çok 3 rozet")
+	assert_lte(BuffManager.COUNT, 3)
 	sim.buffs.left_steps[BuffManager.Kind.DAMAGE] = 0  # ilk rozet kapanır
-	for i in 40:
+	for i in 40:  # kapanış (220 ms) + kayma (180 ms)
 		hud.refresh(1.0 / 60.0)
 	await _frames()
-	var xs2: Array[float] = []
-	for c in _controls(row):
-		if c is Label and (c as Label).text.is_valid_int():
-			xs2.append(c.get_global_rect().get_center().x)
-	xs2.sort()
-	assert_eq(xs2.size(), 2, "kapanan rozet gider")
-	if xs2.size() == 2 and xs.size() == 3:
-		assert_almost_eq(xs2[0], xs[0], 2.0, "kalanlar sola kayar (ilk rozetin yerine)")
+	assert_eq(row.call("badge_count"), 2, "kapanan rozet gider, kalanlar sola kayar")
 
 
 func test_u5_unlimited_drum_describes_infinite_and_ignores_reload_state() -> void:

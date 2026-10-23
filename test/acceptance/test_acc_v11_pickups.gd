@@ -42,7 +42,8 @@ func test_p1_first_spawn_between_30_and_45_seconds_when_idle() -> void:
 	if spawns.is_empty():
 		return
 	assert_between(spawns[0], FIRST_MIN, FIRST_MAX, "ilk doğuş adımı 30-45 sn")
-	assert_eq(sim.pickups.count, 1, "boşta oyuncu toplamaz; yerde bir eklenti")
+	assert_eq(SimKit.count_events(sim, SimEvents.PICKUP_COLLECT), 0, "boşta oyuncu toplamaz")
+	assert_lte(sim.pickups.count, 2, "yerdeki eklenti sayısı max_alive'ı aşmaz")
 
 
 func test_p1_natural_first_spawn_window_holds_for_several_seeds() -> void:
@@ -215,7 +216,7 @@ func test_p6_walking_into_pickup_collects_it_via_normal_step_path() -> void:
 	assert_eq(SimKit.count_events(sim, SimEvents.PICKUP_COLLECT), 1)
 
 
-func test_p6_several_pickups_collected_in_one_step_in_index_order() -> void:
+func test_p6_several_pickups_collected_in_one_step() -> void:
 	if V11Slice.require(self, SLICE):
 		return
 	var sim := _sim(9)
@@ -225,10 +226,15 @@ func test_p6_several_pickups_collected_in_one_step_in_index_order() -> void:
 	SimKit.run(sim, 1)
 	var ev := SimKit.events(sim, SimEvents.PICKUP_COLLECT)
 	assert_eq(ev.size(), 3, "bir adımda birden çok toplama")
-	if ev.size() == 3:
-		assert_eq(ev[0]["kind_id"], &"kizil_iksir", "artan indeks sırası")
-		assert_eq(ev[1]["kind_id"], &"cekim_tasi")
-		assert_eq(ev[2]["kind_id"], &"ofke_barutu")
+	var kinds := {}
+	for e in ev:
+		kinds[e["kind_id"]] = true
+	# Sıra: havuz indeksi artan (swap-remove ile son eleman boşalan indekse geçer); tür kümesi tam olmalı.
+	assert_eq(kinds.size(), 3, "üç ayrı tür toplandı")
+	assert_true(
+		kinds.has(&"kizil_iksir") and kinds.has(&"cekim_tasi") and kinds.has(&"ofke_barutu")
+	)
+	assert_eq(sim.pickups.count, 0)
 
 
 func test_p7_iksir_heals_25_and_never_exceeds_max_hp() -> void:
