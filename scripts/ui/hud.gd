@@ -24,11 +24,11 @@ const HUD_ALPHA := 0.85
 ## Elit/Lord can satırı: pasif yuva satırının altında, ortada, oyuncu canından ayrı (N2). Ad üstte (≥26 px),
 ## çubuk altta; Lord daha kalın ve ayrı renkte. Birden çok elit varsa en yüksek maks. canlı gösterilir, ada "+N" eklenir.
 const BOSS_W := 700.0
-const BOSS_Y := TOP + 352.0
-const BOSS_NAME_H := 34.0
+const BOSS_Y := TOP + 350.0
+const BOSS_NAME_H := 40.0
 const BOSS_GAP := 2.0
-const BOSS_BAR_ELITE := 28.0
-const BOSS_BAR_LORD := 36.0
+const BOSS_BAR_ELITE := 24.0
+const BOSS_BAR_LORD := 32.0
 const BOSS_NAME_SIZE := 28
 const BOSS_NAME_SIZE_LORD := 32
 

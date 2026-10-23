@@ -47,7 +47,9 @@ func test_every_skill_with_an_i_shows_a_dotted_capital_on_its_level_up_card() ->
 		var titles: Array[String] = []
 		for l in labels:
 			titles.append(l.text)
-		assert_has(titles, UiKit.upper_tr(def.display_name), "%s: kart başlığı Türkçe büyük harf" % id)
+		assert_has(
+			titles, UiKit.upper_tr(def.display_name), "%s: kart başlığı Türkçe büyük harf" % id
+		)
 		var shown := UiKit.upper_tr(def.display_name)
 		assert_eq(
 			shown.count("I"),
