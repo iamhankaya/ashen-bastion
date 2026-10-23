@@ -48,3 +48,10 @@ jobs:
           name: ashen-bastion-debug-apk
           path: build/ab-debug.apk
           if-no-files-found: error
+  release-prova:
+    # Release betiğinin olumsuz yolları (secret yok/yanlış); Godot/SDK gerekmez, gerçek secret kullanılmaz.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash tools/ci/prova_release.sh --fast
