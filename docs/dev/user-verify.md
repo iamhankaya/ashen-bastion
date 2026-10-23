@@ -1,56 +1,45 @@
-# Kullanıcıda doğrulanır (prova kontrol listesi)
+# Kullanıcıda doğrulanır (v1 cihaz kontrol listesi — tek liste)
 
-Bulutta telefon/emülatör yoktur; aşağıdakiler yalnız cihazda doğrulanabilir. Sonuçları (özellikle 4. madde) paylaşın.
+Bulutta telefon/emülatör yoktur; aşağıdakiler yalnız cihazda doğrulanabilir. Sonuçları (özellikle 11. madde) paylaşın.
+Kaynak: doğrulama-1 (T…-64), doğrulama-2 (T…-80), doğrulama-3 (T…-83) listeleri birleştirildi, tekrarlar ayıklandı.
 
-## 1. Debug APK kurulumu
+## A. Kurulum ve ikon
+1. GitHub Actions → son `ci` koşusu → **Artifacts** → `ashen-bastion-debug-apk` → `ab-debug.apk`; telefona kurun (bilinmeyen kaynaklara izin).
+   Debug anahtarı sabit olduğundan sonraki CI APK'ları güncelleme olarak kurulur.
+2. Açılışta ana menü: Türkçe harfler (`İ`/`Ş`/`Ğ`) doğru, "ASH AND STEEL" üst yazısı başlığın üstüne sığıyor.
+3. **Uygulama ikonu:** ana ekranda koyu bastion ikonu görünür; yuvarlak/kare/damla maske altında kesilme yok. Android 13+ temalı
+   ikon açıksa tek renkli (monochrome) sürüm doğru görünür. (Adaptive ön katman bilerek boştur; sanat arka plan katmanındadır.)
 
-1. GitHub Actions → son `ci` koşusu → **Artifacts** → `ashen-bastion-debug-apk` → `ab-debug.apk` indirin.
-2. Telefona kurun (bilinmeyen kaynaklara izin). Aynı debug anahtarıyla imzalı olduğundan sonraki CI APK'ları
-   güncelleme olarak kurulur.
-3. Açılışta ana menü görünmeli (Türkçe etiketler, `İ`/`Ş`/`Ğ` doğru).
+## B. Oynanış (tam oyun: 20 dakika)
+4. Joystick ekranın herhangi bir yerinde belirir, parmak kalkınca karakter durur; ateş otomatik; HUD şarjör tamburu 6→0, `↻`
+   doldurma halkası (≈1 sn); XP taşı düşer ve yaklaşınca toplanır.
+5. Seviye atlama: oyun durur, 3 kart (500 ms kilit); aktif beceri 5. seviyede + eşleşen pasif varsa **evrim** kartı en altta.
+   Kart adlarında `i` olanlar `İ` ile (ŞİFA, BARUT KESESİ, KIYAMET MERMİSİ…), kombo adları büyük harf.
+6. Duraklat, Android geri tuşu (Devam Et), uygulamayı arka plana alma (otomatik duraklat), TEKRAR OYNA / ANA MENÜ.
+7. 5/10/15. dk "ARA BOSS YAKLAŞIYOR" bandı + elit; 20. dk "KALE LORDU GELİYOR". Lord'u yenince **KAZANDIN** + "Şafak söktü; kale
+   seni yutamadı."; ölünce **OYUN BİTTİ** + "Kale seni yuttu." ve kombo listesi (kombosuzsa "Bu seferlik kombo yok." kısa panel,
+   düğmeler hemen altında; 5 kombo ekrana sığar). Lord dövüşü orta yapıyla ≈6–7 dk sürebilir.
+8. Elit/Lord çubuğu: pasif yuvaların altında ortada; elit ince bronz, Lord kalın amber; ad okunur; Lord çubuğu uyarı bandının
+   üstünde; birden çok elitte "+N" eki.
 
-## 2. Oynanış (tam oyun: 20 dakika)
+## C. Harabeler ve düşman davranışı
+9. **Katı harabeler:** yüksek yapılara (kule, bayrak, meşale direği) joystick ile 8 yönden gir; içinden geçilmemeli, kenarda kayma
+   akıcı, takılma/titreme yok. Alçak (dekor) harabelerden geçilebilir. Komşu chunk sınırındaki iç içe harabelerde de sıkışma yok.
+10. **Düşman/harabe (F-020 + F-ver3-001):** harabeyi arkana alıp dur: sıradan düşmanlar yanından dolanıp sana ulaşmalı. Bilinen
+    sınır: içbükey/çukurlu büyük yapıların (çok daireli, kap gibi) içine girip orada asılı kalan düşman olabilir (sim: yaklaşık
+    %5 durum). Bunu gözleyin: kaç kişi, ne kadar süre, yığılma, titreme?
 
-- Ekranın herhangi bir yerine dokununca joystick o noktada belirir; parmak kalkınca karakter durur.
-- Karakter iki tabancayla otomatik ateş eder; HUD'da şarjör 6 → 0, **doldurma halkası** (≈1 sn) ve `↻` görünür.
-- Düşman ölünce XP taşı düşer, yaklaşınca toplanır; seviye atlayınca oyun durur ve 3 kart çıkar (500 ms kilit).
-- 5/10/15. dakikada uyarı bandı ("ARA BOSS YAKLAŞIYOR") + uyarı sesi, ardından elit; 20. dakikada "KALE LORDU GELİYOR" ve Lord.
-  Lord'u yenmek **KAZANDIN**, can bitince **OYUN BİTTİ** sonuç ekranı gelir (süre, seviye, öldürme, kurulan kombolar).
-- Seviye atlamada 3 kart; aktif becerisi 5. seviyedeki ve eşleşen pasifi olan oyuncuya **evrim** kartı en altta çıkar.
-- TEKRAR OYNA / ANA MENÜ çalışır.
-- Duraklat, Android geri tuşu (Devam Et), uygulamayı arka plana alma (otomatik duraklat) beklenen gibi davranır.
+## D. Görünüm, performans, ses
+11. **Stres ölçümü:** menüde sürüm etiketine 3 dokunuş (yalnız debug APK) → 60 sn senaryo (400 düşman + ~500 mermi); ekrandaki
+    ortalama / p95 kare süresi, draw call, bellek (veya `user://perf.json`). Hedef: 60 FPS, p95 ≤ 16,7 ms. Tutmazsa
+    `docs/dev/perf.md` yedek merdiveni. Ayrıca gerçek oyunda geç oyun (15+ dk) kalabalığı akıcı mı.
+12. Görünüm: rim konturu kalabalıkta rahatsız ediyor mu, oyuncu ~200 px okunur, çentik/kamera deliği ve yuvarlak köşelerde HUD
+    kesilmiyor (yan ≥36 px), joystick (ölü bölge ≈24, yarıçap 195; 180–210 denenebilir), dokunma hedefleri rahat.
+13. Debug etiketi `düşman N/M  taş N/M` ve `kesme düzeltmesi: AÇIK|KAPALI` (etikete dokun, ayar saklanır): ~2 dk AÇIK, ~2 dk
+    KAPALI oyna; düşman/taş kaybolması var mı, N≠M ise ekran görüntüsü paylaş (F-002 cihazda çözüldü; kontrol amaçlı).
+14. Ses: müzik döngü dikişi, geçişler (1,5 / 4 / 2 sn crossfade), boss uyarısında ve duraklatmada kısma; **SFX yok (beklenen)**;
+    titreşim (`Settings.vibrate`).
 
-## 3. Görünüm ve dokunma
-
-- Çentik/kamera deliği ve yuvarlak köşeler HUD'u kesmiyor: yan boşluk ≥36 px, ayrıca `DisplayServer.get_display_safe_area()` payı eklenir.
-- Joystick: ölü bölge ≈24 px, yarıçap 195 px (`InputGate.MAX_RADIUS` / `DEAD_ZONE_PX`; cihazda 180–210 arası denenir).
-- Düşmanlar ve oyuncu zeminden açık konturla (rim) ayrışıyor; oyuncu boyu ~200 px.
-- Dokunma hedefleri rahat, kazara dokunma yok.
-
-## 4. Cihaz içi stres ölçümü (bize gönderin)
-
-1. Ana menüde **sürüm etiketine 3 kez dokunun** (yalnız debug APK'da çalışır).
-2. 60 sn'lik senaryo çalışır: 400 düşman + ~500 mermi, sabit tohum. Sonuç ekranda görünür ve
-   `user://perf.json` dosyasına yazılır (ortalama / p95 kare süresi, draw call, nesne sayısı, bellek).
-3. Ekran görüntüsünü ya da `perf.json` içeriğini paylaşın.
-   (`perf.json` yolu: `/storage/emulated/0/Android/data/com.iamhankaya.ashenbastion/files/` altında olmayabilir;
-   ekrandaki sayılar yeterlidir.)
-
-Hedef: 60 FPS, p95 kare süresi ≤ 16,7 ms. Tutmazsa `docs/dev/perf.md` yedek merdiveni sırayla uygulanır; "300+"
-hedefinin altına inme kararı kullanıcıya aittir.
-
-## 5. F-ashen-bastion-002 (düşman/XP taşı bir iki kare görünmez olma) karşılaştırması
-
-Debug APK'da oyun sırasında ekranın altında (x≈300, y≈2236) iki satır belirir: `düşman N/M  taş N/M` (MultiMesh
-görünür sayısı / canlı sayı) ve `kesme düzeltmesi: AÇIK|KAPALI (dokun)`. Etikete dokunmak
-`RenderingServer.canvas_item_set_custom_rect` düzeltmesini açar/kapatır (ayar saklanır).
-1. Düzeltme AÇIKken ~2 dk oynayın, özellikle yerden XP taşı toplarken: görünmez olma oluyor mu?
-2. Etikete dokunup KAPALI yapın, aynı şekilde oynayın: sorun geri geliyor mu?
-3. Sayılar farklıysa (N ≠ M) ekran görüntüsünü paylaşın.
-
-## 6. Ses
-
-Müzik (menü, savaş-1 → 10. dk savaş-2, boss uyarısı, Kale Lordu, kazandın, kaybettin) `assets/audio/music/*.ogg`.
-Kontrol: döngü dikişi duyuluyor mu, geçişler (1,5 / 4 / 2 sn crossfade) doğal mı, boss uyarısında müzik kısılıyor mu,
-duraklatmada müzik kısılıyor mu. **SFX dosyası yok** (atış, doldurma, patlama, XP çınlaması sessiz): CC0 paket
-`assets/audio/sfx/<kimlik>.ogg` olarak konunca çalar (`LICENSES-audio.md`). Titreşim (`Settings.vibrate`) cihazda denenebilir.
+## E. Karar ve yayın
+15. Denge hissi (kullanıcı kararı, v1.1/backlog): geç oyun tehdidi ve kalabalık yeterli mi, Lord çok mu kolay/zor.
+16. APK imzalama (`docs/dev/release.md`, GitHub secret) ve aynı anahtarla güncelleme kurulumu (önce debug APK'yı kaldır).
