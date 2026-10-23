@@ -40,3 +40,12 @@ Bilgi amaçlı süre: ≈3,0 ms/adım ortalama, en kötü adım ≈9,5 ms (masa�
 4. Karga/hayalet çarpışma yok sayma.
 
 GDExtension bulutta derlenemediği için kapsam dışıdır. "300+" hedefinin altına inilirse karar kullanıcıya gider.
+
+## Render notları (U1-7)
+
+- **`INSTANCE_CUSTOM` prototipi (gl_compatibility) çalıştı.** Deneme: `MultiMeshInstance2D` + `use_colors` + `use_custom_data`, canvas_item shader'ında `vertex()` içinde `INSTANCE_CUSTOM.r` → varying → `fragment()`'ta beyaza karışım. `xvfb-run` + `--rendering-driver opengl3` (Mesa llvmpipe, OpenGL 4.5 Compatibility) ile ekrandan okunan piksellerde custom=0 örnek kendi rengini, custom=1 örnek beyazı verdi. **Karar:** vurulma parlaması `INSTANCE_CUSTOM.r`'de (`assets/shaders/enemy_flash.gdshader`); COLOR kanalı tür rengine (tint) kalır. Yedek (parlama COLOR'da, karga kareleri 3 ayrı MultiMesh) gerekmedi. Gerçek cihaz GPU'sunda (Adreno/Mali GLES3) doğrulama **kullanıcıda** (prova).
+- **Tampon düzeni** (`MultiMesh.buffer`, 2B): örnek başına 8 dönüşüm (`x.x, y.x, 0, origin.x, x.y, y.y, 0, origin.y`) + 4 renk (+ 4 custom yalnız düşmanda) = düşman 16, mermi/taş 12 float.
+- **Kural:** tür başına tek `MultiMeshInstance2D` (`EnemyRenderer` CAP 400, `ProjectileRenderer` 600, `GemRenderer` 300); `instance_count = CAP` sabit, kare başına kalıcı `PackedFloat32Array`'a doğrudan indeks yazımı + tek `multimesh.buffer` ataması; `visible_instance_count = canlı sayı`. Düşman taraması `for i in EnemyPool.CAP: if alive[i] == 1` (artan indeks; `alive_ids()` sıralaması kullanılmaz). Hot path'te sözlük/Array oluşturma yok (tür ölçek/renk tabloları `bind` sırasında Packed dizilere kurulur).
+- **Çizim sırası:** zemin → taşlar → düşmanlar → y-sıralı aktör katmanı (oyuncu) → mermiler. Düşman–oyuncu y-sort yok (plan: kasıtlı sınır).
+- **2B dörtgen:** `QuadMesh` 2B'de UV'yi dikey ters çevirdiği için `PlaceholderArt.quad_mesh()` elle kurulan `ArrayMesh` kullanır.
+- Masaüstü yazılım GL'de (llvmpipe) 46 düşman + HUD ile ekran görüntüsü alındı; FPS ölçümü yapılmadı (yazılım render anlamlı değil). Cihaz içi ölçüm U1-10 stres koşusunda.

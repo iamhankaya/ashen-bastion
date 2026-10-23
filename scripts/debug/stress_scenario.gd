@@ -19,13 +19,12 @@ func _init(sim_opts: Dictionary = {}) -> void:
 	o.merge(sim_opts, true)
 	sim = GameSim.new(SEED, &"gunslinger", o)
 	_rng.seed = SEED + 1
-	sim.hp = 1.0e9
-	sim.max_hp = 1.0e9
 	top_up()
 
 
 ## Düşman ve mermi sayısını hedefe tamamlar.
 func top_up() -> void:
+	sim.hp = sim.max_hp  # ölümsüz: senaryo süresince koşu sürmeli
 	if sim.enemies.count < ENEMIES:
 		sim.debug_fill(&"curumus_piyade", ENEMIES - sim.enemies.count, RING + _rng.randf() * 200.0)
 	while sim.projectiles.count < PROJECTILES:
@@ -36,6 +35,6 @@ func top_up() -> void:
 ## Bir sim adımı (oyuncu daire çizer, seviye atlamada ilk kartı seçer).
 func step(i: int) -> void:
 	top_up()
-	if sim.state == GameSim.State.LEVEL_UP:
+	while sim.state == GameSim.State.LEVEL_UP:
 		sim.choose(0)
 	sim.step(Vector2.from_angle(i * 0.02))
