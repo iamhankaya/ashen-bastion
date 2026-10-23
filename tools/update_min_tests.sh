@@ -9,7 +9,7 @@ import json, sys, xml.etree.ElementTree as ET
 junit, target = sys.argv[1], sys.argv[2]
 cur = {}
 for ts in ET.parse(junit).getroot().iter("testsuite"):
-    cur[ts.get("name")] = int(ts.get("tests"))
+    cur[ts.get("name")] = int(ts.get("tests")) - int(ts.get("skipped") or 0)
 try:
     old = json.load(open(target))
 except FileNotFoundError:

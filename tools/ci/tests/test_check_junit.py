@@ -6,9 +6,11 @@ from pathlib import Path
 SCRIPT = Path(__file__).resolve().parents[1] / "check_junit.py"
 
 
-def run(tmp_path, suites, mins):
+def run(tmp_path, suites, mins, skipped=None):
+    skipped = skipped or {}
     xml = "<testsuites>" + "".join(
-        f'<testsuite name="{n}" tests="{c}"></testsuite>' for n, c in suites.items()
+        f'<testsuite name="{n}" tests="{c}" skipped="{skipped.get(n, 0)}"></testsuite>'
+        for n, c in suites.items()
     ) + "</testsuites>"
     j = tmp_path / "j.xml"
     j.write_text(xml)
@@ -31,3 +33,8 @@ def test_below_min_fails(tmp_path):
 
 def test_missing_file_fails(tmp_path):
     assert run(tmp_path, {"b": 1}, {"a": 1}).returncode == 1
+
+
+def test_skipped_tests_do_not_count(tmp_path):
+    assert run(tmp_path, {"a": 3}, {"a": 3}, skipped={"a": 3}).returncode == 1
+    assert run(tmp_path, {"a": 3}, {"a": 2}, skipped={"a": 1}).returncode == 0

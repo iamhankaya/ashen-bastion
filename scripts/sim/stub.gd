@@ -7,7 +7,8 @@ static var _calls: Array[StringName] = []
 
 
 static func todo(what: StringName) -> void:
-	_calls.append(what)
+	if not _calls.has(what):  # kayıt sınırlı kalır; kanca yalnız benzersiz adlara bakar
+		_calls.append(what)
 
 
 static func calls() -> Array[StringName]:

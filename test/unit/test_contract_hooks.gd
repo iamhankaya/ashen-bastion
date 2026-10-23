@@ -19,6 +19,10 @@ const SKILL_IDS: Array[String] = [
 const API_EXTRA: Array[String] = ["magazine", "rng_combat"]
 
 
+func before_each() -> void:
+	Stub.reset()
+
+
 func _doc() -> String:
 	return FileAccess.get_file_as_string(DOC)
 
@@ -132,3 +136,13 @@ func test_hooks_are_noop_by_default() -> void:
 	b.on_hit(0, 0)
 	b.tick(0.1)
 	assert_eq(Stub.calls().size(), 0)
+
+
+func test_unimplemented_behaviors_are_visible_to_the_stub_hook() -> void:
+	# Her iskelet davranış setup'ta Stub.todo çağırır; uygulayan görev bunu gerçek gövdeyle değiştirir.
+	for id in SKILL_IDS:
+		Stub.reset()
+		var b: SkillBehavior = SkillRegistry.BEHAVIORS[StringName(id)].new()
+		b.setup(null, null, 1)
+		assert_eq(Stub.calls(), [StringName("skills." + id)] as Array[StringName], id)
+	Stub.reset()

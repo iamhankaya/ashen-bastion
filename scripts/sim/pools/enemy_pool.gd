@@ -60,10 +60,13 @@ func radius_of(id: int) -> float:
 	return 0.0
 
 
-## Canlı düşman kimlikleri, artan indeks sırasıyla.
+## Canlı düşman kimlikleri, ARTAN id (sayısal) sırasıyla; query_circle ile aynı kural.
+## Dikkat: nesil >= 0x8000 olan id int32'de negatiftir (bir slotun 32768 kez yeniden kullanımı; 20 dk'lık
+## oyunda gerçekçi değil). "Eşitlikte en düşük indeks" kuralı id'ye değil index_of(id)'ye bakar.
 func alive_ids() -> PackedInt32Array:
 	var out := PackedInt32Array()
 	for i in CAP:
 		if alive[i] == 1:
 			out.append(make_id(gen[i], i))
+	out.sort()
 	return out

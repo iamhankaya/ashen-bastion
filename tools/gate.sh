@@ -12,7 +12,7 @@ step() { echo "=== $*"; }
 
 # Günlük taraması: izin listesi YOK. ANSI renk kodları atılır.
 scan_log() { # scan_log <dosya>
-  if sed 's/\x1b\[[0-9;]*m//g' "$1" | grep -nE '^(SCRIPT ERROR|Parse Error|ERROR:)' > .gate/scan.out; then
+  if sed 's/\x1b\[[0-9;]*m//g' "$1" | grep -nE '^(SCRIPT ERROR|Parse Error|ERROR:|\[GUT ERROR\])|^Errors +[1-9]' > .gate/scan.out; then
     cat .gate/scan.out >&2
     fail "günlükte hata satırı: $1"
   fi
@@ -34,13 +34,12 @@ scan_log .gate/import.log
 step "3. Lint"
 gdformat --check scripts tools test > .gate/gdformat.log 2>&1 || { cat .gate/gdformat.log >&2; fail "gdformat"; }
 gdlint scripts tools test > .gate/gdlint.log 2>&1 || { cat .gate/gdlint.log >&2; fail "gdlint"; }
-if grep -rnE "to_upper|to_lower" scripts; then fail "to_upper/to_lower yasak (Türkçe i/İ tuzağı)"; fi
+if grep -rnE --include='*.gd' "to_upper|to_lower" scripts tools; then fail "to_upper/to_lower yasak (Türkçe i/İ tuzağı)"; fi
 
 step "4. Veri doğrulama"
-if [ -f tools/validate_data.gd ]; then
-  "$GODOT_BIN" --headless -s res://tools/validate_data.gd > .gate/validate.log 2>&1 || { cat .gate/validate.log >&2; fail "validate_data"; }
-  scan_log .gate/validate.log
-fi
+[ -f tools/validate_data.gd ] || fail "tools/validate_data.gd yok"
+"$GODOT_BIN" --headless -s res://tools/validate_data.gd > .gate/validate.log 2>&1 || { cat .gate/validate.log >&2; fail "validate_data"; }
+scan_log .gate/validate.log
 
 step "5. Python testleri"
 PYDIRS=""

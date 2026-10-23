@@ -207,3 +207,24 @@ func _has(s: GameSim, part: String) -> bool:
 		if part in e:
 			return true
 	return false
+
+
+func test_alive_ids_and_query_circle_share_one_ascending_order_across_generations() -> void:
+	var s := _sim()
+	s.enemies.alive[5] = 1
+	s.enemies.gen[5] = 0
+	s.enemies.alive[3] = 1
+	s.enemies.gen[3] = 1
+	s.enemies.alive[7] = 1
+	s.enemies.gen[7] = 0x8000  # int32'de negatif id
+	var ids := s.alive_ids()
+	var sorted_ids := ids.duplicate()
+	sorted_ids.sort()
+	assert_eq(ids, sorted_ids, "alive_ids artan id sırasında")
+	var h := SpatialHash.new()
+	for i in [5, 3, 7]:
+		h.insert(EnemyPool.make_id(s.enemies.gen[i], i), Vector2.ZERO)
+	var out := PackedInt32Array()
+	h.query_circle(Vector2.ZERO, 10.0, out)
+	assert_eq(out, ids, "query_circle ile aynı sıra")
+	assert_true(s.enemies.is_alive(EnemyPool.make_id(0x8000, 7)))

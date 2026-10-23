@@ -6,3 +6,4 @@ build/
 !tools/ci/debug.keystore
 __pycache__/
 .pytest_cache/
+audio/muzik/*.import

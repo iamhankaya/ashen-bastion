@@ -44,6 +44,14 @@ func query_circle(center: Vector2, radius: float, out: PackedInt32Array) -> void
 	var lo := _key(center - Vector2(radius, radius))
 	var hi := _key(center + Vector2(radius, radius))
 	var r2 := radius * radius
+	if float(hi.x - lo.x + 1) * float(hi.y - lo.y + 1) > float(_ids.size()):
+		# Çok geniş daire: hücre gezmek yerine tüm girdileri tara (sonuç aynı, süre sınırlı)
+		stat_cells_scanned += _cells.size()
+		for slot in _ids.size():
+			if _pts[slot].distance_squared_to(center) <= r2:
+				out.append(_ids[slot])
+		out.sort()
+		return
 	for cy in range(lo.y, hi.y + 1):
 		for cx in range(lo.x, hi.x + 1):
 			stat_cells_scanned += 1

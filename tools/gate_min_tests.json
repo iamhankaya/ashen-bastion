@@ -1,10 +1,10 @@
 {
   "test/unit/test_contract_events.gd": 3,
-  "test/unit/test_contract_hooks.gd": 9,
+  "test/unit/test_contract_hooks.gd": 10,
   "test/unit/test_contract_no_cycles.gd": 2,
   "test/unit/test_contract_signatures.gd": 9,
-  "test/unit/test_contract_sim.gd": 19,
-  "test/unit/test_contract_spatial_hash.gd": 5,
+  "test/unit/test_contract_sim.gd": 20,
+  "test/unit/test_contract_spatial_hash.gd": 6,
   "test/unit/test_contract_stub.gd": 5,
-  "test/unit/test_game_data.gd": 16
+  "test/unit/test_game_data.gd": 20
 }

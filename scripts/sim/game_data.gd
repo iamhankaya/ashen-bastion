@@ -52,6 +52,88 @@ const LEVEL_KEYS_NONDECREASING: PackedStringArray = [
 	"push",
 ]
 const LEVEL_KEYS_NONINCREASING: PackedStringArray = ["cooldown", "interval", "every_n"]
+## Bilinen anahtar kümeleri (yazım hatası = unknown_key). Aktif seviye satırları serbest sayısal anahtar alır.
+const CHARACTER_KEYS: PackedStringArray = [
+	"id",
+	"name",
+	"max_hp",
+	"move_speed",
+	"mag_cap",
+	"reload_time",
+	"pickup_radius",
+	"collision_radius",
+	"starting_skill",
+	"range",
+	"rig",
+]
+const RIG_KEYS: PackedStringArray = [
+	"body",
+	"arm",
+	"display_height",
+	"native_facing",
+	"shoulders",
+	"arm_pivot",
+	"muzzle",
+	"arm_scale",
+	"sway",
+]
+const SWAY_KEYS: PackedStringArray = ["hem_from_y", "scarf_rect", "amp", "lag"]
+const SKILL_KEYS: PackedStringArray = [
+	"id",
+	"kind",
+	"name",
+	"icon",
+	"max_level",
+	"tags",
+	"behavior",
+	"levels",
+	"desc",
+	"requires",
+]
+const REQUIRES_KEYS: PackedStringArray = ["active", "active_level", "passive", "passive_min_level"]
+const ENEMY_KEYS: PackedStringArray = [
+	"id",
+	"name",
+	"hp",
+	"speed",
+	"dmg",
+	"radius",
+	"armor",
+	"xp",
+	"ai",
+	"scales_with_time",
+	"sprite",
+	"display_height",
+	"tint",
+	"charge",
+	"summon",
+]
+const CHARGE_KEYS: PackedStringArray = ["every", "duration", "speed"]
+const SUMMON_KEYS: PackedStringArray = [
+	"type",
+	"every",
+	"count",
+	"enrage_hp_frac",
+	"enrage_speed_mult",
+	"enrage_every",
+]
+## Bilinen aktif seviye anahtarlarının sınırları [alt, üst].
+const LEVEL_KEY_BOUNDS := {
+	"cooldown": [0.05, 600.0],
+	"interval": [0.05, 60.0],
+	"every_n": [1.0, 100.0],
+	"damage": [0.0, 100000.0],
+	"count": [1.0, 100.0],
+	"radius": [0.0, 2000.0],
+	"pellets": [1.0, 100.0],
+	"chance": [0.0, 1.0],
+	"bounces": [0.0, 50.0],
+	"ex_damage": [0.0, 100000.0],
+	"ex_radius": [0.0, 2000.0],
+	"damage_mult": [0.0, 20.0],
+	"pierce": [0.0, 50.0],
+	"push": [0.0, 2000.0],
+}
 const MAX_LEVEL_LIMIT := 8
 const MAX_BURST_COUNT := 400
 const DEFAULT_END_TIME := 1200.0
@@ -92,6 +174,7 @@ const ERROR_CODES: PackedStringArray = [
 	"wave_unknown_key",
 	"no_character",
 	"rhythm_count",
+	"unknown_key",
 ]
 
 var root_dir: String = ""
@@ -110,6 +193,7 @@ var _raw_characters: Array[Dictionary] = []
 var _raw_skills: Array[Dictionary] = []
 var _raw_enemies: Array[Dictionary] = []
 var _raw_waves: Variant = null
+var _waves_failed: bool = false
 
 static var _default: GameData = null
 
@@ -180,6 +264,7 @@ func _load_all() -> void:
 	if FileAccess.file_exists(wp):
 		var r := _read_json(wp, "waves.json")
 		_raw_waves = r.get("data")
+		_waves_failed = r.get("failed", false)
 	else:
 		load_errors.append("[missing_file] waves.json: dosya yok")
 	if _raw_waves is Dictionary:
@@ -218,7 +303,7 @@ func _read_dir(sub: String) -> Array[Dictionary]:
 	for f in names:
 		var rel := sub + "/" + f
 		var r := _read_json(dir.path_join(f), rel)
-		res.append({"file": rel, "data": r.get("data")})
+		res.append({"file": rel, "data": r.get("data"), "failed": r.get("failed", false)})
 	return res
 
 
@@ -244,6 +329,15 @@ func _default_registry() -> Dictionary:
 
 
 # --- doğrulama yardımcıları ----------------------------------------------------------------
+
+
+## Bilinmeyen anahtarları bildirir.
+static func _unknown_keys(
+	out: PackedStringArray, ctx: String, d: Dictionary, known: PackedStringArray
+) -> void:
+	for k in d.keys():
+		if not known.has(str(k)):
+			_err(out, "unknown_key", ctx, "bilinmeyen anahtar '%s'" % k)
 
 
 static func _err(out: PackedStringArray, code: String, ctx: String, msg: String) -> void:
@@ -343,7 +437,7 @@ func _screen(out: PackedStringArray, entries: Array[Dictionary]) -> Array[Dictio
 	for e in entries:
 		var file: String = e["file"]
 		var d: Variant = e["data"]
-		if d == null:
+		if e.get("failed", false):
 			continue  # bad_json zaten load_errors'ta
 		if not (d is Dictionary):
 			_err(out, "not_object", file, "kök nesne olmalı")
@@ -388,6 +482,7 @@ func _validate_skills(out: PackedStringArray, reg: Dictionary) -> void:
 
 
 func _validate_skill(out: PackedStringArray, file: String, d: Dictionary, reg: Dictionary) -> void:
+	_unknown_keys(out, file, d, SKILL_KEYS)
 	_str(out, file, d, "name")
 	_check_asset(out, file, d, "icon")
 	if not d.has("kind") or not (d["kind"] is String) or not SKILL_KINDS.has(d["kind"]):
@@ -401,6 +496,13 @@ func _validate_skill(out: PackedStringArray, file: String, d: Dictionary, reg: D
 	_validate_behavior(out, file, d, kind, reg)
 	if kind != "evolution" and d.has("requires"):
 		_err(out, "requires_unexpected", file, "'requires' yalnız evrimde olur")
+	if kind == "evolution":
+		if not d.has("requires"):
+			_err(out, "missing_field", file, "evrimde 'requires' zorunlu")
+		elif not (d["requires"] is Dictionary):
+			_err(out, "bad_type", file, "'requires' nesne olmalı")
+		else:
+			_unknown_keys(out, file + " requires", d["requires"], REQUIRES_KEYS)
 	var levels_ok := _validate_levels_shape(out, file, d, max_ok)
 	if levels_ok:
 		if kind == "passive":
@@ -522,6 +624,14 @@ func _validate_passive_levels(out: PackedStringArray, file: String, levels: Arra
 
 
 func _validate_active_levels(out: PackedStringArray, file: String, levels: Array) -> void:
+	for i in levels.size():
+		for k in (levels[i] as Dictionary).keys():
+			if LEVEL_KEY_BOUNDS.has(k):
+				var b: Array = LEVEL_KEY_BOUNDS[k]
+				var v := float(levels[i][k])
+				if v < float(b[0]) or v > float(b[1]):
+					_err(out, "out_of_range", file, "levels[%d].%s = %s, aralık %s" % [i, k, v, b])
+					return
 	for k in (levels[0] as Dictionary).keys():
 		var dec: bool = LEVEL_KEYS_NONDECREASING.has(k)
 		var inc: bool = LEVEL_KEYS_NONINCREASING.has(k)
@@ -606,6 +716,7 @@ func _validate_enemies(out: PackedStringArray) -> void:
 
 
 func _validate_enemy(out: PackedStringArray, file: String, d: Dictionary) -> void:
+	_unknown_keys(out, file, d, ENEMY_KEYS)
 	_str(out, file, d, "name")
 	_num(out, file, d, "hp", 1, 1000000)
 	_num(out, file, d, "speed", 0, 2000)
@@ -627,6 +738,7 @@ func _validate_enemy(out: PackedStringArray, file: String, d: Dictionary) -> voi
 		_err(out, "bad_type", file, "'tint' #rrggbb metni olmalı")
 	if d.has("charge"):
 		if d["charge"] is Dictionary:
+			_unknown_keys(out, file + " charge", d["charge"], CHARGE_KEYS)
 			_num(out, file + " charge", d["charge"], "every", 0.1, 600)
 			_num(out, file + " charge", d["charge"], "duration", 0.1, 60)
 			_num(out, file + " charge", d["charge"], "speed", 1, 5000)
@@ -635,6 +747,7 @@ func _validate_enemy(out: PackedStringArray, file: String, d: Dictionary) -> voi
 	if d.has("summon"):
 		if d["summon"] is Dictionary:
 			var sm: Dictionary = d["summon"]
+			_unknown_keys(out, file + " summon", sm, SUMMON_KEYS)
 			_num(out, file + " summon", sm, "every", 0.1, 600)
 			_num(out, file + " summon", sm, "count", 1, 50, true)
 			if _str(out, file + " summon", sm, "type") and not _raw_enemy_exists(sm["type"]):
@@ -663,6 +776,7 @@ func _validate_characters(out: PackedStringArray) -> void:
 
 
 func _validate_character(out: PackedStringArray, file: String, d: Dictionary) -> void:
+	_unknown_keys(out, file, d, CHARACTER_KEYS)
 	_str(out, file, d, "name")
 	_num(out, file, d, "max_hp", 1, 10000)
 	_num(out, file, d, "move_speed", 50, 1000)
@@ -691,6 +805,7 @@ func _validate_character(out: PackedStringArray, file: String, d: Dictionary) ->
 
 
 func _validate_rig(out: PackedStringArray, ctx: String, r: Dictionary) -> void:
+	_unknown_keys(out, ctx, r, RIG_KEYS)
 	_check_asset(out, ctx, r, "body")
 	_check_asset(out, ctx, r, "arm")
 	_num(out, ctx, r, "display_height", 1, 1000)
@@ -714,6 +829,7 @@ func _validate_rig(out: PackedStringArray, ctx: String, r: Dictionary) -> void:
 		_err(out, "bad_type", ctx, "'sway' nesne olmalı")
 	else:
 		var s: Dictionary = r["sway"]
+		_unknown_keys(out, ctx + " sway", s, SWAY_KEYS)
 		_num(out, ctx + " sway", s, "hem_from_y", 0, 1)
 		_num(out, ctx + " sway", s, "amp", 0, 100)
 		_num(out, ctx + " sway", s, "lag", 0, 1)
@@ -735,7 +851,10 @@ func _validate_rig(out: PackedStringArray, ctx: String, r: Dictionary) -> void:
 
 
 func _validate_waves(out: PackedStringArray) -> void:
-	if _raw_waves == null:
+	if (
+		_waves_failed
+		or (_raw_waves == null and not FileAccess.file_exists(root_dir.path_join("waves.json")))
+	):
 		return  # missing_file / bad_json zaten bildirildi
 	if not (_raw_waves is Dictionary):
 		_err(out, "not_object", "waves.json", "kök nesne olmalı")

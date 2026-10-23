@@ -181,3 +181,69 @@ func test_missing_record_directories_count_as_empty() -> void:
 	assert_eq(g.enemy_ids.size(), 0)
 	assert_eq(g.skill_ids.size(), 0)
 	assert_false(_has_code(g.validate(), "bad_json"))
+
+
+func test_evolution_requires_is_mandatory_and_must_be_an_object() -> void:
+	var evo: Dictionary = KitDev.read_json(FIX + "/data_valid/skills/zincirleme_patlama.json")
+	evo.erase("requires")
+	var errs := _validate(KitDev.data_dir_with({"skills/zincirleme_patlama.json": evo}))
+	assert_true(_has_code(errs, "missing_field"), "requires yok: %s" % [errs])
+	evo["requires"] = "x"
+	errs = _validate(KitDev.data_dir_with({"skills/zincirleme_patlama.json": evo}))
+	assert_true(_has_code(errs, "bad_type"), "requires metin: %s" % [errs])
+	evo["requires"] = {
+		"active": "seken_mermi",
+		"active_level": 5,
+		"passive": "barut_kesesi",
+		"passive_min_level": 1,
+		"x": 1
+	}
+	errs = _validate(KitDev.data_dir_with({"skills/zincirleme_patlama.json": evo}))
+	assert_true(_has_code(errs, "unknown_key"))
+
+
+func test_literal_null_json_is_rejected() -> void:
+	var errs := _validate(KitDev.data_dir_with({"waves.json": "null"}))
+	assert_true(_has_code(errs, "not_object"), "waves null: %s" % [errs])
+	errs = _validate(KitDev.data_dir_with({"enemies/les_kargasi.json": "null"}))
+	assert_true(_has_code(errs, "not_object"), "enemy null: %s" % [errs])
+
+
+func test_active_level_values_are_bounded() -> void:
+	var s: Dictionary = KitDev.read_json(FIX + "/data_valid/skills/cift_tabanca.json")
+	s["levels"][0]["interval"] = 0.0
+	assert_true(
+		_has_code(_validate(KitDev.data_dir_with({"skills/cift_tabanca.json": s})), "out_of_range")
+	)
+	s = KitDev.read_json(FIX + "/data_valid/skills/cift_tabanca.json")
+	s["levels"][1]["damage"] = -5
+	assert_true(
+		_has_code(_validate(KitDev.data_dir_with({"skills/cift_tabanca.json": s})), "out_of_range")
+	)
+	s = KitDev.read_json(FIX + "/data_valid/skills/son_mermi_patlar.json")
+	s["levels"][4]["ex_radius"] = 1.0e9
+	assert_true(
+		_has_code(
+			_validate(KitDev.data_dir_with({"skills/son_mermi_patlar.json": s})), "out_of_range"
+		)
+	)
+
+
+func test_unknown_keys_are_rejected_on_every_record_type() -> void:
+	var ch: Dictionary = KitDev.read_json(FIX + "/data_valid/characters/gunslinger.json")
+	ch["rnage"] = 700
+	assert_true(
+		_has_code(
+			_validate(KitDev.data_dir_with({"characters/gunslinger.json": ch})), "unknown_key"
+		)
+	)
+	var en: Dictionary = KitDev.read_json(FIX + "/data_valid/enemies/kale_lordu.json")
+	en["chrage"] = {"every": 4, "duration": 1, "speed": 300}
+	assert_true(
+		_has_code(_validate(KitDev.data_dir_with({"enemies/kale_lordu.json": en})), "unknown_key")
+	)
+	var sk: Dictionary = KitDev.read_json(FIX + "/data_valid/skills/cift_tabanca.json")
+	sk["tagz"] = []
+	assert_true(
+		_has_code(_validate(KitDev.data_dir_with({"skills/cift_tabanca.json": sk})), "unknown_key")
+	)

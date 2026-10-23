@@ -136,6 +136,7 @@ BAD = {
     "wave_boss_time": {"waves.json": mut("waves.json", row(4, at=1100))},
     "wave_enemy_ai": {"waves.json": mut("waves.json", row(3, type="curumus_piyade"))},
     "wave_unknown_key": {"waves.json": mut("waves.json", lambda w: w.update(extra=1))},
+    "unknown_key": {"enemies/les_kargasi.json": mut("enemies/les_kargasi.json", lambda d: d.update(sped=1))},
     "no_character": {"characters/gunslinger.json.deleted": ""},
     "rhythm_count": {
         "skills/seken_mermi.json": mut("skills/seken_mermi.json", lambda d: d.update(tags=[])),

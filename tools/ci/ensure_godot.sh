@@ -35,9 +35,11 @@ chmod +x "$BIN"
 # Dinamik kitaplıklar eksikse (root + apt varsa) kur; yoksa paketleri listele.
 if ldd "$BIN" 2>/dev/null | grep -q "not found"; then
   missing="libasound2t64 libx11-6 libxcursor1 libxi6 libxinerama1 libxrandr2 libgl1 libfontconfig1"
-  if [ "$(id -u)" = "0" ] && command -v apt-get >/dev/null; then
-    apt-get update -qq >&2 || true
-    apt-get install -y -qq $missing >&2 || apt-get install -y -qq ${missing/libasound2t64/libasound2} >&2 || true
+  SUDO=""
+  [ "$(id -u)" != "0" ] && command -v sudo >/dev/null && sudo -n true 2>/dev/null && SUDO="sudo -n"
+  if { [ "$(id -u)" = "0" ] || [ -n "$SUDO" ]; } && command -v apt-get >/dev/null; then
+    $SUDO apt-get update -qq >&2 || true
+    $SUDO apt-get install -y -qq $missing >&2 || $SUDO apt-get install -y -qq ${missing/libasound2t64/libasound2} >&2 || true
   else
     echo "Eksik kitaplıklar var; kurulması gereken paketler: $missing" >&2
   fi

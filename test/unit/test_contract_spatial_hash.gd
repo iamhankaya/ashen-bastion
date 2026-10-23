@@ -53,3 +53,12 @@ func test_negative_coordinates() -> void:
 	var out := PackedInt32Array()
 	h.query_circle(Vector2.ZERO, 5.0, out)
 	assert_eq(out, PackedInt32Array([7, 8]))
+
+
+func test_huge_radius_does_not_scan_every_cell() -> void:
+	var h := SpatialHash.new(96.0)
+	h.insert(1, Vector2(0, 0))
+	h.insert(2, Vector2(100000, 100000))
+	var out := PackedInt32Array()
+	h.query_circle(Vector2.ZERO, 1.0e9, out)
+	assert_eq(out, PackedInt32Array([1, 2]))
