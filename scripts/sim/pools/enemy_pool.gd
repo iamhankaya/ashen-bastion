@@ -98,7 +98,7 @@ func spawn(
 	if not def.charge.is_empty():
 		ai_timer[i] = float(def.charge.get("every", 4.0))
 	elif not def.summon.is_empty():
-		ai_timer[i] = float(def.summon.get("every", 8.0))
+		ai_timer[i] = float(def.summon.get("every", 8.0)) * 0.4  # Lord geldikten kısa süre sonra ilk çağırma
 	else:
 		ai_timer[i] = 0.0
 	count += 1

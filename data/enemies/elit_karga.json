@@ -9,7 +9,7 @@
   "xp": 260,
   "ai": "elite",
   "scales_with_time": false,
-  "sprite": "placeholder:elit_karga",
+  "sprite": "res://assets/gfx/enemies/les_kargasi.png",
   "display_height": 260,
   "tint": "#e0584f",
   "charge": {

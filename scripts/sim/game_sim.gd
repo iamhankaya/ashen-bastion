@@ -529,7 +529,9 @@ func _phase_targeting_fire() -> void:
 	for g in 2:
 		var tid := gun_target[g]
 		if tid >= 0:
-			gun_aim[g] = (enemies.pos[EnemyPool.index_of(tid)] - player_pos).angle()
+			gun_aim[g] = PlayerRig.solve_aim(
+				g, player_pos, enemies.pos[EnemyPool.index_of(tid)], character.rig
+			)
 		elif last_move.length_squared() > 0.01:
 			gun_aim[g] = last_move.angle()
 		gun_cd[g] = maxf(gun_cd[g], -STEP)
@@ -552,15 +554,16 @@ func _fire(g: int, tid: int) -> void:
 	ctx.gun = g
 	ctx.index_in_mag = res["index"]
 	ctx.is_last = res["is_last"]
-	# Namlu aim açısına bağlı, aim namluya bağlı: iki yineleme yeter. Atış yönü = son aim; origin = muzzle_world(aim).
+	# Kol açısı PlayerRig.solve_aim ile çözülür (namlu hedefe bakar); hedef kolun menzilinden yakınsa omuzdan atılır.
 	var target_pos := enemies.pos[EnemyPool.index_of(tid)]
-	var aim := (target_pos - player_pos).angle()
-	var origin := player_pos
-	for k in 2:
-		origin = PlayerRig.muzzle_world(g, player_pos, aim, cos(aim) < 0.0, character.rig)
-		aim = (target_pos - origin).angle()
-	ctx.dir = Vector2.from_angle(aim)
-	ctx.origin = PlayerRig.muzzle_world(g, player_pos, aim, ctx.dir.x < 0.0, character.rig)
+	var aim := PlayerRig.solve_aim(g, player_pos, target_pos, character.rig)
+	var flip := cos(aim) < 0.0
+	var origin := PlayerRig.muzzle_world(g, player_pos, aim, flip, character.rig)
+	var sh := PlayerRig.shoulder_world(g, player_pos, target_pos.x < player_pos.x, character.rig)
+	if target_pos.distance_to(sh) < origin.distance_to(sh) * 1.3:
+		origin = sh
+	ctx.dir = (target_pos - origin).normalized()
+	ctx.origin = origin
 	if g == 0:
 		player_facing_left = ctx.dir.x < 0.0
 	ctx.damage = gun_damage * stats.bullet_dmg_mult

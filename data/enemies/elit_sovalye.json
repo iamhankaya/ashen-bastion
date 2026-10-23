@@ -9,7 +9,7 @@
   "xp": 160,
   "ai": "elite",
   "scales_with_time": false,
-  "sprite": "placeholder:elit_sovalye",
+  "sprite": "res://assets/gfx/enemies/sovalye_hayaleti.png",
   "display_height": 270,
   "tint": "#e8a24a"
 }

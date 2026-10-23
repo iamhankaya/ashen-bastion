@@ -9,7 +9,7 @@
   "xp": 1,
   "ai": "air",
   "scales_with_time": true,
-  "sprite": "placeholder:les_kargasi",
+  "sprite": "res://assets/gfx/enemies/les_kargasi.png",
   "display_height": 64,
-  "tint": "#3b3340"
+  "tint": "#ffffff"
 }

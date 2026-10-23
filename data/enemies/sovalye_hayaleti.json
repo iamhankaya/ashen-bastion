@@ -9,7 +9,7 @@
   "xp": 5,
   "ai": "ghost",
   "scales_with_time": true,
-  "sprite": "placeholder:sovalye_hayaleti",
+  "sprite": "res://assets/gfx/enemies/sovalye_hayaleti.png",
   "display_height": 150,
-  "tint": "#7d8aa8"
+  "tint": "#ffffff"
 }

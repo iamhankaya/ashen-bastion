@@ -9,7 +9,7 @@
   "xp": 500,
   "ai": "lord",
   "scales_with_time": false,
-  "sprite": "placeholder:kale_lordu",
+  "sprite": "res://assets/gfx/enemies/kale_lordu.png",
   "display_height": 384,
   "tint": "#ffffff",
   "summon": {

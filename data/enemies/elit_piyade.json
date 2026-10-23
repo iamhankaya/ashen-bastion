@@ -9,7 +9,7 @@
   "xp": 80,
   "ai": "elite",
   "scales_with_time": false,
-  "sprite": "placeholder:elit_piyade",
+  "sprite": "res://assets/gfx/enemies/curumus_piyade.png",
   "display_height": 230,
   "tint": "#b8404a"
 }
