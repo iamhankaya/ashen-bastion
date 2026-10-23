@@ -113,6 +113,8 @@ var _retarget_cd: float = 0.0
 var _dry_cd: PackedFloat32Array = PackedFloat32Array([0.0, 0.0])
 var _max_enemy_radius: float = 40.0
 var _scratch: PackedInt32Array = PackedInt32Array()
+var _explode_buf: PackedInt32Array = PackedInt32Array()
+var _bounce_buf: PackedInt32Array = PackedInt32Array()
 
 
 func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void:
@@ -222,11 +224,11 @@ func explode(pos: Vector2, radius: float, dmg: float, source: StringName) -> voi
 	var r := radius * stats.area_mult
 	var d := dmg * stats.explosion_dmg_mult
 	w_explosions += 1
-	log_event(SimEvents.EXPLOSION, {"pos": pos, "radius": r, "dmg": d, "source": source})
+	if _log_events:
+		log_event(SimEvents.EXPLOSION, {"pos": pos, "radius": r, "dmg": d, "source": source})
 	bus.explosion.emit(pos, r)
-	var ids := PackedInt32Array()
-	grid.query_circle(pos, r + _max_enemy_radius, ids)
-	for id in ids:
+	grid.query_circle(pos, r + _max_enemy_radius, _explode_buf)
+	for id in _explode_buf:
 		if not enemies.is_alive(id):
 			continue
 		var i := EnemyPool.index_of(id)
@@ -287,7 +289,8 @@ func spawn_enemy(type_id: StringName, pos: Vector2) -> int:
 		spawn_dropped += 1
 		log_event(SimEvents.SPAWN_DROPPED, {"enemy_type": type_id})
 	else:
-		log_event(SimEvents.SPAWN, {"enemy_type": type_id, "id": id, "pos": pos})
+		if _log_events:
+			log_event(SimEvents.SPAWN, {"enemy_type": type_id, "id": id, "pos": pos})
 	return id
 
 
@@ -432,6 +435,11 @@ func take_forced_choices() -> Array[StringName]:
 	return out
 
 
+## Olay kaydı açık mı (çağıranlar sözlük kurmadan önce sorar).
+func logging() -> bool:
+	return _log_events
+
+
 ## event_log'a kayıt ekler (yalnız opts.log_events ise ve max_log aşılmadıysa).
 func log_event(type: StringName, fields: Dictionary = {}) -> void:
 	if _log_events and event_log.size() < _max_log:
@@ -551,17 +559,21 @@ func _fire(g: int, tid: int) -> void:
 		)
 	)
 	gun_cd[g] += gun_interval / stats.fire_rate_mult
-	log_event(
-		SimEvents.SHOT,
-		{
-			"gun": g,
-			"origin": ctx.origin,
-			"dir": ctx.dir,
-			"dmg": ctx.damage,
-			"index_in_mag": ctx.index_in_mag,
-			"is_last": ctx.is_last,
-		}
-	)
+	if g == 0:
+		# Hedefsiz bekleyişten sonra iki tabanca eşzamanlı hazırsa ikinciyi yarım aralık geriye at.
+		gun_cd[1] = maxf(gun_cd[1], gun_cd[0] - gun_interval / stats.fire_rate_mult * 0.5)
+	if _log_events:
+		log_event(
+			SimEvents.SHOT,
+			{
+				"gun": g,
+				"origin": ctx.origin,
+				"dir": ctx.dir,
+				"dmg": ctx.damage,
+				"index_in_mag": ctx.index_in_mag,
+				"is_last": ctx.is_last,
+			}
+		)
 	bus.shot_fired.emit(g, ctx.origin, ctx.dir)
 	if ctx.is_last:
 		bus.last_bullet_fired.emit(ctx.origin)
@@ -641,11 +653,10 @@ func _projectile_hit(pi: int, id: int) -> bool:
 
 ## Mermi için vurulmamış en yakın canlı düşman (eşitlikte en düşük indeks); yoksa -1.
 func _nearest_unhit(pi: int, range_px: float) -> int:
-	var ids := PackedInt32Array()
-	grid.query_circle(projectiles.pos[pi], range_px, ids)
+	grid.query_circle(projectiles.pos[pi], range_px, _bounce_buf)
 	var best := -1
 	var best_d := INF
-	for id in ids:
+	for id in _bounce_buf:
 		if not enemies.is_alive(id) or projectiles.has_hit(pi, id):
 			continue
 		var d := enemies.pos[EnemyPool.index_of(id)].distance_squared_to(projectiles.pos[pi])
@@ -685,7 +696,8 @@ func _phase_deaths_xp() -> void:
 		if d2 <= grab2:
 			var v := gems.collect(i)
 			xp += v
-			log_event(SimEvents.GEM_COLLECTED, {"value": v})
+			if _log_events:
+				log_event(SimEvents.GEM_COLLECTED, {"value": v})
 			bus.gem_collected.emit(v)
 		i -= 1
 
@@ -699,12 +711,6 @@ func _phase_spawn() -> void:
 ## (10) durum: oyun sonu, seviye atlama.
 func _phase_status() -> void:
 	_trace(9)
-	if hp <= 0.0:
-		_end_run(false)
-		return
-	if end_mode == END_MODE_TIMER and time >= end_time:
-		_end_run(true)
-		return
 	while xp >= xp_to_next:
 		xp -= xp_to_next
 		level += 1
@@ -712,6 +718,12 @@ func _phase_status() -> void:
 		pending_levels += 1
 		log_event(SimEvents.LEVEL_UP, {"level": level})
 		bus.level_up.emit(level)
+	if hp <= 0.0:
+		_end_run(false)  # bekleyen seçimler iptal edilir, seviye sayısı korunur
+		return
+	if end_mode == END_MODE_TIMER and time >= end_time:
+		_end_run(true)
+		return
 	if pending_levels > 0:
 		state = State.LEVEL_UP
 		_roll_choices()

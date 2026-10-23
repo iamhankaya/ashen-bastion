@@ -13,7 +13,7 @@ const CARD_W := 984.0
 const CARD_H := 324.0
 const CARD_GAP := 27.0
 const ICON := 180.0
-const PORTRAIT := "res://art/ref/portre-seviye-atlama.png"
+const PORTRAIT := "res://assets/ui/portre-seviye-atlama.png"
 const PORTRAIT_H := 1620.0
 
 var title_label: Label

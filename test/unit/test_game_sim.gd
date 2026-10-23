@@ -378,3 +378,28 @@ func test_work_counters_grow() -> void:
 	assert_gt(s.work[&"enemy_updates"], 0)
 	assert_gt(s.work[&"proj_updates"], 0)
 	assert_gt(s.work[&"collision_tests"], 0)
+
+
+func test_pistols_stay_half_interval_apart_after_idle_period() -> void:
+	var s := KitDev.sim()
+	KitDev.run(s, 30)  # hedefsiz bekleyiş
+	s.debug_spawn(&"sovalye_hayaleti", Vector2(400, 0))
+	KitDev.run(s, 40)
+	var shots := KitDev.events(s, SimEvents.SHOT)
+	assert_gte(shots.size(), 4)
+	var guns := []
+	for e in shots.slice(0, 4):
+		guns.append(e["gun"])
+	assert_eq(guns, [0, 1, 0, 1])
+	assert_between(shots[1]["step"] - shots[0]["step"], 8, 10)
+
+
+func test_level_counted_and_invariants_clean_when_run_ends_with_xp_pending() -> void:
+	var s := KitDev.sim()
+	s.debug_add_xp(12)
+	s.hp = 0.0
+	s.step(Vector2.ZERO)
+	assert_eq(s.state, GameSim.State.LOST)
+	assert_eq(s.level, 2)
+	assert_eq(s.pending_levels, 0)
+	assert_eq(s.check_invariants(), PackedStringArray())

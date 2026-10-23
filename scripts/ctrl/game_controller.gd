@@ -121,6 +121,7 @@ func _build_ui() -> void:
 
 
 func go_menu() -> void:
+	_stop_stress()
 	_bind(null)
 	world.visible = false
 	menu.open(_settings().sound_on, _settings().vibration_on)
@@ -129,6 +130,7 @@ func go_menu() -> void:
 
 ## Yeni oyun (menüden OYNA, Baştan Başla, Tekrar Oyna).
 func start_run() -> void:
+	_stop_stress()
 	_bind(GameSim.new(randi(), CHARACTER, RUN_OPTS))
 	world.visible = true
 	_update_views(0.0)
@@ -220,7 +222,6 @@ func _bind(new_sim: GameSim) -> void:
 		sim.bus.run_ended.disconnect(_on_run_ended)
 		sim.bus.player_damaged.disconnect(_on_player_damaged)
 	sim = new_sim
-	_stop_stress()
 	_run_stats = {}
 	_run_won = false
 	enemy_renderer.bind(sim)

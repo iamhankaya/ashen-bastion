@@ -27,9 +27,11 @@ func damage_enemy(sim: GameSim, id: int, amount: float, kind: StringName) -> voi
 	var net := after_armor(amount, sim.enemies.armor[i]) if kind == &"bullet" else amount
 	sim.enemies.hp[i] -= net
 	sim.enemies.flash[i] = 1.0
-	sim.log_event(
-		SimEvents.DAMAGE, {"target": id, "amount": net, "raw": amount, "kind": kind, "source": &""}
-	)
+	if sim.logging():
+		sim.log_event(
+			SimEvents.DAMAGE,
+			{"target": id, "amount": net, "raw": amount, "kind": kind, "source": &""}
+		)
 	if sim.enemies.hp[i] <= 0.0:
 		_kill(sim, id, i)
 
@@ -40,10 +42,12 @@ func _kill(sim: GameSim, id: int, i: int) -> void:
 	var xp_value := sim.enemies.def_of(i).xp
 	sim.enemies.kill(id)
 	sim.kills += 1
-	sim.log_event(SimEvents.KILL, {"enemy_id": id, "enemy_type": type_id, "pos": p})
+	if sim.logging():
+		sim.log_event(SimEvents.KILL, {"enemy_id": id, "enemy_type": type_id, "pos": p})
 	if xp_value > 0:
 		sim.gems.drop(p, xp_value)
-		sim.log_event(SimEvents.GEM_DROPPED, {"value": xp_value})
+		if sim.logging():
+			sim.log_event(SimEvents.GEM_DROPPED, {"value": xp_value})
 	sim.bus.enemy_killed.emit(type_id, p)
 	for st in sim.loadout.actives():
 		if st.behavior != null:

@@ -37,3 +37,16 @@ func test_status_text_is_turkish_and_nonempty() -> void:
 	add_child_autofree(run)
 	run.advance(0.016)
 	assert_string_contains(run.status_text(), "STRES")
+
+
+func test_controller_stress_entry_keeps_run_alive_and_drives_scenario() -> void:
+	var gc := GameController.new()
+	add_child_autofree(gc)
+	gc.start_stress()
+	assert_not_null(gc._stress, "start_stress sonrası koşu nesnesi yaşamalı")
+	for i in 30:
+		gc._process(1.0 / 60.0)
+	assert_gt(gc._stress.scenario.sim.step_count, 20)
+	assert_eq(gc.sim, gc._stress.scenario.sim)
+	gc.go_menu()
+	assert_null(gc._stress)

@@ -29,7 +29,9 @@ Bilgi amaçlı süre: ≈3,0 ms/adım ortalama, en kötü adım ≈9,5 ms (masa�
   artan id sıralıdır. Aynı kovaya düşen hücreler sorguda bir kez gezilir.
 - `EnemyPool` sıkıştırılmaz (kimlik/nesil kuralı). `ProjectilePool` ve `GemPool` kompakttır (0..count-1, çıkarma için
   ters sırayla gezin); mermi kimliği yoktur, `hit_ids` halka tampon (12) ile mermi başına tutulur.
-- Sıcak yolda `Array`/`Dictionary` oluşturulmaz (istisna: `hitscan` / `pick_highest_hp`, U2 becerileri ve seyrek çağrılar).
+- Sıcak yolda olay sözlükleri yalnız `log_events` açıkken kurulur (`GameSim.logging()`); patlama/sekme sorguları kalıcı
+  scratch dizileri kullanır. Kalan tahsisler: atış başına `ShotContext` + mermi seçenek sözlüğü, `Magazine.consume()` sonucu,
+  `SpawnDirector.step` satır okumaları (ölçüm: bkz. sayaçlar; zaman tavan değildir). `hitscan` / `pick_highest_hp` U2 becerileri içindir.
 - Sayaçların sıcak yol kopyaları `GameSim.w_*` tamsayılarıdır; `work` sözlüğü adım sonunda yazılır.
 
 ## Yedek merdiveni (sırayla)
@@ -49,3 +51,10 @@ GDExtension bulutta derlenemediği için kapsam dışıdır. "300+" hedefinin al
 - **Çizim sırası:** zemin → taşlar → düşmanlar → y-sıralı aktör katmanı (oyuncu) → mermiler. Düşman–oyuncu y-sort yok (plan: kasıtlı sınır).
 - **2B dörtgen:** `QuadMesh` 2B'de UV'yi dikey ters çevirdiği için `PlaceholderArt.quad_mesh()` elle kurulan `ArrayMesh` kullanır.
 - Masaüstü yazılım GL'de (llvmpipe) 46 düşman + HUD ile ekran görüntüsü alındı; FPS ölçümü yapılmadı (yazılım render anlamlı değil). Cihaz içi ölçüm U1-10 stres koşusunda.
+
+## Render'lı stres koşusu (bilgi; bulut, Mesa llvmpipe yazılım GL, xvfb, 540x1200, 40 sn)
+
+`StressRun` (400 düşman + ~485 mermi, `gl_compatibility`): ort. 33,9 ms/kare (≈29,5 FPS), p95 69,7 ms, en çok 144 draw
+call, 2048 nesne, 64 MB statik bellek. **Yazılım rasterleştirici olduğu için cihaz hakkında hiçbir şey söylemez**; yalnızca
+sahnenin çalıştığını, draw call sayısının düşük (tür başına tek MultiMesh) kaldığını gösterir. Cihaz FPS'i kullanıcıda ölçülür
+(`docs/dev/user-verify.md`).
