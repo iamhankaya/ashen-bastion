@@ -1,0 +1,314 @@
+extends SceneTree
+## Denetim yakalama (kendi senaryolarım). Çıktı dizini: ilk kullanıcı argümanı; ikincisi senaryolar.
+
+var out := "/tmp/o/"
+var c: Node
+const DT := 1.0 / 60.0
+
+
+func _initialize() -> void:
+	var a := OS.get_cmdline_user_args()
+	out = a[0].path_join("")
+	DirAccess.make_dir_recursive_absolute(out)
+	_run(a[1].split(","))
+
+
+func frames(n: int) -> void:
+	for i in n:
+		await process_frame
+
+
+func shot(n: String, rect: Rect2i = Rect2i()) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var img := root.get_texture().get_image()
+	if rect.size.x > 0:
+		img = img.get_region(rect)
+	img.save_png(out + n + ".png")
+
+
+func fresh() -> void:
+	if c != null:
+		c.queue_free()
+		await process_frame
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await frames(3)
+	c.start_run()
+	await frames(2)
+	c.set_process(false)
+	c.sim.max_hp = 1.0e9
+	c.sim.hp = 1.0e9
+
+
+## Bir kare: sim adımı (RUNNING ise) + görünüm.
+func tick(move: Vector2 = Vector2.ZERO, n: int = 1) -> void:
+	for i in n:
+		if c.sim.state == GameSim.State.LEVEL_UP:
+			c.sim.choose(0)
+			c.sim.max_hp = 1.0e9
+			c.sim.hp = 1.0e9
+		if c.sim.state == GameSim.State.RUNNING:
+			c.sim.step(move)
+			c._after_step()
+		c._v11_process(DT)
+		c._update_views(DT)
+
+
+func scr(p: Vector2) -> Vector2:
+	return c.world.get_global_transform_with_canvas() * p
+
+
+func crop_at(p: Vector2, w: int, h: int) -> Rect2i:
+	var s := scr(p)
+	return Rect2i(int(s.x) - w / 2, int(s.y) - h / 2, w, h)
+
+
+func pcrop(w: int = 360, h: int = 400) -> Rect2i:
+	var o: Vector2 = c.player_view.get_global_transform_with_canvas().origin
+	return Rect2i(int(o.x) - w / 2, int(o.y) + 100 - h * 3 / 4, w, h)
+
+
+func alog(tag: String) -> void:
+	var a: PlayerAnim = c.player_view.anim
+	print("ANIM ", tag, " bob=%.1f rot=%.3f sx=%.3f sy=%.3f turn=%.2f hit=%.2f" % [a.bob_px, a.body_rot, a.sx, a.sy, a.turn_x, a.hit])
+
+
+func _run(list: PackedStringArray) -> void:
+	await frames(5)
+	for sc in list:
+		match sc:
+			"walk":
+				await fresh()
+				tick(Vector2(1, 0), 30)
+				for k in 12:
+					tick(Vector2(1, 0), 2)
+					alog("walk%d" % k)
+					await shot("walk_%02d" % k, pcrop())
+			"stand":
+				await fresh()
+				tick(Vector2.ZERO, 30)
+				for k in 12:
+					tick(Vector2.ZERO, 12)
+					alog("stand%d" % k)
+					await shot("stand_%02d" % k, pcrop())
+			"turn":
+				await fresh()
+				tick(Vector2(1, 0), 30)
+				for k in 10:
+					tick(Vector2(-1, 0), 1)
+					alog("turn%d" % k)
+					await shot("turn_%02d" % k, pcrop())
+			"enemywalk":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_set_time(300.0)
+				var ids := [
+					sim.debug_spawn(&"curumus_piyade", sim.player_pos + Vector2(-260, -120)),
+					sim.debug_spawn(&"sovalye_hayaleti", sim.player_pos + Vector2(260, -120)),
+					sim.debug_spawn(&"elit_piyade", sim.player_pos + Vector2(0, 320)),
+				]
+				sim.max_hp = 1.0e9
+				for k in 12:
+					tick(Vector2.ZERO, 3)
+					var parts: Array = []
+					for id in ids:
+						var i := EnemyPool.index_of(id)
+						if sim.enemies.alive[i] == 1:
+							parts.append(i)
+					# tek geniş kırpma: oyuncu çevresi
+					await shot("ew_%02d" % k, crop_at(sim.player_pos + Vector2(0, 100), 900, 900))
+			"shadow":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_set_time(300.0)
+				sim.debug_spawn(&"curumus_piyade", sim.player_pos + Vector2(-260, -120))
+				sim.debug_spawn(&"curumus_piyade", sim.player_pos + Vector2(200, 160))
+				sim.debug_spawn(&"sovalye_hayaleti", sim.player_pos + Vector2(260, -220))
+				sim.debug_spawn(&"elit_piyade", sim.player_pos + Vector2(-100, 330))
+				sim.debug_spawn(&"elit_sovalye", sim.player_pos + Vector2(-330, 130))
+				sim.debug_spawn(&"les_kargasi", sim.player_pos + Vector2(100, -330))
+				tick()
+				c.enemy_shadows.visible = true
+				await shot("shadow_on", crop_at(sim.player_pos + Vector2(0, 80), 900, 900))
+				c.enemy_shadows.visible = false
+				await shot("shadow_off", crop_at(sim.player_pos + Vector2(0, 80), 900, 900))
+			"hit":
+				await fresh()
+				tick(Vector2.ZERO, 20)
+				for k in 14:
+					if k == 1:
+						c.sim.bus.player_damaged.emit(10.0, 90.0)
+					tick(Vector2.ZERO, 1)
+					alog("hit%d" % k)
+					await shot("hit_%02d" % k, pcrop())
+			"die":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_set_time(300.0)
+				sim.debug_fill(&"curumus_piyade", 12, 200.0)
+				tick(Vector2.ZERO, 20)
+				sim.max_hp = 100.0
+				sim.hp = 0.0
+				var t := 0
+				var shown := -1
+				for k in 130:
+					tick()
+					if k % 10 == 0:
+						await shot("die_%03d" % k, pcrop(500,400))
+					if shown < 0 and c.screen == PauseLogic.Screen.RESULT:
+						shown = k
+				print("DIE result screen at tick ", shown, " (", shown / 60.0, " s)")
+			"levelup":
+				await fresh()
+				var sim: GameSim = c.sim
+				tick(Vector2.ZERO, 10)
+				sim.debug_add_xp(30)
+				for k in 24:
+					tick()
+					if k % 3 == 0:
+						await shot("lv_%02d" % k, crop_at(sim.player_pos, 500, 500))
+				print("LV state ", sim.state, " screen ", c.screen)
+			"toast":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.hp = 50.0
+				sim.max_hp = 100.0
+				sim.debug_spawn_pickup(&"kizil_iksir", sim.player_pos + Vector2(30, 0))
+				tick()
+				sim.debug_collect_pickups()
+				for k in 20:
+					tick()
+					if k % 3 == 0:
+						await shot("toast_%02d" % k, Rect2i(0, 900, 1080, 700))
+				sim.debug_spawn_pickup(&"ofke_barutu", sim.player_pos)
+				sim.debug_collect_pickups()
+				for k in 12:
+					tick()
+					if k % 4 == 0:
+						await shot("toast2_%02d" % k, Rect2i(0, 900, 1080, 700))
+				await shot("toast2_hud")
+			"bombfuse":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_set_time(300.0)
+				sim.debug_fill(&"curumus_piyade", 18, 230.0)
+				tick()
+				sim.debug_spawn_pickup(&"kara_bomba", sim.player_pos + Vector2(20, 0))
+				sim.debug_collect_pickups()
+				for k in 60:
+					tick()
+					if k in [2, 12, 24, 36, 44, 46, 48, 50, 56]:
+						await shot("bomb_%02d" % k, crop_at(sim.player_pos, 1000, 1000))
+			"buffend":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_spawn_pickup(&"ofke_barutu", sim.player_pos)
+				sim.debug_collect_pickups()
+				tick(Vector2.ZERO, 12 * 60 - 200)
+				for k in 8:
+					tick(Vector2.ZERO, 8)
+					await shot("bend_%02d" % k, Rect2i(0, 2050, 700, 350))
+			"notch":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_set_time(900.0)
+				for id in [&"ofke_barutu", &"kizgin_namlu", &"sonsuz_tambur"]:
+					sim.debug_spawn_pickup(id, sim.player_pos)
+				sim.debug_collect_pickups()
+				sim.debug_spawn_pickup(&"kara_bomba", sim.player_pos + Vector2(-1100, 1700))
+				sim.debug_spawn(&"kale_lordu", sim.player_pos + Vector2(0, -420))
+				tick(Vector2.ZERO, 5)
+				for i in 12:
+					sim.score.on_kill(&"curumus_piyade", sim.step_count)
+				sim.score.on_kill(&"elit_karga", sim.step_count)
+				sim.bus.score_changed.emit(sim.score.total(), sim.score.mult, 1500)
+				c.hud.show_boss_band(&"kale_lordu")
+				tick(Vector2.ZERO, 3)
+				await shot("lord_hud")
+				var e := Vector4(48, 130, 48, 80)
+				c.hud.apply_safe_area(e)
+				tick(Vector2.ZERO, 2)
+				await shot("notch_hud")
+				c.go_menu()
+				c.menu.apply_safe_area(e)
+				await frames(10)
+				await shot("notch_menu")
+				c.open_scores()
+				c.scores_screen.apply_safe_area(e)
+				await frames(20)
+				await shot("notch_scores")
+			"crowd300":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_set_time(900.0)
+				sim.debug_fill(&"curumus_piyade", 150, 420.0)
+				sim.debug_fill(&"les_kargasi", 100, 520.0)
+				sim.debug_fill(&"sovalye_hayaleti", 50, 600.0)
+				sim.debug_spawn(&"elit_piyade", sim.player_pos + Vector2(200, 250))
+				for sk in [&"yelpaze_atis", &"seken_mermi", &"son_mermi_patlar"]:
+					sim.debug_grant(sk, 3)
+				tick(Vector2(0.3, 0.2), 150)
+				await shot("crowd300")
+				print("CROWD alive ", sim.alive_ids().size())
+			"pwalk":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_set_time(300.0)
+				var kinds := [&"curumus_piyade", &"elit_piyade", &"les_kargasi"]
+				for ki in kinds.size():
+					await fresh()
+					sim = c.sim
+					sim.debug_set_time(300.0)
+					sim.character.attack_range = 0.0
+					var id := sim.debug_spawn(kinds[ki], sim.player_pos + Vector2(120, -520))
+					var px := Vector2.ZERO
+					for k in 12:
+						tick(Vector2(0.0, 1.0), 4)
+						var i := EnemyPool.index_of(id)
+						if sim.enemies.alive[i] != 1:
+							break
+						var p: Vector2 = sim.enemies.pos[i]
+						await shot("pw%d_%02d" % [ki, k], crop_at(p + Vector2(0, -40), 300, 300))
+						print("PW ", ki, " ", k, " pos ", p, " d ", (p - px).length())
+						px = p
+			"crowdrand":
+				await fresh()
+				var sim: GameSim = c.sim
+				sim.debug_set_time(900.0)
+				var rng := RandomNumberGenerator.new()
+				rng.seed = 7
+				var kinds := [&"curumus_piyade", &"curumus_piyade", &"les_kargasi", &"sovalye_hayaleti"]
+				for k in 300:
+					var a := rng.randf() * TAU
+					var r := 160.0 + rng.randf() * 520.0
+					sim.debug_spawn(kinds[k % 4], sim.player_pos + Vector2.from_angle(a) * r)
+				sim.debug_spawn(&"elit_piyade", sim.player_pos + Vector2(250, 300))
+				sim.debug_grant(&"yelpaze_atis", 3)
+				tick(Vector2(0.3, 0.2), 20)
+				for k in 4:
+					tick(Vector2(0.3, 0.2), 6)
+					await shot("cr_%d" % k)
+				print("CR alive ", sim.alive_ids().size())
+			"delay":
+				await fresh()
+				var sim: GameSim = c.sim
+				tick(Vector2.ZERO, 5)
+				sim.max_hp = 100.0
+				sim.hp = 0.0
+				var k := 0
+				while c.screen != PauseLogic.Screen.RESULT and k < 400:
+					tick()
+					k += 1
+				print("LOSE delay ticks ", k)
+				await fresh()
+				sim = c.sim
+				tick(Vector2.ZERO, 5)
+				sim.end_mode = GameSim.END_MODE_TIMER
+				sim.end_time = 0.0
+				k = 0
+				while c.screen != PauseLogic.Screen.RESULT and k < 400:
+					tick()
+					k += 1
+				print("WIN delay ticks ", k, " state ", sim.state)
+	quit()
