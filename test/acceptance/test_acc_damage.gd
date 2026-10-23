@@ -101,7 +101,7 @@ func test_kill_drops_gem_with_enemy_xp_and_collecting_gives_xp() -> void:
 	)
 	assert_eq(sim.kills, 1)
 	var kill := SimKit.last_event(sim, SimEvents.KILL)
-	assert_eq(kill.get("type", &""), &"curumus_piyade")
+	assert_eq(kill.get("enemy_type", &""), &"curumus_piyade")
 	var dropped := SimKit.last_event(sim, SimEvents.GEM_DROPPED)
 	assert_eq(int(dropped.get("value", -1)), 1, "piyade XP'si 1")
 	assert_eq(sim.xp, 0, "taş toplanana kadar XP yok")

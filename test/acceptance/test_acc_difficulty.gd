@@ -77,7 +77,7 @@ func _measure_window(start: float) -> Dictionary:
 			over_cap += 1
 	var piyade_spawns := 0
 	for e in SimKit.events(sim, SimEvents.SPAWN):
-		if e["type"] == &"curumus_piyade":
+		if e["enemy_type"] == &"curumus_piyade":
 			piyade_spawns += 1
 	return {"spawns": piyade_spawns, "max_alive": max_alive, "over_cap": over_cap}
 
@@ -127,7 +127,7 @@ func test_spawned_enemy_hp_scales_with_difficulty() -> void:
 			if checked >= 3:
 				break
 			for e in SimKit.events(sim, SimEvents.SPAWN):
-				if int(e["step"]) == sim.step_count and e["type"] == &"curumus_piyade":
+				if int(e["step"]) == sim.step_count and e["enemy_type"] == &"curumus_piyade":
 					var hp := SimKit.enemy_hp(sim, int(e["id"]))
 					if hp > 0.0:
 						checked += 1
@@ -145,7 +145,7 @@ func test_spawn_rate_matches_wave_table_roughly() -> void:
 	SimKit.run(sim, 1800)
 	var n := 0
 	for e in SimKit.events(sim, SimEvents.SPAWN):
-		if e["type"] == &"curumus_piyade":
+		if e["enemy_type"] == &"curumus_piyade":
 			n += 1
 	assert_between(n, 15, 40, "0-30 sn piyade doğuşu ~25")
 	var sim2 := SimKit.make(94, {"data_kind": "real", "start_time": 1100.0})
@@ -153,6 +153,6 @@ func test_spawn_rate_matches_wave_table_roughly() -> void:
 	SimKit.run(sim2, 1800)
 	var n2 := 0
 	for e in SimKit.events(sim2, SimEvents.SPAWN):
-		if e["type"] == &"curumus_piyade":
+		if e["enemy_type"] == &"curumus_piyade":
 			n2 += 1
 	assert_between(n2, 70, 130, "1100-1130 sn piyade doğuşu ~ 3,4/sn x 30 = ~100")
