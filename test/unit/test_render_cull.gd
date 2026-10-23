@@ -3,6 +3,8 @@ extends GutTest
 ## konumlar (toplama + ölüm aynı adımda dahil). Kesme dikdörtgeni düzeltmesi (RenderFix) açık/kapalı çalışır.
 
 const STEPS := 600
+## v1.1 bob/itme payı (px): tampon merkezi = sim konumu ± bu kadar.
+const POS_TOL := 16.0
 
 
 func after_each() -> void:
@@ -22,9 +24,10 @@ func _check_enemies(sim: GameSim, r: EnemyRenderer, label: String) -> void:
 		if sim.enemies.alive[i] != 1:
 			continue
 		var o := n * EnemyRenderer.STRIDE
+		# v1.1: hareket dönüşüme yazılır (bob/itme/squash); merkez sim konumundan en çok ±16 px ayrışır (plan D1).
 		if (
-			absf(buf[o + 3] - sim.enemies.pos[i].x) > 0.01
-			or absf(buf[o + 7] - sim.enemies.pos[i].y) > 0.01
+			absf(buf[o + 3] - sim.enemies.pos[i].x) > POS_TOL
+			or absf(buf[o + 7] - sim.enemies.pos[i].y) > POS_TOL
 		):
 			fail_test("%s: düşman %d konumu buffer'da farklı" % [label, i])
 			return
