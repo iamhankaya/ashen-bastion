@@ -14,6 +14,10 @@ const RIM_COLOR := Color(0.74, 0.64, 0.47)  # ekranda hedef kontur kalınlığı
 const RIM_ELITE_SCREEN_PX := 2.5
 const SHADOW_W := 0.8  # gölge genişliği / sprite genişliği
 const SHADOW_H := 0.2  # gölge yüksekliği / gölge genişliği
+const SHADOW_W_ELITE := 1.0  # elit/Lord: gölge sprite kadar geniş (V-01)
+const SHADOW_H_ELITE := 0.26
+const SHADOW_FOOT_TUCK := 1.0  # elit/Lord gölge merkezi gerçek ayağın bu kadar altında
+const SHADOW_ELITE_HOVER_MAX := 8.0  # kuşsuz elit/Lord: gölge yerden en çok bu kadar ayrılır (ayak <= 10 px)
 const SHADOW_FLY_SCALE := 0.15  # yükseldikçe en çok %15 küçülür
 const SHADOW_FLY_ALPHA := 0.30  # ve en çok %30 soluklaşır
 const CHARGE_PREP := 0.35  # elit karga şarj hazırlığı (E4b): ai_timer < 0,35
@@ -64,6 +68,11 @@ var _t_cell := PackedFloat32Array()
 var _t_rim := PackedFloat32Array()
 var _t_elite := PackedFloat32Array()
 var _t_sw := PackedFloat32Array()
+var _t_sh := PackedFloat32Array()  # gölge yüksekliği / genişliği
+var _t_shov := PackedFloat32Array()  # gölgenin zeminden ayrılması (hover; kuşsuz elitte sınırlı)
+var _t_glift := PackedFloat32Array()  # gölge merkezinin dörtgen altından yukarı kayması (dünya px)
+var _foot_by_type := PackedFloat32Array()  # gerçek ayak: konumun bu kadar altı (dünya px)
+var _margin_by_type := PackedFloat32Array()  # atlas payı (dünya px): dörtgen altı − gerçek ayak
 var _t_alpha_var := PackedByteArray()
 var _cap: int = EnemyPool.CAP
 var _fx: FxRenderer = null
@@ -102,7 +111,23 @@ func bind(sim: GameSim) -> void:
 	_rim_by_type.clear()
 	_elite_by_type.clear()
 	_sprite_w_by_type.clear()
-	for arr in [_t_qx, _t_qy, _t_r, _t_g, _t_b, _t_a, _t_cell, _t_rim, _t_elite, _t_sw]:
+	for arr in [
+		_t_qx,
+		_t_qy,
+		_t_r,
+		_t_g,
+		_t_b,
+		_t_a,
+		_t_cell,
+		_t_rim,
+		_t_elite,
+		_t_sw,
+		_t_sh,
+		_t_shov,
+		_t_glift,
+		_foot_by_type,
+		_margin_by_type
+	]:
 		arr.clear()
 	_t_alpha_var.clear()
 	last_anim_instances = 0
@@ -150,6 +175,8 @@ func bind(sim: GameSim) -> void:
 			Vector2(sprite_w, sprite_h) + Vector2(2 * EnemyAtlas.MARGIN, 2 * EnemyAtlas.MARGIN)
 		)
 		_quad_by_type.append(tight * world_per_texel)
+		_foot_by_type.append(h * 0.5)
+		_margin_by_type.append(float(EnemyAtlas.MARGIN) * world_per_texel)
 		_sprite_w_by_type.append(sprite_w * world_per_texel)
 		_tint_by_type.append(tint)
 		_cell_by_type.append(cell)
@@ -170,7 +197,20 @@ func bind(sim: GameSim) -> void:
 		_t_cell.append(float(_cell_by_type[t]))
 		_t_rim.append(_rim_by_type[t])
 		_t_elite.append(_elite_by_type[t])
-		_t_sw.append(_sprite_w_by_type[t] * SHADOW_W)
+		# gerçek ayak = dörtgen altı − atlas payı (MARGIN texel); elit/Lord gölgesi oraya oturur (V-01)
+		var margin_px := _margin_by_type[t]
+		var hov := anim.hover_t[t]
+		if _t_elite[t] > 0.0 and anim.kind_t[t] != EnemyAnim.Kind.FLAP:
+			hov = minf(hov, SHADOW_ELITE_HOVER_MAX)
+		_t_shov.append(hov)
+		if _t_elite[t] > 0.0:
+			_t_sw.append(_sprite_w_by_type[t] * SHADOW_W_ELITE)
+			_t_sh.append(SHADOW_H_ELITE)
+			_t_glift.append(maxf(margin_px - SHADOW_FOOT_TUCK, 0.0))
+		else:
+			_t_sw.append(_sprite_w_by_type[t] * SHADOW_W)
+			_t_sh.append(SHADOW_H)
+			_t_glift.append(0.0)
 		_t_alpha_var.append(1 if anim.alpha_lo_t[t] < 1.0 else 0)
 
 
@@ -192,6 +232,11 @@ func cell_of(t: int) -> int:
 
 func rim_of(t: int) -> float:
 	return _rim_by_type[t] if t >= 0 and t < _rim_by_type.size() else 0.0
+
+
+## Tür başına gerçek ayak çizgisi: düşman konumunun bu kadar altı (dünya px; atlas payı dışarıda).
+func foot_of(t: int) -> float:
+	return _foot_by_type[t] if t >= 0 and t < _foot_by_type.size() else 55.0
 
 
 ## Tür başına sprite genişliği (dünya px; paysız) — gölge genişliği buna göre.
@@ -232,7 +277,6 @@ func refresh() -> void:
 	var rots := an.rot_t
 	var sqs := an.sq_t
 	var leans := an.lean_t
-	var hovers := an.hover_t
 	var frames_t := _frames_by_type
 	var ntypes := _t_qx.size()
 	var n := 0
@@ -385,8 +429,8 @@ func refresh() -> void:
 		# gölge (E0): aynı döngüde; uçan türde sabit zeminde, yükseldikçe küçülür/solar
 		var sw := _t_sw[t]
 		var sa := EnemyShadowLayer.SHADOW_ALPHA
-		var gy := py + foot
-		var hover := hovers[t]
+		var gy := py + foot - _t_glift[t]
+		var hover := _t_shov[t]
 		if hover > 0.0 and not framed_walk:
 			var h01 := clampf(0.5 + 0.5 * bob / maxf(bobs[t], 1.0), 0.0, 1.0)
 			sw *= 1.0 - SHADOW_FLY_SCALE * h01
@@ -395,7 +439,7 @@ func refresh() -> void:
 		var so := n * EnemyShadowLayer.STRIDE
 		_sbuf[so] = sw
 		_sbuf[so + 3] = px
-		_sbuf[so + 5] = sw * SHADOW_H
+		_sbuf[so + 5] = sw * _t_sh[t]
 		_sbuf[so + 7] = gy
 		_sbuf[so + 11] = sa
 		n += 1

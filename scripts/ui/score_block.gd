@@ -30,6 +30,7 @@ const CHIP_MIN_W := 160.0
 const GAIN_Y := 110.0
 const GAIN_W := 220.0
 const CHIP_PAD := 16.0
+const GAIN_GAP := 12.0  # kazanç başlığı ile SERİ çipi (pop tepesinde de) arasındaki en az boşluk
 const BAR_H := 5.0
 
 var label_skor: Label
@@ -154,7 +155,6 @@ func _layout() -> void:
 	value_label.size.x = w
 	value_label.pivot_offset = Vector2(w, 38.0)
 	_layout_chip(maxi(_chip_mult, 2))
-	gain_label.position = Vector2(w - CHIP_MIN_W - 16.0 - GAIN_W, GAIN_Y)
 
 
 func _layout_chip(mult_n: int) -> void:
@@ -163,6 +163,9 @@ func _layout_chip(mult_n: int) -> void:
 	chip.size = Vector2(w, CHIP_H)
 	chip.position = Vector2(right - w, CHIP_Y)
 	chip.pivot_offset = Vector2(w, CHIP_H * 0.5)
+	# sağ pivotlu pop çipi sola büyür: başlık, pop tepesindeki sol kenarın GAIN_GAP gerisinde biter
+	if gain_label != null:
+		gain_label.position = Vector2(right - w * CHIP_POP_SCALE - GAIN_GAP - GAIN_W, GAIN_Y)
 
 
 func bind(sim: GameSim) -> void:

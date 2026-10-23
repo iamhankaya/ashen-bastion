@@ -6,6 +6,9 @@ extends MultiMeshInstance2D
 
 const STRIDE := 12
 const SHADOW_ALPHA := 0.38
+## Ekrandaki tepe opaklık = SHADOW_ALPHA × GAIN (≈0,84). Tampon α'sı (0,38) kabul testlerinde sabit; kazanç shader'dadır (V-01).
+const GAIN := 2.2
+const SHADER_PATH := "res://assets/shaders/shadow_gain.gdshader"
 
 
 func _init() -> void:
@@ -16,7 +19,12 @@ func _init() -> void:
 	mm.instance_count = EnemyPool.CAP
 	mm.visible_instance_count = 0
 	multimesh = mm
-	texture = PlaceholderArt.soft_circle(128)
+	texture = PlaceholderArt.shadow_disc(128)
+	if ResourceLoader.exists(SHADER_PATH):
+		var mat := ShaderMaterial.new()
+		mat.shader = load(SHADER_PATH)
+		mat.set_shader_parameter("gain", GAIN)
+		material = mat
 	RenderFix.apply(self)
 
 

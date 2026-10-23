@@ -7,6 +7,7 @@ const ENEMY_SIZE := 128
 const GEM_SIZE := 48
 const BULLET_SIZE := Vector2i(64, 24)
 const GROUND_SIZE := 256
+const SHADOW_CORE := 0.55
 
 static var _cache: Dictionary = {}
 
@@ -230,7 +231,23 @@ static func arm_texture() -> Texture2D:
 	return tex
 
 
-## Yumuşak daire (gölge/parlama).
+## Yer gölgesi diski: ortada düz (yarıçapın SHADOW_CORE'u), kenara yumuşak düşer; soft_circle'dan çok daha dolgun.
+static func shadow_disc(size: int = 128) -> Texture2D:
+	var key := "shadow_%d" % size
+	if _cache.has(key):
+		return _cache[key]
+	var img := Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
+	var c := float(size) * 0.5
+	for y in size:
+		for x in size:
+			var d := Vector2(x + 0.5 - c, y + 0.5 - c).length() / c
+			img.set_pixel(x, y, Color(1, 1, 1, 1.0 - smoothstep(SHADOW_CORE, 1.0, d)))
+	var tex := ImageTexture.create_from_image(img)
+	_cache[key] = tex
+	return tex
+
+
+## Yumuşak daire (parlama).
 static func soft_circle(size: int = 64) -> Texture2D:
 	var key := "soft_%d" % size
 	if _cache.has(key):

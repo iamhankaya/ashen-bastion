@@ -11,6 +11,9 @@ const RUN_OPTS := {"end_mode": "lord", "end_time": 1200.0}
 const WON_SUB := "Şafak söktü; kale seni yutamadı."
 const DAMAGE_VIBRATE_MS := 25
 const LORD_ID := &"kale_lordu"
+## Debug etiketleri sağ altta: sol alttaki rozet satırı (x ≤ 579 + çentik) ve tamburu örtmez (V-09).
+const DEBUG_LABEL_X := 636.0
+const DEBUG_LABEL_W := 408.0
 const LORD_SLAM_RING_SEC := 0.45
 ## Öfkeli Lord kor aurası (E9): en çok 20 parçacık/sn.
 const LORD_EMBER_RATE := 18.0
@@ -166,8 +169,9 @@ func _build_render_debug() -> void:
 		return
 	_render_label = Label.new()
 	_render_label.name = "RenderDebug"
-	_render_label.position = Vector2(300, 2236)
-	_render_label.size = Vector2(480, 96)
+	_render_label.position = Vector2(DEBUG_LABEL_X, 2132)
+	_render_label.size = Vector2(DEBUG_LABEL_W, 120)
+	_render_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_render_label.add_theme_font_size_override(&"font_size", 26)
 	_render_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
 	_render_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
@@ -427,6 +431,7 @@ func _on_choice(index: int) -> void:
 	if screen != PauseLogic.Screen.LEVEL_UP or sim == null:
 		return
 	sim.choose(index)
+	player_view.on_level_chosen()
 	if sim.state == GameSim.State.LEVEL_UP:
 		_show_level_up()
 	elif sim.state == GameSim.State.RUNNING:
@@ -624,8 +629,9 @@ func _v11_build_escape_debug() -> void:
 		return
 	_escape_label = Label.new()
 	_escape_label.name = "EscapeDebug"
-	_escape_label.position = Vector2(300, 2334)
-	_escape_label.size = Vector2(480, 64)
+	_escape_label.position = Vector2(DEBUG_LABEL_X, 2264)
+	_escape_label.size = Vector2(DEBUG_LABEL_W, 72)
+	_escape_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_escape_label.add_theme_font_size_override(&"font_size", 24)
 	_escape_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
 	_escape_label.add_theme_color_override(&"font_outline_color", Color.BLACK)

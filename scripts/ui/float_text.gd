@@ -8,6 +8,9 @@ const TIME := 0.7
 const RISE := 60.0
 const FONT_SIZE := 44
 const SHADOW := 3.0
+## Aynı yerde art arda toplanan başlıklar arasındaki en az dikey aralık; yeni başlık aralığı bozuyorsa aşağı itilir (V-02).
+const ROW := 48.0
+const ROW_REACH_X := 360.0
 
 var _text: Array[String] = ["", "", ""]
 var _pos := PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO])
@@ -25,10 +28,33 @@ func show_text(text: String, world_to_screen_pos: Vector2) -> void:
 		return
 	visible = true
 	_text[_head] = UiKit.upper_tr(text)  # idempotent: zaten büyükse değişmez
-	_pos[_head] = world_to_screen_pos
+	_pos[_head] = _free_slot_pos(world_to_screen_pos)
 	_left[_head] = TIME
 	_head = (_head + 1) % POOL
 	queue_redraw()
+
+
+## Etkin başlıkların doğuş satırlarından ROW'dan yakın olmayan en yakın alt konum (en çok POOL itme). Hepsi aynı RISE kadar
+## yükseldiğinden ve eskisi yenisinden önde olduğundan, doğuş satırı farkı yaşam boyu aralığın alt sınırıdır.
+func _free_slot_pos(want: Vector2) -> Vector2:
+	var p := want
+	for _pass in POOL:
+		var moved := false
+		for i in POOL:
+			if i == _head or _left[i] <= 0.0 or absf(_pos[i].x - p.x) >= ROW_REACH_X:  # _head ezilecek
+				continue
+			if absf(_pos[i].y - p.y) < ROW:
+				p.y = _pos[i].y + ROW
+				moved = true
+		if not moved:
+			break
+	return p
+
+
+## i. başlığın güncel ekran y'si (yükselme dahil; denetim orijini hariç).
+func draw_y(i: int) -> float:
+	var u := progress_of(i)
+	return _pos[i].y - RISE * (1.0 - pow(1.0 - u, 3.0))
 
 
 ## Etkin (süresi dolmamış) başlık sayısı.
@@ -64,7 +90,7 @@ func _draw() -> void:
 		if _left[i] <= 0.0:
 			continue
 		var u := progress_of(i)
-		var p := _pos[i] - origin + Vector2(0.0, -RISE * (1.0 - pow(1.0 - u, 3.0)))
+		var p := Vector2(_pos[i].x - origin.x, draw_y(i) - origin.y)
 		var a := 1.0 if u < 0.6 else 1.0 - (u - 0.6) / 0.4
 		var tw := f.get_string_size(_text[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
 		var tp := p - Vector2(tw * 0.5, 0.0)

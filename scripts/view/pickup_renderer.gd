@@ -117,6 +117,11 @@ func refresh(dt: float) -> void:
 # --- saf yardımcılar (testli) ---------------------------------------------------------------
 
 
+## Zemin parlaması dokusu: ortada dolu, kenarda sıfıra yumuşak düşen (sert kenarlı plaka gibi görünmez, V-07).
+static func glow_texture() -> Texture2D:
+	return PlaceholderArt.soft_circle(128)
+
+
 static func rarity_color(rarity: StringName) -> Color:
 	match rarity:
 		&"rare":
@@ -310,8 +315,12 @@ func _draw_glow() -> void:
 		_glow.draw_set_transform(
 			p + Vector2(0.0, 22.0), 0.0, Vector2(1.0, GLOW_SIZE.y / GLOW_SIZE.x)
 		)
-		_glow.draw_circle(
-			Vector2.ZERO, GLOW_SIZE.x * 0.5 * s, Color(col, GLOW_ALPHA * pulse * a * 0.6)
+		var gr := GLOW_SIZE.x * 0.5 * s
+		_glow.draw_texture_rect(
+			glow_texture(),
+			Rect2(Vector2(-gr, -gr), Vector2(gr, gr) * 2.0),
+			false,
+			Color(col, GLOW_ALPHA * pulse * a)
 		)
 		_glow.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		if pk.age_steps[i] < 18:  # doğma halkası 0 → 90 px (300 ms)
