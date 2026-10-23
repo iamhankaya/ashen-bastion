@@ -1,0 +1,61 @@
+extends SceneTree
+var OUT := ""
+var c
+var L: Array = []
+func shot(n: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(OUT + n + ".png")
+func fr(n: int) -> void:
+	for i in n: await process_frame
+func rects(tag: String, node: Node) -> void:
+	var out: Array = []
+	_col(node, out)
+	L.append("RECTS %s %s" % [tag, JSON.stringify(out)])
+func _col(n: Node, out: Array) -> void:
+	if n is Control and n.is_visible_in_tree() and (n is Button or n is Label or n is Range):
+		var r: Rect2 = n.get_global_rect()
+		out.append([n.get_class(), (n.text if "text" in n else ""), snappedf(r.position.x,1), snappedf(r.position.y,1), snappedf(r.size.x,1), snappedf(r.size.y,1)])
+	for ch in n.get_children(): _col(ch, out)
+func _initialize() -> void:
+	OUT = OS.get_cmdline_user_args()[0]
+	_run()
+func fresh() -> void:
+	if c != null:
+		c.queue_free(); await process_frame
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await fr(3)
+func adv(n: int, mv := Vector2.ZERO) -> void:
+	var s = c.sim
+	for i in n:
+		if s.state == GameSim.State.LEVEL_UP: s.choose(0)
+		if s.state != GameSim.State.RUNNING: break
+		s.hp = s.max_hp
+		s.step(mv)
+	c._after_step()
+func _run() -> void:
+	await fresh(); c.start_run(); await fr(3)
+	c.sim.max_hp = 100.0
+	for k in 20: c.sim.step(Vector2.ZERO)
+	c.sim.hp = 18.0
+	await fr(10)
+	await shot("n-dusuk-can")
+	# elit + lord çubuğu
+	c.sim.hp = 100.0
+	c.sim.debug_spawn(&"kale_lordu", c.sim.player_pos + Vector2(0, -600))
+	c.hud.show_boss_band(&"kale_lordu")
+	await fr(30)
+	await shot("o-lord-cubugu")
+	# şifa kartı + tek kart
+	await fresh(); c.start_run(); await fr(3)
+	var ch := Choice.new()
+	ch.kind = Choice.KIND_HEAL; ch.skill_id = &"heal"; ch.title = "Şifa"; ch.desc = "Azami canın %25'i kadar can yenilenir."; ch.icon = "placeholder:heal"
+	c.level_up.show_choices([ch], 5, c.sim.data)
+	c._set_screen(PauseLogic.Screen.LEVEL_UP)
+	await fr(60)
+	await shot("p-sifa")
+	rects("heal", c.level_up)
+	var f := FileAccess.open(OUT + "log2.txt", FileAccess.WRITE)
+	f.store_string("\n".join(L)); f.close()
+	quit()

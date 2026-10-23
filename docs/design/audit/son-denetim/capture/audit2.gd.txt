@@ -1,0 +1,65 @@
+extends SceneTree
+var OUT := ""
+var c
+var L: Array = []
+func shot(n: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(OUT + n + ".png")
+func fr(n: int) -> void:
+	for i in n: await process_frame
+func rects(tag: String, node: Node) -> void:
+	var out: Array = []
+	_col(node, out)
+	L.append("RECTS %s %s" % [tag, JSON.stringify(out)])
+func _col(n: Node, out: Array) -> void:
+	if n is Control and n.is_visible_in_tree() and (n is Button or n is Label or n is Range):
+		var r: Rect2 = n.get_global_rect()
+		out.append([n.get_class(), (n.text if "text" in n else ""), snappedf(r.position.x,1), snappedf(r.position.y,1), snappedf(r.size.x,1), snappedf(r.size.y,1)])
+	for ch in n.get_children(): _col(ch, out)
+func _initialize() -> void:
+	OUT = OS.get_cmdline_user_args()[0]
+	_run()
+func fresh() -> void:
+	if c != null:
+		c.queue_free(); await process_frame
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await fr(3)
+func adv(n: int, mv := Vector2.ZERO) -> void:
+	var s = c.sim
+	for i in n:
+		if s.state == GameSim.State.LEVEL_UP: s.choose(0)
+		if s.state != GameSim.State.RUNNING: break
+		s.hp = s.max_hp
+		s.step(mv)
+	c._after_step()
+func _t(i: int, pr: bool, pos: Vector2) -> void:
+	var e := InputEventScreenTouch.new(); e.index = i; e.pressed = pr; e.position = pos
+	Input.parse_input_event(e)
+func _d(i: int, pos: Vector2) -> void:
+	var e := InputEventScreenDrag.new(); e.index = i; e.position = pos
+	Input.parse_input_event(e)
+func _run() -> void:
+	await fresh(); c.start_run(); await fr(3)
+	c.sim.max_hp = 100.0; c.sim.hp = 100.0
+	c.sim.debug_set_time(840.0)
+	for k in 1500:
+		c.sim.hp = c.sim.max_hp
+		if c.sim.state == GameSim.State.LEVEL_UP: c.sim.choose(0)
+		c.sim.step(Vector2(0.3,0.2))
+	c._after_step(); await fr(3)
+	await shot("j-gec-yogun")
+	c.sim.hp = 18.0; c.hud.refresh(0.016)
+	c.sim.state = c.sim.state
+	await shot("k-dusuk-can-0")
+	await fr(6)
+	c.sim.hp = 18.0
+	await shot("k-dusuk-can")
+	c.hud.show_boss_band(&"kale_lordu"); await fr(20)
+	await shot("l-boss-bandi-gec")
+	var o := Vector2(540, 1750)
+	_t(0, true, o); _d(0, o + Vector2(140, -80)); await fr(20)
+	await shot("m-joystick")
+	_t(0, false, o)
+	quit()
