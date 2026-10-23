@@ -1,0 +1,35 @@
+; Ashen Bastion — Godot proje dosyası (sahip: C0; sonrakiler yalnız kendi satırını ekler)
+config_version=5
+
+[application]
+
+config/name="Ashen Bastion"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+run/max_fps=60
+config/icon="res://icon.svg"
+
+[autoload]
+
+Events="*res://scripts/autoload/events.gd"
+Settings="*res://scripts/autoload/settings.gd"
+
+[display]
+
+window/size/viewport_width=1080
+window/size/viewport_height=2400
+window/size/window_width_override=360
+window/size/window_height_override=800
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+window/vsync/vsync_mode=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+pointing/emulate_mouse_from_touch=false
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
