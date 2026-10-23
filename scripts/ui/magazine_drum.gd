@@ -11,6 +11,8 @@ var count: int = 6
 var cap: int = 6
 var reloading: bool = false
 var progress: float = 0.0
+## Sınırsız şarjör (Sonsuz Tambur): ortada ∞, amber halka, tüm yuvalar amber dolu, doldurma halkası yok.
+var unlimited: bool = false
 
 var _pulse: float = 0.0
 
@@ -42,14 +44,18 @@ func tick(dt: float) -> void:
 		queue_redraw()
 
 
-## Sınırsız şarjör durumu (tambur ortasında ∞, amber halka). Gövde D2-3'te.
-@warning_ignore("unused_parameter")
+## Sınırsız şarjör durumu (tambur ortasında ∞, amber halka).
 func set_unlimited(on: bool) -> void:
-	Stub.todo(&"MagazineDrum.set_unlimited")
+	if on == unlimited:
+		return
+	unlimited = on
+	queue_redraw()
 
 
-## Ekran okuyucu/test için metin: "Şarjör 4 / 6" ya da "Şarjör dolduruluyor".
+## Ekran okuyucu/test için metin: "Şarjör 4 / 6", "Şarjör dolduruluyor" ya da "Şarjör sınırsız".
 func describe() -> String:
+	if unlimited:
+		return "Şarjör sınırsız"
 	return "Şarjör dolduruluyor" if reloading else "Şarjör %d / %d" % [count, cap]
 
 
@@ -65,8 +71,11 @@ func _draw() -> void:
 	var r := size.x * 0.5
 	var pulse := 1.0 + 0.06 * sin((1.0 - _pulse / PULSE_TIME) * PI) if _pulse > 0.0 else 1.0
 	draw_circle(c, r - 2.0, Color(UiKit.VOID, 0.82))
-	draw_arc(c, r - 3.0, 0.0, TAU, 64, UiKit.BRONZ_700, 4.0, true)
-	if reloading:
+	if unlimited:
+		draw_arc(c, r - 3.0, 0.0, TAU, 64, UiKit.AMBER, 6.0, true)
+	else:
+		draw_arc(c, r - 3.0, 0.0, TAU, 64, UiKit.BRONZ_700, 4.0, true)
+	if reloading and not unlimited:
 		draw_arc(c, r - 3.0, -PI * 0.5, -PI * 0.5 + TAU * progress, 64, UiKit.AMBER, 7.0, true)
 	# yuvalar
 	var slot_r := r * 0.64
@@ -74,13 +83,16 @@ func _draw() -> void:
 	for i in cap:
 		var a := -PI * 0.5 + TAU * float(i) / float(cap)
 		var p := c + Vector2.from_angle(a) * slot_r * pulse
-		var filled := slot_filled(i, count, cap, reloading)
+		var filled := unlimited or slot_filled(i, count, cap, reloading)
 		var col := UiKit.BRONZ_300 if filled else UiKit.MERMI_BOS
-		if filled and count == 1:
+		if unlimited or (filled and count == 1):
 			col = UiKit.AMBER
 		draw_circle(p, dot, col)
 		draw_arc(p, dot, 0.0, TAU, 16, Color(0, 0, 0, 0.6), 2.0, true)
 	# orta
+	if unlimited:
+		_draw_infinity(c, r * 0.34)
+		return
 	if reloading:
 		_draw_reload_glyph(c, r * 0.3)
 		return
@@ -119,3 +131,13 @@ func _draw_reload_glyph(c: Vector2, rad: float) -> void:
 		),
 		UiKit.AMBER
 	)
+
+
+## "∞" işareti: Bernoulli lemniskatı, polyline (U+221E glifi doğrulanmadı, kullanılmaz).
+func _draw_infinity(c: Vector2, half_w: float) -> void:
+	var pts := PackedVector2Array()
+	for k in 49:
+		var t := TAU * float(k) / 48.0
+		var den := 1.0 + sin(t) * sin(t)
+		pts.append(c + Vector2(cos(t) / den, sin(t) * cos(t) / den) * half_w * 1.41)
+	draw_polyline(pts, UiKit.AMBER, 8.0, true)

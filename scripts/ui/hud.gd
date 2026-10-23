@@ -399,6 +399,7 @@ func _bind_v11(sim: GameSim) -> void:
 
 
 func _refresh_v11(dt: float) -> void:
+	drum.set_unlimited(_sim.magazine.unlimited)
 	score_block.refresh(dt)
 	buff_row.refresh(dt)
 	offscreen_arrow.refresh(dt)
