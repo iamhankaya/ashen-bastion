@@ -139,10 +139,15 @@ func test_dt_zero_keeps_the_pose_still() -> void:
 	assert_eq(v.anim.knock_px, k, "duraklatmada (view_dt 0) animasyon donuk")
 
 
-func test_level_up_event_starts_the_ring() -> void:
+func test_level_up_event_starts_the_halo_and_the_choice_starts_the_ring() -> void:
+	# V-08: halka (P11 "Devam") kart seçilince başlar; seviye atlamada yalnız ön vurgu (halo) oynar
 	var sim := _sim()
 	var v := _view(sim)
 	sim.bus.level_up.emit(2)
+	v.update_view(DT)
+	assert_gt(v.anim.halo, 0.0)
+	assert_eq(v.anim.level_ring, -1.0, "ön vurguda halka yok")
+	v.on_level_chosen()
 	v.update_view(DT)
 	assert_gte(v.anim.level_ring, 0.0)
 

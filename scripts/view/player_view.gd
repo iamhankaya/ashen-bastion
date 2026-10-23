@@ -188,6 +188,7 @@ class MuzzleFlash:
 
 func _init() -> void:
 	y_sort_enabled = true
+	anim.defer_ring = true  # halka dalgası kart seçilince başlar (V-08)
 	_rng.seed = 7
 	shadow = Shadow.new()
 	shadow.name = "Shadow"
@@ -637,6 +638,11 @@ func _on_player_damaged(amount: float, _hp: float) -> void:
 
 func _on_level_up(_level: int) -> void:
 	anim.on_level_up()
+
+
+## Seviye kartı seçildi (denetleyici çağırır): halka dalgası şimdi başlar (V-08).
+func on_level_chosen() -> void:
+	anim.on_level_chosen()
 
 
 func _on_reload_finished() -> void:

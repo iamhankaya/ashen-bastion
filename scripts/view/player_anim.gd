@@ -115,6 +115,9 @@ var _hit_t: float = 9.0
 var _flash_gap: float = 9.0
 var _tint_t: float = 9.0
 var _lu_t: float = -1.0
+var _ring_t: float = -1.0
+## true: halka seviye atlamada değil, `on_level_chosen` (kart seçimi) ile başlar (DESIGN P11/F2, V-08). Varsayılan: halka `on_level_up`ta.
+var defer_ring: bool = false
 var _stop_t: float = 9.0
 var _won: bool = false
 var _death_t: float = 0.0
@@ -183,6 +186,7 @@ func reset() -> void:
 	_flash_gap = 9.0
 	_tint_t = 9.0
 	_lu_t = -1.0
+	_ring_t = -1.0
 	_stop_t = 9.0
 	_won = false
 	_death_t = 0.0
@@ -232,6 +236,15 @@ func on_level_up() -> void:
 	if mode == Mode.DEAD:
 		return
 	_lu_t = 0.0
+	if not defer_ring:
+		_ring_t = 0.0
+
+
+## Seviye kartı seçildi: ertelenmiş halka dalgası şimdi başlar (defer_ring kapalıysa etkisiz).
+func on_level_chosen() -> void:
+	if mode == Mode.DEAD or not defer_ring:
+		return
+	_ring_t = 0.0
 
 
 func on_buffs(mask: int) -> void:
@@ -251,6 +264,7 @@ func on_died(from_dir: Vector2) -> void:
 	else:
 		_fall_sign = 1.0 if _facing_left else -1.0
 	_lu_t = -1.0
+	_ring_t = -1.0
 	level_ring = -1.0
 	hit = 1.0
 	_set_idle_outputs()
@@ -489,22 +503,33 @@ func _update_hit(dt: float) -> void:
 ## Seviye atlama: ön vurgu (halo, altın ton) 180 ms tam, kalan sürede söner; halka 450 ms'de 0->180 px (cubic-out).
 ## Halka son değerinde bir kare daha kalır (450. ms'de 180 okunabilsin).
 func _update_level(dt: float) -> float:
+	var ring := Motion.sec(Motion.LEVELUP_RING)
+	_update_ring(dt, ring)
 	if _lu_t < 0.0:
-		level_ring = -1.0
 		halo = 0.0
 		return 0.0
 	_lu_t += dt
 	var pre := Motion.sec(Motion.LEVELUP_PREROLL)
-	var ring := Motion.sec(Motion.LEVELUP_RING)
 	if _lu_t >= ring + 1.0 / 60.0:
 		_lu_t = -1.0
-		level_ring = -1.0
 		halo = 0.0
 		return 0.0
 	var g := 1.0 if _lu_t < pre else clampf(1.0 - (_lu_t - pre) / (ring - pre), 0.0, 1.0)
 	halo = LEVEL_HALO * g
-	level_ring = LEVEL_RING_PX * (1.0 - pow(1.0 - clampf(_lu_t / ring, 0.0, 1.0), 3.0))
 	return g
+
+
+## Halka dalgası: kendi saati (_ring_t) ile 0->180 px; son değerinde bir kare daha kalır.
+func _update_ring(dt: float, ring: float) -> void:
+	if _ring_t < 0.0:
+		level_ring = -1.0
+		return
+	_ring_t += dt
+	if _ring_t >= ring + 1.0 / 60.0:
+		_ring_t = -1.0
+		level_ring = -1.0
+		return
+	level_ring = LEVEL_RING_PX * (1.0 - pow(1.0 - clampf(_ring_t / ring, 0.0, 1.0), 3.0))
 
 
 ## Hasar bordosu ile seviye altını arasında büyük olan kazanır.
