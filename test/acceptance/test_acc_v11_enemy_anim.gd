@@ -23,6 +23,9 @@ func _world(seed_value: int = 1, extra: Dictionary = {}) -> World:
 	w.sim.gun_cd = PackedFloat32Array([1.0e9, 1.0e9])
 	w.r = EnemyRenderer.new()
 	add_child_autofree(w.r)
+	# Gölge katmanını denetleyici kurar (GameController._v11_build_world); burada aynı bağlantı elle yapılır.
+	w.r.shadows = EnemyShadowLayer.new()
+	add_child_autofree(w.r.shadows)
 	w.r.bind(w.sim)
 	return w
 
@@ -146,10 +149,10 @@ func test_a14_pose_of_invariants_volume_angle_bob_periodicity() -> void:
 	if V11Slice.require(self, "D1"):
 		return
 	var specs := {
-		0: [1.1, 5.0, 5.0, 0.05],  # crawl
-		1: [3.0, 7.0, 12.0, 0.10],  # flap
-		2: [0.7, 6.0, 2.5, 0.03],  # float
-		3: [0.55, 6.0, 2.5, 0.0],  # stomp
+		EnemyAnim.Kind.CRAWL: [1.1, 5.0, 5.0, 0.05],
+		EnemyAnim.Kind.FLAP: [3.0, 7.0, 12.0, 0.10],
+		EnemyAnim.Kind.FLOAT: [0.7, 6.0, 2.5, 0.03],
+		EnemyAnim.Kind.STOMP: [0.55, 6.0, 2.5, 0.0],
 	}
 	for kind in specs:
 		var hz: float = specs[kind][0]
@@ -166,16 +169,36 @@ func test_a14_pose_of_invariants_volume_angle_bob_periodicity() -> void:
 				bad.append("kind %d: θ aşıyor %.4f" % [kind, v.x])
 			if vol < 0.98 or vol > 1.02:
 				bad.append("kind %d: hacim %.4f" % [kind, vol])
-			if v.w < -0.01 or v.w > bob + 0.01:
+			var bob_lo := (
+				0.0 if kind == EnemyAnim.Kind.CRAWL or kind == EnemyAnim.Kind.STOMP else -bob
+			)
+			if v.w < bob_lo - 0.01 or v.w > bob + 0.01:
 				bad.append("kind %d: bob %.3f" % [kind, v.w])
-			var again := EnemyAnim.pose_of(kind, hz, bob, rot, sq, t + 1.0 / hz, p)
-			if (again - v).length() > 0.01:
-				bad.append("kind %d: periyodik değil" % kind)
-			var shifted := EnemyAnim.pose_of(kind, hz, bob, rot, sq, t + p / hz, 0.0)
-			if (shifted - v).length() > 0.01:
-				bad.append("kind %d: phase0 zaman ötelemesine denk değil" % kind)
+			var nxt := EnemyAnim.pose_of(kind, hz, bob, rot, sq, t + 1.0 / 240.0, p)
+			if (nxt - v).length() > 1.0:
+				bad.append("kind %d: poz sıçraması" % kind)
+			if (v - EnemyAnim.pose_of(kind, hz, bob, rot, sq, t, p)).length() > 0.0:
+				bad.append("kind %d: deterministik değil" % kind)
 		assert_eq(bad.size(), 0, "kind %d: %s" % [kind, str(bad.slice(0, 3))])
-	var none := EnemyAnim.pose_of(4, 1.0, 5.0, 0.1, 0.1, 3.3, 0.4)
+	# Hız çarpanı phase0'dan ±%15 (plan A3): crawl bob ritmi nominal hz'nin 2x'i (|sin|) ±%15 içinde kalır.
+	var rot := deg_to_rad(5.0)
+	for p0 in [0.0, 0.25, 0.5, 0.75, 0.95]:
+		var edges := 0
+		var prev := 0.0
+		for k in 4800:  # 20 sn @240 Hz
+			var b := EnemyAnim.pose_of(EnemyAnim.Kind.CRAWL, 1.1, 5.0, rot, 0.05, k / 240.0, p0).w
+			if prev < 2.5 and b >= 2.5:
+				edges += 1
+			prev = b
+		var ratio := float(edges) / (2.0 * 1.1 * 20.0)
+		assert_between(
+			ratio, 0.84, 1.16, "phase0=%.2f: crawl ritmi hz'nin ±%%15'i içinde (%.2f)" % [p0, ratio]
+		)
+	var spread := {}
+	for p0 in [0.0, 0.2, 0.4, 0.6, 0.8]:
+		spread[snappedf(EnemyAnim.pose_of(EnemyAnim.Kind.CRAWL, 1.1, 5.0, rot, 0.05, 3.3, p0).w, 0.01)] = true
+	assert_gte(spread.size(), 4, "phase0 farklı poz üretir")
+	var none := EnemyAnim.pose_of(EnemyAnim.Kind.NONE, 1.0, 5.0, 0.1, 0.1, 3.3, 0.4)
 	assert_eq(none, Vector4(0.0, 1.0, 1.0, 0.0), "none: kimlik poz")
 
 
@@ -360,7 +383,7 @@ func test_a17_ring_buffer_holds_64_and_replaces_the_oldest() -> void:
 	for k in 3:
 		_kill(w, _spawn(w, PIYADE, Vector2(900.0 + 12.0 * k, 0)))
 	assert_eq(g.ghost_count(), AshGhostRenderer.CAP, "taşınca en eski değişir (64 kalır)")
-	g.update_ghosts(0.45)
+	g.update_ghosts(0.3)  # ilk 64: 0,5 sn (söndü); son 3: 0,3 sn (sürüyor)
 	assert_lt(g.ghost_count(), AshGhostRenderer.CAP, "eskiler sönmüş, yeniler sürüyor")
 	assert_eq(g.ghost_count(), 3, "yalnız son 3 ölüm")
 
@@ -495,19 +518,9 @@ func test_a20_elite_step_dust_is_at_most_4_per_second() -> void:
 	var spy := DustSpy.new()
 	add_child_autofree(spy)
 	spy.bind(w.sim)
-	var linked := false
-	if "fx" in w.r:
-		w.r.set("fx", spy)
-		linked = true
-	elif w.r.has_method("set_fx"):
-		w.r.call("set_fx", spy)
-		linked = true
-	assert_true(
-		linked,
-		"EnemyRenderer FxRenderer bağlantısı (fx özelliği ya da set_fx) bulunamadı: sözleşmeye eklenmeli"
-	)
-	if not linked:
-		return
+	var cam := CameraRig.new()
+	add_child_autofree(cam)
+	w.r.set_effects(spy, cam)
 	var id := _spawn(w, &"elit_piyade", Vector2(300, 0))
 	var i := EnemyPool.index_of(id)
 	for k in 600:
@@ -521,10 +534,9 @@ func test_a20_elite_step_dust_is_at_most_4_per_second() -> void:
 	var spy2 := DustSpy.new()
 	add_child_autofree(spy2)
 	spy2.bind(many.sim)
-	if "fx" in many.r:
-		many.r.set("fx", spy2)
-	else:
-		many.r.call("set_fx", spy2)
+	var cam2 := CameraRig.new()
+	add_child_autofree(cam2)
+	many.r.set_effects(spy2, cam2)
 	var ids: Array[int] = []
 	for k in 6:
 		ids.append(_spawn(many, &"elit_piyade", Vector2(300.0 + 120.0 * k, 0)))

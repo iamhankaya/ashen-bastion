@@ -247,20 +247,17 @@ func test_a4_turn_takes_70_ms_and_squeezes_to_0_25() -> void:
 	var a := _anim()
 	_run(a, 1.0, Vector2.ZERO, false)
 	assert_almost_eq(absf(a.turn_x), 1.0, 0.001, "dönüşten önce |sx| = 1")
-	var st := {"min": 10.0, "turning": 0.0}
-	_run(
-		a,
-		0.2,
-		Vector2.ZERO,
-		true,
-		-1.0,
-		func(_t: float) -> void:
-			st["min"] = minf(st["min"], absf(a.turn_x))
-			if absf(a.turn_x) < 0.999:
-				st["turning"] += DT
-	)
-	assert_almost_eq(st["min"], 0.25, 0.06, "orta noktada |sx| = 0,25")
-	assert_almost_eq(st["turning"], 0.07, 0.015, "dönüş süresi 70 ms")
+	# Orta noktada ayna atlaması olduğundan minimum ancak ince adımla (0,1 ms) yakalanır.
+	var fine := 0.0001
+	var min_abs := 10.0
+	var turning := 0.0
+	for i in int(0.2 / fine):
+		a.update(fine, Vector2.ZERO, true, -1.0)
+		min_abs = minf(min_abs, absf(a.turn_x))
+		if absf(a.turn_x) < 0.999:
+			turning += fine
+	assert_almost_eq(min_abs, 0.25, 0.03, "orta noktada |sx| = 0,25")
+	assert_almost_eq(turning, 0.07, 0.015, "dönüş süresi 70 ms")
 	assert_almost_eq(absf(a.turn_x), 1.0, 0.001, "dönüş sonunda |sx| = 1")
 
 
@@ -388,20 +385,16 @@ func test_a6_reload_phase_two_trembles_8_hz_plus_minus_10_degrees_body_sy_097() 
 		return
 	var a := _anim()
 	_run(a, 0.5)
-	_run(a, 0.3, Vector2.ZERO, false, 0.4)
+	# Gerçek doldurma gibi ilerleme zamanla artar (1 sn doldurma): %12-70 arası = 0,58 sn.
 	var vals: Array[float] = []
 	var sy_acc := [0.0, 0]
-	_run(
-		a,
-		1.0,
-		Vector2.ZERO,
-		false,
-		0.4,
-		func(_t: float) -> void:
-			vals.append(rad_to_deg(a.arm_rot[0]))
-			sy_acc[0] += a.sy
-			sy_acc[1] += 1
-	)
+	var p := 0.12
+	while p < 0.70:
+		a.update(DT, Vector2.ZERO, false, p)
+		vals.append(rad_to_deg(a.arm_rot[0]))
+		sy_acc[0] += a.sy
+		sy_acc[1] += 1
+		p += DT
 	var mean := 0.0
 	for v in vals:
 		mean += v
@@ -415,7 +408,14 @@ func test_a6_reload_phase_two_trembles_8_hz_plus_minus_10_degrees_body_sy_097() 
 		if i > 0 and (vals[i - 1] - mean) * (vals[i] - mean) < 0.0:
 			crossings += 1
 	assert_almost_eq((hi - lo) * 0.5, 10.0, 2.0, "titreme genliği +-10 derece")
-	assert_almost_eq(float(crossings) / 2.0, 8.0, 1.2, "titreme 8 Hz (%d geçiş/sn)" % crossings)
+	var secs := 0.58
+	assert_almost_eq(
+		float(crossings) / 2.0 / secs,
+		8.0,
+		1.2,
+		"titreme 8 Hz (%d geçiş / %.2f sn)" % [crossings, secs]
+	)
+	assert_almost_eq(abs(mean), 70.0, 4.0, "titreme 70 derece indirilmiş kol etrafında")
 	assert_almost_eq(sy_acc[0] / float(sy_acc[1]), 0.97, 0.015, "gövde sy 0,97")
 
 
