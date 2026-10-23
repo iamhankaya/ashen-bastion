@@ -207,6 +207,8 @@ func _load_all() -> void:
 func _read_dir(sub: String) -> Array[Dictionary]:
 	var res: Array[Dictionary] = []
 	var dir := root_dir.path_join(sub)
+	if not DirAccess.dir_exists_absolute(dir):
+		return res  # eksik dizin = boş (temiz checkout'ta boş dizinler git'te yoktur)
 	var files := DirAccess.get_files_at(dir)
 	var names: Array[String] = []
 	for f in files:

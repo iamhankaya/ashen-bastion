@@ -170,3 +170,14 @@ func test_load_default_is_cached() -> void:
 	var a := GameData.load_default()
 	assert_same(a, GameData.load_default())
 	GameData.clear_default_cache()
+
+
+func test_missing_record_directories_count_as_empty() -> void:
+	# temiz checkout'ta boş dizinler (ör. data/enemies) git'te yoktur
+	var dir := KitDev.data_dir()
+	for sub in ["enemies", "skills"]:
+		KitDev.remove_dir(dir.path_join(sub))
+	var g := GameData.load_dir(dir)
+	assert_eq(g.enemy_ids.size(), 0)
+	assert_eq(g.skill_ids.size(), 0)
+	assert_false(_has_code(g.validate(), "bad_json"))

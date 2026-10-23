@@ -48,6 +48,10 @@ static func copy_dir(src: String, dst: String) -> void:
 		copy_dir(src.path_join(d), dst.path_join(d))
 
 
+static func remove_dir(path: String) -> void:
+	_remove_recursive(ProjectSettings.globalize_path(path))
+
+
 static func remove_tmp() -> void:
 	_remove_recursive(ProjectSettings.globalize_path(TMP_ROOT))
 
