@@ -14,6 +14,11 @@ func before_all() -> void:
 	_rig_base = GameData.load_default().get_character(&"gunslinger").rig.duplicate(true)
 
 
+## `_view_run` paylaşılan GameData önbelleğindeki rig.walk'ı değiştirir ("real" = load_default): sızmasın.
+func after_each() -> void:
+	GameData.clear_default_cache()
+
+
 func _rig(frames: int = 0) -> Dictionary:
 	var rig := _rig_base.duplicate(true)
 	var w: Dictionary = rig.get("walk", {})
