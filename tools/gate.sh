@@ -65,12 +65,10 @@ fi
 
 if [ "${GATE_EXPORT:-0}" = "1" ]; then
   step "9. Debug APK"
-  if [ -f tools/ci/ensure_android_sdk.sh ]; then
-    bash tools/ci/ensure_android_sdk.sh || fail "android sdk"
-    mkdir -p build && "$GODOT_BIN" --headless --export-debug "Android" build/ab-debug.apk || fail "export"
-  else
-    echo "APK derlenmedi: ensure_android_sdk.sh yok (U1-10)"
-  fi
+  bash tools/ci/export_debug.sh > .gate/export.log 2>&1; rc=$?
+  tail -n 15 .gate/export.log
+  [ $rc -eq 3 ] && exit 3
+  [ $rc -eq 0 ] || fail "debug APK (bkz. .gate/export.log)"
 else
   echo "APK derlenmedi (GATE_EXPORT=1 değil)"
 fi
