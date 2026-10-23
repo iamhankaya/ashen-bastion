@@ -96,11 +96,13 @@ class Glow:
 ## Ayak altı gölge elipsi.
 class Shadow:
 	extends Node2D
+	## Tepe opaklık: düşman gölgesiyle aynı ekran değeri (SHADOW_ALPHA × GAIN); aynı dolgun doku (V-01).
+	const ALPHA := EnemyShadowLayer.SHADOW_ALPHA * EnemyShadowLayer.GAIN
 	var size: Vector2 = Vector2(60, 18)
+	var texture: Texture2D = PlaceholderArt.shadow_disc(128)
 
 	func _draw() -> void:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, size.y / size.x))
-		draw_circle(Vector2.ZERO, size.x * 0.5, Color(0, 0, 0, 0.38))
+		draw_texture_rect(texture, Rect2(-size * 0.5, size), false, Color(0, 0, 0, ALPHA))
 
 
 ## Ayak çizgisinde yer halkaları: süreli etki aurası (P13) ve seviye halkası (P11). Merkez = ayak.
