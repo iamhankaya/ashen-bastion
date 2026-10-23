@@ -34,7 +34,7 @@ Yedek sürüm `4.6.3-stable` kullanılmadı: 4.7.2 indirilebildi ve çalıştı.
 
 ## Debug keystore
 
-`tools/ci/debug.keystore` standart Android debug anahtarıdır (`android` / `androiddebugkey`); sır değildir. Release keystore repoda yer almaz (yalnız GitHub secret, U2-9).
+`tools/ci/debug.keystore` standart Android debug anahtarıdır (`android` / `androiddebugkey`); sır değildir. Release keystore repoda yer almaz (yalnız GitHub secret); imzalı release APK için bkz. [release.md](release.md).
 
 ## Debug APK (U1-10)
 
