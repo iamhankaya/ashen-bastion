@@ -1,24 +1,424 @@
 class_name HighscoreScreen
 extends Control
 ## En İyi Skorlar ekranı (DESIGN §3.5): en çok 10 satır, boş durum, GERİ ve OYNA. Kural yok; Highscores girişlerini gösterir.
-## İskelet (S3): gizli doğar. D3-5 doldurur.
+## Satırlar 936×156, aralık 12, y 360'tan; GERİ altta (alt 72). Veri bozuksa/boşsa boş durum gibi davranır.
 
 signal back_requested
 signal play_requested
+
+const W := 936.0
+const ROWS := 10
+const Y_TITLE := 150.0
+const Y_SUB := 262.0
+const Y_DIV := 316.0
+const Y_ROWS := 360.0
+const ROW_H := 156.0
+const ROW_GAP := 12.0
+const ROW_MIN_H := 120.0
+const BACK_H := 132.0
+const PLAY_H := 180.0
+const Y_PLAY := 1500.0
+const BOTTOM := 72.0
+const TOP_DEFAULT := 96.0
+const DESIGN_H := 2400.0
+const SLIDE_SEC := 0.26
+const SLIDE_PX := 40.0
+
+var title_label: Label
+var sub_label: Label
+var divider: Control
+var back_button: Button
+var play_button: Button
+var empty_box: Control
+var empty_title: Label
+var empty_text: Label
+## Satır düğümleri (her zaman 10; dolu olmayanlar boş yuva): Rank/Score/Chip/Time/Date/New alt düğümleri.
+var rows: Array[Control] = []
+var empty: bool = true
+var highlight: int = -1
+
+var _extra := Vector4.ZERO
+var _x0: float = 72.0
+var _w: float = W
+var _dy: float = 0.0
+var _entries: Array[Dictionary] = []
+var _slide_t: float = 1.0
+var _built: bool = false
+
+
+## Sonuç çipi: "KAZANDI" (amber kenar + çizilmiş onay) / "YENİLDİ" (bordo dolgu).
+class ResultChip:
+	extends Control
+	var won: bool = false
+	var text: String = ""
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		custom_minimum_size = Vector2(0, 34)
+
+	func configure(p_won: bool) -> void:
+		won = p_won
+		text = "KAZANDI" if won else "YENİLDİ"
+		var f := UiKit.font_bold()
+		var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
+		size = Vector2(tw + (58.0 if won else 36.0), 34.0)
+		custom_minimum_size = size
+		queue_redraw()
+
+	func _draw() -> void:
+		var sb: StyleBoxFlat
+		var col := UiKit.AMBER if won else UiKit.KEMIK_100
+		if won:
+			sb = UiKit.stylebox(Color(UiKit.VOID, 0.0), UiKit.AMBER, 3, 17)
+		else:
+			sb = UiKit.stylebox(UiKit.BORDO_500, UiKit.BORDO_400, 2, 17)
+		draw_style_box(sb, Rect2(Vector2.ZERO, size))
+		var x := 18.0
+		if won:
+			var pts := PackedVector2Array([Vector2(14, 18), Vector2(19, 24), Vector2(29, 11)])
+			draw_polyline(pts, col, 3.0, true)
+			x = 38.0
+		draw_string(
+			UiKit.font_bold(), Vector2(x, 25.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, col
+		)
+
+
+## Sıra rozeti: 1–3 kalın halka (bronz/kemik/koyu bronz, 8 px), 4–10 ince bronz_700 (5 px); renk + rakam.
+class RankBadge:
+	extends Control
+	var rank: int = 1
+	var faded: bool = false
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		custom_minimum_size = Vector2(84, 84)
+		size = Vector2(84, 84)
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var ring := UiKit.BRONZ_700
+		var w := 5.0
+		match rank:
+			1:
+				ring = UiKit.BRONZ_300
+				w = 8.0
+			2:
+				ring = UiKit.KEMIK_300
+				w = 8.0
+			3:
+				ring = UiKit.BRONZ_500
+				w = 8.0
+		var a := 0.5 if faded else 1.0
+		draw_circle(c, 42.0, Color(UiKit.VOID, 0.7 * a))
+		draw_arc(c, 42.0 - w * 0.5, 0.0, TAU, 48, Color(ring, a), w, true)
+		var f := UiKit.font(&"title")
+		var txt := str(rank)
+		var sz := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 44)
+		draw_string(
+			f,
+			Vector2(c.x - sz.x * 0.5, c.y + 15.0),
+			txt,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1,
+			44,
+			Color(UiKit.KEMIK_100 if not faded else UiKit.KEMIK_500, a)
+		)
+
+
+## Boş yuva çerçevesi: kesikli kenar.
+class DashedFrame:
+	extends Control
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var col := Color(UiKit.BRONZ_700, 0.6)
+		var step := 18.0
+		var x := 0.0
+		while x < size.x:
+			draw_line(Vector2(x, 0), Vector2(minf(x + 10.0, size.x), 0), col, 2.0)
+			draw_line(Vector2(x, size.y), Vector2(minf(x + 10.0, size.x), size.y), col, 2.0)
+			x += step
+		var y := 0.0
+		while y < size.y:
+			draw_line(Vector2(0, y), Vector2(0, minf(y + 10.0, size.y)), col, 2.0)
+			draw_line(Vector2(size.x, y), Vector2(size.x, minf(y + 10.0, size.y)), col, 2.0)
+			y += step
+
+
+## Boş durum çemberi: kesikli yıldız çemberi 160 px.
+class EmptyRing:
+	extends Control
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		custom_minimum_size = Vector2(160, 160)
+		size = Vector2(160, 160)
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var col := Color(UiKit.BRONZ_500, 0.7)
+		for i in 28:
+			var a0 := TAU * i / 28.0
+			draw_arc(c, 76.0, a0, a0 + TAU / 56.0, 4, col, 4.0, true)
+		var pts := PackedVector2Array()
+		for i in 10:
+			var rad := 40.0 if i % 2 == 0 else 17.0
+			pts.append(c + Vector2.from_angle(-PI * 0.5 + TAU * i / 10.0) * rad)
+		draw_colored_polygon(pts, Color(UiKit.BRONZ_500, 0.55))
 
 
 func _init() -> void:
 	visible = false
 
 
-@warning_ignore_start("unused_parameter")
+func _ready() -> void:
+	theme = UiKit.theme()
+	UiKit.fill(self)
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	_build()
+
+
+func _build() -> void:
+	if _built:
+		return
+	_built = true
+	var bg := ColorRect.new()
+	bg.color = UiKit.MOR_900
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.fill(bg)
+	add_child(bg)
+	var glow := TextureRect.new()
+	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	glow.stretch_mode = TextureRect.STRETCH_SCALE
+	glow.anchor_right = 1.0
+	glow.offset_bottom = 900.0
+	glow.texture = ResultScreen._glow_texture(UiKit.BORDO_700)
+	add_child(glow)
+	title_label = UiKit.label("EN İYİ SKORLAR", &"LabelTitle", 80)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_constant_override(&"shadow_offset_y", 4)
+	add_child(title_label)
+	sub_label = UiKit.label("Bu cihazdaki en iyi 10 sonuç", &"", 32, UiKit.KEMIK_300)
+	sub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(sub_label)
+	divider = UiKit.divider()
+	add_child(divider)
+	for i in ROWS:
+		var row := _make_row(i)
+		add_child(row)
+		rows.append(row)
+	empty_box = Control.new()
+	empty_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var ring := EmptyRing.new()
+	ring.name = "Ring"
+	empty_box.add_child(ring)
+	empty_title = UiKit.label("HENÜZ SKOR YOK", &"LabelTimer", 56)
+	empty_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	empty_box.add_child(empty_title)
+	empty_text = UiKit.label(
+		"İlk oyunundan sonra en iyi on sonucun burada listelenir.", &"", 34, UiKit.KEMIK_300
+	)
+	empty_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	empty_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	empty_box.add_child(empty_text)
+	add_child(empty_box)
+	play_button = UiKit.button("OYNA", &"primary", PLAY_H)
+	play_button.add_theme_font_size_override(&"font_size", 64)
+	play_button.pressed.connect(func() -> void: play_requested.emit())
+	add_child(play_button)
+	back_button = UiKit.button("GERİ", &"secondary", BACK_H)
+	back_button.pressed.connect(func() -> void: back_requested.emit())
+	add_child(back_button)
+	_layout()
+
+
+func _make_row(i: int) -> Control:
+	var row := Control.new()
+	row.name = "Row%d" % i
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg := Panel.new()
+	bg.name = "Bg"
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.add_theme_stylebox_override(&"panel", _raised_style())
+	UiKit.fill(bg)
+	row.add_child(bg)
+	var inner := Control.new()
+	inner.name = "Inner"
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(inner)
+	var dash := DashedFrame.new()
+	dash.name = "Dash"
+	row.add_child(dash)
+	var badge := RankBadge.new()
+	badge.name = "Rank"
+	badge.rank = i + 1
+	inner.add_child(badge)
+	var score := UiKit.label("", &"LabelTimer", 56, UiKit.KEMIK_100)
+	score.name = "Score"
+	inner.add_child(score)
+	var chip := ResultChip.new()
+	chip.name = "Chip"
+	inner.add_child(chip)
+	var time := UiKit.label("", &"", 28, UiKit.KEMIK_100)
+	time.name = "Time"
+	time.add_theme_font_override(&"font", UiKit.font_semibold())
+	inner.add_child(time)
+	var date := UiKit.label("", &"", 26, UiKit.KEMIK_500)
+	date.name = "Date"
+	date.add_theme_font_override(&"font", UiKit.font_semibold())
+	date.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	inner.add_child(date)
+	var tag := UiKit.label("YENİ", &"", 22, UiKit.AMBER)
+	tag.name = "New"
+	tag.add_theme_font_override(&"font", UiKit.font_bold())
+	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	tag.add_theme_stylebox_override(
+		&"normal", UiKit.stylebox(Color(UiKit.VOID, 0.4), UiKit.AMBER, 3, 17)
+	)
+	inner.add_child(tag)
+	return row
 
 
 ## highlight_index: vurgulanacak satır (-1 = yok; denetleyici v1.1'de hep -1 verir).
 func show_scores(entries: Array[Dictionary], highlight_index: int = -1) -> void:
-	Stub.todo(&"HighscoreScreen.show_scores")
+	_build()
+	_entries = entries.slice(0, ROWS)
+	highlight = (
+		highlight_index if highlight_index >= 0 and highlight_index < _entries.size() else -1
+	)
+	empty = _entries.is_empty()
+	var bias := int(Time.get_time_zone_from_system().get("bias", 0))
+	for i in ROWS:
+		var row := rows[i]
+		var filled := i < _entries.size()
+		(row.get_node("Dash") as Control).visible = not filled and not empty
+		row.visible = not empty
+		var inner := row.get_node("Inner") as Control
+		var badge := inner.get_node("Rank") as RankBadge
+		badge.faded = not filled
+		badge.queue_redraw()
+		for n in ["Score", "Chip", "Time", "Date"]:
+			(inner.get_node(n) as Control).visible = filled
+		(inner.get_node("New") as Control).visible = filled and i == highlight
+		var bg := row.get_node("Bg") as Panel
+		row.modulate.a = 1.0
+		if filled:
+			var e := _entries[i]
+			(inner.get_node("Score") as Label).text = UiKit.format_thousands(int(e["score"]))
+			(inner.get_node("Chip") as ResultChip).configure(bool(e["won"]))
+			(inner.get_node("Time") as Label).text = UiKit.format_time(float(e["time"]))
+			(inner.get_node("Date") as Label).text = Highscores.format_date(int(e["unix"]), bias)
+			if i == highlight:
+				bg.add_theme_stylebox_override(
+					&"panel", UiKit.stylebox(UiKit.MOR_800, UiKit.AMBER, 5, 14, true)
+				)
+			else:
+				bg.add_theme_stylebox_override(&"panel", _raised_style())
+		else:
+			bg.add_theme_stylebox_override(
+				&"panel", UiKit.stylebox(Color(UiKit.VOID, 0.35), Color(0, 0, 0, 0), 0, 14)
+			)
+	empty_box.visible = empty
+	play_button.visible = empty
+	_slide_t = 0.0 if highlight >= 0 else 1.0
+	_layout()
+	visible = true
+	(play_button if empty else back_button).grab_focus.call_deferred()
 
 
 ## Güvenli alan payı: Vector4(sol, üst, sağ, alt); null = UiKit.current_safe_extra.
 func apply_safe_area(extra: Variant = null) -> void:
-	Stub.todo(&"HighscoreScreen.apply_safe_area")
+	if extra is Vector4:
+		_extra = extra
+	else:
+		_extra = UiKit.current_safe_extra(Vector2(1080.0, DESIGN_H))
+	_layout()
+
+
+func _layout() -> void:
+	if not _built:
+		return
+	_x0 = maxf(72.0, UiKit.SAFE_EDGE + _extra.x)
+	var x1 := 1080.0 - maxf(72.0, UiKit.SAFE_EDGE + _extra.z)
+	_w = minf(W, x1 - _x0)
+	_x0 = (1080.0 - _w) * 0.5 if _w >= W else _x0
+	_dy = maxf(0.0, _extra.y - (Y_TITLE - TOP_DEFAULT))
+	_abs(title_label, 0.0, Y_TITLE + _dy, 1080.0, 110.0)
+	_abs(sub_label, 0.0, Y_SUB + _dy, 1080.0, 44.0)
+	_abs(divider, _x0, Y_DIV + _dy, _w, 20.0)
+	var back_y := DESIGN_H - BOTTOM - _extra.w - BACK_H
+	_abs(back_button, _x0, back_y, _w, BACK_H)
+	var play_y := minf(Y_PLAY + _dy, back_y - BUTTONS_GAP - PLAY_H)
+	_abs(play_button, _x0, play_y, _w, PLAY_H)
+	var top := Y_ROWS + _dy
+	var avail := back_y - 24.0 - top
+	var pitch := minf(ROW_H + ROW_GAP, (avail + ROW_GAP) / float(ROWS))
+	var rh := clampf(pitch - ROW_GAP, ROW_MIN_H, ROW_H)
+	for i in ROWS:
+		var row := rows[i]
+		_abs(row, _x0, top + float(i) * pitch, _w, rh)
+		_layout_row(row, rh)
+	var ey := 760.0 + _dy
+	_abs(empty_box, _x0, ey, _w, 520.0)
+	(empty_box.get_node("Ring") as Control).position = Vector2((_w - 160.0) * 0.5, 0)
+	_abs(empty_title, 0.0, 220.0, _w, 80.0)
+	empty_title.position = Vector2(0, 220.0)
+	_abs(empty_text, 60.0, 330.0, _w - 120.0, 140.0)
+
+
+const BUTTONS_GAP := 27.0
+
+
+## Tema "PanelRaised" kutusunun kopyası (Panel düğümü için; PanelContainer çocukları yeniden boyutlar).
+static func _raised_style() -> StyleBox:
+	var sb: StyleBox = UiKit.theme().get_stylebox(&"panel", &"PanelRaised")
+	return sb.duplicate() if sb != null else UiKit.stylebox(UiKit.MOR_800, UiKit.BRONZ_500, 4, 14)
+
+
+func _layout_row(row: Control, h: float) -> void:
+	var inner := row.get_node("Inner") as Control
+	inner.position = Vector2.ZERO
+	inner.size = Vector2(_w, h)
+	var cy := h * 0.5
+	var badge := inner.get_node("Rank") as Control
+	badge.position = Vector2(24.0, cy - 42.0)
+	var dash := row.get_node("Dash") as Control
+	dash.position = Vector2.ZERO
+	dash.size = Vector2(_w, h)
+	var score := inner.get_node("Score") as Label
+	score.position = Vector2(140.0, maxf(2.0, cy - 66.0))
+	score.size = Vector2(_w - 420.0, 76.0)
+	var chip := inner.get_node("Chip") as Control
+	chip.position = Vector2(140.0, cy + 22.0)
+	var time := inner.get_node("Time") as Label
+	time.position = Vector2(140.0 + chip.size.x + 14.0, cy + 18.0)
+	time.size = Vector2(160.0, 40.0)
+	var date := inner.get_node("Date") as Label
+	date.position = Vector2(_w - 24.0 - 240.0, cy - 18.0)
+	date.size = Vector2(240.0, 36.0)
+	var tag := inner.get_node("New") as Control
+	tag.position = Vector2(_w - 24.0 - 240.0 - 90.0 - 8.0, cy - 17.0)
+	tag.size = Vector2(90.0, 34.0)
+
+
+func _abs(c: Control, x: float, y: float, w: float, h: float) -> void:
+	c.anchor_left = 0.0
+	c.anchor_top = 0.0
+	c.anchor_right = 0.0
+	c.anchor_bottom = 0.0
+	c.position = Vector2(x, y)
+	c.size = Vector2(w, h)
+
+
+func _process(delta: float) -> void:
+	if not visible or _slide_t >= 1.0 or highlight < 0:
+		return
+	_slide_t = minf(1.0, _slide_t + delta / SLIDE_SEC)
+	var k := ResultTimeline.cubic_out(_slide_t)
+	var row := rows[highlight]
+	row.modulate.a = k
+	(row.get_node("Inner") as Control).position.x = (1.0 - k) * SLIDE_PX

@@ -58,6 +58,9 @@ func _run(policy: StringName, seed_value: int) -> Dictionary:
 		"secs_below_half": below_half,
 		"evolutions": sim.evolved_log.size(),
 		"spawn_dropped": sim.spawn_dropped,
+		"score": sim.score.total(),
+		"score_parts": sim.score.parts(),
+		"best_mult": sim.score.best_mult,
 	}
 
 

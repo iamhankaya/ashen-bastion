@@ -431,7 +431,7 @@ func test_run_ended_carries_the_score_fields_next_to_the_v1_ones() -> void:
 	var st: Dictionary = got[0][1]
 	for k in ["time", "level", "kills", "evolutions", "score", "score_parts", "best_mult"]:
 		assert_true(st.has(k), "run_ended.%s" % k)
-	assert_eq(st["score"], 0, "puanlama D3-1'de; iskelette bileşenler 0")
+	assert_eq(st["score"], 10, "boşta yalnız hayatta kalma: 130 adım x 5 / 60 = 10 (D3-1)")
 	assert_eq(st["best_mult"], 1)
 	var parts: Dictionary = st["score_parts"]
 	assert_eq(parts.keys(), ["kills", "streak", "evolution", "survival", "lord"])

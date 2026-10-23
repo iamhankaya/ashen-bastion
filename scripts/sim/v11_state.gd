@@ -82,6 +82,13 @@ static func on_score_gained(sim: GameSim, gain: int, source: StringName) -> void
 	sim.bus.score_changed.emit(total, sim.score.mult, gain)
 
 
+## ScoreKeeper.streak_changed -> bus.streak_changed; seri sıfırlanınca streak_reset olayı (neden: window|damage).
+static func on_streak_changed(sim: GameSim, mult: int, left: float) -> void:
+	if mult == 1 and left == 0.0:
+		sim.log_event(SimEvents.STREAK_RESET, {"reason": sim.score.last_reset_reason})
+	sim.bus.streak_changed.emit(mult, left)
+
+
 ## run_ended sözlüğüne eklenen alanlar: score, score_parts, best_mult.
 static func end_stats(sim: GameSim) -> Dictionary:
 	return {
