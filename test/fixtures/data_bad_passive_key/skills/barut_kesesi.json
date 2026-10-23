@@ -1,0 +1,37 @@
+{
+  "id": "barut_kesesi",
+  "kind": "passive",
+  "name": "Barut Kesesi",
+  "icon": "placeholder:barut_kesesi",
+  "max_level": 5,
+  "tags": [],
+  "levels": [
+    {
+      "explosion_dmg_mult": 0.08,
+      "luck": 0.12
+    },
+    {
+      "explosion_dmg_mult": 0.16,
+      "luck": 0.24
+    },
+    {
+      "explosion_dmg_mult": 0.24,
+      "luck": 0.36
+    },
+    {
+      "explosion_dmg_mult": 0.32,
+      "luck": 0.48
+    },
+    {
+      "explosion_dmg_mult": 0.4,
+      "luck": 0.6
+    }
+  ],
+  "desc": [
+    "Barut Kesesi seviye 1.",
+    "Barut Kesesi seviye 2.",
+    "Barut Kesesi seviye 3.",
+    "Barut Kesesi seviye 4.",
+    "Barut Kesesi seviye 5."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "end_time": 1200,
+  "rows": [
+    {
+      "kind": "spiral",
+      "type": "curumus_piyade",
+      "from": 0,
+      "to": 1200,
+      "rate": [
+        0.8,
+        3.5
+      ]
+    },
+    {
+      "kind": "group",
+      "type": "les_kargasi",
+      "from": 90,
+      "to": 1200,
+      "group": [
+        6,
+        14
+      ],
+      "every": [
+        26,
+        12
+      ]
+    },
+    {
+      "kind": "burst",
+      "type": "curumus_piyade",
+      "at": 480,
+      "count": 50,
+      "ring": true
+    },
+    {
+      "kind": "boss",
+      "type": "elit_piyade",
+      "at": 300,
+      "warn": 5
+    },
+    {
+      "kind": "boss",
+      "type": "kale_lordu",
+      "at": 1200,
+      "warn": 5
+    }
+  ],
+  "after_lord": {
+    "piyade_rate_mult": 0.5,
+    "karga_stop": true
+  }
+}

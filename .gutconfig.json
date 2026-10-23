@@ -1,5 +1,8 @@
 {
-  "dirs": ["res://test/unit", "res://test/acceptance"],
+  "dirs": [
+    "res://test/unit",
+    "res://test/acceptance"
+  ],
   "prefix": "test_",
   "suffix": ".gd",
   "include_subdirs": true,
@@ -7,5 +10,6 @@
   "should_exit_on_success": true,
   "junit_xml_file": "res://.gate/junit.xml",
   "junit_xml_timestamp": false,
-  "log_level": 1
+  "log_level": 1,
+  "post_run_script": "res://tools/ci/gut_stub_hook.gd"
 }

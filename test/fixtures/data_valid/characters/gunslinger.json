@@ -1,0 +1,48 @@
+{
+  "id": "gunslinger",
+  "name": "Gunslinger",
+  "max_hp": 100,
+  "move_speed": 300,
+  "mag_cap": 6,
+  "reload_time": 1.0,
+  "pickup_radius": 110,
+  "collision_radius": 22,
+  "starting_skill": "cift_tabanca",
+  "range": 700,
+  "rig": {
+    "body": "placeholder:gunslinger_body",
+    "arm": "placeholder:gunslinger_arm",
+    "display_height": 112,
+    "native_facing": "right",
+    "shoulders": [
+      [
+        0.38,
+        0.195
+      ],
+      [
+        0.62,
+        0.2
+      ]
+    ],
+    "arm_pivot": [
+      0.11,
+      0.47
+    ],
+    "muzzle": [
+      0.98,
+      0.37
+    ],
+    "arm_scale": 0.62,
+    "sway": {
+      "hem_from_y": 0.6,
+      "scarf_rect": [
+        0.1,
+        0.25,
+        0.45,
+        0.7
+      ],
+      "amp": 6,
+      "lag": 0.12
+    }
+  }
+}

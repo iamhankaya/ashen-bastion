@@ -40,7 +40,7 @@ d=$(fresh c); echo '{"test/unit/test_smoke.gd": 99}' > "$d/tools/gate_min_tests.
 # (d) Stub.todo => test başarısızlığı (stub.gd varsa)
 if [ -f "$ROOT/scripts/sim/stub.gd" ]; then
   d=$(fresh d)
-  printf 'extends GutTest\n\n\nfunc test_stub() -> void:\n\tStub.todo(&"Selftest.yontem")\n\tassert_eq(Stub.calls().size(), 0, "uygulanmadı")\n' > "$d/test/unit/test_zz_stub.gd"
+  printf 'extends GutTest\n\n\nfunc test_stub() -> void:\n\tStub.todo(&"Selftest.yontem")\n\tassert_true(true)\n' > "$d/test/unit/test_zz_stub.gd"
   expect "Stub.todo başarısızlık" 1 "$d" X=1
 fi
 
