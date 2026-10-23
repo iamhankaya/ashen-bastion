@@ -49,7 +49,7 @@ const DESIGN_H := 2400.0
 
 var won: bool = false
 var stats: Dictionary = {}
-var record: Dictionary = {}
+var last_record: Dictionary = {}
 ## &"none" | &"record" | &"top10" | &"outside" (test/okuma için).
 var record_kind: StringName = &"none"
 var title_label: Label
@@ -59,7 +59,7 @@ var score_caption: Label
 var score_value: Label
 var record_band: Control
 var record_label: Label
-var record_stars: Array[Label] = []
+var record_stars: Array[Control] = []
 var record_pill: Label
 var record_note: Label
 var breakdown_panel: PanelContainer
@@ -169,9 +169,7 @@ func _build_record() -> void:
 	record_label.add_theme_constant_override(&"shadow_offset_y", 3)
 	record_band.add_child(record_label)
 	for i in 2:
-		var star := UiKit.label("★", &"LabelTimer", 56, UiKit.AMBER)
-		star.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		star.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var star := UiKit.Glyph.new(&"star", UiKit.AMBER, 48.0)
 		record_band.add_child(star)
 		record_stars.append(star)
 	_shine = ColorRect.new()
@@ -296,11 +294,11 @@ func show_result(
 	p_stats: Dictionary,
 	combos: Array[Dictionary] = [],
 	subtitle: String = "",
-	p_record: Dictionary = {}
+	record: Dictionary = {}
 ) -> void:
 	won = p_won
 	stats = p_stats
-	record = p_record
+	last_record = record
 	_subtitle = subtitle
 	title_label.text = "KAZANDIN" if won else "OYUN BİTTİ"
 	title_label.add_theme_color_override(&"font_color", UiKit.AMBER if won else UiKit.KEMIK_100)
@@ -343,21 +341,21 @@ func _fill_combos(combos: Array[Dictionary]) -> void:
 
 func _fill_record() -> void:
 	record_kind = &"none"
-	var rank := int(record.get("rank", 0))
-	if record.is_empty():
+	var rank := int(last_record.get("rank", 0))
+	if last_record.is_empty():
 		pass
-	elif rank == 1 and bool(record.get("is_record", false)):
+	elif rank == 1 and bool(last_record.get("is_record", false)):
 		record_kind = &"record"
 	elif rank >= 2:
 		record_kind = &"top10"
-	elif rank == 0 and int(record.get("needed_for_top10", 0)) > 0:
+	elif rank == 0 and int(last_record.get("needed_for_top10", 0)) > 0:
 		record_kind = &"outside"
 	record_band.visible = record_kind == &"record"
 	record_pill.visible = record_kind == &"top10"
 	record_note.text = ""
 	match record_kind:
 		&"record":
-			var prev := int(record.get("previous_best", 0))
+			var prev := int(last_record.get("previous_best", 0))
 			record_note.text = (
 				"Önceki en iyi: %s" % UiKit.format_thousands(prev) if prev > 0 else ""
 			)
@@ -366,7 +364,7 @@ func _fill_record() -> void:
 		&"outside":
 			record_note.text = (
 				"10. sıra için gereken: %s"
-				% UiKit.format_thousands(int(record.get("needed_for_top10", 0)))
+				% UiKit.format_thousands(int(last_record.get("needed_for_top10", 0)))
 			)
 
 
@@ -420,9 +418,9 @@ func _layout() -> void:
 	record_label.position = Vector2(0, 0)
 	record_label.size = record_band.size
 	for i in record_stars.size():
-		var sx := 70.0 if i == 0 else _w - 70.0 - 60.0
-		record_stars[i].position = Vector2(sx, 0)
-		record_stars[i].size = Vector2(60.0, BAND_H)
+		var sx := 70.0 if i == 0 else _w - 70.0 - 48.0
+		record_stars[i].position = Vector2(sx, (BAND_H - 48.0) * 0.5)
+		record_stars[i].size = Vector2(48.0, 48.0)
 	_put(record_pill, _x0 + 40.0, Y_RECORD + 20.0, _w - 80.0, 76.0)
 	record_pill.pivot_offset = Vector2((_w - 80.0) * 0.5, 38.0)
 	_put(

@@ -175,23 +175,14 @@ func _cases_d2() -> Array:
 	]
 
 
-## D3: skor, highscore, ekranlar
+## D3: skor, highscore, ekranlar — hepsi uygulandı (D3-1..D3-5); iskelet kaydı kalmadı.
 func _cases_d3() -> Array:
-	var sim := GameSim.new(1, &"gunslinger")
-	var scores: HighscoreScreen = _node(HighscoreScreen.new())
-	return [
-		[
-			func() -> void: scores.show_scores([] as Array[Dictionary]),
-			&"HighscoreScreen.show_scores"
-		],
-		[func() -> void: scores.apply_safe_area(), &"HighscoreScreen.apply_safe_area"],
-		[func() -> void: _node(MainMenu.new()).apply_safe_area(), &"MainMenu.apply_safe_area"],
-	]
+	return []
 
 
 func test_v11_skeleton_bodies_record_stub_todo() -> void:
 	var cases := _v11_cases()
-	assert_gt(cases.size(), 70)
+	assert_gte(cases.size(), 0, "faz uygulandıkça liste küçülür; hepsi bitince boş")
 	var ids := {}
 	for c in cases:
 		assert_false(ids.has(c[1]), "yinelenen kimlik %s" % c[1])

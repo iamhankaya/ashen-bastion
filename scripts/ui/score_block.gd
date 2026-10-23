@@ -165,14 +165,14 @@ func _layout_chip(mult_n: int) -> void:
 	chip.pivot_offset = Vector2(w, CHIP_H * 0.5)
 
 
-func bind(p_sim: GameSim) -> void:
+func bind(sim: GameSim) -> void:
 	_build()
 	if _sim != null and is_instance_valid(_sim.bus):
 		if _sim.bus.score_changed.is_connected(_on_score_changed):
 			_sim.bus.score_changed.disconnect(_on_score_changed)
 		if _sim.bus.streak_changed.is_connected(_on_streak_changed):
 			_sim.bus.streak_changed.disconnect(_on_streak_changed)
-	_sim = p_sim
+	_sim = sim
 	visible = true
 	_bound = _sim != null
 	_target = 0
