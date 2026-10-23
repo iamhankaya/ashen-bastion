@@ -337,6 +337,18 @@ func _process(delta: float) -> void:
 		_after_step()
 	_update_views(delta)
 	joystick.show_state(gate)
+	_update_music()
+
+
+func _update_music() -> void:
+	var s := sim
+	audio.update_music(
+		s.time if s != null else 0.0,
+		screen == PauseLogic.Screen.MENU,
+		s != null and s.state == GameSim.State.WON,
+		s != null and s.state == GameSim.State.LOST,
+		screen == PauseLogic.Screen.PAUSED
+	)
 
 
 func _after_step() -> void:
