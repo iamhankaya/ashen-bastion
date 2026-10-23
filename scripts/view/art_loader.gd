@@ -54,7 +54,7 @@ static func padded_cells(path: String, cells: int, pad: int) -> Texture2D:
 		return _cache[key]
 	if cells < 1 or path == "" or path.begins_with("placeholder:"):
 		return null
-	var img := _read_image(path)
+	var img := image(path)
 	if img == null or img.get_width() % cells != 0:
 		return null
 	if img.is_compressed():
@@ -68,6 +68,13 @@ static func padded_cells(path: String, cells: int, pad: int) -> Texture2D:
 	var tex := ImageTexture.create_from_image(out)
 	_cache[key] = tex
 	return tex
+
+
+## Dosyanın ham görüntüsü (ImageTexture/içe aktarılmış ya da düz dosya); null = yok. Önbelleksiz: çağıran dönüştürür.
+static func image(path: String) -> Image:
+	if path == "" or path.begins_with("placeholder:"):
+		return null
+	return _read_image(path)
 
 
 static func _read_image(path: String) -> Image:

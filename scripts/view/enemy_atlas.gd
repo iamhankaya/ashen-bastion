@@ -10,6 +10,9 @@ const COLS := 3
 const MARGIN := 16
 const MANIFEST := "res://assets/gfx/manifest.json"
 
+## Kare sayılarının okunduğu manifest (testler sentetik şerit için değiştirir).
+static var manifest_path: String = MANIFEST
+
 ## sprite yolu -> {"cell": ilk hücre, "frames": kare sayısı, "size": Vector2 (tek kare piksel boyutu)}
 var cells: Dictionary = {}
 var texture: Texture2D = null
@@ -26,14 +29,14 @@ func build(sprites: Array[String]) -> EnemyAtlas:
 	for path in sprites:
 		var frames := 1
 		var img: Image = null
-		var tex := ArtLoader.texture(path)
-		if tex != null:
-			img = tex.get_image()
-			if img != null:
-				if img.is_compressed():
-					img.decompress()
-				img.convert(Image.FORMAT_RGBA8)
-			frames = int(frames_of.get(path.trim_prefix("res://"), 1))
+		img = ArtLoader.image(path)
+		if img != null:
+			if img.is_compressed():
+				img.decompress()
+			img.convert(Image.FORMAT_RGBA8)
+			frames = maxi(1, int(frames_of.get(path.trim_prefix("res://"), 1)))
+			if img.get_width() % frames != 0:
+				frames = 1  # şerit hücrelere bölünmüyor: tek kare (yedek)
 		else:
 			img = PlaceholderArt.enemy_texture().get_image()
 		plan.append([path, frames, img])
@@ -80,9 +83,9 @@ func build(sprites: Array[String]) -> EnemyAtlas:
 
 static func _manifest_frames() -> Dictionary:
 	var out := {}
-	if not FileAccess.file_exists(MANIFEST):
+	if not FileAccess.file_exists(manifest_path):
 		return out
-	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(MANIFEST))
+	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
 	if d is Dictionary and d.get("files") is Dictionary:
 		for k in d["files"].keys():
 			out[k] = int(d["files"][k].get("frames", 1))
