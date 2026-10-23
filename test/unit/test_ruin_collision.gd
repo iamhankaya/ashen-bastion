@@ -352,3 +352,22 @@ func test_stream_seeds_are_pinned_independent_of_variant_hash() -> void:
 	assert_eq(sim._stream_seed(&"spawn"), 6950604273150918458)
 	assert_ne(SimKit.make(2)._stream_seed(&"map"), sim._stream_seed(&"map"))
 	assert_ne(SimKit.make(-1)._stream_seed(&"map"), SimKit.make(1)._stream_seed(&"map"))
+
+
+func test_gems_dropped_inside_a_solid_ruin_are_moved_out_and_collectable() -> void:
+	var sim := SimKit.make(31, {"log_events": false})
+	SimKit.godmode(sim)
+	var m := sim.map
+	var pick := -1
+	for i in m.count:
+		if m.ob_solid[i] == 1 and pick < 0:
+			pick = i
+	var centre := m.circ_pos[m.circ_first[pick]]
+	sim.player_pos = centre + Vector2(0.0, 1500.0)
+	var id := SimKit.add_enemy(sim, &"elit_piyade", centre)  # elit muaf: harabenin içinde ölür
+	var xp_before := sim.gems.total_value()
+	sim.damage_enemy(id, 1.0e9, &"bullet")
+	assert_gt(sim.gems.total_value(), xp_before, "elit taş bıraktı")
+	var local := _local(m, centre)
+	for i in sim.gems.count:
+		assert_lt(_penetration(m, local, sim.gems.pos[i], 0.0), 0.5, "taş katı dairelerin dışında")
