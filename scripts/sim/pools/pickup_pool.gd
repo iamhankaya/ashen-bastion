@@ -1,7 +1,6 @@
 class_name PickupPool
 extends RefCounted
 ## Yerdeki eklentiler (SoA, kompakt 0..count-1, CAP 8). Etki uygulamaz. Süre sayaçları tam sayı ADIM'dır.
-## İskelet (S2): alanlar, spawn ve remove gerçek (debug_spawn_pickup bunlara dayanır); tick D2-1'de dolar.
 
 const CAP := 8
 
@@ -57,4 +56,15 @@ func tick(expired_kinds: PackedInt32Array) -> void:
 	expired_kinds.clear()
 	if count == 0:
 		return
-	Stub.todo(&"PickupPool.tick")
+	for i in count:
+		age_steps[i] += 1
+		left_steps[i] -= 1
+		if left_steps[i] <= 0:
+			expired_kinds.append(kind_idx[i])
+	if expired_kinds.is_empty():
+		return
+	var i := count - 1
+	while i >= 0:
+		if left_steps[i] <= 0:
+			remove(i)
+		i -= 1

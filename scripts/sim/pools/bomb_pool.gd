@@ -1,7 +1,6 @@
 class_name BombPool
 extends RefCounted
 ## Toplanmış bombalar (SoA, CAP 4). Hasar vermez; fitil tam sayı ADIM sayacıdır.
-## İskelet (S2): alanlar ve is_full gerçek; plant/tick/remove D2-1'de dolar.
 
 const CAP := 4
 
@@ -22,26 +21,40 @@ func _init() -> void:
 	kind_idx.resize(CAP)
 
 
-@warning_ignore_start("unused_parameter")
-
-
 func is_full() -> bool:
 	return count >= CAP
 
 
 ## Bomba kurar; havuz doluysa -1, değilse indeks.
 func plant(p: Vector2, fuse: int, r: float, kind: int) -> int:
-	Stub.todo(&"BombPool.plant")
-	return -1
+	if count >= CAP:
+		return -1
+	var i := count
+	pos[i] = p
+	fuse_steps[i] = fuse
+	fuse_total[i] = fuse
+	radius[i] = r
+	kind_idx[i] = kind
+	count += 1
+	return i
 
 
 ## fuse_steps--; <= 0 olanların indeksleri artan sırayla ready'ye yazılır (önce temizlenir).
 func tick(ready: PackedInt32Array) -> void:
 	ready.clear()
-	if count == 0:
-		return
-	Stub.todo(&"BombPool.tick")
+	for i in count:
+		fuse_steps[i] -= 1
+		if fuse_steps[i] <= 0:
+			ready.append(i)
 
 
+## Son elemanı yerine alır. Ters sırayla gezen döngüde güvenlidir.
 func remove(i: int) -> void:
-	Stub.todo(&"BombPool.remove")
+	var last := count - 1
+	if i != last:
+		pos[i] = pos[last]
+		fuse_steps[i] = fuse_steps[last]
+		fuse_total[i] = fuse_total[last]
+		radius[i] = radius[last]
+		kind_idx[i] = kind_idx[last]
+	count = last

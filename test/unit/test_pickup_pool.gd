@@ -63,3 +63,35 @@ func test_reverse_iteration_removal_is_safe() -> void:
 	assert_eq(p.count, 3)
 	for k in p.count:
 		assert_eq(p.kind_idx[k] % 2, 1)
+
+
+func test_tick_counts_down_and_expires_exactly_at_life() -> void:
+	var p := PickupPool.new()
+	p.spawn(2, Vector2.ZERO, 3)
+	var out := PackedInt32Array()
+	p.tick(out)
+	p.tick(out)
+	assert_eq(p.count, 1)
+	assert_eq(p.age_steps[0], 2)
+	assert_eq(p.left_steps[0], 1)
+	assert_true(out.is_empty())
+	p.tick(out)
+	assert_eq(p.count, 0, "3. adımda ömür dolar")
+	assert_eq(out, PackedInt32Array([2]))
+
+
+func test_tick_clears_output_and_removes_several_expired_in_one_step() -> void:
+	var p := PickupPool.new()
+	p.spawn(0, Vector2.ZERO, 1)
+	p.spawn(1, Vector2.ZERO, 5)
+	p.spawn(2, Vector2.ZERO, 1)
+	p.spawn(3, Vector2.ZERO, 5)
+	var out := PackedInt32Array([9])
+	p.tick(out)
+	assert_eq(out, PackedInt32Array([0, 2]), "artan indeks sırası")
+	assert_eq(p.count, 2)
+	var kinds := [p.kind_idx[0], p.kind_idx[1]]
+	kinds.sort()
+	assert_eq(kinds, [1, 3])
+	for k in p.count:
+		assert_eq(p.left_steps[k], 4)
