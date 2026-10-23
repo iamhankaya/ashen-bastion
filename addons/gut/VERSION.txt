@@ -1,0 +1,1 @@
+GUT 9.7.1 (bitwes/Gut tag v9.7.1, commit aeb5d4f). Vendored olarak addons/gut; elle düzenlenmez.

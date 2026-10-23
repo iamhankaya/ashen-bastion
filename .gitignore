@@ -1,0 +1,8 @@
+.godot/
+build/
+.gate/
+*.translation
+*.keystore
+!tools/ci/debug.keystore
+__pycache__/
+.pytest_cache/
