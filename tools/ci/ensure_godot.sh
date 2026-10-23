@@ -9,11 +9,27 @@ BIN="$CACHE/Godot_v${V}_linux.x86_64"
 BASE="https://github.com/godotengine/godot-builds/releases/download/$V"
 HOST="github.com"
 
+fetch() { # fetch <dosya>
+  mkdir -p "$CACHE"
+  curl -fL --retry 3 -sS -o "$CACHE/$1" "$BASE/$1"
+}
+
+# Export şablonları yalnız GATE_EXPORT=1 ile (Godot zaten kuruluyken de çalışır).
+ensure_templates() {
+  [ "${GATE_EXPORT:-0}" = "1" ] || return 0
+  local TDIR="$HOME/.local/share/godot/export_templates/${V/-/.}"
+  [ -d "$TDIR" ] && return 0
+  fetch "Godot_v${V}_export_templates.tpz" || { echo "GATE_NET: $HOST erişilemiyor — şablonlar indirilemedi" >&2; exit 3; }
+  (cd "$CACHE" && grep "export_templates.tpz" "$ROOT/tools/ci/checksums.txt" | sha512sum -c - >&2)
+  mkdir -p "$TDIR" "$CACHE/tpl" && unzip -oq "$CACHE/Godot_v${V}_export_templates.tpz" -d "$CACHE/tpl"
+  cp -r "$CACHE/tpl/templates/." "$TDIR/"
+}
+
 if [ -n "${GODOT_BIN:-}" ] && "$GODOT_BIN" --version 2>/dev/null | grep -q "^${V%-stable}\.stable"; then
-  echo "$GODOT_BIN"; exit 0
+  ensure_templates; echo "$GODOT_BIN"; exit 0
 fi
 if [ -x "$BIN" ] && "$BIN" --version 2>/dev/null | grep -q "^${V%-stable}\.stable"; then
-  echo "$BIN"; exit 0
+  ensure_templates; echo "$BIN"; exit 0
 fi
 
 if [ "${GATE_SIMULATE_NO_NET:-0}" = "1" ]; then
@@ -21,9 +37,6 @@ if [ "${GATE_SIMULATE_NO_NET:-0}" = "1" ]; then
 fi
 
 mkdir -p "$CACHE"
-fetch() { # fetch <dosya>
-  curl -fL --retry 3 -sS -o "$CACHE/$1" "$BASE/$1"
-}
 if ! fetch "Godot_v${V}_linux.x86_64.zip" 2>"$CACHE/curl.err"; then
   echo "GATE_NET: $HOST erişilemiyor — Godot indirilemedi ($(head -c 200 "$CACHE/curl.err"))" >&2
   exit 3
@@ -46,14 +59,5 @@ if ldd "$BIN" 2>/dev/null | grep -q "not found"; then
 fi
 "$BIN" --version >/dev/null 2>&1 || { echo "Godot çalışmıyor: $BIN" >&2; exit 1; }
 
-# Export şablonları yalnız GATE_EXPORT=1 ile
-if [ "${GATE_EXPORT:-0}" = "1" ]; then
-  TDIR="$HOME/.local/share/godot/export_templates/${V/-/.}"
-  if [ ! -d "$TDIR" ]; then
-    fetch "Godot_v${V}_export_templates.tpz" || { echo "GATE_NET: $HOST erişilemiyor — şablonlar indirilemedi" >&2; exit 3; }
-    (cd "$CACHE" && grep "export_templates.tpz" "$ROOT/tools/ci/checksums.txt" | sha512sum -c - >&2)
-    mkdir -p "$TDIR" "$CACHE/tpl" && unzip -oq "$CACHE/Godot_v${V}_export_templates.tpz" -d "$CACHE/tpl"
-    cp -r "$CACHE/tpl/templates/." "$TDIR/"
-  fi
-fi
+ensure_templates
 echo "$BIN"

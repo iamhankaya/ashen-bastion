@@ -1,0 +1,45 @@
+{
+  "id": "seken_mermi",
+  "kind": "active",
+  "name": "Seken Mermi",
+  "icon": "placeholder:seken_mermi",
+  "max_level": 5,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "seken_mermi",
+  "levels": [
+    {
+      "every_n": 3,
+      "bounces": 2,
+      "damage_mult": 1.0
+    },
+    {
+      "every_n": 3,
+      "bounces": 3,
+      "damage_mult": 1.1
+    },
+    {
+      "every_n": 3,
+      "bounces": 3,
+      "damage_mult": 1.2
+    },
+    {
+      "every_n": 2,
+      "bounces": 4,
+      "damage_mult": 1.3
+    },
+    {
+      "every_n": 2,
+      "bounces": 5,
+      "damage_mult": 1.4
+    }
+  ],
+  "desc": [
+    "Her 3. şarjör kurşunu 2 kez seker.",
+    "Her 3. kurşun 3 kez seker, hasar +%10.",
+    "Hasar +%20.",
+    "Her 2. kurşun 4 kez seker, hasar +%30.",
+    "Her 2. kurşun 5 kez seker, hasar +%40."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "curumus_piyade",
+  "name": "Çürümüş Piyade",
+  "hp": 30,
+  "speed": 95,
+  "dmg": 6,
+  "radius": 26,
+  "armor": 0,
+  "xp": 1,
+  "ai": "ground",
+  "scales_with_time": true,
+  "sprite": "placeholder:curumus_piyade",
+  "display_height": 104,
+  "tint": "#8a7a63"
+}

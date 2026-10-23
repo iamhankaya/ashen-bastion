@@ -70,11 +70,12 @@ func test_state_hash_reflects_rng_state() -> void:
 
 
 func test_step_runs_phases_in_fixed_order_and_advances_one_step() -> void:
-	var s := _sim()
+	var s := _sim(7, {"trace_phases": true})
 	s.step(Vector2.ZERO)
 	assert_eq(s.step_count, 1)
 	assert_almost_eq(s.time, GameSim.STEP, 1e-9)
-	assert_eq(Stub.calls(), GameSim.PHASES, "10 aşama sabit sırada çağrılmalı")
+	assert_eq(s.phase_trace, GameSim.PHASES, "10 aşama sabit sırada çağrılmalı")
+	assert_eq(Stub.calls().size(), 0)
 	assert_eq(GameSim.PHASES.size(), 10)
 
 

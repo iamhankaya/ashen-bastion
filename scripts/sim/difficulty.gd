@@ -5,20 +5,17 @@ extends RefCounted
 
 
 static func enemy_hp_mult(t: float) -> float:
-	Stub.todo(&"Difficulty.enemy_hp_mult")
-	return 1.0
+	var m := t / 60.0
+	return 1.0 + 0.10 * m + 0.004 * m * m
 
 
 static func enemy_dmg_mult(t: float) -> float:
-	Stub.todo(&"Difficulty.enemy_dmg_mult")
-	return 1.0
+	return 1.0 + 0.04 * (t / 60.0)
 
 
 static func enemy_speed_mult(t: float) -> float:
-	Stub.todo(&"Difficulty.enemy_speed_mult")
-	return 1.0
+	return minf(1.0 + 0.012 * (t / 60.0), 1.25)
 
 
 static func alive_cap(t: float) -> int:
-	Stub.todo(&"Difficulty.alive_cap")
-	return 0
+	return mini(EnemyPool.CAP, int(40.0 + 0.3 * t))

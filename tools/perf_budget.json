@@ -1,0 +1,9 @@
+{
+  "hash_inserts": 500,
+  "hash_queries": 640,
+  "cells_scanned": 2650,
+  "collision_tests": 470,
+  "enemy_updates": 500,
+  "proj_updates": 630,
+  "explosions": 1
+}

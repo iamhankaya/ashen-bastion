@@ -1,0 +1,32 @@
+{
+  "id": "miknatis",
+  "kind": "passive",
+  "name": "Mıknatıs",
+  "icon": "placeholder:miknatis",
+  "max_level": 5,
+  "tags": [],
+  "levels": [
+    {
+      "pickup_mult": 0.25
+    },
+    {
+      "pickup_mult": 0.5
+    },
+    {
+      "pickup_mult": 0.75
+    },
+    {
+      "pickup_mult": 1.0
+    },
+    {
+      "pickup_mult": 1.25
+    }
+  ],
+  "desc": [
+    "Toplama alanı +%25.",
+    "Toplama alanı +%50.",
+    "Toplama alanı +%75.",
+    "Toplama alanı +%100.",
+    "Toplama alanı +%125."
+  ]
+}

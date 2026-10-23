@@ -16,4 +16,19 @@ var range_mult: float = 1.0
 
 
 func rebuild(loadout: Loadout, data: GameData) -> void:
-	Stub.todo(&"StatBlock.rebuild")
+	var s := {}
+	for st in loadout.passives():
+		var lv := st.def.level_data(st.level)
+		for k in lv.keys():
+			s[k] = float(s.get(k, 0.0)) + float(lv[k])
+	bullet_dmg_mult = 1.0 + float(s.get("bullet_dmg_mult", 0.0))
+	fire_rate_mult = 1.0 + float(s.get("fire_rate_mult", 0.0))
+	reload_time_mult = 1.0 + float(s.get("reload_time_mult", 0.0))
+	mag_add = int(s.get("mag_add", 0.0))
+	area_mult = 1.0 + float(s.get("area_mult", 0.0))
+	explosion_dmg_mult = 1.0 + float(s.get("explosion_dmg_mult", 0.0))
+	move_speed_mult = 1.0 + float(s.get("move_speed_mult", 0.0))
+	max_hp_add = float(s.get("max_hp_add", 0.0))
+	regen = float(s.get("regen", 0.0))
+	pickup_mult = 1.0 + float(s.get("pickup_mult", 0.0))
+	range_mult = 1.0 + float(s.get("range_mult", 0.0))

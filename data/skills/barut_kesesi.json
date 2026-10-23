@@ -1,0 +1,37 @@
+{
+  "id": "barut_kesesi",
+  "kind": "passive",
+  "name": "Barut Kesesi",
+  "icon": "placeholder:barut_kesesi",
+  "max_level": 5,
+  "tags": [],
+  "levels": [
+    {
+      "area_mult": 0.12,
+      "explosion_dmg_mult": 0.08
+    },
+    {
+      "area_mult": 0.24,
+      "explosion_dmg_mult": 0.16
+    },
+    {
+      "area_mult": 0.36,
+      "explosion_dmg_mult": 0.24
+    },
+    {
+      "area_mult": 0.48,
+      "explosion_dmg_mult": 0.32
+    },
+    {
+      "area_mult": 0.6,
+      "explosion_dmg_mult": 0.4
+    }
+  ],
+  "desc": [
+    "Patlama alanı +%12, patlama hasarı +%8.",
+    "Alan +%24, hasar +%16.",
+    "Alan +%36, hasar +%24.",
+    "Alan +%48, hasar +%32.",
+    "Alan +%60, hasar +%40."
+  ]
+}

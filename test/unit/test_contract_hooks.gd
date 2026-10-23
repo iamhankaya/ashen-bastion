@@ -16,6 +16,10 @@ const SKILL_IDS: Array[String] = [
 	"yelpaze_atis",
 	"zincirleme_patlama",
 ]
+## Gerçek gövdesi olan davranışlar (uygulama-1). Yeni uygulanan beceri buraya eklenir.
+const IMPLEMENTED: Array[String] = [
+	"cift_tabanca", "seken_mermi", "son_mermi_patlar", "zincirleme_patlama"
+]
 const API_EXTRA: Array[String] = ["magazine", "rng_combat"]
 
 
@@ -139,10 +143,22 @@ func test_hooks_are_noop_by_default() -> void:
 
 
 func test_unimplemented_behaviors_are_visible_to_the_stub_hook() -> void:
-	# Her iskelet davranış setup'ta Stub.todo çağırır; uygulayan görev bunu gerçek gövdeyle değiştirir.
+	# Henüz uygulanmamış (U2) iskelet davranışlar setup'ta Stub.todo çağırır; uygulayan görev bunu gerçek gövdeyle
+	# değiştirir ve kimliği IMPLEMENTED listesine ekler.
 	for id in SKILL_IDS:
+		if IMPLEMENTED.has(id):
+			continue
 		Stub.reset()
 		var b: SkillBehavior = SkillRegistry.BEHAVIORS[StringName(id)].new()
 		b.setup(null, null, 1)
 		assert_eq(Stub.calls(), [StringName("skills." + id)] as Array[StringName], id)
 	Stub.reset()
+
+
+func test_implemented_behaviors_do_not_hit_the_stub() -> void:
+	var data := GameData.load_default()
+	for id in IMPLEMENTED:
+		Stub.reset()
+		var b: SkillBehavior = SkillRegistry.BEHAVIORS[StringName(id)].new()
+		b.setup(GameSim.new(1, &"gunslinger"), data.get_skill(StringName(id)), 1)
+		assert_eq(Stub.calls().size(), 0, id)

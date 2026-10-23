@@ -35,3 +35,11 @@ Yedek sürüm `4.6.3-stable` kullanılmadı: 4.7.2 indirilebildi ve çalıştı.
 ## Debug keystore
 
 `tools/ci/debug.keystore` standart Android debug anahtarıdır (`android` / `androiddebugkey`); sır değildir. Release keystore repoda yer almaz (yalnız GitHub secret, U2-9).
+
+## Debug APK (U1-10)
+
+`bash tools/ci/export_debug.sh` (CI `export-debug` işi; `GATE_EXPORT=1 bash tools/gate.sh` de çağırır): Godot + export
+şablonları (`ensure_godot.sh`), Android SDK/JDK (`ensure_android_sdk.sh`: runner'da hazır `ANDROID_HOME` + JDK 17, yoksa
+sdkmanager), editör ayarı (`write_editor_settings.sh`), repodaki standart debug keystore ile imza, `apksigner verify`.
+Çıktı `build/ab-debug.apk`; CI artifact adı `ashen-bastion-debug-apk`. Not: `export_presets.cfg`'de `min_sdk/target_sdk`
+satırı yoktur (Gradle kapalıyken Godot bunu hata sayar); `project.godot`'ta ETC2/ASTC içe aktarma açıktır (Android şartı).

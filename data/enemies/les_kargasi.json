@@ -1,0 +1,15 @@
+{
+  "id": "les_kargasi",
+  "name": "Leş Kargası",
+  "hp": 12,
+  "speed": 210,
+  "dmg": 4,
+  "radius": 18,
+  "armor": 0,
+  "xp": 1,
+  "ai": "air",
+  "scales_with_time": true,
+  "sprite": "placeholder:les_kargasi",
+  "display_height": 64,
+  "tint": "#3b3340"
+}
