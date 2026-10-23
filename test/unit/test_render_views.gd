@@ -67,7 +67,7 @@ func test_player_view_rig_nodes_and_arm_flip() -> void:
 	var v := PlayerView.new()
 	add_child_autofree(v)
 	v.bind(sim)
-	for n in ["FarArm", "Body", "NearArm", "ReloadRing", "Shadow"]:
+	for n in ["Rig/FarArm", "Rig/Body", "Rig/NearArm", "ReloadRing", "Shadow"]:
 		assert_not_null(v.get_node_or_null(n), n)
 	assert_lt(v.far_arm.z_index, v.body.z_index)
 	assert_gt(v.near_arm.z_index, v.body.z_index)
