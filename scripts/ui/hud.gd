@@ -31,6 +31,12 @@ const BOSS_BAR_ELITE := 24.0
 const BOSS_BAR_LORD := 32.0
 const BOSS_NAME_SIZE := 28
 const BOSS_NAME_SIZE_LORD := 32
+## v1.1 yerleşimi (DESIGN §3.2, §2.4, §5.2). İçerikleri ilgili sınıflar çizer; burada yalnız kutular.
+const SCORE_TOP := 284.0  # skor sütunu: sağ SAFE_EDGE, üst 284 (SKOR etiketi 284, değer 312, SERİ çipi 388..436)
+const SCORE_W := 460.0
+const SCORE_H := 152.0
+const BUFF_BADGE := 108.0  # etki rozeti; rozet n'nin sol x'i 231 + n·120 (BuffRow.badge_x), alt BOTTOM
+const BUFF_ROW_W := 231.0 + 3.0 * 120.0 - 12.0
 
 var level_badge: LevelBadge
 var xp_bar: ProgressBar
@@ -51,6 +57,11 @@ var boss_is_lord: bool = false
 var boss_extra: int = 0
 var boss_label: Label
 var vignette: Vignette
+## v1.1 (gizli doğar; ilgili D fazı görünür yapar): skor sütunu, etki rozetleri, ekran dışı ok, kayan metin.
+var score_block: ScoreBlock
+var buff_row: BuffRow
+var offscreen_arrow: OffscreenArrow
+var float_text: FloatText
 ## Cihaz güvenli alanı payı kadar içeri çekilmiş katman (rozet, çubuklar, yuvalar, tambur, duraklat).
 var safe: Control
 
@@ -268,6 +279,8 @@ func _build() -> void:
 	drum.offset_bottom = -BOTTOM
 	root.add_child(drum)
 
+	_build_v11(root)
+
 	boss_band = PanelContainer.new()
 	boss_band.name = "BossBand"
 	boss_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -282,6 +295,31 @@ func _build() -> void:
 	boss_band.add_child(boss_label)
 	boss_band.visible = false
 	add_child(boss_band)
+
+
+## v1.1 öğeleri (hepsi gizli): skor sütunu ve etki rozetleri HUD katmanında, ok ve kayan metin tam ekran güvenli katmanda.
+func _build_v11(root: Control) -> void:
+	score_block = ScoreBlock.new()
+	score_block.name = "ScoreBlock"
+	_place(score_block, 1.0, Rect2(-UiKit.SAFE_EDGE - SCORE_W, SCORE_TOP, SCORE_W, SCORE_H))
+	root.add_child(score_block)
+	buff_row = BuffRow.new()
+	buff_row.name = "BuffRow"
+	buff_row.anchor_top = 1.0
+	buff_row.anchor_bottom = 1.0
+	buff_row.offset_left = 0.0
+	buff_row.offset_right = BUFF_ROW_W
+	buff_row.offset_top = -BOTTOM - BUFF_BADGE
+	buff_row.offset_bottom = -BOTTOM
+	root.add_child(buff_row)
+	offscreen_arrow = OffscreenArrow.new()
+	offscreen_arrow.name = "OffscreenArrow"
+	UiKit.fill(offscreen_arrow)
+	safe.add_child(offscreen_arrow)
+	float_text = FloatText.new()
+	float_text.name = "FloatText"
+	UiKit.fill(float_text)
+	safe.add_child(float_text)
 
 
 ## Güvenli alan payını (çentik, yuvarlak köşe) uygular; payı DisplayServer.get_display_safe_area'dan alır.
@@ -307,6 +345,7 @@ func bind(sim: GameSim) -> void:
 		if _sim.bus.player_damaged.is_connected(_on_player_damaged):
 			_sim.bus.player_damaged.disconnect(_on_player_damaged)
 	_sim = sim
+	_bind_v11(sim)
 	_boss_left = 0.0
 	if boss_band != null:
 		boss_band.visible = false
@@ -347,7 +386,23 @@ func refresh(dt: float) -> void:
 	drum.set_state(mag.count, mag.cap, mag.reloading, prog)
 	drum.tick(dt)
 	_refresh_boss_bar()
+	_refresh_v11(dt)
 	_tick_effects(dt)
+
+
+func _bind_v11(sim: GameSim) -> void:
+	if score_block == null:
+		return  # _build'den önce
+	score_block.bind(sim)
+	buff_row.bind(sim)
+	offscreen_arrow.bind(sim)
+
+
+func _refresh_v11(dt: float) -> void:
+	score_block.refresh(dt)
+	buff_row.refresh(dt)
+	offscreen_arrow.refresh(dt)
+	float_text.refresh(dt)
 
 
 ## "86 / 120" (yukarı yuvarlanmış can; 0'ın altı 0).

@@ -11,5 +11,23 @@
   "scales_with_time": false,
   "sprite": "res://assets/gfx/enemies/sovalye_hayaleti.png",
   "display_height": 270,
-  "tint": "#e8a24a"
+  "tint": "#e8a24a",
+  "anim": {
+    "kind": "float",
+    "hz": 0.52,
+    "bob": 6,
+    "rot": 2.5,
+    "sq": 0.03,
+    "lean": 0,
+    "hover": 24,
+    "knock": 2,
+    "hit_sq": 0.03,
+    "hit_rot": 0,
+    "death": "ash_big",
+    "death_ms": 900,
+    "alpha": [
+      1,
+      1
+    ]
+  }
 }

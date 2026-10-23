@@ -17,6 +17,8 @@ var display_height: float = 100.0
 var tint: Color = Color.WHITE
 var charge: Dictionary = {}  # opsiyonel: every, duration, speed
 var summon: Dictionary = {}  # opsiyonel: type, every, count, [enrage_*]
+## Hareket/ölüm animasyonu (görünüm okur, sim kullanmaz). Yoksa {"kind": "none"}: hareket ve gölge yok.
+var anim: Dictionary = {"kind": "none"}
 
 
 static func from_dict(d: Dictionary) -> EnemyDef:
@@ -40,4 +42,7 @@ static func from_dict(d: Dictionary) -> EnemyDef:
 	e.charge = ch if ch is Dictionary else {}
 	var sm: Variant = d.get("summon", {})
 	e.summon = sm if sm is Dictionary else {}
+	var an: Variant = d.get("anim", null)
+	if an is Dictionary:
+		e.anim = an
 	return e

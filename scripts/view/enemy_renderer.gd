@@ -15,6 +15,11 @@ const RIM_ELITE_SCREEN_PX := 2.5
 const ANIM_FPS := 9.0  # çok kareli sprite (kargalar) kanat hızı
 
 var atlas: EnemyAtlas = null
+## v1.1 iş sayaçları (gate: last_anim_instances / last_frame_selects <= canlı, last_shadow_instances == canlı). D1-2 yazar.
+var last_anim_instances: int = 0
+var last_frame_selects: int = 0
+var last_shadow_instances: int = 0
+var shadows: EnemyShadowLayer = null
 
 var _sim: GameSim = null
 var _buf: PackedFloat32Array = PackedFloat32Array()
@@ -167,3 +172,9 @@ func apply_cull_fix() -> void:
 
 func visible_count() -> int:
 	return multimesh.visible_instance_count
+
+
+## Ölüm hayaleti renderer'ını bağlar (EnemyAnim/AshGhostRenderer ilişkisi). Gövde D1-3'te.
+@warning_ignore("unused_parameter")
+func set_ghosts(g: AshGhostRenderer) -> void:
+	Stub.todo(&"EnemyRenderer.set_ghosts")

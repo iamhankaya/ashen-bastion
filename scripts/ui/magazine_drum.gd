@@ -42,6 +42,12 @@ func tick(dt: float) -> void:
 		queue_redraw()
 
 
+## Sınırsız şarjör durumu (tambur ortasında ∞, amber halka). Gövde D2-3'te.
+@warning_ignore("unused_parameter")
+func set_unlimited(on: bool) -> void:
+	Stub.todo(&"MagazineDrum.set_unlimited")
+
+
 ## Ekran okuyucu/test için metin: "Şarjör 4 / 6" ya da "Şarjör dolduruluyor".
 func describe() -> String:
 	return "Şarjör dolduruluyor" if reloading else "Şarjör %d / %d" % [count, cap]

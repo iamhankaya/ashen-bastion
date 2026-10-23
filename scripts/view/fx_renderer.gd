@@ -104,6 +104,32 @@ func add_spark() -> void:
 	_spark_head = (_spark_head + 1) % MAX_SPARKS
 
 
+# v1.1 ek API (hepsi sabit boyutlu halka tampon). İskelet (S3): gövdeler D1-3'te dolar.
+
+## Genel halka (MAX_RINGS 12): pos merkezli, 0'dan r_max'a dur sn'de büyür.
+@warning_ignore("unused_parameter")
+func add_ring(pos: Vector2, r_max: float, dur: float, color: Color, width: float) -> void:
+	Stub.todo(&"FxRenderer.add_ring")
+
+
+## Kovan (16): pos'tan dir yönüne atılır.
+@warning_ignore("unused_parameter")
+func add_shell(pos: Vector2, dir: Vector2) -> void:
+	Stub.todo(&"FxRenderer.add_shell")
+
+
+## Parçacık (96): kind = &"plus"|&"ember"|&"dust".
+@warning_ignore("unused_parameter")
+func add_particle(kind: StringName, pos: Vector2, vel: Vector2, life: float) -> void:
+	Stub.todo(&"FxRenderer.add_particle")
+
+
+## Zemin kömürü (≤8).
+@warning_ignore("unused_parameter")
+func add_char(pos: Vector2, radius: float) -> void:
+	Stub.todo(&"FxRenderer.add_char")
+
+
 ## Her kare: sürelerini azalt, etkinse yeniden çiz.
 func update_fx(dt: float) -> void:
 	var n := 0

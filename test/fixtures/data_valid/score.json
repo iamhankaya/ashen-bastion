@@ -1,0 +1,37 @@
+{
+  "kill_points": {
+    "curumus_piyade": 10,
+    "les_kargasi": 8,
+    "elit_piyade": 400,
+    "kale_lordu": 10000
+  },
+  "streak": {
+    "window": 3.0,
+    "tiers": [
+      [
+        0,
+        1
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        25,
+        3
+      ],
+      [
+        50,
+        4
+      ],
+      [
+        100,
+        5
+      ]
+    ]
+  },
+  "evolution_bonus": 2000,
+  "survival_per_sec": 5,
+  "lord_bonus": 25000,
+  "display_cap": 99999999
+}

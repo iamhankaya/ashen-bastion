@@ -19,5 +19,13 @@
     "enrage_hp_frac": 0.5,
     "enrage_speed_mult": 1.4,
     "enrage_every": 5
+  },
+  "anim": {
+    "kind": "stomp",
+    "hz": 0.55,
+    "bob": 6,
+    "rot": 2.5,
+    "death": "lord",
+    "death_ms": 900
   }
 }

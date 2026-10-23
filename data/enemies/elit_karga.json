@@ -16,5 +16,23 @@
     "every": 4.0,
     "duration": 0.8,
     "speed": 380
+  },
+  "anim": {
+    "kind": "flap",
+    "hz": 1.49,
+    "bob": 7,
+    "rot": 12,
+    "sq": 0.1,
+    "lean": 0,
+    "hover": 36,
+    "knock": 2,
+    "hit_sq": 0.03,
+    "hit_rot": 0,
+    "death": "ash_big",
+    "death_ms": 900,
+    "alpha": [
+      1,
+      1
+    ]
   }
 }

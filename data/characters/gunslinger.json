@@ -43,6 +43,16 @@
       ],
       "amp": 14,
       "lag": 0.12
+    },
+    "walk": {
+      "frames": 0,
+      "stride": 136,
+      "strip": "res://assets/gfx/char/gunslinger_body_walk.png",
+      "cell": [
+        177,
+        320
+      ],
+      "shoulder_dev": []
     }
   }
 }

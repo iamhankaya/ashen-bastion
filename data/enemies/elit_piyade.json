@@ -11,5 +11,24 @@
   "scales_with_time": false,
   "sprite": "res://assets/gfx/enemies/curumus_piyade.png",
   "display_height": 230,
-  "tint": "#b8404a"
+  "tint": "#b8404a",
+  "anim": {
+    "kind": "crawl",
+    "hz": 0.74,
+    "bob": 5,
+    "rot": 5,
+    "sq": 0.05,
+    "lean": 4,
+    "hover": 0,
+    "knock": 2,
+    "hit_sq": 0.03,
+    "hit_rot": 0,
+    "cycle": 160,
+    "death": "ash_big",
+    "death_ms": 900,
+    "alpha": [
+      1,
+      1
+    ]
+  }
 }

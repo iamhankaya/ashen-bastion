@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" fill="none" stroke-linejoin="round" stroke-linecap="round" role="img" aria-label="Sonsuz Tambur"><title>Sonsuz Tambur</title>
+<g stroke="#2B0E14" stroke-width="4"><circle cx="48" cy="48" r="38" fill="#2E211C"/><circle cx="48" cy="48" r="38" stroke="#E8A24A" stroke-width="4"/></g>
+<path d="M48 48 C40 34 20 34 20 48 C20 62 40 62 48 48 C56 34 76 34 76 48 C76 62 56 62 48 48 Z" stroke="#2B0E14" stroke-width="13"/>
+<path d="M48 48 C40 34 20 34 20 48 C20 62 40 62 48 48 C56 34 76 34 76 48 C76 62 56 62 48 48 Z" stroke="#E8A24A" stroke-width="7"/>
+<path d="M48 48 C40 34 20 34 20 48" stroke="#EFE7D6" stroke-width="2.5" opacity=".7"/>
+<g fill="#D2B47E"><circle cx="48" cy="16" r="3"/><circle cx="48" cy="80" r="3"/><circle cx="16" cy="48" r="0"/></g>
+</svg>
