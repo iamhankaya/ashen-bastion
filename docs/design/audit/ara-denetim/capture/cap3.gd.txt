@@ -1,0 +1,77 @@
+extends SceneTree
+var OUT := "/tmp/claude-0/-home-user-ashen-bastion/8f0bc3f8-a83e-59b3-aca5-b8430a791030/scratchpad/out/"
+var c
+var L: Array = []
+func shot(n: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(OUT + n + ".png")
+func fr(n: int) -> void:
+	for i in n: await process_frame
+func secs(s: float) -> void:
+	var t := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t < s * 1000.0: await process_frame
+func tap(pos: Vector2) -> void:
+	var e := InputEventScreenTouch.new(); e.index = 0; e.pressed = true; e.position = pos
+	Input.parse_input_event(e)
+	await fr(3)
+	e = InputEventScreenTouch.new(); e.index = 0; e.pressed = false; e.position = pos
+	Input.parse_input_event(e)
+	await fr(4)
+func ctr(n: Control) -> Vector2: return n.get_global_rect().get_center()
+func rects(tag: String, node: Node) -> void:
+	var out: Array = []
+	_col(node, out)
+	L.append("RECTS %s %s" % [tag, JSON.stringify(out)])
+func _col(n: Node, out: Array) -> void:
+	if n is Control and n.is_visible_in_tree() and (n is Button or n is Label):
+		var r: Rect2 = n.get_global_rect()
+		out.append([n.get_class(), (n.text if "text" in n else ""), snappedf(r.position.x,1), snappedf(r.position.y,1), snappedf(r.size.x,1), snappedf(r.size.y,1)])
+	for ch in n.get_children(): _col(ch, out)
+func _initialize() -> void: _run()
+func _t(i: int, pr: bool, pos: Vector2) -> void:
+	var e := InputEventScreenTouch.new(); e.index = i; e.pressed = pr; e.position = pos
+	Input.parse_input_event(e)
+func _d(i: int, pos: Vector2) -> void:
+	var e := InputEventScreenDrag.new(); e.index = i; e.position = pos
+	Input.parse_input_event(e)
+func _run() -> void:
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await secs(1.0)
+	await tap(ctr(c.menu.play_button))
+	await secs(0.8)
+	var o := Vector2(540, 1750)
+	_t(0, true, o); _d(0, o + Vector2(140, -80))
+	await secs(0.6)
+	L.append("joy move=%s screen=%d" % [c.gate.move(), c.screen])
+	await shot("08-joystick")
+	_d(0, o + Vector2(400, -200)); await secs(0.4)
+	await shot("08b-joystick-asiri")
+	_t(1, true, Vector2(200, 1950)); _d(1, Vector2(120, 1950)); await fr(4)
+	L.append("second_finger_move=%s" % c.gate.move())
+	_t(1, false, Vector2(200, 1950)); _t(0, false, o); await fr(3)
+	# kenar: ekran kenarında joystick
+	_t(0, true, Vector2(20, 2350)); await secs(0.3)
+	await shot("08c-joystick-kenar")
+	_t(0, false, Vector2(20, 2350)); await fr(3)
+	# geç oyun yoğunluğu
+	c.sim.debug_set_time(900.0)
+	c.sim.debug_fill(&"curumus_piyade", 160, 560.0)
+	c.sim.debug_fill(&"les_kargasi", 100, 760.0)
+	c.sim.debug_fill(&"sovalye_hayaleti", 30, 420.0)
+	c.sim.hp = c.sim.max_hp
+	await secs(1.0)
+	L.append("dense screen=%d" % c.screen)
+	await shot("03b-hud-gec-yogun")
+	# oyun bitti (gerçek)
+	c.sim.hp = 0.0
+	c.sim.debug_spawn(&"sovalye_hayaleti", c.sim.player_pos)
+	await secs(3.0)
+	L.append("after_death screen=%d" % c.screen)
+	await secs(1.5)
+	await shot("14-oyun-bitti")
+	rects("result_lose", c.result_screen)
+	var f := FileAccess.open(OUT + "log3.txt", FileAccess.WRITE)
+	f.store_string("\n".join(L)); f.close()
+	quit()
