@@ -453,10 +453,9 @@ func _place_arm(arm: Sprite2D, gun: int, aim: float) -> void:
 	var sh := _shoulder_now(gun)
 	var half_h := body_size(_rig).y * 0.5
 	var in_rig := Vector2(sh.x, (sh.y - half_h) * anim.sy)
-	var pos := in_rig - Vector2.from_angle(local_aim) * anim.arm_back[gun]
 	if _strip_ready:
-		pos = _clamp_shoulder(gun, pos)
-	arm.position = pos
+		in_rig = _clamp_shoulder(gun, in_rig)  # kenet omuz tabanına; geri tepme (arm_back) sonradan tam uygulanır
+	arm.position = in_rig - Vector2.from_angle(local_aim) * anim.arm_back[gun]
 
 
 ## Gösterilen karenin omzu (Player yerel). Kare modu dışında duruş omzu.

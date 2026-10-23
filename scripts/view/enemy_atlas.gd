@@ -36,6 +36,9 @@ func build(sprites: Array[String]) -> EnemyAtlas:
 			img.convert(Image.FORMAT_RGBA8)
 			frames = maxi(1, int(frames_of.get(path.trim_prefix("res://"), 1)))
 			if img.get_width() % frames != 0:
+				push_warning(
+					"EnemyAtlas: %s genişliği %d kareye bölünmüyor; tek kare" % [path, frames]
+				)
 				frames = 1  # şerit hücrelere bölünmüyor: tek kare (yedek)
 		else:
 			img = PlaceholderArt.enemy_texture().get_image()

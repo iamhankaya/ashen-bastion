@@ -193,3 +193,51 @@ func test_arms_follow_the_per_frame_shoulder_deviation() -> void:
 	v.update_view(0.0)
 	var shift := v.shoulder_view(0).x - before.x
 	assert_almost_eq(shift, 0.02 * float(v._rig["display_height"]), 0.3, "kare 0 omzu dx=+%2")
+
+
+func test_clamp_holds_a_large_shoulder_deviation_to_the_tolerance() -> void:
+	var dev: Array = []
+	for f in 7:
+		dev.append([0.0, 0.0] if f == 6 else [0.15, 0.0])  # 30 px: kenetsiz çok aşar
+	var v := _view(6, dev)
+	_walk(v, 0.2, 3)
+	for g in 2:
+		var want := PlayerRig.shoulder_world(g, v._sim.player_pos, false, v._sim.character.rig)
+		assert_lte(v.shoulder_view(g).distance_to(want), PlayerView.SHOULDER_TOL + 0.05)
+
+
+func test_recoil_is_not_cut_by_the_shoulder_clamp_in_frame_mode() -> void:
+	var v := _view(6)
+	_walk(v, 0.2, 3)
+	var before := v.near_arm.position
+	v.anim.on_shot(0)
+	var peak := 0.0
+	var moved := 0.0
+	for i in 8:
+		_walk(v, 0.2, 1)
+		if v.anim.arm_back[0] > peak:
+			peak = v.anim.arm_back[0]
+			moved = v.near_arm.position.distance_to(before)
+	assert_gt(peak, 5.0, "tepme tepe noktası")
+	assert_almost_eq(moved, peak, 1.0, "geri tepme tam uygulanır (kenet yalnız omuz tabanında)")
+
+
+func test_crossfade_blends_the_deviation_of_both_frames_and_mirrors_when_facing_left() -> void:
+	var dev: Array = []
+	for f in 7:
+		dev.append([0.0, 0.0] if f == 6 else [0.02, 0.0])
+	var v := _view(6, dev)
+	_walk(v, 0.2, 3)
+	_stand(v, 2)  # 0 < mix < 1: kare 0 (dx 0,02) ile duruş (0) harmanı
+	var mix := v.anim.frame_mix
+	assert_between(mix, 0.01, 0.99)
+	var sh := v._shoulder_now(0)
+	var base := PlayerRig.shoulder_world(0, Vector2.ZERO, false, v._rig)
+	assert_almost_eq(sh.x - base.x, 0.02 * 200.0 * (1.0 - mix), 0.05)
+	v._sim.player_facing_left = true
+	v._facing_left = true
+	var left := v._shoulder_now(0)
+	var lbase := PlayerRig.shoulder_world(0, Vector2.ZERO, true, v._rig)
+	assert_almost_eq(
+		left.x - lbase.x, -0.02 * 200.0 * (1.0 - mix), 0.05, "sola bakışta dx aynalanır"
+	)
