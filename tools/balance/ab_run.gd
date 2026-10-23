@@ -35,5 +35,4 @@ func _initialize() -> void:
 		var f := FileAccess.open(out_path, FileAccess.WRITE)
 		if f != null:
 			f.store_string(JSON.stringify(rows))
-	SimKit.remove_tmp()
 	quit()

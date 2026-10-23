@@ -8,10 +8,6 @@ const LATE_START := 840.0  # 14 dk
 const LATE_STEPS := 7200
 
 
-func after_all() -> void:
-	SimKit.remove_tmp()
-
-
 func _policies(with_pickups: bool) -> Array[StringName]:
 	var out: Array[StringName] = Bots.POLICIES.duplicate()
 	if with_pickups:
