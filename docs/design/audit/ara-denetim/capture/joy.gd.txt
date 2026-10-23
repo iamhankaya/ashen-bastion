@@ -1,0 +1,32 @@
+extends SceneTree
+func tch(i, p, pos):
+	var e := InputEventScreenTouch.new(); e.index = i; e.pressed = p; e.position = pos
+	Input.parse_input_event(e)
+func drg(i, pos):
+	var e := InputEventScreenDrag.new(); e.index = i; e.position = pos
+	Input.parse_input_event(e)
+func w(n):
+	for k in n: await process_frame
+func _initialize() -> void:
+	_run()
+func _run():
+	var c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await w(30)
+	var pc: Vector2 = c.menu.play_button.get_global_rect().get_center()
+	tch(0, true, pc); await w(3); tch(0, false, pc); await w(3)
+	print("after play touch screen=", c.screen)
+	await w(60)
+	print("screen=", c.screen, " locked=", c.gate.is_locked())
+	var o := Vector2(540, 1700)
+	tch(0, true, o); await w(2)
+	print("after touch finger=", c.gate.finger, " origin=", c.gate.origin)
+	drg(0, o + Vector2(120, -60)); await w(30)
+	print("move=", c.gate.move(), " player=", c.sim.player_pos)
+	tch(0, false, o + Vector2(120,-60)); await w(2)
+	print("released finger=", c.gate.finger)
+	# mouse-only (emulate_touch_from_mouse)
+	var m := InputEventMouseButton.new(); m.button_index = MOUSE_BUTTON_LEFT; m.pressed = true; m.position = o
+	Input.parse_input_event(m); await w(2)
+	print("mouse finger=", c.gate.finger)
+	quit()

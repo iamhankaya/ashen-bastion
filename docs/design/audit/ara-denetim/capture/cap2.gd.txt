@@ -1,0 +1,90 @@
+extends SceneTree
+var OUT := "/tmp/claude-0/-home-user-ashen-bastion/8f0bc3f8-a83e-59b3-aca5-b8430a791030/scratchpad/out/"
+var c
+var L: Array = []
+func shot(n: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(OUT + n + ".png")
+func fr(n: int) -> void:
+	for i in n: await process_frame
+func secs(s: float) -> void:
+	var t := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t < s * 1000.0: await process_frame
+func tap(pos: Vector2) -> void:
+	var e := InputEventScreenTouch.new(); e.index = 0; e.pressed = true; e.position = pos
+	Input.parse_input_event(e)
+	await fr(3)
+	e = InputEventScreenTouch.new(); e.index = 0; e.pressed = false; e.position = pos
+	Input.parse_input_event(e)
+	await fr(4)
+func ctr(n: Control) -> Vector2: return n.get_global_rect().get_center()
+func rects(tag: String, node: Node) -> void:
+	var out: Array = []
+	_col(node, out)
+	L.append("RECTS %s %s" % [tag, JSON.stringify(out)])
+func _col(n: Node, out: Array) -> void:
+	if n is Control and n.is_visible_in_tree() and (n is Button or n is Label):
+		var r: Rect2 = n.get_global_rect()
+		out.append([n.get_class(), (n.text if "text" in n else ""), snappedf(r.position.x,1), snappedf(r.position.y,1), snappedf(r.size.x,1), snappedf(r.size.y,1)])
+	for ch in n.get_children(): _col(ch, out)
+func _initialize() -> void: _run()
+func _run() -> void:
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await secs(1.0)
+	await tap(ctr(c.menu.play_button))
+	await secs(0.6)
+	# seviye atlama: tek seviye, kilit
+	c.sim.debug_add_xp(c.sim.xp_to_next - c.sim.xp)
+	await fr(3)
+	L.append("levelup screen=%d pending=%d lock=%s" % [c.screen, c.sim.pending_levels, c.level_up.is_locked()])
+	# kilit sırasında karta dokun (kazara dokunma koruması)
+	await tap(ctr(c.level_up.cards[0]))
+	L.append("tap_during_lock screen=%d" % c.screen)
+	await shot("09-seviye-atlama-kilitli")
+	await secs(0.9)
+	L.append("lock_after=%s" % c.level_up.is_locked())
+	await tap(ctr(c.level_up.cards[2]))
+	L.append("tap_card screen=%d" % c.screen)
+	# devam sonrası kilit
+	L.append("gate_locked_after_choice=%s" % c.gate.is_locked())
+	await secs(0.3)
+	# duraklat
+	await tap(ctr(c.hud.pause_button))
+	L.append("tap_pause screen=%d" % c.screen)
+	await secs(0.4)
+	await shot("11-duraklatma")
+	rects("pause", c.pause_screen)
+	await tap(ctr(c.pause_screen.menu_button))
+	L.append("tap_menu_btn confirm_open=%s" % c.pause_screen.is_confirm_open())
+	await secs(0.3)
+	await shot("12-duraklatma-onay")
+	rects("pause_confirm", c.pause_screen)
+	L.append("dialog_default_focus=%s" % [root.gui_get_focus_owner()])
+	await tap(ctr(c.pause_screen.dialog_cancel))
+	await tap(ctr(c.pause_screen.resume_button))
+	L.append("tap_resume screen=%d" % c.screen)
+	await secs(0.2)
+	# ölüm
+	c.sim.hp = 0.0
+	c.sim.debug_spawn(&"sovalye_hayaleti", c.sim.player_pos)
+	await secs(1.5)
+	L.append("after_death screen=%d state=%d" % [c.screen, c.sim.state])
+	await shot("13-oyun-bitti-sayim")
+	await tap(ctr(c.result_screen.replay_button))
+	L.append("tap_replay_early screen=%d (0.8s kilit)" % c.screen)
+	await secs(2.0)
+	await shot("14-oyun-bitti")
+	rects("result_lose", c.result_screen)
+	await tap(ctr(c.result_screen.replay_button))
+	L.append("tap_replay screen=%d" % c.screen)
+	await secs(0.5)
+	c.sim.debug_set_time(479.5)
+	await secs(2.5)
+	L.append("after_win screen=%d state=%d" % [c.screen, c.sim.state])
+	await secs(2.0)
+	await shot("15-kazandin")
+	var f := FileAccess.open(OUT + "log2.txt", FileAccess.WRITE)
+	f.store_string("\n".join(L)); f.close()
+	quit()
