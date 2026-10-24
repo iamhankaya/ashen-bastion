@@ -284,12 +284,20 @@ func test_store_io_int_of_matches_highscores_rules() -> void:
 		)
 
 
-func test_skeleton_bodies_are_stubs_that_the_gate_would_catch() -> void:
+func test_b_bodies_are_real_not_stubs() -> void:
+	# B1/B2 sonrası depo/izleyici/ilerleme gövdeleri iskelet değil: Stub.todo kaydı bırakmaz.
 	Stub.reset()
-	var s := AchievementStore.new("user://test_ach_contract_never_written.json")
+	var path := "user://test_ach_contract_never_written.json"
+	var s := AchievementStore.new("user://yok_klasor_ach/x.json")
+	s.unlock(&"a", 1)
 	s.save()
-	assert_true(Stub.calls().has(&"AchievementStore.save"), "iskelet gövde Stub.todo çağırır")
-	Stub.reset()
+	s.load_file()
+	var tr := AchievementTracker.new(GameData.new(), s, &"gunslinger")
+	tr.attach(SimBus.new())
+	tr.finish(false, {})
+	AchievementProgress.of(null, s)
+	assert_eq(Stub.calls().size(), 0, "iskelet gövde kalmadı: %s" % [Stub.calls()])
+	assert_false(FileAccess.file_exists(path))
 
 
 func test_achievement_def_from_dict_tolerates_wrong_types() -> void:

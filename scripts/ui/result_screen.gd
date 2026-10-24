@@ -36,6 +36,13 @@ const BUTTONS_MIN_Y := 1500.0
 const REPLAY_H := 156.0
 const MENU_H := 132.0
 const BUTTON_GAP := 27.0
+## v2.0 (B4) yeni başarım özet çipi: şerit ile kombolar arasında 936×96; döküm satırlarından sonra 1100 ms'de 200 ms kayma-giriş.
+const CHIP_H := 96.0
+const CHIP_AT := 1.1
+const CHIP_IN := 0.2
+const CHIP_SLIDE := 24.0
+const CHIP_MAX_COMBOS := 3
+const DETAIL_FONT := 26
 const EMPTY_ROW_ALPHA := 0.35
 const STAMP_SEC := 0.28
 const STAMP_SCALE := 1.3
@@ -74,6 +81,10 @@ var combo_box: VBoxContainer
 var replay_button: Button
 var menu_button: Button
 var glow: TextureRect
+var achievement_chip: Panel
+var chip_title: Label
+var chip_names: Label
+var chip_star: Control
 
 var _t: float = 0.0
 var _skip_t: float = -1.0
@@ -92,6 +103,7 @@ var _strip_nodes: Array[Control] = []
 var _hero_total: int = 0
 var _combos_data: Array[Dictionary] = []
 var _shown_combos: int = MAX_COMBOS
+var _new_names: Array[String] = []
 
 
 func _ready() -> void:
@@ -136,6 +148,7 @@ func _build() -> void:
 	_build_record()
 	_build_breakdown()
 	_build_strip()
+	_build_chip()
 
 	combo_panel = PanelContainer.new()
 	combo_panel.theme_type_variation = &"PanelRaised"
@@ -241,7 +254,7 @@ func _build_breakdown() -> void:
 		l.size = Vector2(330, ROW_H)
 		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		row.add_child(l)
-		var det := UiKit.label("", &"", 24, UiKit.KEMIK_500)
+		var det := UiKit.label("", &"", DETAIL_FONT, UiKit.KEMIK_500)
 		det.name = "Detail"
 		det.add_theme_font_override(&"font", UiKit.font_semibold())
 		det.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -290,6 +303,63 @@ func _build_strip() -> void:
 	kills_value = vals[2]
 
 
+func _build_chip() -> void:
+	achievement_chip = Panel.new()
+	achievement_chip.name = "AchievementChip"
+	achievement_chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	achievement_chip.add_theme_stylebox_override(
+		&"panel", UiKit.stylebox(UiKit.MOR_800, UiKit.AMBER, 4, 14)
+	)
+	achievement_chip.visible = false
+	add_child(achievement_chip)
+	chip_star = UiKit.Glyph.new(&"star", UiKit.AMBER, 44.0)
+	chip_star.position = Vector2(28.0, (CHIP_H - 44.0) * 0.5)
+	chip_star.size = Vector2(44.0, 44.0)
+	achievement_chip.add_child(chip_star)
+	chip_title = UiKit.label("", &"LabelTimer", 30, UiKit.AMBER)
+	chip_title.name = "Title"
+	chip_title.position = Vector2(92.0, 8.0)
+	chip_title.size = Vector2(300.0, 40.0)
+	achievement_chip.add_child(chip_title)
+	chip_names = UiKit.label("", &"", 28, UiKit.KEMIK_300)
+	chip_names.name = "Names"
+	chip_names.add_theme_font_override(&"font", UiKit.font_semibold())
+	chip_names.position = Vector2(92.0, 48.0)
+	chip_names.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	chip_names.clip_text = true
+	achievement_chip.add_child(chip_names)
+
+
+## Koşuda açılan başarımların görünen adları; `show_result`'tan ÖNCE çağrılır. Boş => v1.1 düzeni aynen.
+## Çip: "YENİ BAŞARIM · N" + ilk iki ad ("+k" kalan); varken kombolar en çok 3 satır.
+func set_new_achievements(names: Array[String]) -> void:
+	_new_names = names.duplicate()
+	if achievement_chip == null:
+		return
+	var n := _new_names.size()
+	achievement_chip.visible = n > 0
+	if n > 0:
+		chip_title.text = "YENİ BAŞARIM · %d" % n
+		var shown := ", ".join(_new_names.slice(0, 2))
+		if n > 2:
+			shown += " +%d" % (n - 2)
+		chip_names.text = shown
+		achievement_chip.accessibility_name = ("%d yeni başarım: %s" % [n, ", ".join(_new_names)])
+	if _shown_combos != _combo_cap():
+		_shown_combos = _combo_cap()
+		if combo_box != null:
+			_render_combos()
+	_layout()
+
+
+func has_new_achievements() -> bool:
+	return not _new_names.is_empty()
+
+
+func _combo_cap() -> int:
+	return CHIP_MAX_COMBOS if not _new_names.is_empty() else MAX_COMBOS
+
+
 ## Sonucu göster. combos: UiKit.combo_rows() çıktısı. subtitle boşsa varsayılan. record: Highscores.submit sonucu
 ## ({} = rekor bilgisi yok).
 func show_result(
@@ -307,7 +377,7 @@ func show_result(
 	title_label.add_theme_color_override(&"font_color", UiKit.AMBER if won else UiKit.KEMIK_100)
 	sub_label.text = subtitle if subtitle != "" else (WON_SUB if won else LOST_SUB)
 	glow.texture = _glow_texture(UiKit.AMBER if won else UiKit.BORDO_500)
-	_shown_combos = MAX_COMBOS
+	_shown_combos = _combo_cap()
 	_fill_combos(combos)
 	_fill_record()
 	_fill_rows()
@@ -448,8 +518,8 @@ func _layout() -> void:
 		_put(row, _x0 + 36.0, Y_BREAKDOWN + BREAKDOWN_PAD + float(i) * ROW_H, _w - 72.0, ROW_H)
 		var rw := _w - 72.0
 		var det := row.get_node("Detail") as Label
-		det.position = Vector2(rw - 460.0, 0)
-		det.size = Vector2(190.0, ROW_H)
+		det.position = Vector2(rw - 500.0, 0)
+		det.size = Vector2(230.0, ROW_H)
 		var val := row.get_node("Value") as Label
 		val.position = Vector2(rw - 260.0, 0)
 		val.size = Vector2(260.0, ROW_H)
@@ -464,9 +534,14 @@ func _layout() -> void:
 		(col.get_node("Value") as Control).size = Vector2(cw, 64.0)
 		(col.get_node("Caption") as Control).position = Vector2(0, 126.0)
 		(col.get_node("Caption") as Control).size = Vector2(cw, 34.0)
+	var combos_y := Y_COMBOS
+	if not _new_names.is_empty():
+		_put(achievement_chip, _x0, Y_COMBOS, _w, CHIP_H)
+		chip_names.size = Vector2(_w - 92.0 - 28.0, 40.0)
+		combos_y += CHIP_H + GAP
 	combo_panel.custom_minimum_size = Vector2(_w, 0)
 	combo_panel.size = Vector2(_w, 0)
-	combo_panel.position = Vector2(_x0, Y_COMBOS + _dy)
+	combo_panel.position = Vector2(_x0, combos_y + _dy)
 	combo_panel.size = Vector2(_w, combo_panel.get_combined_minimum_size().y)
 	var by := maxf(combo_panel.position.y + combo_panel.size.y + GAP, BUTTONS_MIN_Y)
 	var limit := DESIGN_H - BOTTOM_DEFAULT - _extra.w
@@ -514,7 +589,7 @@ func apply_safe_area(extra: Variant = null) -> void:
 		_extra = extra
 	else:
 		_extra = UiKit.current_safe_extra(Vector2(1080.0, DESIGN_H))
-	_shown_combos = MAX_COMBOS
+	_shown_combos = _combo_cap()
 	if combo_box != null:
 		_render_combos()
 	_layout()
@@ -571,10 +646,19 @@ func _apply(t: float) -> void:
 		row.position.y = (
 			Y_BREAKDOWN + _dy + BREAKDOWN_PAD + float(i) * ROW_H + (1.0 - rp) * ROW_SLIDE_PX
 		)
+	_apply_chip(t, done)
 	_apply_stamp(t, done)
 	var on := buttons_enabled()
 	replay_button.disabled = not on
 	menu_button.disabled = not on
+
+
+func _apply_chip(t: float, done: bool) -> void:
+	if _new_names.is_empty():
+		return
+	var k := 1.0 if done else ResultTimeline.cubic_out(clampf((t - CHIP_AT) / CHIP_IN, 0.0, 1.0))
+	achievement_chip.modulate.a = k
+	achievement_chip.position.y = Y_COMBOS + _dy + (1.0 - k) * CHIP_SLIDE
 
 
 func _apply_stamp(t: float, done: bool) -> void:

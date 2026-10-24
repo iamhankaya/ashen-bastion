@@ -73,6 +73,7 @@ func test_render_fix_uses_a_fixed_world_covering_rect() -> void:
 
 func test_controller_toggle_flips_the_fix_for_all_three_renderers_and_persists() -> void:
 	var c := GameController.new()
+	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.start_run()
@@ -91,6 +92,7 @@ func test_controller_toggle_flips_the_fix_for_all_three_renderers_and_persists()
 func test_debug_label_shows_visible_vs_live_counts_in_a_debug_build() -> void:
 	assert_true(OS.is_debug_build(), "test koşusu debug derleme")
 	var c := GameController.new()
+	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	assert_not_null(c._render_label, "debug derlemede etiket kurulur")

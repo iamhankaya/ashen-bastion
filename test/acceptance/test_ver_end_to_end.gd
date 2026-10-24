@@ -30,6 +30,7 @@ func after_all() -> void:
 
 func _controller() -> GameController:
 	var c := GameController.new()
+	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.highscores = Highscores.new(TMP_SCORES)  # v2.0 izolasyon: gerçek highscores.json'a yazılmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED  # sim'i test sürer
 	add_child_autofree(c)

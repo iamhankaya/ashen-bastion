@@ -31,6 +31,7 @@ func test_u11_controller_opens_scores_screen_from_menu_and_back_returns() -> voi
 	if V11Slice.require(self, "D3"):
 		return
 	var c := GameController.new()
+	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.highscores = Highscores.new(_dir.path_join("hs.json"))
@@ -58,6 +59,7 @@ class SpyController:
 
 func _spy(highscore_path: String) -> SpyController:
 	var c := SpyController.new()
+	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.highscores = Highscores.new(highscore_path)

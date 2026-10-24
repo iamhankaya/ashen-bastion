@@ -102,6 +102,11 @@ Her dilim yalnız kendi alt başlığına madde ekler (birleştirme çakışmas�
 
 ### B — Başarımlar
 (Başarım fazı ekler: bildirimin kalabalık üstünde okunurluğu ve y 820'nin başparmakla örtüşmemesi, çentik düzeni.)
+- [ ] Bir başarım açılınca kutu y 820'de belirir, ~2,5 sn kalır, dokunma/joystick kesilmez; üst üste açılışlarda tek tek gelir.
+- [ ] Başarımlar ekranı: liste kaydırılır, GERİ menüye döner, çentikli cihazda başlık/GERİ güvenli alan içinde.
+- [ ] Koşu sonunda açılan başarım varsa sonuç ekranında "YENİ BAŞARIM · N" çipi görünür; düğmeler ekran içinde.
+- [ ] Uygulamayı koşu ortasında arka plana alıp kapat/aç: o ana dek açılanlar listede durur.
+- [ ] Yer tutucu başarım ikonları (mevcut HUD/beceri ikonları) kabul edilebilir mi? (22 özel ikon üretilirse yalnız PNG + `icon` yolu eklenir.)
 
 ### M — Bakım
 Bu bölümün maddeleri **M-n** diye numaralanır (K/B ile çakışmasın). Bulut yalnız masaüstü/headless koştu; aşağıdakiler cihazda görülür.
