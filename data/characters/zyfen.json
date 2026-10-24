@@ -31,14 +31,22 @@
       "lag": 0.12
     },
     "walk": {
-      "frames": 0,
-      "stride": 150,
-      "strip": "res://assets/gfx/char/zyfen_body_walk.png",
+      "frames": 8,
+      "stride": 130,
+      "strip": "res://assets/gfx/char/zyfen_strip.png",
       "cell": [
-        177,
+        300,
         320
       ],
       "shoulder_dev": []
+    },
+    "cast": {
+      "frames": 6,
+      "fire_frame": 3,
+      "fps": 24
+    },
+    "gather": {
+      "frames": 4
     }
   },
   "portrait": "res://assets/gfx/char/zyfen_portrait.png",

@@ -796,6 +796,8 @@ func _v11_on_screen(next: int) -> void:
 
 ## Boş kovan (P8): silindir hizasından, ateş yönünün tersine yatay fırlar.
 func _on_shot_for_shell(gun: int, origin: Vector2, dir: Vector2) -> void:
+	if PlayerRig.is_armless(sim.character.rig):  # kolsuz karakterde kovan yok (v2.0.2)
+		return
 	var port := (origin + player_view.shoulder_view(gun)) * 0.5
 	fx_renderer.add_shell(port, Vector2(-signf(dir.x), 0.0))
 
