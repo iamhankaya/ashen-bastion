@@ -11,7 +11,7 @@ func _menu() -> MainMenu:
 	return m
 
 
-func test_button_order_play_scores_toggles() -> void:
+func test_button_order_play_half_row_scores_toggles() -> void:
 	var m := _menu()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -20,8 +20,9 @@ func test_button_order_play_scores_toggles() -> void:
 	var col := m.play_button.get_parent() as Control
 	assert_eq(m.scores_button.get_parent(), col)
 	assert_eq(m.play_button.get_index(), 0)
-	assert_eq(m.scores_button.get_index(), 1)
-	assert_eq(m.sound_button.get_parent().get_index(), 2, "ses/titreşim sırası 3.")
+	assert_eq(m.characters_button.get_parent().get_index(), 1, "v2.0: KARAKTERLER | BAŞARIMLAR 2.")
+	assert_eq(m.scores_button.get_index(), 2)
+	assert_eq(m.sound_button.get_parent().get_index(), 3, "ses/titreşim sırası 4.")
 	assert_lt(m.play_button.global_position.y, m.scores_button.global_position.y)
 	assert_lt(m.scores_button.global_position.y, m.sound_button.global_position.y)
 	assert_eq(m.scores_button.size.y, 132.0)
@@ -29,26 +30,26 @@ func test_button_order_play_scores_toggles() -> void:
 	assert_eq(m.play_button.size.y, 180.0)
 
 
-func test_column_top_at_least_1715_and_gap_27() -> void:
+func test_column_top_at_least_1556_and_gap_27() -> void:
 	var m := _menu()
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var col := m.play_button.get_parent() as Control
-	assert_gte(col.global_position.y, 1715.0 - 0.01)
-	var gap := m.scores_button.global_position.y - (m.play_button.global_position.y + 180.0)
+	assert_gte(col.global_position.y, 1556.0 - 0.01)
+	var gap := m.characters_button.global_position.y - (m.play_button.global_position.y + 180.0)
 	assert_almost_eq(gap, 27.0, 0.5)
 
 
-func test_hero_box_960x1020_ends_by_1680() -> void:
+func test_hero_box_960x960_ends_by_1520() -> void:
 	var m := _menu()
 	await get_tree().process_frame
 	if m.hero == null:
 		pending("ana görsel dosyası yok: hero kutusu kurulmaz")
 		return
 	assert_eq(m.hero.offset_right - m.hero.offset_left, 960.0)
-	assert_eq(m.hero.offset_bottom - m.hero.offset_top, 1020.0)
-	assert_lte(1200.0 + m.hero.offset_bottom, 1680.0 + 0.01)
-	assert_gte(1200.0 + m.hero.offset_top, 660.0 - 0.01)
+	assert_eq(m.hero.offset_bottom - m.hero.offset_top, 960.0)
+	assert_lte(1200.0 + m.hero.offset_bottom, 1520.0 + 0.01)
+	assert_gte(1200.0 + m.hero.offset_top, 560.0 - 0.01)
 
 
 func test_scores_requested_signal() -> void:
@@ -72,7 +73,7 @@ func test_safe_area_extra_moves_column_up_and_title_down() -> void:
 	m.apply_safe_area(Vector4.ZERO)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	assert_gte(col.global_position.y, 1715.0 - 0.5)
+	assert_gte(col.global_position.y, 1556.0 - 0.5)
 
 
 func test_play_button_keeps_focus_on_open() -> void:

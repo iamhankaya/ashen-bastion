@@ -5,7 +5,6 @@ extends Node
 ## Android geri tuşu, arka plana alınınca otomatik duraklatma. Karar mantığı InputGate/PauseLogic'tedir;
 ## bu sınıf yalnız uygular. Tam oyun: 20 dk, Kale Lordu (lord modu).
 
-const CHARACTER := &"gunslinger"
 ## Tam oyun: 20 dk, 20. dk'da Kale Lordu (ölümü kazandırır).
 const RUN_OPTS := {"end_mode": "lord", "end_time": 1200.0}
 const WON_SUB := "Şafak söktü; kale seni yutamadı."
@@ -42,6 +41,9 @@ var level_up: LevelUpScreen
 var pause_screen: PauseScreen
 var result_screen: ResultScreen
 var menu: MainMenu
+## v2.0 cephesi (karakter/başarım/bakım dilimleri); testler `v2_opts`'u add_child'dan ÖNCE doldurur.
+var v2: V2Flow
+var v2_opts: Dictionary = {}
 ## v1.1 (iskelet): ilgili D fazları `_v11_*` işlevlerinde kurar/doldurur; o zamana dek v1 davranışı değişmez.
 var highscores: Highscores = Highscores.new()
 var scores_screen: HighscoreScreen
@@ -73,13 +75,22 @@ var _result_record: Dictionary = {}
 
 func _ready() -> void:
 	get_tree().quit_on_go_back = false  # geri tuşunu kendimiz yönetiriz
+	v2 = V2Flow.new(v2_opts)
 	_build_world()
 	_build_ui()
 	_v11_build_world()  # world ve ui kuruldu
 	audio = AudioDirector.new()
 	audio.name = "Audio"
 	add_child(audio)
+	var refs := {"ui_root": ui, "menu": menu, "hud": hud, "level_up": level_up}
+	refs.merge({"result_screen": result_screen, "pause_screen": pause_screen})
+	refs["set_screen"] = _set_screen
+	v2.build_world(refs)
 	go_menu()
+
+
+func _exit_tree() -> void:
+	v2.release()
 
 
 func _build_world() -> void:
@@ -228,7 +239,7 @@ func go_menu() -> void:
 ## Yeni oyun (menüden OYNA, Baştan Başla, Tekrar Oyna).
 func start_run() -> void:
 	_stop_stress()
-	_bind(GameSim.new(randi(), CHARACTER, RUN_OPTS))
+	_bind(GameSim.new(randi(), v2.selected_character(), RUN_OPTS))
 	world.visible = true
 	atmosphere.visible = true
 	_update_views(0.0)
@@ -283,6 +294,7 @@ func _on_stress_finished(result: Dictionary) -> void:
 func pause_game() -> void:
 	if screen != PauseLogic.Screen.PLAYING:
 		return
+	v2.on_pause()
 	if _v11_skip_delay():  # geri tuşu / arka plan / duraklat düğmesi gecikmeyi atlar; oyun duraklatılmaz
 		return
 	pause_screen.open(
@@ -347,6 +359,7 @@ func _bind(new_sim: GameSim) -> void:
 		sim.bus.run_ended.connect(_on_run_ended)
 		sim.bus.player_damaged.connect(_on_player_damaged)
 	_v11_bind(sim)
+	v2.bind(null if _stress != null else sim)  # stres koşusu başarım saymaz
 
 
 # --- kare döngüsü ---------------------------------------------------------------------------
@@ -417,6 +430,7 @@ func _update_views(dt: float) -> void:
 	atmosphere.follow(camera.position, camera.view_size())
 	hud.refresh(dt)
 	_v11_update_views(dt if screen == PauseLogic.Screen.PLAYING else 0.0)
+	v2.update_views(dt if screen == PauseLogic.Screen.PLAYING else 0.0)
 	if _render_label != null and _render_label.visible:
 		_render_label.text = render_debug_text()
 
@@ -483,6 +497,8 @@ func _v11_build_world() -> void:
 	scores_screen.back_requested.connect(go_menu)
 	scores_screen.play_requested.connect(start_run)
 	menu.scores_requested.connect(open_scores)
+	menu.characters_requested.connect(open_characters)
+	menu.achievements_requested.connect(open_achievements)
 	result_screen.record_stamped.connect(_on_record_stamped)
 	get_viewport().size_changed.connect(_apply_safe_areas)
 	_apply_safe_areas()
@@ -525,6 +541,14 @@ func open_scores() -> void:
 		return
 	scores_screen.show_scores(highscores.entries, -1)
 	_set_screen(PauseLogic.Screen.SCORES)
+
+
+func open_characters() -> void:
+	v2.open_characters()
+
+
+func open_achievements() -> void:
+	v2.open_achievements()
 
 
 ## `_bind` sonunda (sim null olabilir): faz başına alt işlevlere dağıtır (her D yalnız kendi gövdesini doldurur).
@@ -777,6 +801,7 @@ func _on_record_stamped() -> void:
 ## `_set_screen` sonunda (next = PauseLogic.Screen). D3: SCORES ekranı, sonuç ekranı gecikmesi.
 func _v11_on_screen(next: int) -> void:
 	scores_screen.visible = next == PauseLogic.Screen.SCORES
+	v2.on_screen(next)
 
 
 # --- D1: oyuncu/Lord görünüm olayları ---------------------------------------------------------
@@ -893,7 +918,9 @@ func _events():
 func _on_run_ended(won: bool, stats: Dictionary) -> void:
 	_run_won = won
 	_run_stats = stats
+	v2.on_run_ended(won, stats)  # tracker.finish: sonuç ekranından ve skor kaydından ÖNCE
 	_v11_on_run_ended(won, stats)
+	v2.flush()
 
 
 func _on_player_damaged(_amount: float, _hp: float) -> void:

@@ -80,3 +80,22 @@ Dengeye dokunan sonuçlar (geç oyun zorluğu vb.) ayrı denge görevine veridir
 36. **`user://highscores.json` boş/bozuk** — (a) dosya yokken En İyi Skorlar → "HENÜZ SKOR YOK" ve OYNA; (b) dosyayı boş/rastgele yazıyla bozup aç → çökme yok, liste boş, `highscores.json.bad` oluşur, bir sonraki oyun sonunda geçerli dosya yazılır.
 37. **Skor / SERİ hissi** — SERİ çipi ×N, hasar alınca bozulması, sonuç ekranı sayımı ve rekor bandı → okunuyor, tatmin edici; kombo ekranı sığıyor.
 38. **Geç oyun dengesi (veri: A/B raporu)** — eklentilerle 15+ dk oynayınca geç oyun "zor ama eklentilerle dengelenebilir" mi; denge ayarı şimdilik YOK (kullanıcı kararı).
+
+# v2.0 cihaz kontrol listesi (kullanıcıda doğrulanır — T20261024-55 sözleşmesi; dilim fazları kendi alt başlığına ekler)
+
+Aynı kural: bulutta telefon yok; bunlar yalnız cihazda görülür. Her satır: **ne** — nasıl bakılır → beklenen. Kurulum için A bölümü (debug APK).
+Her dilim yalnız kendi alt başlığına madde ekler (birleştirme çakışması olmasın); genel/sözleşme maddeleri aşağıdadır.
+
+## Genel (sözleşme)
+39. **Ana menü yeni düzeni** — KARAKTERLER ∣ BAŞARIMLAR yarım düğmeleri OYNA'nın altında, EN İYİ SKORLAR ve SES ∣ TİTREŞİM yerinde; alt satırda seçili karakter adı ve `açılan/toplam` → hiçbir öğe kesilmiyor, ana görsel (960×960) düğmelerin üstünde kalıyor; çentikli/yuvarlak köşeli cihazda da.
+40. **Sürüm etiketi** — menü en altında `Sürüm 2.0 · <karakter adı>`; uzun ad `…` ile kesilir (Türkçe `i`/`ı` bozulmaz).
+41. **Geri tuşu** — (K/B ekranları gelince) Android geri tuşu Karakterler ve Başarımlar ekranından ana menüye döner; menüde çıkar.
+
+### K — Karakterler
+(Karakter fazı ekler: vitrin ≤ 1,5 ms/kare, çentik düzeni, yer tutucu görsel tonu, 2× yazı boyutu.)
+
+### B — Başarımlar
+(Başarım fazı ekler: bildirimin kalabalık üstünde okunurluğu ve y 820'nin başparmakla örtüşmemesi, çentik düzeni.)
+
+### M — Bakım
+(Bakım fazı ekler: N3 / N5 / N8 ve GAIN 2,2 notları, shader derlemesi.)

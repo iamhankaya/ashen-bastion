@@ -131,6 +131,13 @@ class Glyph:
 					w,
 					true
 				)
+			&"person":
+				draw_circle(c + Vector2(0.0, -r * 0.42), r * 0.34, color)
+				var body := PackedVector2Array()
+				for i in 13:
+					var a := PI + PI * float(i) / 12.0
+					body.append(c + Vector2(cos(a) * r * 0.78, r * 0.95 + sin(a) * r * 0.78))
+				draw_colored_polygon(body, color)
 			&"trophy":
 				var cup := PackedVector2Array(
 					[
