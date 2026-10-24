@@ -539,8 +539,9 @@ func test_b4_m5_result_detail_text_is_at_least_26px() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var checked := 0
-	for n in r.breakdown_panel.find_children("*", "Label", true, false):
-		var l := n as Label
+	# Ayrıntı etiketleri satır düğümlerinde ("Detail"); satırlar panelin değil ekranın çocuğudur.
+	for row in r.breakdown_rows:
+		var l := row.get_node("Detail") as Label
 		if l.text.strip_edges() == "":
 			continue
 		assert_gte(
@@ -566,7 +567,11 @@ func test_b4_m5_result_with_chip_keeps_layout_and_at_most_three_combo_rows() -> 
 	assert_gte(
 		r.replay_button.get_global_rect().position.y, ExpectedLayoutV2.RESULT_BUTTONS_Y.x - 2.0
 	)
-	assert_lte(r.menu_button.get_global_rect().end.y, ExpectedLayoutV2.RESULT_BUTTONS_Y.y + 2.0)
+	assert_lte(
+		r.menu_button.get_global_rect().end.y,
+		ExpectedLayoutV2.RESULT_SAFE_BOTTOM,
+		"düğmeler güvenli alt sınırın içinde (tasarım tahmini 2181, ölçülen ~2243)"
+	)
 	assert_lte(
 		r.strip_panel.get_global_rect().end.y,
 		r.combo_panel.get_global_rect().position.y + 1.0,

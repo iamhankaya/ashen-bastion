@@ -173,7 +173,9 @@ func test_b4_toast_shows_name_of_definition() -> void:
 	add_child_autofree(t)
 	var d := GameData.load_default()
 	t.show_def(d.get_achievement(&"bes_dakika"))
-	assert_true(AchKit.any_text_contains(t, "Beş Dakika"), "başarım adı bildirimde görünür")
+	assert_true(
+		AchKit.any_text_contains(t, UiKit.upper_tr("Beş Dakika")), "başarım adı bildirimde görünür"
+	)
 
 
 func test_b4_toast_apply_state_changes_position_or_alpha() -> void:

@@ -57,8 +57,16 @@ func test_v2_require_returns_true_for_unmarked_and_false_for_marked() -> void:
 		if not V2Slice.marks().has(s):
 			open_symbol = s
 			break
-	if not OS.get_environment(SliceFile.FORCE_ENV).is_empty() or open_symbol.is_empty():
-		pending("tüm simgeler işaretli ya da V2_SLICES_FORCE açık")
+	if not OS.get_environment(SliceFile.FORCE_ENV).is_empty():
+		pending("V2_SLICES_FORCE açık")
+		return
+	if open_symbol.is_empty():
+		# B-tur: tüm simgeler işaretli; işaretli simgede require false döner ve pending çağırmaz.
+		var all_probe := _Probe.new()
+		for sym in V2Slice.SYMBOLS:
+			assert_false(V2Slice.require(all_probe, sym), "%s işaretli: require false" % sym)
+		assert_eq(all_probe.pending_calls, 0)
+		all_probe.free()
 		return
 	# `require` pending() çağırır; bu testin kendisi pending olmasın diye çağrı sahte GutTest'e yönlendirilir.
 	var probe := _Probe.new()

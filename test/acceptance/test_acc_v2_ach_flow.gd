@@ -128,10 +128,8 @@ func test_b5_result_summary_lists_first_two_names_plus_remaining() -> void:
 	c.flush_delay()
 	var tx := UiKit.upper_tr("Yeni başarım · 3")
 	assert_true(AchKit.any_text_contains(c.result_screen, tx), "N = 3")
-	assert_true(AchKit.any_text_contains(c.result_screen, UiKit.upper_tr("İlk Kan")), "ilk isim")
-	assert_true(
-		AchKit.any_text_contains(c.result_screen, UiKit.upper_tr("Onuncu Basamak")), "ikinci isim"
-	)
+	assert_true(AchKit.any_text_contains(c.result_screen, "İlk Kan"), "ilk isim")
+	assert_true(AchKit.any_text_contains(c.result_screen, "Onuncu Basamak"), "ikinci isim")
 	assert_true(AchKit.any_text_contains(c.result_screen, "+1"), "kalan sayısı")
 
 

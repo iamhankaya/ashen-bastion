@@ -203,8 +203,14 @@ func test_b6_back_signal_and_scroll_container_for_22_rows() -> void:
 func test_b6_safe_area_keeps_content_inside() -> void:
 	if _gate():
 		return
-	var s := _screen(AchKit.store())
-	s.size = ExpectedLayoutV2.REF
+	# Ekran tam-dikdörtgen çıpalı: boyutunu doğrudan atamak yerine REF boyutlu bir ana düğüme koyulur.
+	var host := Control.new()
+	host.custom_minimum_size = ExpectedLayoutV2.REF
+	host.size = ExpectedLayoutV2.REF
+	add_child_autofree(host)
+	var s := AchievementsScreen.new()
+	host.add_child(s)
+	s.open(AchKit.data(), AchKit.store())
 	s.apply_safe_area(ExpectedLayoutV2.SAFE_NOTCH)
 	await get_tree().process_frame
 	await get_tree().process_frame
