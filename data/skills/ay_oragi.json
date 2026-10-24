@@ -2,7 +2,7 @@
   "id": "ay_oragi",
   "kind": "evolution",
   "name": "Ay Orağı",
-  "icon": "res://assets/ui/icons/ay-oragi.svg",
+  "icon": "res://assets/ui/icons/ay-oragi.png",
   "max_level": 1,
   "tags": [
     "rhythm"

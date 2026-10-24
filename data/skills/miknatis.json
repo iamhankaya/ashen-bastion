@@ -33,7 +33,7 @@
   "variants": {
     "zyfen": {
       "name": "Çeken Esinti",
-      "icon": "res://assets/ui/icons/zyfen/miknatis.svg",
+      "icon": "res://assets/ui/icons/zyfen/miknatis.png",
       "desc": [
         "Toplama alanı +%25.",
         "Toplama alanı +%50.",

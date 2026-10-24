@@ -35,7 +35,7 @@
   "variants": {
     "zyfen": {
       "name": "Derin Nefes",
-      "icon": "res://assets/ui/icons/zyfen/fazladan-mermi.svg",
+      "icon": "res://assets/ui/icons/zyfen/fazladan-mermi.png",
       "desc": [
         "Rüzgar toplamadan önce +1 kesik.",
         "Rüzgar toplamadan önce +2 kesik.",

@@ -2,7 +2,7 @@
   "id": "hortum",
   "kind": "active",
   "name": "Hortum",
-  "icon": "res://assets/ui/icons/hortum.svg",
+  "icon": "res://assets/ui/icons/hortum.png",
   "max_level": 5,
   "tags": [],
   "behavior": "hortum",

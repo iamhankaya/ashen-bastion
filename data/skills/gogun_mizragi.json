@@ -2,7 +2,7 @@
   "id": "gogun_mizragi",
   "kind": "evolution",
   "name": "Göğün Mızrağı",
-  "icon": "res://assets/ui/icons/gogun-mizragi.svg",
+  "icon": "res://assets/ui/icons/gogun-mizragi.png",
   "max_level": 1,
   "tags": [],
   "behavior": "gogun_mizragi",

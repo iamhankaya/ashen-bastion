@@ -2,7 +2,7 @@
   "id": "delen_ruzgar",
   "kind": "active",
   "name": "Delen Rüzgar",
-  "icon": "res://assets/ui/icons/delen-ruzgar.svg",
+  "icon": "res://assets/ui/icons/delen-ruzgar.png",
   "max_level": 5,
   "tags": [],
   "behavior": "delen_ruzgar",

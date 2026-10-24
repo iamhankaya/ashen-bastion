@@ -2,7 +2,7 @@
   "id": "hava_bicaklari",
   "kind": "active",
   "name": "Hava Bıçakları",
-  "icon": "res://assets/ui/icons/hava-bicaklari.svg",
+  "icon": "res://assets/ui/icons/hava-bicaklari.png",
   "max_level": 5,
   "tags": [],
   "behavior": "hava_bicaklari",

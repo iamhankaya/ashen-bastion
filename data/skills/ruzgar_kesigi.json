@@ -2,7 +2,7 @@
   "id": "ruzgar_kesigi",
   "kind": "active",
   "name": "Rüzgar Kesiği",
-  "icon": "res://assets/ui/icons/ruzgar-kesigi.svg",
+  "icon": "res://assets/ui/icons/ruzgar-kesigi.png",
   "max_level": 5,
   "tags": [],
   "behavior": "ruzgar_kesigi",

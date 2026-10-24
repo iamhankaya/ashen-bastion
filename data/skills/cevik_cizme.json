@@ -33,7 +33,7 @@
   "variants": {
     "zyfen": {
       "name": "Rüzgar Adımı",
-      "icon": "res://assets/ui/icons/zyfen/cevik-cizme.svg",
+      "icon": "res://assets/ui/icons/zyfen/cevik-cizme.png",
       "desc": [
         "Hareket hızı +%6.",
         "Hareket hızı +%12.",

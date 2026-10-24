@@ -35,7 +35,7 @@
   "variants": {
     "zyfen": {
       "name": "Çabuk Toplayış",
-      "icon": "res://assets/ui/icons/zyfen/hizli-doldurma.svg",
+      "icon": "res://assets/ui/icons/zyfen/hizli-doldurma.png",
       "desc": [
         "Rüzgar toplama süresi -%10.",
         "Rüzgar toplama süresi -%20.",

@@ -54,3 +54,9 @@ Kalite kapısı sonuçları ve komutlar: `docs/dev/v1.1-d4/README.md`. Testler: 
 `foot_slide` ≥ N-2 çift ≤3 px, klip boy sapması ≤%6, toplam genişlik ≤8192. Kapı kırmızıysa çıkış kodu 1 ve `quality.json`
 `pass: false` (sessiz yedek yok; `test_make_zyfen_strip.py` depodaki çıktıyı denetler). `stride`, `zyfen.json` `walk.stride` ile aynı olmalıdır.
 Yöntem kb notu: kareler video kareleridir; üretici araç yan görünümde bacak sırasını değiştiremediği için video yöntemi kullanıldı.
+
+## Zyfen ikon ve efektleri (`process_zyfen_fx.py`, v2.0.2 A2a)
+`python tools/art/process_zyfen_fx.py [--check]`: `art/source/zyfen/icons/*.png` (20, 1254 px) -> alfa kutusuna kırp, uzun kenar %80,
+256 px kare tuval -> `assets/ui/icons/<id-tireli>.png` (13 rüzgar becerisi) ve `assets/ui/icons/zyfen/<ortak-id-tireli>.png`
+(7 pasif varyantı). `art/source/zyfen/fx/*.png` (13) -> her kenarda >= %8 şeffaf pay (sönük kenar pikselleri silinir, tuval
+büyür), en-boy oranı korunur, uzun kenar <= 512 px -> `assets/gfx/fx/zyfen/`. Yüklenen kod: `scripts/view/zyfen_fx.gd`.
