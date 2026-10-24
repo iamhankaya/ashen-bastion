@@ -2,7 +2,7 @@
   "id": "fazladan_mermi",
   "kind": "passive",
   "name": "Fazladan Mermi",
-  "icon": "placeholder:fazladan_mermi",
+  "icon": "res://assets/ui/icons/fazladan-mermi.png",
   "max_level": 5,
   "tags": [
     "rhythm"

@@ -2,7 +2,7 @@
   "id": "cevik_cizme",
   "kind": "passive",
   "name": "Çevik Çizme",
-  "icon": "placeholder:cevik_cizme",
+  "icon": "res://assets/ui/icons/cevik-cizme.png",
   "max_level": 5,
   "tags": [],
   "levels": [

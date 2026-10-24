@@ -3,7 +3,7 @@
   "kind": "active",
   "pool": "gunslinger",
   "name": "Şarapnel",
-  "icon": "placeholder:sarapnel",
+  "icon": "res://assets/ui/icons/sarapnel.png",
   "max_level": 5,
   "tags": [],
   "behavior": "sarapnel",
