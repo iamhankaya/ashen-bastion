@@ -46,7 +46,6 @@ const BOUNCE_TIERS := [
 ]
 const BOUNCE_TIER_DEFAULT := 1
 const BOB_PX := 4.5  # varsayılan kademenin bob'u (üst sınır karşılaştırmaları için)
-const BOB_HZ := 2.2
 const CONTACT_TIME := 0.06
 const LEAN_FRAME_SCALE := 0.6
 const LEAN_TAU := 0.04  # 120 ms'de %95
@@ -423,7 +422,10 @@ func _update_walk(dt: float, vel: Vector2) -> void:
 			frame_b = frame_a
 			frame_mix = 0.0
 		else:
-			_phase = fposmod(_phase + BOB_HZ * clampf(speed / MAX_SPEED, 0.5, 1.0) * dt, 1.0)
+			# v1.1.1: faz = katedilen yol / stride (kare modundaki gibi); düşük hızda bob adım temposundan kopmaz
+			var dist_p := speed * dt
+			if dist_p <= 60.0:  # ışınlanma yok sayılır
+				_phase = WalkCycle.advance(_phase, dist_p, _stride)
 			frame_a = 0
 			frame_b = 0
 			frame_mix = 0.0

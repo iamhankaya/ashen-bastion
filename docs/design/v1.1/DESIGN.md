@@ -44,14 +44,14 @@ Mevcut: `BOB_PX 4`, `SQUASH 0,04`, `BOB_HZ 2,2` (|sin| → 4,4 adım/sn), `RECOI
 | ID | Hareket | Tetikleyici | Zamanlama / eğri | Genlik | Sınıf |
 |---|---|---|---|---|---|
 | P1 | **Nefes (duruş)** | hız < 5 px/sn | 2,4 sn sinüs, sürekli | gövde sy 1,000→1,015; kol ±1,5°; atkı `scarf_amp` 3 px | (a) |
-| P2 | **Yürüme sekmesi + squash/stretch** (**yedek**; kare gelince §1.7.3'e göre 0) | hız ≥ 5 px/sn; frekans = 2,2 Hz × clamp(hız/300, 0,5, 1) | `h = |sin(πφ)|^0,8` (temasta keskin); temas anında 60 ms squash | bob **9 px** (4'ten); temas: sx 1,05 / sy 0,93; havada: sx 0,97 / sy 1,04 | (a) |
-| P3 | **Gövde eğimi (lean)** | harekette | hız yönüne eğim, 120 ms lag (cubic-out); adım senkronlu ±2° sallanma | `6° × clamp(vx/300, −1, 1)` + ±2° | (a) |
+| P2 | **Yürüme sekmesi + squash/stretch** (**yedek**; kare gelince §1.7.3'e göre 0) | hız ≥ 5 px/sn; faz = katedilen yol / rig stride (136 px; v1.1.1: önceki "2,2 Hz × clamp(hız/300, 0,5, 1)" düşük hızda tempodan kopuyordu) | `h = |sin(πφ)|^0,8` (temasta keskin); temas anında 60 ms squash | bob **4,5 px** (v1.1.1; v1.1: 9 px); temas: sx 1,03 / sy 0,96; havada: sx 0,985 / sy 1,02 (kademeler: `PlayerAnim.BOUNCE_TIERS`) | (a) |
+| P3 | **Gövde eğimi (lean)** | harekette | hız yönüne eğim, 120 ms lag (cubic-out); adım senkronlu ±2° sallanma | `4° × clamp(vx/300, −1, 1)` + ±1° (v1.1.1; v1.1: 6° + ±2°; toplam ≤5°) | (a) |
 | P4 | **Yön çevirme (turn)** | `facing_left` değişince, 8 px histerezis | 70 ms: `scale.x` 1 → 0,25 → −1 (orta noktada ayna), cubic-in-out | min |sx| 0,25 | (a) |
 | P5 | **Etek/atkı ikincil hareketi** | sürekli | etek: mevcut `sway` + adım fazlı sinüs; atkı: koşuda `scarf_amp` 6,5 px, duruşta 3 px | etek ±3 px ek; atkı 3–6,5 px | (a) shader |
 | P6 | **Geri tepme (tabanca başına ayrı)** | `shot_fired(gun)` | **40 ms** kol +8° yukarı & omuzdan 10 px geri & kol boyu %94 (cubic-out) → **110 ms** toparlanma (quad-out, −1,5° aşma, sonra 0). Yeni atış zamanlayıcıyı sıfırlar; genlik birikmez (tavan 1,25×) | kol 8°, 10 px, %6 kısalma; gövde karşı −1,2° ve 2 px geri (tabanca başına yarısı) | (a) |
 | P7 | **Namlu alevi** | `shot_fired` | 80 ms (60'tan), 3 karelik titreşim: dönme ±8°, ölçek 0,8–1,2 rastgele, `MuzzleFlash` | yarıçap 14→4 px (mevcut) | (a) |
 | P8 | **Boş kovan** | `shot_fired` | 350 ms yay: yan-geri 30–50 px, 6 px yükselip düşer, bronz 4×2 px dörtgen, FxRenderer'da halka tampon (16) | — | (a) |
-| P9 | **Doldurma** | `reload_started(duration)` → `reload_finished` | 0–12 %: iki kol göğse iner (aim → aşağı 70°, quad-in); 12–70 %: ±10° titreme 8 Hz, gövde sy 0,97; 80–100 %: kollar **+6° aşarak** geri kalkar (cubic-out). Tamamlanınca halka 1→1,5 ölçek + solma 150 ms + tık anında amber nabız | kol 70°; titreme ±10°; sy 0,97 | (a); (b) isteğe bağlı: silindiri açık kol karesi |
+| P9 | **Doldurma** | `reload_started(duration)` → `reload_finished` | v1.1.1: kollar aim'e GÖRELİ küçük hareket yapar (v1.1: 70° iniş, kullanıcı kaydında "rastgele sallanıyor"). 0–12 %: aim → 14° kalkar (quad-in, ~120 ms); 12–70 %: ±4° titreme 8 Hz, gövde sy 0,97; 80–100 %: kollar **−3° aşarak** aim'e döner (cubic-out, ~200 ms). Hiçbir karede aim'den >30° sapma, kare başına >25° değişim yok. Tamamlanınca halka 1→1,5 ölçek + solma 150 ms + tık anında amber nabız | kol 14° (v1.1: 70°); titreme ±4° (v1.1: ±10°); sy 0,97 | (a); (b) isteğe bağlı: silindiri açık kol karesi |
 | P10 | **Hasar (sarsıntı + parlama)** | `player_damaged(amount, hp)` | 0–90 ms **kemik-beyaz** parlama (`hit`=1, `#EFE7D6`), sonra 200 ms'de **bordo ton** (`tint #E0584F`, %35) söner. t=50 ms: **8 px geri** (fiziksel olmayan itme, ayakta kalır) + sx 1,10 / sy 0,90; sonra 12 Hz sönümlü yay 220 ms. Atkı `scarf_amp ×2,5` 300 ms sönüm. Kamera `shake(min(amount·0,4, 10))`. Beyaz parlama en çok 150 ms'de bir | 8 px · %10 · 10 px kamera | (a) |
 | P11 | **Seviye atlama vurgusu** | `level_up` | **Ön:** 180 ms, sim durmuşken (görünüm kendi zamanında): gövde altın parlama (`#E8A24A`→kemik), halo ×1,3. **Sonra** ekran 220 ms girer (portre kaplar). **Devam:** kart seçilince halka dalgası 0→180 px, 450 ms (cubic-out), `xp_parlak` renk, ince 3 px; HUD rozeti 1→1,35→1 (260 ms) | halka 180 px | (a) |
 | P12 | **Ölüm** | durum `LOST` | 0–120 ms **vuruş donması** + beyaz parlama; 120–720 ms gövde ayak pivotunda **devrilme** −75° (quad-in), 720'de ±4° sekme; kollar 350 ms'de sarkar (aim → ~100°); `desat` 0→0,6, amber ışık 600 ms'de söner; 720–1300 ms kül solması. Dokunma = atla. **Sonuç ekranı 1,3 sn gecikmeyle girer** | −75°, ~8 px yere gömülme | (a); (b) isteğe bağlı: yığılma karesi |
@@ -138,7 +138,7 @@ Kare, zamana değil **kat edilen mesafeye** bağlanır:
 | Durum | Davranış |
 |---|---|
 | Kare **yok** (şimdi) | §1.2/§1.3'teki prosedürel sekme + eğim + squash **yedek** olarak çalışır (bob 9 px, vb.) |
-| Kare **var** | Kare animasyonu ayak ve dikey hareketi taşır: **prosedürel bob 0 px**, yürüme squash'ı 0 (karede var). Üstüne **biner** (kapatılmaz): P3 gövde eğimi 6° (%60'a indirilir 3,6°; kare zaten ileri eğik), P4 yön çevirme, P5 etek/atkı shader'ı, P6 geri tepme, P10 hasar sarsıntısı + parlama, P11–P13, E5 vurulma, E6 ölüm. Hepsi mevcut `Rig`/örnek dönüşümü üzerinde, kare dokusundan bağımsız |
+| Kare **var** | Kare animasyonu ayak ve dikey hareketi taşır: **prosedürel bob 0 px**, yürüme squash'ı 0 (karede var). Üstüne **biner** (kapatılmaz): P3 gövde eğimi 4° (v1.1.1; %60'a indirilir 2,4°; kare zaten ileri eğik), P4 yön çevirme, P5 etek/atkı shader'ı, P6 geri tepme, P10 hasar sarsıntısı + parlama, P11–P13, E5 vurulma, E6 ölüm. Hepsi mevcut `Rig`/örnek dönüşümü üzerinde, kare dokusundan bağımsız |
 | Geçiş | `rig.walk.frames` (kare sayısı) > 0 ise kare modu; yoksa yedek. Kod dalı tek bayrak: aynı veri dosyasıyla iki mod |
 
 **1.7.4 Oyuncu rig'inde kare kullanımı ve omuz pivotu**
@@ -405,3 +405,7 @@ Maket notları: Chromium ile üretildi (`--headless --screenshot`), Godot render
 3. **Kare hazır olana dek** prosedürel yedek kalır; ilk teslim sırası: oyuncu 6 kare → piyade 6 kare (kullanıcıya bağlı).
 4. **Cihazda doğrulanacaklar:** düşman animasyon maliyeti (≤0,4 ms/kare), gölge MultiMesh, kare seçimi ek maliyeti, atlas bellek artışı (§1.7.5), ∞ glifi, kenar oku güvenli alanı.
 5. Karga için kare eklenmedi (mevcut 3 kare yeterli); hayalet/elit şövalye yalnız süzülür.
+
+## Değişiklik notu — v1.1.1 (T20261024-67)
+
+Cihaz geri bildirimi (ekran kaydı 2026-10-24): doldurma/bekleme kolları ve yürüme sekmesi hatalıydı. P2 (bob 9 → 4,5 px, squash 1,03/0,96, faz = yol/stride), P3 (eğim 6° → 4° + ±1°) ve P9 (doldurma 70°/±10°/+6° → 14°/±4°/−3°, aim'e göreli) değerleri yukarıda güncellendi; kollar sim aim'ine yumuşak yaklaşır (`PlayerAnim.track_aim`), hedefsizken bakış yönüne döner. Kademeler tek yerde: `PlayerAnim.BOUNCE_TIERS`. Kanıt: `docs/dev/v1.1.1/`.

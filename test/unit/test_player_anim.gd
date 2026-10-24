@@ -47,17 +47,20 @@ func test_mode_hysteresis_idle_walk() -> void:
 	assert_eq(a.mode, PlayerAnim.Mode.IDLE)
 
 
-func test_procedural_bob_peaks_at_tier_bob_and_scales_with_speed() -> void:
+func test_procedural_bob_peaks_at_tier_bob_and_phase_follows_distance() -> void:
 	var a := _anim()
 	var peak := 0.0
 	for i in roundi(2.0 / DT):
 		a.update(DT, Vector2(300.0, 0.0), false, -1.0)
 		peak = maxf(peak, a.bob_px)
 	assert_almost_eq(peak, PlayerAnim.BOB_PX, 0.2, "tepe bob = varsayılan kademe (v1.1.1: 4,5 px)")
-	var f_full := _phase_rate(300.0)
-	assert_almost_eq(f_full, 2.2, 0.05, "tam hızda 2,2 Hz")
-	assert_almost_eq(_phase_rate(75.0), 1.1, 0.05, "hız/300 0,5'e kenetlenir: 1,1 Hz")
-	assert_almost_eq(_phase_rate(600.0), 2.2, 0.05, "üst sınır 1")
+	assert_almost_eq(
+		_phase_rate(300.0), 300.0 / 136.0, 0.02, "faz = yol / stride: 300 px/sn → 2,2 çevrim/sn"
+	)
+	assert_almost_eq(
+		_phase_rate(75.0), 75.0 / 136.0, 0.02, "düşük hızda da yola orantılı (tempodan kopmaz)"
+	)
+	assert_almost_eq(_phase_rate(600.0), 600.0 / 136.0, 0.05, "hız arttıkça orantılı")
 
 
 func _phase_rate(speed: float) -> float:
