@@ -259,7 +259,10 @@ func test_k3_levelup_shows_upper_cased_character_name() -> void:
 		return
 	var d := AchKit.data()
 	var s := _levelup(d.get_character(&"gunslinger"))
-	assert_not_null(_label_with(s, UiKit.upper_tr("Gunslinger")), "GUNSLINGER üst yazısı")
+	assert_not_null(
+		_label_with(s, UiKit.character_upper(d.get_character(&"gunslinger"))),
+		"GUNSLINGER üst yazısı"
+	)
 	var s2 := _levelup(d.get_character(&"barutcu"))
 	assert_not_null(_label_with(s2, UiKit.upper_tr("Barutçu")), "BARUTÇU üst yazısı")
 
@@ -294,7 +297,9 @@ func test_k3_levelup_name_and_title_geometry() -> void:
 		return
 	var s := _levelup(AchKit.data().get_character(&"gunslinger"))
 	await get_tree().process_frame
-	var name_label := _label_with(s, UiKit.upper_tr("Gunslinger"))
+	var name_label := _label_with(
+		s, UiKit.character_upper(AchKit.data().get_character(&"gunslinger"))
+	)
 	assert_not_null(name_label)
 	if name_label != null:
 		assert_almost_eq(

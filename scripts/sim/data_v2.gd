@@ -182,6 +182,13 @@ static func validate_character(
 		GameData._err(out, "bad_type", file, "'placeholder' bool olmalı")
 	if d.has("unlock"):
 		_validate_unlock(g, out, file, d["unlock"])
+	if d.has("display_upper"):
+		if not (d["display_upper"] is String):
+			GameData._err(out, "bad_type", file, "'display_upper' metin olmalı")
+		elif (d["display_upper"] as String).length() > NAME_MAX:
+			GameData._err(out, "out_of_range", file, "'display_upper' > %d karakter" % NAME_MAX)
+	if d.has("order") and not (d["order"] is int or d["order"] is float):
+		GameData._err(out, "bad_type", file, "'order' tam sayı olmalı")
 
 
 static func _validate_unlock(g: GameData, out: PackedStringArray, file: String, u: Variant) -> void:

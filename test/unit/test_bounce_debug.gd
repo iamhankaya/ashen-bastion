@@ -31,3 +31,16 @@ func test_label_hidden_in_menu() -> void:
 	var c := _controller()
 	c.go_menu()
 	assert_false(c._bounce_label.visible, "menüde gizli")
+
+
+func test_label_text_fits_width_for_every_tier() -> void:
+	var l := DebugLabels.build_bounce(self, func(_e: InputEvent) -> void: pass)
+	autofree(l)
+	for i in PlayerAnim.BOUNCE_TIERS.size():
+		PlayerAnim.bounce_tier = i
+		BounceDebug.sync(l, true)
+		var fs := l.get_theme_font_size(&"font_size")
+		var w := (
+			l.get_theme_default_font().get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		)
+		assert_lte(w, l.size.x, "kademe %d kırpılmaz: %s" % [i, l.text])

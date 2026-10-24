@@ -20,6 +20,11 @@ var blurb: String = ""
 var portrait: String = ""
 var unlock_achievement: StringName = &""
 var placeholder: bool = false
+## v2.0 düzeltme payı: `display_upper` büyük harfli ad (özel adlarda upper_tr noktalı İ üretir, F-029); boşsa upper_tr.
+## `order` vitrin sırası (küçük önce, F-030); yoksa ORDER_DEFAULT (dosya adı sırasıyla sona).
+const ORDER_DEFAULT := 1000
+var display_upper: String = ""
+var order: int = ORDER_DEFAULT
 
 
 static func from_dict(d: Dictionary) -> CharacterDef:
@@ -46,6 +51,9 @@ static func from_dict(d: Dictionary) -> CharacterDef:
 		c.unlock_achievement = StringName(_s(u.get("achievement", "")))
 	var ph: Variant = d.get("placeholder", false)
 	c.placeholder = ph is bool and ph
+	c.display_upper = _s(d.get("display_upper", ""))
+	var o: Variant = d.get("order", ORDER_DEFAULT)
+	c.order = int(o) if o is int or o is float else ORDER_DEFAULT
 	return c
 
 

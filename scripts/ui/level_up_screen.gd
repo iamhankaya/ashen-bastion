@@ -157,7 +157,7 @@ func show_choices(
 ## bordo radyal zemin, başlık aynı yerde (çökmez).
 func set_character(character: CharacterDef) -> void:
 	var path := character.portrait if character != null else PORTRAIT
-	name_label.text = UiKit.upper_tr(character.display_name) if character != null else "GUNSLINGER"
+	name_label.text = UiKit.character_upper(character) if character != null else "GUNSLINGER"
 	if portrait_node != null:
 		portrait_node.free()
 		portrait_node = null

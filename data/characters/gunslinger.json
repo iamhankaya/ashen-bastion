@@ -56,5 +56,7 @@
     }
   },
   "portrait": "res://assets/ui/portre-seviye-atlama.png",
-  "blurb": "Dengeli ve çevik; çift tabancasıyla sürüyü ateş altında tutar."
+  "blurb": "Dengeli ve çevik; çift tabancasıyla sürüyü ateş altında tutar.",
+  "display_upper": "GUNSLINGER",
+  "order": 1
 }

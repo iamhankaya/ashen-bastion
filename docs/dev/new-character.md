@@ -17,10 +17,12 @@ Dosya adı = `id` (`data/characters/<id>.json`). Tam şema ve doğrulama kodlar�
 | `portrait` | hayır (önerilir) | vitrin ve seviye atlama portresi, 1024×1536; yoksa yer tutucu portre / portresiz düzen |
 | `blurb` | hayır | vitrin açıklaması, ≤ 120 karakter |
 | `unlock` | hayır | `{"achievement": "<başarım id>"}`: o başarım açılana dek karakter kilitli (vitrinde "<ad> başarımını aç") |
-| `placeholder` | hayır | `true` ise debug yapıda vitrinde "YER TUTUCU" etiketi çıkar |
+| `placeholder` | hayır | `true` ise debug yapıda vitrinde "YER TUTUCU" etiketi çıkar; release'te kart/sahne portresi soğuk tonlanır ve baş harf monogramı biner |
+| `display_upper` | hayır | büyük harfli ad (ör. `GUNSLINGER`); `i` içeren özel adlarda noktalı İ'yi önler |
+| `order` | hayır | vitrin sırası (küçük önce); yoksa dosya adı sırasıyla sona |
 
 `base_gun` yoktur (`unknown_key`). İki tabanca ateşi tüm karakterlerde ortaktır; karakterleri `starting_skill` ve sayılar ayırır.
-Sıra dosya adı sırasıdır; varsayılan karakter (`gunslinger`) sıradan bağımsızdır.
+Sıra `order` alanıdır (eşitlikte dosya adı sırası); varsayılan karakter (`gunslinger`) sıradan bağımsızdır.
 
 ## Görsel hazırlama
 

@@ -39,8 +39,9 @@ class _FakeStore:
 		return open_ids.has(id)
 
 
-func test_ids_are_file_name_order() -> void:
-	assert_eq(CharacterRoster.ids(_real), [&"barutcu", &"gunslinger"] as Array[StringName])
+func test_ids_follow_order_field() -> void:
+	# F-030: vitrin sırası `order` alanı (gunslinger 1, barutcu 2), dosya adı sırası değil.
+	assert_eq(CharacterRoster.ids(_real), [&"gunslinger", &"barutcu"] as Array[StringName])
 
 
 func test_resolve_empty_unknown_or_missing_goes_to_default() -> void:
@@ -54,8 +55,12 @@ func test_resolve_valid_saved_wins() -> void:
 
 
 func test_resolve_default_is_order_independent() -> void:
-	# barutcu dosya sırasında önce gelir; yine de varsayılan gunslinger'dır.
-	assert_eq(CharacterRoster.ids(_real)[0], &"barutcu")
+	# barutcu `order` ile öne alınsa da varsayılan gunslinger'dır.
+	var d := GameData.load_dir("res://data")  # özel kopya
+	d.get_character(&"barutcu").order = 0
+	d._sort_character_ids()
+	assert_eq(CharacterRoster.ids(d)[0], &"barutcu")
+	assert_eq(CharacterRoster.resolve("", d, null), &"gunslinger")
 	assert_eq(CharacterRoster.resolve("", _real, null), &"gunslinger")
 
 

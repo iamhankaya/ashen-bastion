@@ -46,6 +46,10 @@ var _open_n: int = 0
 var _total: int = 0
 var _fade_top: TextureRect
 var _fade_bottom: TextureRect
+## Yapışkan grup başlığı (DESIGN §5.1): kaydırınca üstteki grubun başlığı liste tepesinde kalır.
+var sticky: Control = null
+var _groups: Array[Dictionary] = []  # {tier, opened, total, node}
+var _sticky_tier: int = -1
 
 
 ## Özet çubuğu: oran 0..1; hepsi açıksa amber.
@@ -163,6 +167,7 @@ func _build() -> void:
 	list.add_child(content)
 	_fade_top = _fade(true)
 	_fade_bottom = _fade(false)
+	list.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _update_sticky())
 	error_label = UiKit.label("Başarım listesi yüklenemedi", &"", 34, UiKit.KEMIK_300)
 	error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	error_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -214,6 +219,10 @@ func _populate() -> void:
 		content.remove_child(c)
 		c.free()
 	rows.clear()
+	_groups.clear()
+	_sticky_tier = -1
+	if sticky != null:
+		sticky.visible = false
 	_row_w = _w
 	var defs: Array[AchievementDef] = data.achievements if data != null else []
 	_total = defs.size()
@@ -274,11 +283,52 @@ func _fill(defs: Array[AchievementDef], store: AchievementStore) -> void:
 				opened.append(d)
 			else:
 				locked.append(d)
-		content.add_child(_group_header(tier_i, opened.size(), in_tier.size()))
+		var gh := _group_header(tier_i, opened.size(), in_tier.size())
+		content.add_child(gh)
+		_groups.append(
+			{"tier": tier_i, "opened": opened.size(), "total": in_tier.size(), "node": gh}
+		)
 		for d in opened + locked:
 			var row := _make_row(d, store, bias)
 			content.add_child(row)
 			rows.append(row)
+
+
+## Kaydırma konumuna göre üstte kalan grubun başlığını liste tepesine sabitler; sıradaki başlık yaklaşınca onu iter.
+func _update_sticky(scroll: float = -1.0) -> void:
+	if list == null or _groups.is_empty():
+		return
+	var sc := float(list.scroll_vertical) if scroll < 0.0 else scroll
+	var cur := -1
+	for i in _groups.size():
+		if (_groups[i]["node"] as Control).position.y < sc:
+			cur = i
+	if cur < 0:
+		if sticky != null:
+			sticky.visible = false
+		return
+	if cur != _sticky_tier or sticky == null:
+		if sticky != null:
+			sticky.free()
+		var g := _groups[cur]
+		sticky = Panel.new()
+		sticky.name = "StickyHeader"
+		sticky.custom_minimum_size = Vector2(_w, GROUP_H)
+		sticky.size = Vector2(_w, GROUP_H)
+		sticky.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sticky.add_theme_stylebox_override(
+			&"panel", UiKit.stylebox(Color(UiKit.MOR_900, 0.97), Color(0, 0, 0, 0), 0, 0)
+		)
+		sticky.add_child(_group_header(g["tier"], g["opened"], g["total"]))
+		add_child(sticky)
+		move_child(sticky, _fade_top.get_index())
+		_sticky_tier = cur
+	var push := 0.0
+	if cur + 1 < _groups.size():
+		var gap := (_groups[cur + 1]["node"] as Control).position.y - sc
+		push = minf(0.0, gap - GROUP_H)
+	sticky.position = Vector2(_x0, list.position.y + push)
+	sticky.visible = true
 
 
 func _info_panel(text: String) -> Control:
@@ -472,6 +522,7 @@ func _layout() -> void:
 	if _data != null and absf(_w - _row_w) > 0.5:
 		_populate()
 	content.custom_minimum_size = Vector2(_w, 0.0)
+	_sticky_tier = -1  # genişlik değişmiş olabilir: yapışkan başlık yeniden kurulur
 	_abs(_fade_top, _x0, top, _w, 80.0)
 	_abs(_fade_bottom, _x0, top + h - 80.0, _w, 80.0)
 	_abs(error_label, _x0, top, _w, h)

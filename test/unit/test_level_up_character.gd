@@ -35,7 +35,7 @@ func test_header_uses_character_name_upper_tr() -> void:
 	s.show_choices([], 3, _data, _data.get_character(&"barutcu"))
 	assert_eq(s.name_label.text, "BARUTÇU")
 	s.show_choices([], 3, _data, _data.get_character(&"gunslinger"))
-	assert_eq(s.name_label.text, "GUNSLİNGER", "upper_tr: i → İ (tasarım kararı)")
+	assert_eq(s.name_label.text, "GUNSLINGER", "F-029: display_upper (özel ad, noktalı İ yok)")
 	assert_eq(s.title_label.text, "SEVİYE 3")
 
 

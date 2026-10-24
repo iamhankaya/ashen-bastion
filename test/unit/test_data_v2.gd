@@ -146,9 +146,10 @@ func test_gunslinger_gets_portrait_and_blurb_unchanged_stats() -> void:
 	assert_eq(c.starting_skill, &"cift_tabanca")
 
 
-func test_character_ids_are_file_name_order() -> void:
+func test_character_ids_follow_order_field() -> void:
+	# F-030: `order` (gunslinger 1, barutcu 2); eşitlikte dosya adı sırası.
 	assert_eq(
-		GameData.load_dir(REAL).character_ids, [&"barutcu", &"gunslinger"] as Array[StringName]
+		GameData.load_dir(REAL).character_ids, [&"gunslinger", &"barutcu"] as Array[StringName]
 	)
 
 

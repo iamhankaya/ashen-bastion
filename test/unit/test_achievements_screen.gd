@@ -217,3 +217,21 @@ func test_b6_accessibility_names() -> void:
 	assert_true(_row(s, &"ilk_kan").accessibility_name.begins_with("İlk Kan, açıldı "))
 	assert_eq(_row(s, &"yerlesik").accessibility_name, "Yerleşik, kilitli, 6 / 10")
 	assert_eq(s.accessibility_name, "Başarımlar, 1 / 22 açıldı")
+
+
+func test_sticky_group_header_follows_scroll_and_hides_at_top() -> void:
+	var s := _screen()
+	# Ekran görünür ağaçta olmayabilir (yerleşim kurulmaz): başlık konumlarını elle ver, kaydırmayı parametreyle sına.
+	for i in s._groups.size():
+		(s._groups[i]["node"] as Control).position.y = i * 400.0
+	s._update_sticky(0.0)
+	assert_true(s.sticky == null or not s.sticky.visible, "tepede yapışkan başlık yok")
+	s._update_sticky(405.0)
+	assert_not_null(s.sticky)
+	assert_true(s.sticky.visible, "ikinci grup başlığı üstten çıkınca yapışır")
+	assert_eq(s._sticky_tier, 1)
+	assert_almost_eq(s.sticky.position.y, s.list.position.y, 0.5, "liste tepesinde")
+	s._update_sticky(800.0 - 20.0)
+	assert_lt(s.sticky.position.y, s.list.position.y, "sıradaki başlık yaklaşınca iter")
+	s._update_sticky(0.0)
+	assert_false(s.sticky.visible, "başa dönünce gizlenir")
