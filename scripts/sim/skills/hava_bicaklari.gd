@@ -49,4 +49,5 @@ func tick(dt: float) -> void:
 			{"pierce": _pierce, "radius": BLADE_RADIUS}
 		)
 	sim.fx.volley_fired.emit(origin, _pellets)
+	sim.fx.skill_sfx.emit(&"hava_bicaklari")
 	_cd = _cooldown / sim.stats.fire_rate_mult

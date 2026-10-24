@@ -15,6 +15,32 @@ const LIMITS := {
 	&"explosion": 3,
 	&"enemy_die": 3,
 	&"xp_pickup": 2,
+	&"zyfen_cast": 3,
+	&"zyfen_wind_hit": 3,
+	&"zyfen_gather": 1,
+	&"hava_bicaklari": 2,
+	&"delen_ruzgar": 2,
+	&"hortum": 2,
+	&"girdap": 1,
+	&"tufan": 1,
+	&"hava_cebi": 2,
+	&"nefes_dalgasi": 1,
+	&"kasirga_patlamasi": 1,
+}
+## v2.0.2 A4: yalnız rüzgar sesleri; kimlik başına en kısa tekrar aralığı (ms). Aralık dolmadan gelen çağrı yutulur
+## (hortum/tufan/isabet yoğunluğunda ses kalabalığı olmasın). Gunslinger kimlikleri burada yok: davranışları aynı.
+const MIN_GAP_MS := {
+	&"zyfen_wind_hit": 70,
+	&"hava_bicaklari": 150,
+	&"delen_ruzgar": 100,
+	&"gogun_mizragi": 400,
+	&"ay_oragi": 200,
+	&"hava_cebi": 120,
+	&"nefes_dalgasi": 300,
+	&"kasirga_patlamasi": 500,
+	&"hortum": 400,
+	&"tufan": 800,
+	&"girdap": 3000,
 }
 const COMBO_WINDOW_MS := 600
 const COMBO_MAX := 12
@@ -28,6 +54,7 @@ static var _variants: Dictionary = {}  # StringName -> Array[AudioStream] (_1.._
 static var _last_variant: Dictionary = {}  # StringName -> son seçilen indeks
 static var _rng := RandomNumberGenerator.new()
 static var _clock: int = 0
+static var _last_ms: Dictionary = {}  # StringName -> son çalma zamanı (MIN_GAP_MS)
 static var _combo: int = 0
 static var _last_pickup_ms: int = -100000
 
@@ -53,6 +80,13 @@ static func teardown() -> void:
 	_stamp.resize(0)
 	_combo = 0
 	_last_pickup_ms = -100000
+	_last_ms.clear()
+
+
+## Kimliğin en kısa tekrar aralığı dolmadı mı (true: bu çağrı yutulur). Aralık tanımsızsa false.
+static func gap_blocked(id: StringName, now_ms: int) -> bool:
+	var gap: int = MIN_GAP_MS.get(id, 0)
+	return gap > 0 and now_ms - int(_last_ms.get(id, -1000000)) < gap
 
 
 ## Test/özel kullanım: kimliğe akış bağlar (dosya aramasını atlar).
@@ -100,9 +134,14 @@ static func playing_count(id: StringName) -> int:
 static func play(id: StringName, opts: Dictionary = {}) -> void:
 	if _players.is_empty():
 		return
+	var now := Time.get_ticks_msec()
+	if gap_blocked(id, now):
+		return
 	var stream := pick_stream(id)
 	if stream == null:
 		return
+	if MIN_GAP_MS.has(id):
+		_last_ms[id] = now
 	_clock += 1
 	var limit: int = LIMITS.get(id, POOL_SIZE)
 	var same := 0

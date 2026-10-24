@@ -345,7 +345,7 @@ func _bind(new_sim: GameSim) -> void:
 	player_view.bind(sim)
 	hud.bind(sim)
 	if sim != null:
-		audio.bind(sim.bus, sim.data)
+		audio.bind(sim.bus, sim.data, sim.character, sim.fx)
 		sim.bus.run_ended.connect(_on_run_ended)
 		sim.bus.player_damaged.connect(_on_player_damaged)
 	_v11_bind(sim)

@@ -59,3 +59,4 @@ func _wave(sim: GameSim) -> void:
 		sim, sim.player_pos, _radius, _damage * sim.stats.bullet_dmg_mult, _push, &"dot"
 	)
 	sim.fx.wind_wave.emit(sim.player_pos, _radius, true)
+	sim.fx.skill_sfx.emit(&"kasirga_patlamasi")

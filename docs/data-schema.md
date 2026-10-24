@@ -45,6 +45,7 @@ g.get_achievement(id) -> AchievementDef        # null olabilir
 | `placeholder` | bool, isteğe bağlı (v2.0) | `true` = görsel yer tutucu; yalnız debug yapıda "YER TUTUCU" etiketi. Release'te de kartta/sahnede soğuk ton + baş harf monogramı gösterilir |
 | `display_upper` | metin ≤ 22 karakter, isteğe bağlı (v2.0 düzeltme) | büyük harfli ad; özel adlarda `upper_tr` noktalı İ üretir ("GUNSLİNGER"), boşsa `upper_tr(name)` |
 | `order` | sayı, isteğe bağlı (v2.0 düzeltme) | vitrin sırası (küçük önce; eşitlikte dosya adı sırası); yoksa 1000 |
+| `sfx` | nesne, isteğe bağlı (v2.0.2 A4) | olay -> ses: anahtarlar `shot`, `hit`, `reload_start`, `reload_end`, `dry` (başkası `unknown_key`); değer ses kimliği ya da kimlik dizisi (`shot` dizisi silah indeksiyle seçilir). Kimlik `assets/audio/sfx/<id>.ogg` ya da `<id>_1.ogg` varyasyonu olarak var olmalı (`asset_missing`). Sözlük VARSA anahtarı olmayan olay sessizdir (Gunslinger'a özgü sesler Zyfen'de çalmaz); sözlük YOKSA eski varsayılan sesler |
 
 `base_gun` v2.0'da YOKTUR (JSON'da görülürse `unknown_key`). Yeni karakter yalnız veri + görsel ekleyerek tanımlanır;
 sıra `order` alanıdır, eşitlikte dosya adı sırası (`character_ids`).
@@ -123,7 +124,11 @@ Yeni hata kodları (v2.0): `unknown_stat`, `ach_count`, `tier_missing`, `scope_m
   `passive` = `kind:passive` beceri, `passive_min_level` 1..pasifin `max_level`'ı. Her aktifin en çok bir evrimi olur.
 - `sfx` (isteğe bağlı, **yalnız evrimde**): evrim kazanılınca çalan ses kimliği; `assets/audio/sfx/<sfx>.ogg` var olmalı
   (hatalar: evrim dışında `unknown_key`, boş/metin değil `bad_type`, dosya yok `asset_missing`). Alan yoksa `evolution_1` çalar.
-  Dört evrime `evolution_1…4` atanmıştır; `evolution_5`, `evolution_6` yeni karakter evrimleri için yedektir.
+  Dört evrime `evolution_1…4` atanmıştır; Zyfen'in evrimleri `evolution_5…8` kullanır (Ay Orağı 5, Göğün Mızrağı 6,
+  Kasırga Patlaması 7, Tufan 8).
+- `cast_sfx` (isteğe bağlı, aktif ve evrimde; pasifte `unknown_key`): becerinin ateşlenme/doğuş sesi (`SimFx.skill_sfx`
+  ile çalar). Tek dosya ya da `_1..N` varyasyon; yoksa `asset_missing`. Sürekli bölgeler (hortum, tufan) doğuşta tek
+  seferlik, Girdap 4 sn'de bir; `Sfx.MIN_GAP_MS` aynı sesin en kısa tekrar aralığını sınırlar.
 - `tags`: metin dizisi. `rhythm` = şarjör ritmiyle etkileşir. **İçerik tamamlandı (slice 2)** modunda `rhythm` etiketli
   **aktif** sayısı ≥ 2 (`rhythm_count`).
 - `levels[i]` sayısal değerlerden oluşan nesnedir; **tüm seviyelerde aynı anahtar kümesi** (`levels_keys`).

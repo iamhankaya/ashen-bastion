@@ -53,5 +53,11 @@
   "blurb": "Rüzgarın büyücüsü; kesikler savurur, fırtına toplar.",
   "placeholder": false,
   "display_upper": "ZYFEN",
-  "order": 2
+  "order": 2,
+  "sfx": {
+    "shot": "zyfen_cast",
+    "hit": "zyfen_wind_hit",
+    "reload_start": "zyfen_gather",
+    "reload_end": "zyfen_gather_done"
+  }
 }

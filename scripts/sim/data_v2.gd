@@ -13,6 +13,8 @@ const SCOPES: PackedStringArray = ["run", "total"]
 ## shaders: enemy_flash.gdshader `cell_rect[16]`, ash_ghost.gdshader `cell_rect[16]`.
 const SFX_DIR := "res://assets/audio/sfx/"
 const ATLAS_CELLS_MAX := 16
+## Karakter `sfx` sözlüğü anahtarları (AudioDirector olayları).
+const SFX_EVENTS: PackedStringArray = ["shot", "hit", "reload_start", "reload_end", "dry"]
 const ACH_COUNT_MIN := 15
 const ACH_COUNT_MAX := 25
 const NAME_MAX := 22
@@ -53,6 +55,7 @@ static func validate(g: GameData, out: PackedStringArray, complete: bool) -> voi
 	for e in g._raw_skills:
 		if e["data"] is Dictionary:
 			validate_skill_sfx(out, e["file"], e["data"])
+			validate_cast_sfx(out, e["file"], e["data"])
 	if not g._v2.get("ach_present", false):
 		if complete:
 			GameData._err(
@@ -86,6 +89,47 @@ static func validate_skill_sfx(out: PackedStringArray, file: String, d: Dictiona
 		GameData._err(out, "bad_type", file, "'sfx' boş olmayan metin olmalı")
 	elif not ResourceLoader.exists(SFX_DIR + (sfx as String) + ".ogg"):
 		GameData._err(out, "asset_missing", file, "'sfx' = '%s' için SFX dosyası yok" % sfx)
+
+
+## v2.0.2 A4: `cast_sfx` (aktif ve evrimde): `<id>.ogg` ya da `<id>_1.ogg` (varyasyon) var olmalı.
+static func validate_cast_sfx(out: PackedStringArray, file: String, d: Dictionary) -> void:
+	if not d.has("cast_sfx"):
+		return
+	if d.get("kind") == "passive":
+		GameData._err(out, "unknown_key", file, "'cast_sfx' pasifte olmaz")
+	else:
+		_check_sfx_id(out, file, "cast_sfx", d["cast_sfx"])
+
+
+## SFX kimliği: boş olmayan metin ve dosya (ya da `_1` varyasyonu) mevcut.
+static func _check_sfx_id(out: PackedStringArray, file: String, key: String, v: Variant) -> void:
+	if not (v is String) or (v as String).is_empty():
+		GameData._err(out, "bad_type", file, "'%s' boş olmayan metin olmalı" % key)
+	elif not sfx_exists(v):
+		GameData._err(out, "asset_missing", file, "'%s' = '%s' için SFX dosyası yok" % [key, v])
+
+
+## Kimlik tek dosya ya da `_1..N` varyasyon olarak var mı (Sfx.pick_stream ile aynı arama).
+static func sfx_exists(id: String) -> bool:
+	return (
+		ResourceLoader.exists(SFX_DIR + id + ".ogg")
+		or ResourceLoader.exists(SFX_DIR + id + "_1.ogg")
+	)
+
+
+## Karakter `sfx` sözlüğü: anahtarlar SFX_EVENTS, değer metin ya da metin dizisi.
+static func validate_character_sfx(out: PackedStringArray, file: String, v: Variant) -> void:
+	if not (v is Dictionary):
+		GameData._err(out, "bad_type", file, "'sfx' nesne olmalı")
+		return
+	GameData._unknown_keys(out, file + " sfx", v, SFX_EVENTS)
+	for k in v:
+		var val: Variant = v[k]
+		var ids: Array = val if val is Array else [val]
+		if ids.is_empty():
+			GameData._err(out, "bad_type", file, "'sfx.%s' boş dizi" % k)
+		for id in ids:
+			_check_sfx_id(out, file, "sfx." + str(k), id)
 
 
 static func _validate_atlas_cells(g: GameData, out: PackedStringArray) -> void:
@@ -205,6 +249,8 @@ static func validate_character(
 			GameData._err(out, "bad_type", file, "'display_upper' metin olmalı")
 		elif (d["display_upper"] as String).length() > NAME_MAX:
 			GameData._err(out, "out_of_range", file, "'display_upper' > %d karakter" % NAME_MAX)
+	if d.has("sfx"):
+		validate_character_sfx(out, file, d["sfx"])
 	if d.has("order") and not (d["order"] is int or d["order"] is float):
 		GameData._err(out, "bad_type", file, "'order' tam sayı olmalı")
 

@@ -29,5 +29,6 @@
     "passive": "furtina_gozu",
     "passive_min_level": 1
   },
-  "sfx": "evolution_6"
+  "sfx": "evolution_8",
+  "cast_sfx": "tufan"
 }
