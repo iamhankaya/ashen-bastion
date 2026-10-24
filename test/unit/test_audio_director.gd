@@ -85,3 +85,38 @@ func test_lord_spawn_switches_to_lord_music_until_it_dies() -> void:
 	bus.enemy_killed.emit(&"kale_lordu", Vector2.ZERO)
 	director.update_music(800.0, false, true, false, false)
 	assert_eq(director.track, &"kazandin")
+
+
+## M8c (F-013): kapanışta ana iş parçacığı bloklanmaz ve ses düğümleri sonraki karede serbest kalır.
+func test_no_blocking_delay_anywhere_in_scripts() -> void:
+	var hits: Array[String] = []
+	var stack: Array[String] = ["res://scripts"]
+	while not stack.is_empty():
+		var dir: String = stack.pop_back()
+		for sub in DirAccess.get_directories_at(dir):
+			stack.append(dir.path_join(sub))
+		for f in DirAccess.get_files_at(dir):
+			if (
+				f.ends_with(".gd")
+				and FileAccess.get_file_as_string(dir.path_join(f)).contains("OS.delay_msec")
+			):
+				hits.append(dir.path_join(f))
+	assert_eq(hits, [] as Array[String], "scripts/ içinde OS.delay_msec yok")
+
+
+func test_players_are_freed_on_the_next_frame_after_exit() -> void:
+	var d := AudioDirector.new()
+	add_child(d)
+	var kept: Array[AudioStreamPlayer] = []
+	for c in d.get_children():
+		if c is AudioStreamPlayer:
+			kept.append(c)
+	assert_gt(kept.size(), 0, "oynatıcılar kurulu")
+	remove_child(d)  # _exit_tree
+	for p in kept:
+		assert_true(is_instance_valid(p), "kapanışta hemen serbest bırakılmaz (bloklama yok)")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	for p in kept:
+		assert_false(is_instance_valid(p), "sonraki karede serbest")
+	d.free()

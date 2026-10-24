@@ -67,7 +67,7 @@ func test_each_enemy_type_rim_separates_from_ground() -> void:
 		var elite := def.ai == &"elite" or def.ai == &"lord"
 		var rim := EnemyRenderer.RIM_COLOR
 		if elite:
-			rim = (def.tint * 1.25).clamp()
+			rim = EnemyRenderer.RIM_ELITE_COLOR  # N6: tint'ten türetilmez
 		assert_gte(ratio(rim, g[0]), MIN_RATIO, "%s kontur / zemin" % id)
 		assert_gte(ratio(rim, g[1]), MIN_RATIO, "%s kontur / parlak zemin" % id)
 
@@ -81,3 +81,33 @@ func test_player_rim_separates_from_ground() -> void:
 func test_player_is_at_least_180px_tall() -> void:
 	var rig := GameData.load_default().get_character(&"gunslinger").rig
 	assert_gte(float(rig["display_height"]), 180.0, "makette oyuncu ~200 px (ara denetim #5)")
+
+
+## N6 (M2): elit/Lord kontur rengi bronz/amber ailesinde (beyaza ya da kırmızıya kaçmaz); shader varsayılanı sabitle aynı.
+func test_elite_rim_is_in_the_bronze_amber_family() -> void:
+	var c := EnemyRenderer.RIM_ELITE_COLOR
+	assert_between(c.h * 360.0, 25.0, 45.0, "ton bronz/amber (25–45°)")
+	assert_between(c.s, 0.25, 0.75, "beyaza kaçmaz, doygunluk korunur")
+	var base := EnemyRenderer.RIM_COLOR
+	assert_between(absf(c.h - base.h) * 360.0, 0.0, 12.0, "taban düşman rimiyle aynı aile")
+	var src := FileAccess.get_file_as_string("res://assets/shaders/enemy_flash.gdshader")
+	assert_true(
+		src.contains("mix(rim_color, rim_elite_color, v_elite)"), "elit rimi tint'ten gelmez"
+	)
+	assert_false(src.contains("clamp(v_tint * 1.25"), "tint'li rim kalmadı")
+
+
+## M4 (S-02): seviye halkası koyu zeminde >= 3:1, 4 px çekirdek, α başlangıçta 0,9 ve 450. ms'de 0.
+func test_level_ring_is_thick_visible_and_fades_from_point_nine() -> void:
+	var g := _ground_colors()
+	assert_gte(ratio(UiKit.XP_PARLAK, g[0]), MIN_RATIO, "halka / ortalama zemin")
+	assert_gte(ratio(UiKit.XP_PARLAK, g[1]), MIN_RATIO, "halka / en parlak zemin")
+	assert_gte(PlayerView.Aura.RING_W, 4.0, "kalınlık >= 4 px")
+	assert_almost_eq(PlayerView.Aura.ring_alpha(0.0), 0.9, 1e-4)
+	assert_almost_eq(PlayerView.Aura.ring_alpha(PlayerView.Aura.RING_MAX), 0.0, 1e-4)
+	assert_gt(PlayerView.Aura.ring_alpha(120.0), 0.2, "yarıdan sonra da seçilir")
+	var prev := 1.0
+	for r in range(0, 181, 15):
+		var a := PlayerView.Aura.ring_alpha(float(r))
+		assert_lte(a, prev + 1e-6, "α azalır")
+		prev = a

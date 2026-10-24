@@ -108,6 +108,11 @@ class Shadow:
 ## Ayak çizgisinde yer halkaları: süreli etki aurası (P13) ve seviye halkası (P11). Merkez = ayak.
 class Aura:
 	extends Node2D
+	## Seviye halkası (S-02/M4): çekirdek 4 px, yanında 8 px yumuşak ışıma; α 0,9 → 0 (süreye göre doğrusal).
+	const RING_W := 4.0
+	const RING_GLOW_W := 8.0
+	const RING_ALPHA0 := 0.9
+	const RING_MAX := 180.0
 	var mask: int = 0
 	var level_ring: float = -1.0
 	var time: float = 0.0
@@ -158,10 +163,17 @@ class Aura:
 				Vector2.ZERO, rx + 9.0, 0.0, TAU, 40, Color(0.91, 0.635, 0.29, 0.45), 2.0, true
 			)
 		if level_ring >= 0.0:
-			var u := clampf(level_ring / 180.0, 0.0, 1.0)
-			var col := Color("#A98BEF")
-			col.a = 1.0 - u * u
-			draw_arc(Vector2.ZERO, maxf(level_ring, 1.0), 0.0, TAU, 56, col, 3.0, true)
+			var col := Color(UiKit.XP_PARLAK, ring_alpha(level_ring))
+			var glow := Color(col, col.a * 0.35)
+			var r := maxf(level_ring, 1.0)
+			draw_arc(Vector2.ZERO, r, 0.0, TAU, 56, glow, RING_W + RING_GLOW_W, true)
+			draw_arc(Vector2.ZERO, r, 0.0, TAU, 56, col, RING_W, true)
+
+	## Halka yarıçapından (cubic-out büyüme) geçen süre oranını geri çözer; α doğrusal 0,9 → 0 (450. ms'de 0).
+	static func ring_alpha(radius: float) -> float:
+		var f := clampf(radius / RING_MAX, 0.0, 1.0)
+		var t := 1.0 - pow(1.0 - f, 1.0 / 3.0)
+		return RING_ALPHA0 * (1.0 - t)
 
 
 ## Namlu parlaması: yerel noktalar, kalan süreler ve 3 karelik titreşim (dönme ±8°, ölçek 0,8–1,2).
