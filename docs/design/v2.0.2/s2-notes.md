@@ -16,4 +16,4 @@ Toplam 435 sn (CI bütçesi 15 dk = %48): GUT 370 sn, pytest 31 sn, lint 24 sn, 
 - Planın "fast" politikası koşucuda yok; `greedy` kullanıldı (bilgi amaçlı).
 - `--file` = dilim dosyası (konumsal bağımsız değişkenle eşdeğer). v2.0.2 testleri `--classname-re v202` ile ayrılır (v1.1 `test_p20_` adı çakışması).
 - `hp_mid` "ölen koşu 0" tanımı harfiyen uygulandı; ayırt ediciliği düşük (baseline README).
-- `make_zyfen_strip.py` palm/foot_slide ölçümü sentetik klipte doğrulandı; gerçek kare yok (`vlad/zyfen-assets` dalı bu oturumda görünmüyordu).
+- `make_zyfen_strip.py`: S2 de bir sürüm yazmıştı (stand/glob girdili, `--palm-px`); U2 gerçek karelerle kendi sürümünü merge ettiği için çakışmada U2 sürümü esas alındı, S2 sürümü atıldı (palm ölçümü yok; K `palm` testi gerekirse U2 aracına eklenmeli).

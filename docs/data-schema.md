@@ -69,7 +69,7 @@ Hücre sırası (`RigFrames`): yürüme `0..W-1`, duruş `W`, cast, gather, walk
 ≤ 8192 (`out_of_range`); şerit dokusu varsa boyutu `toplam × w` × `h` olmalı (`bad_type`).
 
 Şerit, gövde görseli, manifest ve kalite raporu `tools/art/make_zyfen_strip.py` ile üretilir (hücre genişliği girdiden hesaplanır, `walk.cell`
-buraya yazılır; `cast_point` için manifest `palm` değeri `--palm-px` ile ölçülür; kapı: `foot_slide`, klip yükseklik sapması, toplam genişlik;
+buraya yazılır; kapı: `foot_slide`, klip yükseklik sapması, toplam genişlik;
 bkz. `tools/art/README.md`). Çıktı kalite raporu `art/source/zyfen/quality.json` yürüme kalite kapısı testinin girdisidir.
 
 `rig.walk` (v1.1, isteğe bağlı; `CharacterDef.walk`): kareli yürüme. Anahtarlar `WALK_KEYS`:
