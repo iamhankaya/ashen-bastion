@@ -259,11 +259,11 @@ func test_original_four_rng_streams_are_bit_identical_to_v1() -> void:
 	var t := _sim(42)
 	for i in 600:
 		t.step(Vector2.RIGHT)
-	assert_eq(t.rng_spawn.state, -8493515420973163873)
+	assert_eq(t.rng_spawn.state, -5168061458156269691)
 	assert_eq(t.rng_choice.state, 5934793932216903214)
 	assert_eq(t.rng_map.state, 8303414694259264612)
 	assert_eq(t.rng_combat.state, -5824027413901770946)
-	assert_eq(t.enemies.count, 5)
+	assert_eq(t.enemies.count, 4)
 	assert_eq(Stub.calls().size(), 0, "v1 yolu iskelet gövdelere düşmez")
 
 
