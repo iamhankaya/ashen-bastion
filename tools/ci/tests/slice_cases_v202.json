@@ -1,0 +1,96 @@
+{
+  "valid": [
+    "P",
+    "R",
+    "W",
+    "Z",
+    "E",
+    "A"
+  ],
+  "cases": [
+    {
+      "name": "bos_dosya",
+      "text": "",
+      "ok": true,
+      "marks": []
+    },
+    {
+      "name": "yalniz_yorum",
+      "text": "# P R W Z E A\n#P\n",
+      "ok": true,
+      "marks": []
+    },
+    {
+      "name": "tek_simge",
+      "text": "P\n",
+      "ok": true,
+      "marks": [
+        "P"
+      ]
+    },
+    {
+      "name": "alti_simge",
+      "text": "P R W Z E A\n",
+      "ok": true,
+      "marks": [
+        "P",
+        "R",
+        "W",
+        "Z",
+        "E",
+        "A"
+      ]
+    },
+    {
+      "name": "satir_ayracli",
+      "text": "P\nR\nW\n",
+      "ok": true,
+      "marks": [
+        "P",
+        "R",
+        "W"
+      ]
+    },
+    {
+      "name": "sira_korunur",
+      "text": "E P\n",
+      "ok": true,
+      "marks": [
+        "E",
+        "P"
+      ]
+    },
+    {
+      "name": "yinelenen",
+      "text": "P P\nP\n",
+      "ok": true,
+      "marks": [
+        "P"
+      ]
+    },
+    {
+      "name": "v2_simgesi_gecersiz",
+      "text": "K\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "kucuk_harf",
+      "text": "p\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "bilinmeyen",
+      "text": "Q\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "satir_sonu_yorum",
+      "text": "P # tamam\n",
+      "ok": false,
+      "marks": []
+    }
+  ]
+}

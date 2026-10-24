@@ -9,3 +9,4 @@ __pycache__/
 audio/muzik/*.import
 tools/art/_preview/
 .mid/
+.baseline/

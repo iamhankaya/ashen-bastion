@@ -160,6 +160,8 @@
   "test/unit/test_v202_contract_sim.gd": 7,
   "test/unit/test_v202_contract_skill_def.gd": 11,
   "test/unit/test_v202_contract_zone_pool.gd": 9,
+  "test/unit/test_v202_dps_probe.gd": 5,
+  "test/unit/test_v202_slice_file.gd": 4,
   "test/unit/test_v202_player_view_armless.gd": 10,
   "test/unit/test_v202_pool_card_fit.gd": 2,
   "test/unit/test_v202_pool_golden.gd": 5,
