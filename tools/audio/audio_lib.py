@@ -44,16 +44,20 @@ def _window_rms_db_diff(x: np.ndarray, q: np.ndarray, w: int) -> np.ndarray:
 def loop_crossfade(x: np.ndarray, sr: int, seconds: float, search_s: float = 4.0) -> np.ndarray:
     """Sondaki `seconds` eşit-güç crossfade ile başa bindirilir ve kırpılır: son örnek -> ilk örnek sürekli.
     Kesim noktası, sondan `search_s` içinde bitişik 20 ms pencerelerin RMS farkını en aza indiren yerde seçilir
-    (dikişte genlik sıçraması olmasın)."""
+    (dikişte genlik sıçraması olmasın). `search_s <= 0`: arama yok, kesim tam `len(x) - n`."""
     n = int(sr * seconds)
-    if n <= 0 or len(x) <= 2 * n + int(sr * search_s):
+    if n <= 0 or len(x) <= 2 * n + int(sr * max(search_s, 0.0)):
         return x
     w = max(1, int(sr * 0.02))
     # q = crossfade başlangıcı (çıktının sonu = x[q-1]); crossfade penceresi x[q:q+n] kuyruktur.
     hi = len(x) - n
-    lo = max(w + 1, hi - int(sr * search_s))
-    q = np.arange(lo, hi - w)
-    cut = int(q[np.argmin(_window_rms_db_diff(x, q, w))])
+    if search_s <= 0:
+        cut = hi
+    else:
+        lo = max(w + 1, hi - int(sr * search_s))
+        q = np.arange(lo, hi - w)
+        step = np.max(np.abs(x[q] - x[q - 1]), axis=1)  # dikişteki örnek sıçraması (x[q-1] -> x[q])
+        cut = int(q[np.argmin(_window_rms_db_diff(x, q, w) + 50.0 * step)])
     x = x[: cut + n]
     t = np.linspace(0.0, 1.0, n, endpoint=False, dtype=np.float32)
     fade_in = np.sin(t * math.pi / 2.0)[:, None]
@@ -61,6 +65,15 @@ def loop_crossfade(x: np.ndarray, sr: int, seconds: float, search_s: float = 4.0
     out = x[:cut].copy()
     out[:n] = x[cut : cut + n] * fade_out_w + x[:n] * fade_in
     return out.astype(np.float32)
+
+
+def trim(x: np.ndarray, sr: int, start_s: float = None, end_s: float = None) -> np.ndarray:
+    """Kaynağı [start_s, end_s) saniye aralığına kırpar (ikisi de isteğe bağlı); aralık geçersizse ValueError."""
+    a = 0 if start_s is None else int(round(start_s * sr))
+    b = len(x) if end_s is None else int(round(end_s * sr))
+    if a < 0 or b > len(x) or b <= a:
+        raise ValueError(f"geçersiz kırpma: start_s={start_s}, end_s={end_s}, kaynak={len(x) / sr:.3f} sn")
+    return x[a:b]
 
 
 def fade_out(x: np.ndarray, sr: int, seconds: float = 0.15) -> np.ndarray:

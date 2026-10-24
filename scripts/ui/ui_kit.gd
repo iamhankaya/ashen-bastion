@@ -344,6 +344,23 @@ static func toggle_text(label_upper: String, on: bool) -> String:
 	return "%s: %s" % [label_upper, "AÇIK" if on else "KAPALI"]
 
 
+## F-037: cihazda `emulate_mouse_from_touch` kapalı; ScrollContainer parmak sürüklemesini (InputEventScreenDrag)
+## kendiliğinden kaydırmaz. Sürüklemeyi kaydırmaya çevirir. Fare↔dokunma emülasyonu (device -1) atlanır:
+## fare sürüklemesini ScrollContainer zaten kaydırır, ikinci kez kaydırmak çift hız yapardı.
+static func touch_scroll(sc: ScrollContainer) -> void:
+	sc.gui_input.connect(
+		func(ev: InputEvent) -> void:
+			if not (ev is InputEventScreenDrag) or ev.device == InputEvent.DEVICE_ID_EMULATION:
+				return
+			var rel: Vector2 = (ev as InputEventScreenDrag).relative
+			if sc.vertical_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED:
+				sc.scroll_vertical -= int(roundf(rel.y))
+			if sc.horizontal_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED:
+				sc.scroll_horizontal -= int(roundf(rel.x))
+			sc.accept_event()
+	)
+
+
 ## Tam ekran kökü olarak bir Control'ü yay.
 static func fill(c: Control) -> void:
 	c.set_anchors_preset(Control.PRESET_FULL_RECT)
