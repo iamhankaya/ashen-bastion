@@ -1,0 +1,98 @@
+extends SceneTree
+## v2.0 ara denetim yakalama (üretim koduna dokunmaz; repoya kopyalanıp çalıştırılır, sonra silinir).
+## xvfb-run ... -s res://tools/capture/_cap_k.gd -- <çıktı>
+var out := "/tmp/cap2/"
+var c: Node
+const NOTCH := Vector4(48, 130, 48, 80)
+
+func frames(n: int) -> void:
+	for i in n:
+		await process_frame
+
+func shot(n: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(out + n + ".png")
+	print("shot ", n)
+
+func fresh() -> void:
+	if c != null:
+		c.queue_free()
+		await process_frame
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await frames(3)
+
+func _initialize() -> void:
+	var a := OS.get_cmdline_user_args()
+	if a.size() > 0:
+		out = a[0].path_join("")
+	DirAccess.make_dir_recursive_absolute(out)
+	_run()
+
+func _run() -> void:
+	if OS.get_environment("ONLY_LV") == "":
+		await _early()
+	await _lv()
+	quit()
+
+func _early() -> void:
+	await fresh()
+	c.go_menu()
+	await frames(3)
+	c.menu.apply_safe_area(NOTCH)
+	await frames(5)
+	await shot("menu_notch")
+	c.open_characters()
+	await frames(30)
+	var scr: CharactersScreen = c.v2.characters.screen
+	scr.apply_safe_area(NOTCH)
+	await frames(10)
+	await shot("chars_notch")
+	scr.set_focus_id(&"barutcu")
+	await frames(40)
+	await shot("chars_b_notch")
+	# tek karakter
+	var d := GameData.load_dir("res://data")
+	d._characters.erase(&"barutcu")
+	d.character_ids.erase(&"barutcu")
+	scr.apply_safe_area(Vector4.ZERO)
+	scr.open(d, null, &"gunslinger")
+	await frames(30)
+	await shot("chars_single")
+	# portresiz Barutçu
+	var d2 := GameData.load_dir("res://data")
+	d2.get_character(&"barutcu").portrait = ""
+	scr.open(d2, null, &"gunslinger")
+	scr.set_focus_id(&"barutcu")
+	await frames(40)
+	await shot("chars_noportrait")
+	# portre dosyası yok
+	d2.get_character(&"barutcu").portrait = "res://yok.png"
+	scr.open(d2, null, &"gunslinger")
+	scr.set_focus_id(&"barutcu")
+	await frames(40)
+	await shot("chars_missingfile")
+
+func _lv() -> void:
+	root.get_node("Settings").character_id = "barutcu"
+	await fresh()
+	c.start_run()
+	await frames(2)
+	c.sim.max_hp = 1.0e9
+	c.sim.hp = 1.0e9
+	c.sim.debug_add_xp(30)
+	for k in 5:
+		if c.sim.state == GameSim.State.RUNNING:
+			c.sim.step(Vector2.ZERO)
+	c._after_step()
+	await frames(40)
+	c.level_up.apply_safe_area(NOTCH)
+	await frames(5)
+	await shot("levelup_b_notch")
+	var ch: CharacterDef = c.sim.character
+	ch.portrait = ""
+	c.level_up.set_character(ch)
+	await frames(10)
+	await shot("levelup_b_noportrait")
+	root.get_node("Settings").character_id = ""
