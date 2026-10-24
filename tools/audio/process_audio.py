@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""audio/muzik/*.wav -> assets/audio/music/<id>.ogg (44,1 kHz, -18 LUFS, döngü crossfade).
+"""audio/muzik/* (wav/mp3) -> assets/audio/music/<id>.ogg (44,1 kHz, -18 LUFS, döngü crossfade).
 
 Kullanım: python tools/audio/process_audio.py [--only <id>] [--verify]
-Eksik kaynak WAV "bekleyen" olarak listelenir (hata değil). `--verify` yazmadan çıktıları denetler.
+Eksik kaynak "bekleyen" olarak listelenir (hata değil). `--verify` yazmadan çıktıları denetler.
+Manifest parçasında isteğe bağlı `start_s`/`end_s` (saniye) kaynağı kırpar. Döngülü parçada kırpma varsa kesim aranmaz:
+döngü uzunluğu ≈ end_s - start_s - loop_crossfade_s (en çok 40 ms kısa; tam ölçü katına oturtulmuş seçilir).
 """
 import argparse
 import json
@@ -18,6 +20,7 @@ import audio_lib as lib  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = Path(__file__).with_name("audio_manifest.json")
 OUT_DIR = ROOT / "assets" / "audio" / "music"
+LOOP_TRIM_SEARCH_S = 0.04
 
 
 def load_manifest(path: Path = MANIFEST) -> dict:
@@ -34,17 +37,24 @@ def write_ogg(path: Path, y: np.ndarray, sr: int) -> None:
 def process_track(track: dict, cfg: dict, root: Path = ROOT, out_dir: Path = OUT_DIR) -> dict:
     src = root / track["src"]
     x, sr = sf.read(src, dtype="float32", always_2d=True)
+    trimmed = "start_s" in track or "end_s" in track
+    x = lib.trim(x, sr, track.get("start_s"), track.get("end_s"))
     x = lib.resample(x, sr, cfg["sample_rate"])
     sr = cfg["sample_rate"]
     if track["loop"]:
-        x = lib.loop_crossfade(x, sr, cfg["loop_crossfade_s"])
+        # Elle seçilmiş (kırpılmış) döngüde kesim yalnız son LOOP_TRIM_SEARCH_S içinde ince ayarlanır (ritim kaymaz):
+        # döngü uzunluğu ≈ end_s - start_s - crossfade (en çok LOOP_TRIM_SEARCH_S kısa).
+        x = lib.loop_crossfade(x, sr, cfg["loop_crossfade_s"], search_s=LOOP_TRIM_SEARCH_S if trimmed else 4.0)
     y, lufs, limited = lib.normalize(x, sr, cfg["target_lufs"], cfg["peak_ceiling_db"])
     if not track["loop"]:
         y = lib.fade_out(y, sr)
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"{track['id']}.ogg"
     write_ogg(out, y, sr)
-    seam = lib.seam_report(y, sr) if track["loop"] else None
+    seam = None
+    if track["loop"]:  # kodlama sonrası çözülmüş dosyadan ölç: Vorbis uç örnekleri değiştirebilir
+        decoded, _ = sf.read(out, dtype="float32", always_2d=True)
+        seam = lib.seam_report(decoded, sr)
     return {"id": track["id"], "lufs": lufs, "limited": limited, "seconds": len(y) / sr, "seam": seam, "out": out}
 
 
@@ -78,7 +88,7 @@ def main() -> int:
         note = " (hedefin altında kaldı: tepe sınırı)" if r["limited"] else ""
         print(f"{r['id']}: {r['seconds']:.1f} sn, {r['lufs']:.2f} LUFS{note}, dikiş={r['seam']}")
     if pending:
-        print("bekleyen (kaynak WAV yok):", ", ".join(pending))
+        print("bekleyen (kaynak yok):", ", ".join(pending))
     return 1 if bad else 0
 
 
