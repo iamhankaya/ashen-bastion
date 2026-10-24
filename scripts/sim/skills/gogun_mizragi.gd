@@ -40,6 +40,7 @@ func tick(dt: float) -> void:
 	if not WindUtil.spear(sim, dmg):
 		_cd = 0.0
 		return
+	sim.fx.skill_sfx.emit(&"gogun_mizragi")  # salvonun ilk mızrağında tek ses
 	_left = _count - 1
 	_gap_left = _gap
 	_cd = _cooldown / sim.stats.fire_rate_mult

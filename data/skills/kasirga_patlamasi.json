@@ -25,5 +25,6 @@
     "passive": "hizli_doldurma",
     "passive_min_level": 1
   },
-  "sfx": "evolution_2"
+  "sfx": "evolution_7",
+  "cast_sfx": "kasirga_patlamasi"
 }

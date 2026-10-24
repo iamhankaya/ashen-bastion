@@ -73,6 +73,7 @@ const CHARACTER_KEYS: PackedStringArray = [
 	"placeholder",
 	"display_upper",
 	"order",
+	"sfx",
 ]
 const RIG_KEYS: PackedStringArray = [
 	"body",

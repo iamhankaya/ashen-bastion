@@ -24,5 +24,6 @@
     "passive": "hizli_parmak",
     "passive_min_level": 1
   },
-  "sfx": "evolution_3"
+  "sfx": "evolution_6",
+  "cast_sfx": "gogun_mizragi"
 }

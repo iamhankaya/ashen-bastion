@@ -42,3 +42,4 @@ func on_kill(_enemy_id: int, pos: Vector2) -> void:
 			}
 		)
 	)
+	sim.fx.skill_sfx.emit(&"hava_cebi")

@@ -24,6 +24,9 @@ var cast: Dictionary = {}
 var gather: Dictionary = {}
 var walk_cast: Dictionary = {}
 var action_while_moving: bool = false
+## v2.0.2 A4: olay -> ses kimliği sözlüğü (`shot`, `hit`, `reload_start`, `reload_end`, `dry`; değer metin ya da
+## metin dizisi, `shot` dizide silah indeksiyle). Boş sözlük = eski varsayılan sesler. Şema: docs/data-schema.md
+var sfx: Dictionary = {}
 ## v2.0 (hepsi isteğe bağlı): vitrin metni, portre yolu, kilit başarımı (yok = açık), yer tutucu görsel işareti.
 var blurb: String = ""
 var portrait: String = ""
@@ -63,6 +66,8 @@ static func from_dict(d: Dictionary) -> CharacterDef:
 			c.set(k, blk)
 	var awm: Variant = c.rig.get("action_while_moving", false)
 	c.action_while_moving = awm is bool and awm
+	var sf: Variant = d.get("sfx", {})
+	c.sfx = sf if sf is Dictionary else {}
 	c.blurb = _s(d.get("blurb", ""))
 	c.portrait = _s(d.get("portrait", ""))
 	var u: Variant = d.get("unlock", null)

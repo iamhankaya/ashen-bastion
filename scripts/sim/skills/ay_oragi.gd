@@ -34,3 +34,6 @@ func modify_shot(ctx: ShotContext) -> void:
 		& ~ProjectilePool.FLAG_SPLITTER
 	)
 	ctx.tags.append("crescent_moon")
+	var sim := api()
+	if sim != null:
+		sim.fx.skill_sfx.emit(&"ay_oragi")

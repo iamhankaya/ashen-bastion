@@ -5,7 +5,7 @@ extends RefCounted
 ## (game_data.gd satır tavanı). Hata kodları GameData'nın (yeni kod yok): unknown_ref, bad_type, unknown_key,
 ## requires_ref, out_of_range, asset_missing. Şema: docs/data-schema.md
 
-const KEYS: PackedStringArray = ["pool", "variants"]
+const KEYS: PackedStringArray = ["pool", "variants", "cast_sfx"]  # cast_sfx: A4 (DataV2.validate_cast_sfx)
 const VARIANT_KEYS: PackedStringArray = ["name", "icon", "desc"]
 const NAME_MAX := 18
 

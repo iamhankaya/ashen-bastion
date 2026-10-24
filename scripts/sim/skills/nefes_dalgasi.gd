@@ -25,3 +25,4 @@ func on_reload_start() -> void:
 		sim, sim.player_pos, r, _damage * sim.stats.bullet_dmg_mult, _push, &"dot"
 	)
 	sim.fx.wind_wave.emit(sim.player_pos, r, false)
+	sim.fx.skill_sfx.emit(&"nefes_dalgasi")

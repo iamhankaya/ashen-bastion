@@ -27,5 +27,6 @@
     "passive": "agir_kursun",
     "passive_min_level": 1
   },
-  "sfx": "evolution_5"
+  "sfx": "evolution_5",
+  "cast_sfx": "ay_oragi"
 }

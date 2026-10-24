@@ -25,4 +25,5 @@ func tick(dt: float) -> void:
 	if not WindUtil.spear(sim, _damage * sim.stats.bullet_dmg_mult):
 		_cd = 0.0
 		return
+	sim.fx.skill_sfx.emit(&"delen_ruzgar")
 	_cd = _cooldown / sim.stats.fire_rate_mult

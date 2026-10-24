@@ -22,6 +22,8 @@ var sfx: StringName = &""  # yalnız evrim, isteğe bağlı: evrim sesi kimliği
 ## v2.0.2: `pool` "common" (varsayılan) ya da karakter kimliği; `variants` yalnız ortak becerilerde karakter başına
 ## {name, icon, desc} (hepsi isteğe bağlı). Şema: docs/data-schema.md
 var pool: StringName = POOL_COMMON
+## v2.0.2 A4: aktif/evrim becerinin ateşlenme/doğuş sesi kimliği (isteğe bağlı; `evolution sfx` evrim anı sesidir).
+var cast_sfx: StringName = &""
 var variants: Dictionary = {}
 
 
@@ -50,6 +52,7 @@ static func from_dict(d: Dictionary) -> SkillDef:
 	s.requires = rq if rq is Dictionary else {}
 	s.sfx = StringName(str(d.get("sfx", "")))
 	s.pool = StringName(str(d.get("pool", "common")))
+	s.cast_sfx = StringName(str(d.get("cast_sfx", "")))
 	var vr: Variant = d.get("variants", {})
 	s.variants = vr if vr is Dictionary else {}
 	return s

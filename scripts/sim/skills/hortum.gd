@@ -24,4 +24,5 @@ func tick(dt: float) -> void:
 		_cd = 0.0
 		return
 	WindSystem.cast_twisters(sim, ZonePool.KIND_TWISTER, _lv)
+	sim.fx.skill_sfx.emit(&"hortum")  # doğuşta tek seferlik
 	_cd = _cooldown / sim.stats.fire_rate_mult
