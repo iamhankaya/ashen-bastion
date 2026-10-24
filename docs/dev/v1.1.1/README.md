@@ -4,7 +4,7 @@ Kaynak: kullanıcı ekran kaydı 2026-10-24. 24 fps görünüm saati, 720×720, 
 
 ```
 xvfb-run -a -s "-screen 0 720x720x24" godot --path . --rendering-driver opengl3 --resolution 720x720 \
-  -s res://tools/capture/shots_anim.gd -- <dizin> <walk|walk8|shoot|reload> [kademe]
+  -s res://tools/capture/shots_anim.gd -- <dizin> <walk|walk8|slow|shoot|reload> [kademe]
 python3 tools/capture/anim_montage.py <dizin> <senaryo> docs/dev/v1.1.1/<senaryo>_after.png 2
 ```
 
@@ -14,6 +14,7 @@ python3 tools/capture/anim_montage.py <dizin> <senaryo> docs/dev/v1.1.1/<senaryo
 |---|---|
 | walk_* | sağa 8 kare, sola 8 (yön değiştirme), dur 8 (hedefsiz; sim, hareket varken `gun_aim = hareket açısı` yazar) |
 | walk8_* | sağ-yukarı çapraz 8, dur 4, yürü-dur 4, sol-aşağı çapraz 8 |
+| slow_* | 60 px/sn düşük hız yürüme, 24 kare (1 sn, 58 px): bob fazı yola bağlı mı |
 | shoot_* | sağa bakarken eski hedef sol-aşağı (150°) kalmış; 14. karede sağda hedef belirir, atış |
 | reload_* | hedef var, doldurma 1 sn; 12. karede hedef sol-yukarıya geçer (uç durum) |
 
@@ -25,6 +26,8 @@ python3 tools/capture/anim_montage.py <dizin> <senaryo> docs/dev/v1.1.1/<senaryo
 | bekleme→atış (shoot) | 150,1 | 22,6 |
 | yürüme (walk) | 180,0 | 15,0 |
 | yürüme çapraz (walk8) | 135,0 | 15,0 |
+
+Düşük hız (slow): 58 px yolda v1.1 ≈ 1,1 çevrim = 2,2 bob (zamana bağlı, hız 0,5'e kenetli → 26 px/bob); v1.1.1 0,44 çevrim = yaklaşık 0,9 bob (faz = yol / stride 136 → 68 px/bob), yani adım uzunluğuyla senkron.
 
 Yürüme gövdesi (rig): eğim tepe 8,0° → 5,0°; bob 8,1 px → 4,1 px; temas squash sx 1,05 → 1,03, sy 0,93 → 0,96.
 

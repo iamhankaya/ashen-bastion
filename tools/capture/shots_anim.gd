@@ -104,6 +104,11 @@ func _drive(scen: String, i: int) -> String:
 			sim.player_pos += v * DT
 			_sim_aim_from_move(v)
 			return "çapraz" if v != Vector2.ZERO else "dur"
+		"slow":  # düşük hız (60 px/sn) yürüme: bob adım tempodan kopmamalı (v1.1.1: faz = yol / stride)
+			sim.player_facing_left = false
+			sim.player_pos += Vector2(60.0, 0) * DT
+			_sim_aim_from_move(Vector2.RIGHT)
+			return "yavaş"
 		"shoot":  # sağa bakarken eski hedef sol-aşağı (150°); 14. karede sağda hedef belirir, atış
 			sim.player_facing_left = false
 			if i < 12:
