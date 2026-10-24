@@ -10,16 +10,15 @@ const Y := 6.0
 const H := 34.0
 const FONT_SIZE := 24
 const RENDER_X := 36.0
-const RENDER_W := 370.0
-const RENDER_TAP_X := 410.0
-const ESCAPE_X := 570.0
-const ESCAPE_W := 300.0
-const ESCAPE_TAP_X := 880.0
-const TAP_W := 150.0
+const RENDER_W := 280.0
+const RENDER_TAP_X := 320.0
+const ESCAPE_X := 456.0
+const ESCAPE_W := 280.0
+const ESCAPE_TAP_X := 742.0
+const TAP_W := 130.0
 const TAP_GROUP := &"debug_tap"
-const BOUNCE_X := 570.0
-const BOUNCE_Y := 46.0
-const BOUNCE_W := 400.0
+const BOUNCE_X := 878.0
+const BOUNCE_W := 166.0
 
 
 static func build_render(parent: Node, on_input: Callable) -> Label:
@@ -30,17 +29,24 @@ static func build_escape(parent: Node, on_input: Callable) -> Label:
 	return _build(parent, &"EscapeDebug", [ESCAPE_X, ESCAPE_W, ESCAPE_TAP_X], on_input)
 
 
-## Sekme kademesi etiketi (v1.1.1): ikinci satır; kendisi dokunma alanıdır (TAP_GROUP dışında).
+## Sekme kademesi etiketi (v1.1.1): üst satırın sağ ucu; etiket dokunmayı yutmaz, üstündeki saydam çocuk
+## Control dokunma alanıdır (TAP_GROUP dışında; yalnız etiket görünürken görünür).
 static func build_bounce(parent: Node, on_input: Callable) -> Label:
 	var label := Label.new()
 	label.name = &"BounceDebug"
-	label.position = Vector2(BOUNCE_X, BOUNCE_Y)
+	label.position = Vector2(BOUNCE_X, Y)
 	label.size = Vector2(BOUNCE_W, H)
+	label.max_lines_visible = 1
 	label.clip_text = true
 	_style(label)
-	label.mouse_filter = Control.MOUSE_FILTER_STOP
-	label.gui_input.connect(on_input)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.visible = false
+	var tap := Control.new()
+	tap.name = &"BounceTap"
+	tap.size = label.size
+	tap.mouse_filter = Control.MOUSE_FILTER_STOP
+	tap.gui_input.connect(on_input)
+	label.add_child(tap)
 	parent.add_child(label)
 	return label
 
