@@ -8,6 +8,7 @@
     "rhythm"
   ],
   "behavior": "mermi_firtinasi",
+  "sfx": "evolution_3",
   "levels": [
     {
       "salvo_mult": 2,

@@ -8,7 +8,7 @@
       "to": 1200,
       "rate": [
         0.8,
-        3.5
+        4.2
       ]
     },
     {
@@ -32,28 +32,28 @@
       "to": 1200,
       "rate": [
         0.05,
-        0.5
+        0.8
       ]
     },
     {
       "kind": "burst",
       "type": "curumus_piyade",
       "at": 480,
-      "count": 50,
+      "count": 65,
       "ring": true
     },
     {
       "kind": "burst",
       "type": "curumus_piyade",
       "at": 720,
-      "count": 50,
+      "count": 70,
       "ring": true
     },
     {
       "kind": "burst",
       "type": "curumus_piyade",
       "at": 960,
-      "count": 50,
+      "count": 75,
       "ring": true
     },
     {

@@ -257,3 +257,119 @@ func test_sd03_every_description_fits_its_label() -> void:
 		assert_lte(
 			d.get_line_count() * d.get_line_height(), d.size.y, "açıklama tam görünür: %s" % d.text
 		)
+
+
+## F-037: cihazda yalnız InputEventScreenTouch/ScreenDrag gelir (emulate_mouse_from_touch=false); gerçek olay dizisiyle kayma.
+func _list_point(s: AchievementsScreen) -> Vector2:
+	return s.list.get_global_rect().get_center()
+
+
+func _touch(idx: int, pos: Vector2, pressed: bool) -> void:
+	var t := InputEventScreenTouch.new()
+	t.index = idx
+	t.position = pos
+	t.pressed = pressed
+	get_viewport().push_input(t, true)
+
+
+func _drag(idx: int, pos: Vector2, rel: Vector2) -> void:
+	var d := InputEventScreenDrag.new()
+	d.index = idx
+	d.position = pos
+	d.relative = rel
+	d.velocity = rel * 60.0
+	get_viewport().push_input(d, true)
+
+
+func _settle() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+func test_f037_touch_drag_scrolls_list() -> void:
+	var s := _screen()
+	s.visible = true
+	await _settle()
+	var p := _list_point(s)
+	_touch(0, p, true)
+	for i in 10:
+		p += Vector2(0, -40)
+		_drag(0, p, Vector2(0, -40))
+		await get_tree().process_frame
+	_touch(0, p, false)
+	assert_gt(s.list.scroll_vertical, 100, "parmak yukarı sürüklenince liste kayar")
+
+
+func test_f037_mouse_drag_scrolls_list() -> void:
+	var s := _screen()
+	s.visible = true
+	await _settle()
+	var p := _list_point(s)
+	var b := InputEventMouseButton.new()
+	b.button_index = MOUSE_BUTTON_LEFT
+	b.pressed = true
+	b.position = p
+	b.global_position = p
+	get_viewport().push_input(b, true)
+	for i in 10:
+		p += Vector2(0, -40)
+		var m := InputEventMouseMotion.new()
+		m.position = p
+		m.global_position = p
+		m.relative = Vector2(0, -40)
+		m.button_mask = MOUSE_BUTTON_MASK_LEFT
+		get_viewport().push_input(m, true)
+		await get_tree().process_frame
+	b = b.duplicate()
+	b.pressed = false
+	b.position = p
+	b.global_position = p
+	get_viewport().push_input(b, true)
+	assert_gt(s.list.scroll_vertical, 100, "emüle fare sürüklemesi listeyi kaydırır")
+
+
+func test_f037_drag_starting_on_row_scrolls_and_back_still_taps() -> void:
+	var s := _screen()
+	s.visible = true
+	await _settle()
+	var row := s.rows[0]
+	var p := row.get_global_rect().get_center()
+	assert_true(s.list.get_global_rect().has_point(p), "satır görünür alanda")
+	_touch(0, p, true)
+	for i in 8:
+		p += Vector2(0, -50)
+		_drag(0, p, Vector2(0, -50))
+		await get_tree().process_frame
+	_touch(0, p, false)
+	assert_gt(s.list.scroll_vertical, 100, "satır üstünden başlayan sürükleme de kaydırır")
+	watch_signals(s)
+	var c := s.back_button.get_global_rect().get_center()
+	var m := InputEventMouseButton.new()
+	m.button_index = MOUSE_BUTTON_LEFT
+	m.position = c
+	m.global_position = c
+	m.pressed = true
+	get_viewport().push_input(m, true)
+	m = m.duplicate()
+	m.pressed = false
+	get_viewport().push_input(m, true)
+	assert_signal_emitted(s, "back_requested", "GERİ dokunuşu hâlâ çalışır")
+
+
+func test_icon_locked_vs_open_state() -> void:
+	var st := AchievementStore.new(PATH)
+	st.unlock(&"ilk_kan", T0)
+	var s := _screen(st)
+	var open_icon := _icon(_row(s, &"ilk_kan"))
+	var locked_icon := _icon(_row(s, &"bes_dakika"))
+	assert_eq(open_icon.modulate, Color.WHITE)
+	assert_null(open_icon.material)
+	assert_eq(locked_icon.modulate, Color.WHITE)
+	assert_true(locked_icon.material is ShaderMaterial, "kilitli: gri tonlama etkin")
+
+
+func _icon(row: Control) -> TextureRect:
+	for c in row.get_children():
+		if c is TextureRect and (c as TextureRect).size == Vector2(84.0, 84.0):
+			return c
+	return null

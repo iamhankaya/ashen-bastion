@@ -11,6 +11,13 @@ var cull_fix: bool = true
 var character_id: String = ""
 ## v2.0: ayar dosyası yolu (boş yol parametreleri bunu kullanır). Testler geçici dosyaya çevirir, `after_each`'te geri alır.
 var store_path: String = "user://settings.cfg"
+## v2.0.1: kanal seviyeleri yüzde (0-100, tamsayı). Müzik varsayılanı 100, efekt 70 (efektler müziği bastırmasın).
+const MUSIC_DEFAULT := 100
+const SFX_DEFAULT := 70
+var music_pct: int = MUSIC_DEFAULT
+var sfx_pct: int = SFX_DEFAULT
+## AudioDirector'ın Music kanalına eklediği anlık pay (duraklatma/duck, dB); kullanıcı seviyesinin ÜSTÜNE eklenir.
+var music_extra_db: float = 0.0
 
 
 func _ready() -> void:
@@ -33,6 +40,8 @@ func load_settings(path: String = "") -> void:
 	cull_fix = bool(d.get("kesme_duzeltmesi", true))
 	var ch: Variant = d.get("karakter", "")
 	character_id = ch if ch is String else ""
+	music_pct = _pct_from(d.get("muzik_yuzde"), MUSIC_DEFAULT)
+	sfx_pct = _pct_from(d.get("efekt_yuzde"), SFX_DEFAULT)
 	RenderFix.enabled = cull_fix
 
 
@@ -52,6 +61,8 @@ func save_settings(path: String = "") -> bool:
 						"titresim": vibration_on,
 						"kesme_duzeltmesi": cull_fix,
 						"karakter": character_id,
+						"muzik_yuzde": music_pct,
+						"efekt_yuzde": sfx_pct,
 					}
 				)
 			)
@@ -73,11 +84,52 @@ func set_vibration(on: bool) -> void:
 	Events.settings_changed.emit()
 
 
-## sound_on=false Master bus'ı susturur.
+## Sayı değilse/eksikse varsayılan; sayıysa 0-100'e sıkıştırılıp tamsayıya yuvarlanır.
+static func _pct_from(v: Variant, fallback: int) -> int:
+	if (v is float or v is int) and is_finite(float(v)):
+		return AudioMix.clamp_pct(float(v))
+	return fallback
+
+
+## Tek ses uygulama noktası: sound_on=false Master'ı susturur (hızlı sessize alma, yüzdelere dokunmaz);
+## Music = müzik yüzdesi + AudioDirector payı; SFX ve UI = efekt yüzdesi. %0 kanalı susturur.
 func apply_audio() -> void:
-	var idx := AudioServer.get_bus_index(&"Master")
-	if idx >= 0:
-		AudioServer.set_bus_mute(idx, not sound_on)
+	_set_bus(&"Master", not sound_on, 0.0)
+	_set_bus(&"Music", music_pct <= 0, AudioMix.bus_db(music_pct, music_extra_db))
+	for bus in [&"SFX", &"UI"]:
+		_set_bus(bus, sfx_pct <= 0, AudioMix.bus_db(sfx_pct))
+
+
+static func _set_bus(bus: StringName, mute: bool, db: float) -> void:
+	var idx := AudioServer.get_bus_index(bus)
+	if idx < 0:
+		return
+	AudioServer.set_bus_mute(idx, mute)
+	if bus != &"Master":
+		AudioServer.set_bus_volume_db(idx, db)
+
+
+## `persist=false`: kaydırma sırasında yalnız sesi uygular; bırakılınca `persist=true` ile yazılır.
+func set_music_pct(pct: int, persist: bool = true) -> void:
+	music_pct = AudioMix.clamp_pct(pct)
+	apply_audio()
+	if persist:
+		save_settings()
+		Events.settings_changed.emit()
+
+
+func set_sfx_pct(pct: int, persist: bool = true) -> void:
+	sfx_pct = AudioMix.clamp_pct(pct)
+	apply_audio()
+	if persist:
+		save_settings()
+		Events.settings_changed.emit()
+
+
+## AudioDirector: duraklatma/duck payı (dB, <= 0). Kullanıcı müzik seviyesinin üstüne eklenir.
+func set_music_extra_db(db: float) -> void:
+	music_extra_db = db
+	apply_audio()
 
 
 ## Seçili karakteri kaydeder (boş yol = store_path) ve settings_changed yayınlar.

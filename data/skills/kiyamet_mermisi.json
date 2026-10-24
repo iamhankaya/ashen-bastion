@@ -8,6 +8,7 @@
     "rhythm"
   ],
   "behavior": "kiyamet_mermisi",
+  "sfx": "evolution_2",
   "levels": [
     {
       "ex_damage": 400,

@@ -132,6 +132,7 @@ func show_def(def: AchievementDef) -> void:
 	var tier_i := maxi(AchievementDef.tier_index(def.tier), 0)
 	name_label.text = UiKit.upper_tr(def.display_name)
 	icon_rect.texture = UiKit.texture(AchievementIcons.path_for(def))
+	AchievementIcons.apply_state(icon_rect, false)
 	var col := AchievementIcons.tier_color(def.tier)
 	frame_rect.modulate = col
 	tier_marks.count = tier_i + 1

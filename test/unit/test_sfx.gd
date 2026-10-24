@@ -70,3 +70,72 @@ func test_xp_pitch_formula_and_combo_reset() -> void:
 	assert_almost_eq(p2, 1.12, 1e-6)
 	var p3 := Sfx.note_pickup(1400 + Sfx.COMBO_WINDOW_MS + 1)
 	assert_almost_eq(p3, 1.0, 1e-6, "0,6 sn toplama yoksa sıfırlanır")
+
+
+func _tagged(rate: int) -> AudioStreamWAV:
+	var w := AudioStreamWAV.new()
+	w.format = AudioStreamWAV.FORMAT_8_BITS
+	w.mix_rate = rate  # mix_rate akışı ayırt etmek için kimlik görevi görür
+	w.data = PackedByteArray([0, 0, 0, 0])
+	return w
+
+
+func test_variants_are_all_used_and_never_repeat_back_to_back() -> void:
+	Sfx.register_stream(&"vary_1", _tagged(1001))
+	Sfx.register_stream(&"vary_2", _tagged(1002))
+	Sfx.register_stream(&"vary_3", _tagged(1003))
+	assert_eq(Sfx.variant_count(&"vary"), 3)
+	Sfx.seed_presentation(7)
+	var seen := {}
+	var prev := -1
+	for i in 60:
+		var rate: int = (Sfx.pick_stream(&"vary") as AudioStreamWAV).mix_rate
+		seen[rate] = true
+		assert_ne(rate, prev, "üst üste aynı varyasyon yok")
+		prev = rate
+	assert_eq(seen.size(), 3)
+
+
+func test_variant_choice_is_seed_stable_and_does_not_touch_global_rng() -> void:
+	Sfx.register_stream(&"vary_1", _tagged(1001))
+	Sfx.register_stream(&"vary_2", _tagged(1002))
+	seed(123)
+	var before := randi()
+	seed(123)
+	Sfx.seed_presentation(5)
+	var a: Array[int] = []
+	for i in 8:
+		a.append((Sfx.pick_stream(&"vary") as AudioStreamWAV).mix_rate)
+	assert_eq(randi(), before, "varyasyon seçimi genel RNG'yi tüketmez")
+	Sfx.clear_registered()
+	Sfx.register_stream(&"vary_1", _tagged(1001))
+	Sfx.register_stream(&"vary_2", _tagged(1002))
+	Sfx.seed_presentation(5)
+	var b: Array[int] = []
+	for i in 8:
+		b.append((Sfx.pick_stream(&"vary") as AudioStreamWAV).mix_rate)
+	assert_eq(a, b, "aynı tohum aynı sıra")
+
+
+func test_single_file_and_missing_ids_still_work() -> void:
+	Sfx.register_stream(&"solo", _tagged(1004))
+	assert_eq(Sfx.variant_count(&"solo"), 1)
+	assert_eq((Sfx.pick_stream(&"solo") as AudioStreamWAV).mix_rate, 1004)
+	assert_eq(Sfx.variant_count(&"hic_yok"), 0)
+	assert_null(Sfx.pick_stream(&"hic_yok"))
+
+
+func test_play_uses_a_variant_stream() -> void:
+	Sfx.register_stream(&"vary_1", _tagged(1001))
+	Sfx.register_stream(&"vary_2", _tagged(1002))
+	Sfx.play(&"vary")
+	assert_eq(Sfx.playing_count(&"vary"), 1)
+
+
+func test_shipped_variation_files_exist_for_hit_die_and_reload_spin() -> void:
+	Sfx.clear_registered()
+	assert_eq(Sfx.variant_count(&"hit"), 2)
+	assert_eq(Sfx.variant_count(&"enemy_die"), 2)
+	assert_eq(Sfx.variant_count(&"reload_spin"), 2)
+	assert_eq(Sfx.variant_count(&"explosion"), 1)
+	assert_eq(Sfx.variant_count(&"dry_fire"), 1)

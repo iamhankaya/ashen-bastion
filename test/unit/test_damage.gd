@@ -70,7 +70,7 @@ func test_no_contact_keeps_timer_ready() -> void:
 func test_contact_multiplier_is_computed_at_tick_time_not_spawn_time() -> void:
 	var s := _contact_sim(1)
 	var base := s.enemies.contact[0]
-	s.debug_set_time(600.0)  # 10. dk: enemy_dmg_mult = 1,4 (düşman t=0'da doğdu)
+	s.debug_set_time(600.0)  # 10. dk: enemy_dmg_mult = 1,7 (düşman t=0'da doğdu)
 	assert_almost_eq(
 		s.damage.contact_tick(s, 1.0 / 60.0), base * Difficulty.enemy_dmg_mult(600.0), 1e-4
 	)

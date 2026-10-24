@@ -9,6 +9,7 @@ signal restart_confirmed
 signal menu_confirmed
 signal sound_toggled(on: bool)
 signal vibration_toggled(on: bool)
+signal settings_requested
 
 enum Confirm { NONE, RESTART, MENU }
 
@@ -20,6 +21,7 @@ const GAP_MIN := 40.0
 var resume_button: Button
 var sound_button: Button
 var vibration_button: Button
+var settings_button: Button
 var restart_button: Button
 var menu_button: Button
 var active_slots: Array[SkillSlot] = []
@@ -105,6 +107,10 @@ func _build() -> void:
 	row.add_child(sound_button)
 	row.add_child(vibration_button)
 	col.add_child(row)
+
+	settings_button = UiKit.button("AYARLAR", &"secondary")
+	settings_button.pressed.connect(func() -> void: settings_requested.emit())
+	col.add_child(settings_button)
 
 	restart_button = UiKit.button("BAŞTAN BAŞLA", &"secondary")
 	restart_button.pressed.connect(open_confirm.bind(Confirm.RESTART))

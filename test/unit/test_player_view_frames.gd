@@ -159,7 +159,7 @@ func test_mid_stop_blends_two_cells() -> void:
 	assert_almost_eq(float(_param(v, "frame_mix")), v.anim.frame_mix, 1e-5)
 
 
-func test_shoulders_stay_within_5px_of_the_sim_while_walking_in_frame_mode() -> void:
+func test_shoulders_follow_the_sim_within_the_hip_lean_drift_while_walking_in_frame_mode() -> void:
 	var v := _view(6)
 	for facing in [false, true]:
 		v._sim.player_facing_left = facing
@@ -169,7 +169,8 @@ func test_shoulders_stay_within_5px_of_the_sim_while_walking_in_frame_mode() -> 
 		for g in 2:
 			var want := PlayerRig.shoulder_world(g, v._sim.player_pos, facing, v._sim.character.rig)
 			var dev := v.shoulder_view(g).distance_to(want)
-			assert_lte(dev, 5.0, "omuz uyumu ≤5 px (g=%d sol=%s, %.2f px)" % [g, facing, dev])
+			# bel pivotu: eğim kayması + bob/squash (gövdenin bütünü); kenet yok (v2.0.1)
+			assert_lte(dev, 9.0, "omuz sim'den ≤9 px (g=%d sol=%s, %.2f px)" % [g, facing, dev])
 
 
 func test_standing_shoulders_still_match_within_a_pixel_in_frame_mode() -> void:
@@ -195,15 +196,14 @@ func test_arms_follow_the_per_frame_shoulder_deviation() -> void:
 	assert_almost_eq(shift, 0.02 * float(v._rig["display_height"]), 0.3, "kare 0 omzu dx=+%2")
 
 
-func test_clamp_holds_a_large_shoulder_deviation_to_the_tolerance() -> void:
+func test_arm_pivot_is_not_clamped_to_the_sim_shoulder() -> void:
 	var dev: Array = []
 	for f in 7:
-		dev.append([0.0, 0.0] if f == 6 else [0.15, 0.0])  # 30 px: kenetsiz çok aşar
+		dev.append([0.0, 0.0] if f == 6 else [0.15, 0.0])  # 30 px: kol gövdeyle birlikte gider (v2.0.1)
 	var v := _view(6, dev)
 	_walk(v, 0.2, 3)
-	for g in 2:
-		var want := PlayerRig.shoulder_world(g, v._sim.player_pos, false, v._sim.character.rig)
-		assert_lte(v.shoulder_view(g).distance_to(want), PlayerView.SHOULDER_TOL + 0.05)
+	var want := PlayerRig.shoulder_world(0, v._sim.player_pos, false, v._sim.character.rig)
+	assert_gt(v.shoulder_view(0).distance_to(want), 20.0)
 
 
 func test_recoil_is_not_cut_by_the_shoulder_clamp_in_frame_mode() -> void:

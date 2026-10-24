@@ -35,3 +35,7 @@ signal streak_changed(mult: int, left: float)
 ## PickupSystem.blast: bomb_exploded'ten hemen sonra. YALNIZ Kara Bomba (dinamit mermi havuzundan patlar, blast çağırmaz).
 ## Sim durumunu etkilemez; dinleyicisiz de aynı state_hash (başarım #22 için; bomb_exploded imzası değişmez).
 signal bomb_hits(pos: Vector2, radius: float, hits: int)
+
+# --- v2.0.1 ---
+## Mermi düşmana isabet etti ve öldürmedi (ölüm `enemy_killed` ile duyulur). Yalnız bildirim: sim durumunu ve RNG'yi etkilemez.
+signal enemy_hit(pos: Vector2)

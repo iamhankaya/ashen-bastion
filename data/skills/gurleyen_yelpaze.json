@@ -6,6 +6,7 @@
   "max_level": 1,
   "tags": [],
   "behavior": "gurleyen_yelpaze",
+  "sfx": "evolution_1",
   "levels": [
     {
       "cooldown": 2.0,

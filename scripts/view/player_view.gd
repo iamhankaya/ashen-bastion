@@ -21,9 +21,9 @@ const RIM_SCREEN_PX := 2.1
 const RING_PULSE := 0.15  # doldurma bitişinde halka 1→1,5 + solma
 const AURA_SIZE := Vector2(80.0, 28.0)
 const FLASH_STEP := 1.0 / 30.0  # 3 karelik titreşim
-## Kare modunda görünüm omzu sim omzundan en çok bu kadar (px) uzaklaşır (eğim omzu ayaktan ~0,8H yukarıda kaydırır);
-## kalan sapma gövde dikişinde kalır. Plan D4-2: omuz uyumu ≤5 px.
-const SHOULDER_TOL := 4.5
+## Gövde eğimi/sallanması ayak yerine bu yükseklikte (ayaktan, boy kesri; bel) döner: omuz (~0,8) pivottan ~0,2·H uzakta
+## kalır, eğim omzu ayaktan değil belden kaydırır (v2.0.1: ≈17 px → ≤6 px).
+const HIP_FRAC := 0.65
 
 var far_arm: Sprite2D
 var body: MeshInstance2D
@@ -378,8 +378,12 @@ func _apply_pose(dt: float, moved: Vector2) -> void:
 	# Rig: ayak pivotu; bob/itme/gömülme dönüşümde, dönüş ve solma burada
 	var rp := Vector2(0.0, half_h - anim.bob_px + anim.sink_px)
 	rp += anim.knock_dir * anim.knock_px + Vector2(-sgn * anim.body_back_px, 0.0)
+	var rot := anim.body_rot
+	if anim.mode != PlayerAnim.Mode.DEAD:  # ölümde devrilme ayak pivotundan (zemine yatar)
+		var hip := Vector2(0.0, -HIP_FRAC * body_size(_rig).y)
+		rp += hip - hip.rotated(rot)
 	rig_node.position = rp
-	rig_node.rotation = anim.body_rot
+	rig_node.rotation = rot
 	rig_node.modulate.a = anim.fade
 	shadow.modulate.a = anim.fade
 	# gövde: ayak sabit, squash/ayna ayak çizgisinden
@@ -467,7 +471,7 @@ func _aims() -> PackedFloat32Array:
 
 ## Kol Rig'in çocuğudur: dünya açısını korumak için dönüşü Rig dönüşünden çıkarır; omuz Rig yerelinde görünüm omzudur.
 ## Kare modunda omuz = duruş omzu + gösterilen karenin sapması (çapraz solmada iki kare harmanlanır) ve görünüm omzu sim
-## omzundan SHOULDER_TOL'den fazla uzaklaşmaz (eğimin omuz kaydırması gövde dikişine bırakılır).
+## omzundan kenetlenmez: kol pivotu hep gövdenin omzundadır (v2.0.1; eğimin kaydırması bel pivotuyla küçültülür).
 func _place_arm(arm: Sprite2D, gun: int, aim: float) -> void:
 	var flip := arm_flip(aim)
 	var kx := _arm_len / maxf(_arm_orig.x, 1.0)
@@ -480,8 +484,6 @@ func _place_arm(arm: Sprite2D, gun: int, aim: float) -> void:
 	var sh := _shoulder_now(gun)
 	var half_h := body_size(_rig).y * 0.5
 	var in_rig := Vector2(sh.x, (sh.y - half_h) * anim.sy)
-	if _strip_ready:
-		in_rig = _clamp_shoulder(gun, in_rig)  # kenet omuz tabanına; geri tepme (arm_back) sonradan tam uygulanır
 	arm.position = in_rig - Vector2.from_angle(local_aim) * anim.arm_back[gun]
 
 
@@ -493,18 +495,6 @@ func _shoulder_now(gun: int) -> Vector2:
 	if anim.frame_mix <= 0.0 or anim.frame_b == anim.frame_a:
 		return a
 	return a.lerp(shoulder_local(_rig, gun, _facing_left, anim.frame_b), anim.frame_mix)
-
-
-## Görünüm omzunu (Rig dönüşümü sonrası dünya) sim omzuna en çok SHOULDER_TOL kadar yaklaştırır.
-func _clamp_shoulder(gun: int, pos_in_rig: Vector2) -> Vector2:
-	var view_local := rig_node.transform * pos_in_rig
-	var sim_local := shoulder_local(_rig, gun, _facing_left)
-	var off := view_local - sim_local
-	var d := off.length()
-	if d <= SHOULDER_TOL:
-		return pos_in_rig
-	var target := sim_local + off * (SHOULDER_TOL / d)
-	return rig_node.transform.affine_inverse() * target
 
 
 func _anim_rig(rig: Dictionary) -> Dictionary:

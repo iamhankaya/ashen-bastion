@@ -94,13 +94,17 @@ Yeni hata kodları (v2.0): `unknown_stat`, `ach_count`, `tier_missing`, `scope_m
 ```json
 {"id": "...", "kind": "active|passive|evolution", "name": "...", "icon": "...", "max_level": 5,
  "tags": [], "behavior": "<SkillRegistry anahtarı>", "levels": [{...}], "desc": ["..."],
- "requires": {"active": "...", "active_level": 5, "passive": "...", "passive_min_level": 1}}
+ "requires": {"active": "...", "active_level": 5, "passive": "...", "passive_min_level": 1},
+ "sfx": "evolution_3"}
 ```
 
 - `max_level` 1..8 tamsayı; **evrimde 1**. `levels` ve `desc` uzunluğu = `max_level`.
 - `behavior`: aktif/evrimde zorunlu, `SkillRegistry.BEHAVIORS`'ta olmalı ve `SkillBehavior`'dan türemeli; **pasifte yok**.
 - `requires`: yalnız evrimde (zorunlu). `active` = `kind:active` beceri, `active_level` = o becerinin `max_level`'ı,
   `passive` = `kind:passive` beceri, `passive_min_level` 1..pasifin `max_level`'ı. Her aktifin en çok bir evrimi olur.
+- `sfx` (isteğe bağlı, **yalnız evrimde**): evrim kazanılınca çalan ses kimliği; `assets/audio/sfx/<sfx>.ogg` var olmalı
+  (hatalar: evrim dışında `unknown_key`, boş/metin değil `bad_type`, dosya yok `asset_missing`). Alan yoksa `evolution_1` çalar.
+  Dört evrime `evolution_1…4` atanmıştır; `evolution_5`, `evolution_6` yeni karakter evrimleri için yedektir.
 - `tags`: metin dizisi. `rhythm` = şarjör ritmiyle etkileşir. **İçerik tamamlandı (slice 2)** modunda `rhythm` etiketli
   **aktif** sayısı ≥ 2 (`rhythm_count`).
 - `levels[i]` sayısal değerlerden oluşan nesnedir; **tüm seviyelerde aynı anahtar kümesi** (`levels_keys`).

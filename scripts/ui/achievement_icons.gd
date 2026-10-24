@@ -3,6 +3,7 @@ extends RefCounted
 ## Başarım ikonu çözümü: `icon` (geçerli res:// yolu) varsa o; yoksa `stat` ailesine göre mevcut ikon (yer tutucu, DESIGN §6.3).
 
 const DIR := UiKit.ICON_DIR
+const LOCKED_SHADER := "res://assets/shaders/ach_locked.gdshader"
 ## stat -> assets/ui/icons altındaki ad (uzantısız). Kapalı küme `AchievementDef.STATS`'ın tümü kapsanır.
 const FAMILY := {
 	"total_kills": "hud-oldurme",
@@ -51,3 +52,16 @@ static func tier_color(tier: StringName) -> Color:
 		"zor", "cok_zor":
 			return UiKit.AMBER
 	return UiKit.KEMIK_300
+
+
+## Kilitli/açık görünüm: açık = renk çarpanı yok (modulate beyaz, materyal yok); kilitli = modulate beyaz kalır,
+## boyalı ikon gölgelendiriciyle gri tonlanıp karartılır.
+static func apply_state(rect: CanvasItem, locked: bool) -> void:
+	rect.modulate = Color.WHITE
+	if not locked:
+		rect.material = null
+		return
+	var m := ShaderMaterial.new()
+	m.shader = load(LOCKED_SHADER)
+	m.set_shader_parameter(&"desaturate", 1.0)
+	rect.material = m

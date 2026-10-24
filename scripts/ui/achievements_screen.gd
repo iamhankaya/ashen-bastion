@@ -160,6 +160,7 @@ func _build() -> void:
 	list.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	list.mouse_filter = Control.MOUSE_FILTER_STOP
 	list.scroll_deadzone = 12
+	UiKit.touch_scroll(list)
 	add_child(list)
 	content = VBoxContainer.new()
 	content.name = "Content"
@@ -391,7 +392,7 @@ func _make_row(d: AchievementDef, store: AchievementStore, bias: int) -> Control
 		sb.shadow_color = Color(UiKit.AMBER, 0.3)
 		sb.shadow_size = 12
 	row.add_theme_stylebox_override(&"panel", sb)
-	# İkon plakası 108×108, ikon 68.
+	# İkon plakası 108×108, boyalı ikon 84 (plaka çerçevesiyle çakışmaz).
 	var plate := TextureRect.new()
 	plate.texture = UiKit.frame(&"active" if is_open else &"passive")
 	plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -406,9 +407,9 @@ func _make_row(d: AchievementDef, store: AchievementStore, bias: int) -> Control
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.position = Vector2(24.0 + 20.0, 24.0 + 20.0)
-	icon.size = Vector2(68.0, 68.0)
-	icon.modulate = Color(1, 1, 1, 1.0) if is_open else Color(0.62, 0.6, 0.58, 0.45)
+	icon.position = Vector2(24.0 + 12.0, 24.0 + 12.0)
+	icon.size = Vector2(84.0, 84.0)
+	AchievementIcons.apply_state(icon, not is_open)
 	row.add_child(icon)
 	if not is_open:
 		var lock := Badge.new()

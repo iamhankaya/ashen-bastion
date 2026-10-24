@@ -75,13 +75,13 @@ func test_existing_bomb_exploded_signature_unchanged() -> void:
 	fail_test("bomb_exploded yok")
 
 
-func test_bomb_hits_is_the_last_signal_declared_in_source() -> void:
-	# Yeni sinyal SONA eklenir (mevcut sinyallerin sırası/imzası değişmez): kaynakta son `signal` satırı bomb_hits.
+func test_enemy_hit_follows_bomb_hits_as_the_last_signal_declared_in_source() -> void:
+	# Yeni sinyal SONA eklenir (mevcut sinyallerin sırası/imzası değişmez): kaynakta son `signal` satırı enemy_hit (v2.0.1; bomb_hits ondan hemen önce).
 	var last := ""
 	for line in FileAccess.get_file_as_string("res://scripts/sim/sim_bus.gd").split("\n"):
 		if line.begins_with("signal "):
 			last = line
-	assert_true(last.begins_with("signal bomb_hits("), last)
+	assert_true(last.begins_with("signal enemy_hit("), last)  # v2.0.1: bomb_hits'ten sonra eklenen tek sinyal
 
 
 func test_tracker_listened_signals_exist_with_exact_signatures() -> void:
