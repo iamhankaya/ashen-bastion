@@ -437,7 +437,7 @@ func _update_views(dt: float) -> void:
 
 func _show_level_up() -> void:
 	var shown_level := sim.level - maxi(sim.pending_levels, 1) + 1
-	level_up.show_choices(sim.pending_choices(), shown_level, sim.data)
+	level_up.show_choices(sim.pending_choices(), shown_level, sim.data, sim.character)
 	_set_screen(PauseLogic.Screen.LEVEL_UP)
 
 
