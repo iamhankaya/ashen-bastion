@@ -1,6 +1,7 @@
 {
   "id": "seken_mermi",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Seken Mermi",
   "icon": "placeholder:seken_mermi",
   "max_level": 5,

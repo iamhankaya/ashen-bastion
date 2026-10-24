@@ -1,6 +1,7 @@
 {
   "id": "yelpaze_atis",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Yelpaze Atış",
   "icon": "placeholder:yelpaze_atis",
   "max_level": 5,

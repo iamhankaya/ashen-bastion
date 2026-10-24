@@ -28,5 +28,19 @@
     "Mermi hasarı +%30.",
     "Mermi hasarı +%40.",
     "Mermi hasarı +%50."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Bilenmiş Rüzgar",
+      "icon": "res://assets/ui/icons/zyfen/agir-kursun.svg",
+      "desc": [
+        "Kesik hasarı +%10.",
+        "Kesik hasarı +%20.",
+        "Kesik hasarı +%30.",
+        "Kesik hasarı +%40.",
+        "Kesik hasarı +%50."
+      ]
+    }
+  }
 }

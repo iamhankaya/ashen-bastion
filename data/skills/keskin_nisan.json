@@ -1,6 +1,7 @@
 {
   "id": "keskin_nisan",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Keskin Nişan",
   "icon": "placeholder:keskin_nisan",
   "max_level": 5,

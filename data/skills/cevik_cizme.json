@@ -28,5 +28,19 @@
     "Hareket hızı +%18.",
     "Hareket hızı +%24.",
     "Hareket hızı +%30."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Rüzgar Adımı",
+      "icon": "res://assets/ui/icons/zyfen/cevik-cizme.svg",
+      "desc": [
+        "Hareket hızı +%6.",
+        "Hareket hızı +%12.",
+        "Hareket hızı +%18.",
+        "Hareket hızı +%24.",
+        "Hareket hızı +%30."
+      ]
+    }
+  }
 }

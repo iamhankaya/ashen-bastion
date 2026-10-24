@@ -28,5 +28,19 @@
     "Atış hızı +%24.",
     "Atış hızı +%32.",
     "Atış hızı +%40."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Çevik Eller",
+      "icon": "res://assets/ui/icons/zyfen/hizli-parmak.svg",
+      "desc": [
+        "Saldırı hızı +%8.",
+        "Saldırı hızı +%16.",
+        "Saldırı hızı +%24.",
+        "Saldırı hızı +%32.",
+        "Saldırı hızı +%40."
+      ]
+    }
+  }
 }

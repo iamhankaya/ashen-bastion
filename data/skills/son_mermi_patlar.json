@@ -1,6 +1,7 @@
 {
   "id": "son_mermi_patlar",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Son Mermi Patlar",
   "icon": "placeholder:son_mermi_patlar",
   "max_level": 5,

@@ -52,6 +52,5 @@ func _live_equals_v201(character: StringName) -> void:
 func test_gunslinger_live_run_equals_v201() -> void:
 	_live_equals_v201(&"gunslinger")
 
-
-func test_barutcu_live_run_equals_v201() -> void:
-	_live_equals_v201(&"barutcu")
+## Barutçu'nun canlı koşusu U1a'dan sonra v201'e eşit değildir: karakter havuz süzgecinde Gunslinger becerilerini
+## göremez ve U1b'de silinir. v201/s1 Barutçu kayıtları yalnız tarihçe olarak fixture'da kalır.

@@ -1,6 +1,7 @@
 {
   "id": "dinamit",
   "kind": "active",
+  "pool": "common",
   "name": "Dinamit",
   "icon": "placeholder:dinamit",
   "max_level": 5,
