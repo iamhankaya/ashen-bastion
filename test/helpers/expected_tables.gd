@@ -143,11 +143,12 @@ const BOSSES := {
 	&"kale_lordu": 1200.0,
 }
 const BURST_TIMES: Array[float] = [480.0, 720.0, 960.0]
+const BURST_COUNTS := {480: 65, 720: 70, 960: 75}
 const BOSS_WARN := 5.0
 const END_TIME := 1200.0
 
 ## Zorluk sabit noktaları (dk -> [hp, dmg]); alive_cap(sn) noktaları.
-const DIFFICULTY_POINTS := {5: [1.6, 1.2], 10: [2.4, 1.4], 15: [3.4, 1.6], 20: [4.6, 1.8]}
+const DIFFICULTY_POINTS := {5: [1.6625, 1.2], 10: [2.65, 1.7], 15: [3.9625, 2.2], 20: [5.6, 2.7]}
 const CAP_POINTS := {300.0: 130, 600.0: 220, 900.0: 310, 1200.0: 400}
 
 ## XpCurve: need(n) sabit noktaları ve cumulative(10).

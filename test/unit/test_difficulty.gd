@@ -2,8 +2,8 @@ extends GutTest
 
 
 func test_fixed_points() -> void:
-	var hp := {300.0: 1.6, 600.0: 2.4, 900.0: 3.4, 1200.0: 4.6}
-	var dmg := {300.0: 1.2, 600.0: 1.4, 900.0: 1.6, 1200.0: 1.8}
+	var hp := {300.0: 1.6625, 600.0: 2.65, 900.0: 3.9625, 1200.0: 5.6}
+	var dmg := {300.0: 1.2, 600.0: 1.7, 900.0: 2.2, 1200.0: 2.7}
 	var cap := {300.0: 130, 600.0: 220, 900.0: 310, 1200.0: 400}
 	for t in hp.keys():
 		assert_almost_eq(Difficulty.enemy_hp_mult(t), hp[t], 1e-6, "hp %d" % t)
