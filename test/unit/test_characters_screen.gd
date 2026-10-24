@@ -305,3 +305,29 @@ func test_sd04_locked_chip_gap_between_lock_and_text() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT,
 		"metin ortalanıp kilide binmez"
 	)
+
+
+## F-037: kart şeridi de yalnız ScreenDrag ile (cihaz) yatay kayar.
+func test_f037_strip_scrolls_with_touch_drag() -> void:
+	var s := _screen()
+	s.visible = true
+	s._strip.visible = true
+	s._strip_row.custom_minimum_size.x = 3000.0
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var p := s._strip.get_global_rect().get_center()
+	var t := InputEventScreenTouch.new()
+	t.position = p
+	t.pressed = true
+	get_viewport().push_input(t, true)
+	for i in 6:
+		p += Vector2(-60, 0)
+		var d := InputEventScreenDrag.new()
+		d.position = p
+		d.relative = Vector2(-60, 0)
+		get_viewport().push_input(d, true)
+		await get_tree().process_frame
+	t = t.duplicate()
+	t.pressed = false
+	get_viewport().push_input(t, true)
+	assert_gt(s._strip.scroll_horizontal, 100, "şerit parmakla yatay kayar")

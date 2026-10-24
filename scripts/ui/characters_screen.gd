@@ -150,6 +150,7 @@ func _build() -> void:
 	_strip.name = "Strip"
 	_strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	_strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	UiKit.touch_scroll(_strip)
 	add_child(_strip)
 	_strip_row = HBoxContainer.new()
 	_strip_row.add_theme_constant_override(&"separation", int(CARD_GAP))
