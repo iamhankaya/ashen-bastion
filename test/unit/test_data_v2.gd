@@ -136,7 +136,7 @@ func test_zyfen_values_and_assets() -> void:
 	assert_eq(c.starting_skill, &"ruzgar_kesigi")
 	assert_eq(g.get_skill(c.starting_skill).pool, &"zyfen")
 	assert_eq(g.get_skill(c.starting_skill).kind, SkillDef.KIND_ACTIVE)
-	assert_true(c.placeholder)
+	assert_false(c.placeholder, "U2: gerçek gövde şeridi ve portre bağlandı")
 	assert_eq(c.unlock_achievement, &"", "ödül yok: kilit yok")
 	for p in [c.rig["body"], c.portrait]:
 		assert_true(FileAccess.file_exists(p), p)

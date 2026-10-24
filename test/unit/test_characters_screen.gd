@@ -237,6 +237,8 @@ func test_k03_card_without_portrait_uses_fallback_not_flat_block() -> void:
 
 
 func test_k03_placeholder_character_is_distinguishable_from_gunslinger() -> void:
+	# v2.0.2 U2: Zyfen gerçek varlıklara geçti (placeholder false); yer tutucu davranışı özel veri kopyasında işaretlenir.
+	_data.get_character(&"zyfen").placeholder = true
 	var s := _screen(&"gunslinger")
 	var g_face := s.cards[0].get_node("Face") as TextureRect
 	var b_face := s.cards[1].get_node("Face") as TextureRect
