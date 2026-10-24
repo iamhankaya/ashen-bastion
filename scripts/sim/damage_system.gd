@@ -34,6 +34,8 @@ func damage_enemy(sim: GameSim, id: int, amount: float, kind: StringName) -> voi
 		)
 	if sim.enemies.hp[i] <= 0.0:
 		_kill(sim, id, i)
+	elif kind == &"bullet":
+		sim.bus.enemy_hit.emit(sim.enemies.pos[i])
 
 
 const GEM_CLEARANCE := 16.0

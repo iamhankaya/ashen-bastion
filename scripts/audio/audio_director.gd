@@ -76,6 +76,7 @@ func bind(bus: SimBus, game_data: GameData = null) -> void:
 	bus.reload_finished.connect(_on_reload_finished)
 	bus.dry_fire.connect(_on_dry)
 	bus.enemy_killed.connect(_on_killed)
+	bus.enemy_hit.connect(_on_hit)
 	bus.gem_collected.connect(_on_gem)
 	bus.player_damaged.connect(_on_damaged)
 	bus.explosion.connect(_on_explosion)
@@ -93,6 +94,7 @@ func _unbind() -> void:
 		[sim_bus.reload_finished, _on_reload_finished],
 		[sim_bus.dry_fire, _on_dry],
 		[sim_bus.enemy_killed, _on_killed],
+		[sim_bus.enemy_hit, _on_hit],
 		[sim_bus.gem_collected, _on_gem],
 		[sim_bus.player_damaged, _on_damaged],
 		[sim_bus.explosion, _on_explosion],
@@ -231,6 +233,10 @@ func _on_killed(type_id: StringName, _pos: Vector2) -> void:
 	if type_id == &"kale_lordu":
 		_lord_alive = false
 	_play(&"enemy_die")
+
+
+func _on_hit(_pos: Vector2) -> void:
+	_play(&"hit")
 
 
 func _on_shot(gun: int, _origin: Vector2, _dir: Vector2) -> void:

@@ -48,6 +48,11 @@ func test_reload_and_misc_events_map_to_sounds() -> void:
 	)
 
 
+func test_hit_event_maps_to_hit_sound() -> void:
+	bus.enemy_hit.emit(Vector2.ZERO)
+	assert_eq(ids, [&"hit"] as Array[StringName])
+
+
 func test_level_up_signal_alone_is_silent() -> void:
 	bus.level_up.emit(2)
 	assert_eq(ids.size(), 0, "ses kartlar gösterilince çalar (play_level_up)")
