@@ -125,3 +125,27 @@ Bu bölümün maddeleri **M-n** diye numaralanır (K/B ile çakışmasın). Bulu
 - **M-9 (M8c) Kapanış** — uygulamadan çıkarken donma/kare atlaması yok (ses nesneleri artık 150 ms bekletmiyor); çıkışta çökme yok.
 - **M-10 (S-04) Debug etiketleri (yalnız debug APK)** — sayaç etiketleri ekranın üst kenarında (y 6–40), hiçbir düğmeyi/oku örtmüyor, dokunmayı yutmuyor; bayrağı çevirmek için oyun sırasında etiketin yanındaki küçük "dokun: AÇIK/KAPALI" alanına dokun (duraklatma ve sonuç ekranında dokunulmaz).
 - **M-11 (shader) Derleme** — elit rim değişikliği `enemy_flash.gdshader`'a `rim_elite_color` ekledi → cihazda (Mali/Adreno) düşmanlar render ediliyor, siyah/eksik sprite yok.
+
+### V — v2.0 doğrulama ekleri (T20261024-65; v1.1.1 aktarımı + düzeltme payı)
+Bu bölüm v2.0 listesinin tek giriş noktasını tamamlar: yukarıdaki Genel/K/B/M maddeleri geçerlidir; aşağıdakiler v1.1.1 ve düzeltme payından (T…-64) gelen, **yalnız cihazda görülebilen** eklerdir.
+
+**v1.1.1 oyuncu animasyonu (debug APK):**
+- **V-1 Sekme kademesi seçimi** — oyun sırasında sağ alttaki "sekme: …" etiketine dokun: ESKİ v1.1 → YUMUŞAK (varsayılan) → SAKİN döner. Üçünü de koş → hangisi doğal? Karar: varsayılan YUMUŞAK kalsın mı, SAKİN mi? (`PlayerAnim.BOUNCE_TIERS`; kademeler `docs/dev/v1.1.1/README.md`.)
+- **V-2 Kol hissi** — yürürken, nişan alırken ve doldururken sol kol: eski sürümdeki "sallanma/sıçrama" gitti mi; nişan yönü değişince kol takılmadan dönüyor mu (özellikle doldurma sırasında ve 165° aim sıçramasında).
+- **V-3 Sekme etiketi okunurluğu** — "sekme: ESKİ v1.1 1/3" gibi uzun etiket 166 px'e sığıyor, küçülse de okunuyor; hiçbir düğmeyi/oku örtmüyor, dokunuşu yutmuyor.
+
+**Düzeltme payı (T…-64) cihaz kontrolleri:**
+- **V-4 (K-01) Çentikli menü** — çentikli/yuvarlak köşeli telefonda ana menü: "BASTION" başlığının alt kenarı ile ana görselin üstü arasında boşluk var (başlık görsele binmiyor); alt düğmeler kesilmiyor; çentiksiz cihazla aynı boşluk.
+- **V-5 (K-02/K-04) SEÇ düğmesi durumu** — Karakterler ekranında Gunslinger → Barutçu → Gunslinger gez: SEÇ düğmesi odaktayken bordo (mor/amber kalıntı yok); "✓ SEÇİLİ" yazısı odakta da amber.
+- **V-6 (K-03) Yer tutucu karakter** — Barutçu kartı/sahnesi soğuk tonlu ve baş harf monogramlı, Gunslinger'dan ayırt ediliyor; portresiz kartta düz kahverengi blok yok.
+- **V-7 (K-05) Çip** — kart adının yanındaki çip kapsül biçimli, kilitli çipte asma kilit glifi var ve ad satırına hizalı.
+- **V-8 (F-029) Büyük harf** — adlar "GUNSLINGER" / "BARUTÇU" (noktalı İ yok) hem Karakterler ekranında hem seviye atlamada.
+- **V-9 Beceri ikon çerçevesi** — vitrindeki başlangıç becerisi 84 px çerçeveli; **Dinamit ikonu boş görünür** (asset yok — kullanıcıdan görsel beklenir, bkz. Kullanıcı kararları).
+- **V-10 Yapışkan grup başlığı** — Başarımlar ekranını kaydır: üstteki grup başlığı liste tepesinde kalıyor, sıradaki başlık yaklaşınca onu itiyor; en tepede gizleniyor (yalnız birim testi var, gerçek kaydırma görülmedi).
+
+**Kullanıcı kararları (uygulanmaz; VLAD önerir, karar sizde):**
+- **D-1 Barutçu konsepti/adı/becerileri ve görselleri** — şimdilik yer tutucu (`placeholder:true`); AI görseli kullanıcı üretir (`docs/dev/new-character.md`, yer tutucudan gerçeğe geçiş).
+- **D-2 Dinamit beceri ikonu** — görsel yok (V-9); PNG + beceri `icon` yolu eklenince kapanır.
+- **D-3 Başarım ödülü** — şu an yalnız kayıt; kilit açma (`unlock`) altyapısı var, hiçbir karakterde kullanılmıyor. Kilit kullanılacaksa hangi başarım hangi karakteri açsın?
+- **D-4 Başarım hedef kalibrasyonu ve denge** — bot verisi `docs/dev/v2.0-verification.md`'de; hedef/denge ayarı yapılmadı (v1.1 kararı: "denge şimdilik dursun").
+- **D-5 Açık görsel bulgular** — K-06, K-07 (asset düzeltmesi; kullanıcı/AI görseli gerekebilir), K-08 (v1.1 kökenli) ve Label'da bulunmayan başlık harf aralığı bilerek atlandı.
