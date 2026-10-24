@@ -195,9 +195,13 @@ func test_slice2_evolutions_match_table() -> void:
 func test_slice2_record_counts_are_8_8_4_and_7_enemies() -> void:
 	if not _slice2():
 		return
-	assert_eq(_data.skills_of_kind(&"active").size(), 8, "8 aktif")
-	assert_eq(_data.skills_of_kind(&"passive").size(), 8, "8 pasif")
-	assert_eq(_data.skills_of_kind(&"evolution").size(), 4, "4 evrim")
+	# v2.0.2: Gunslinger havuzu (ortak + gunslinger); Zyfen kayıtları sayıma girmez.
+	for k in [[&"active", 8, "8 aktif"], [&"passive", 8, "8 pasif"], [&"evolution", 4, "4 evrim"]]:
+		var n := 0
+		for s in _data.skills_of_kind(k[0]):
+			if s.available_to(&"gunslinger"):
+				n += 1
+		assert_eq(n, k[1], k[2])
 	assert_eq(_data.enemy_ids.size(), 7, "7 düşman")
 
 
