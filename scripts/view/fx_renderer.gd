@@ -153,6 +153,8 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 			_sim.bus.bomb_exploded.disconnect(_on_bomb_exploded)
 			_sim.fx.beam_fired.disconnect(_on_beam)
 			_sim.fx.wind_wave.disconnect(_on_wind_wave)
+			_sim.fx.wind_cast.disconnect(_on_wind_cast)
+			_sim.bus.shot_fired.disconnect(_on_shot)
 	_sim = sim
 	_camera = camera
 	_ex_left.fill(0.0)
@@ -175,6 +177,8 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 	sim.bus.bomb_exploded.connect(_on_bomb_exploded)
 	sim.fx.beam_fired.connect(_on_beam)
 	sim.fx.wind_wave.connect(_on_wind_wave)
+	sim.fx.wind_cast.connect(_on_wind_cast)
+	sim.bus.shot_fired.connect(_on_shot)
 
 
 ## Efekt var mı (testler/yeniden çizim).
@@ -499,3 +503,13 @@ func _on_wind_wave(origin: Vector2, radius: float, big: bool) -> void:
 	add_ring(origin, radius, 0.6 if big else 0.4, Color(0.7, 0.9, 0.95, 0.9), 10.0 if big else 6.0)
 	if big and _camera != null:
 		_camera.shake(8.0)
+
+
+## Avuçtaki savuruş: kolsuz karakterde (Zyfen) her atışta cast noktasında küçük, kısa halka (`fx.wind_cast` ile aynı efekt).
+func _on_shot(_gun: int, origin: Vector2, _dir: Vector2) -> void:
+	if _sim != null and PlayerRig.is_armless(_sim.character.rig):
+		_on_wind_cast(origin)
+
+
+func _on_wind_cast(origin: Vector2) -> void:
+	add_ring(origin, 28.0, 0.18, Color(0.75, 0.92, 1.0, 0.8), 3.0)

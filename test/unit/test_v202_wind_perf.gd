@@ -6,15 +6,16 @@ extends GutTest
 const STEPS := 600
 const ENEMIES := 300
 const GRANTS := {"tufan": 1, "hortum": 5, "girdap": 5, "furtina_gozu": 5}
-## Ölçüm (U3, tohum 161): hash_queries 7.03, cells_scanned 631.2, collision_tests 4.13, enemy_updates 296.8,
-## hash_inserts 301.5, proj_updates 0.25. Karşılaştırma: rüzgârsız Zyfen aynı sahnede hash_queries 1.1, cells_scanned 81.
+## Ölçüm (U3, U1+U2 merge'lü, tohum 161): hash_queries 10.61, cells_scanned 655.5, collision_tests 7.93,
+## enemy_updates 296.7, hash_inserts 301.4, proj_updates 3.86 (Rüzgar Kesiği artık delen hilal). Karşılaştırma:
+## rüzgârsız Zyfen aynı sahnede hash_queries ≈1, cells_scanned ≈81.
 const BUDGET := {
-	&"hash_queries": 9.0,
-	&"cells_scanned": 790.0,
-	&"collision_tests": 6.0,
+	&"hash_queries": 14.0,
+	&"cells_scanned": 820.0,
+	&"collision_tests": 10.0,
 	&"enemy_updates": 372.0,
 	&"hash_inserts": 378.0,
-	&"proj_updates": 1.0,
+	&"proj_updates": 5.0,
 }
 
 

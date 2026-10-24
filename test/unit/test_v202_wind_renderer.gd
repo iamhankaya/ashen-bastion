@@ -87,3 +87,16 @@ func test_wind_renderer_reads_only_never_changes_sim_state() -> void:
 		fx.update_fx(0.016)
 		await wait_process_frames(1)
 	assert_eq(sim.state_hash(), h)
+
+
+func test_armless_shot_adds_palm_ring_but_gunslinger_shot_does_not() -> void:
+	var zy := WindKit.make()
+	var fx := _fx_with_sim(zy)
+	zy.bus.shot_fired.emit(0, Vector2(10, 10), Vector2.RIGHT)
+	assert_eq(fx.ring_count(), 1, "kolsuz atış avuç halkası")
+	zy.fx.wind_cast.emit(Vector2(5, 5))
+	assert_eq(fx.ring_count(), 2)
+	var gs := GameSim.new(1, &"gunslinger")
+	var fx2 := _fx_with_sim(gs)
+	gs.bus.shot_fired.emit(0, Vector2(10, 10), Vector2.RIGHT)
+	assert_eq(fx2.ring_count(), 0)

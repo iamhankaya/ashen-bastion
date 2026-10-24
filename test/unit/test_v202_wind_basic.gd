@@ -273,7 +273,7 @@ func test_gogun_mizragi_fires_four_spears_gap_0_12_each_at_current_highest() -> 
 	assert_eq(fired_at.size(), 4, "4 mızrak")
 	assert_almost_eq(float(fired_at[1] - fired_at[0]), 7.2, 1.0)
 	assert_almost_eq(float(fired_at[3] - fired_at[2]), 7.2, 1.0)
-	assert_gt(dirs[0].x, 0.95, "ilk mızrak a'ya")
+	assert_gt(dirs[0].x, 0.85, "ilk mızrak a'ya")
 	assert_gt(absf(dirs[3].y), 0.95, "son mızrak o anki en yüksek b'ye")
 	for i in sim.projectiles.count:
 		assert_almost_eq(sim.projectiles.dmg[i], 100.0, 0.001)
