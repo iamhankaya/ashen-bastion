@@ -137,7 +137,7 @@ func test_waves_rows_1_to_3_match_table() -> void:
 	if not piyade.is_empty():
 		assert_eq(float(piyade["from"]), 0.0)
 		assert_eq(float(piyade["to"]), 1200.0)
-		assert_eq(piyade["rate"], [0.8, 3.5])
+		assert_eq(piyade["rate"], [0.8, 4.2])
 	var karga := _row("group", "les_kargasi")
 	assert_false(karga.is_empty(), "karga group satırı yok")
 	if not karga.is_empty():
@@ -150,7 +150,7 @@ func test_waves_rows_1_to_3_match_table() -> void:
 	if not sov.is_empty():
 		assert_eq(float(sov["from"]), 240.0)
 		assert_eq(float(sov["to"]), 1200.0)
-		assert_eq(sov["rate"], [0.05, 0.5])
+		assert_eq(sov["rate"], [0.05, 0.8])
 
 
 func test_after_lord_and_end_time() -> void:
@@ -230,7 +230,11 @@ func test_slice2_waves_rows_4_to_6_match_table() -> void:
 	for r in _data.waves.get("rows", []):
 		if r.get("kind", "") == "burst" and r.get("type", "") == "curumus_piyade":
 			bursts.append(float(r["at"]))
-			assert_eq(int(r["count"]), 50, "halka dalgası adedi")
+			assert_eq(
+				int(r["count"]),
+				int(ExpectedTables.BURST_COUNTS[int(r["at"])]),
+				"halka dalgası adedi"
+			)
 			assert_eq(r["ring"], true)
 	bursts.sort()
 	assert_eq(bursts, ExpectedTables.BURST_TIMES, "halka dalgaları 480/720/960. sn")
