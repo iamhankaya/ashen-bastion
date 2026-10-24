@@ -235,3 +235,25 @@ func test_sticky_group_header_follows_scroll_and_hides_at_top() -> void:
 	assert_lt(s.sticky.position.y, s.list.position.y, "sıradaki başlık yaklaşınca iter")
 	s._update_sticky(0.0)
 	assert_false(s.sticky.visible, "başa dönünce gizlenir")
+
+
+func test_sd02_sticky_header_above_fade_and_opaque() -> void:
+	var s := _screen()
+	for i in s._groups.size():
+		(s._groups[i]["node"] as Control).position.y = i * 400.0
+	s._update_sticky(405.0)
+	assert_gt(s.sticky.get_index(), s._fade_top.get_index(), "yapışkan başlık perdenin üstünde")
+	var sb := s.sticky.get_theme_stylebox(&"panel") as StyleBoxFlat
+	assert_eq(sb.bg_color.a, 1.0, "zemin opak")
+
+
+func test_sd03_every_description_fits_its_label() -> void:
+	var s := _screen()
+	assert_eq(s.rows.size(), 22)
+	for r in s.rows:
+		var d := r.find_child("Desc", true, false) as Label
+		assert_not_null(d)
+		assert_gte(d.size.y, 72.0)
+		assert_lte(
+			d.get_line_count() * d.get_line_height(), d.size.y, "açıklama tam görünür: %s" % d.text
+		)
