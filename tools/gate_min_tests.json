@@ -51,6 +51,7 @@
   "test/acceptance/test_ver_v11_invariants.gd": 3,
   "test/acceptance/test_ver_v11_memory.gd": 2,
   "test/acceptance/test_ver_v11_package.gd": 5,
+  "test/acceptance/test_ver_v2_invariants.gd": 4,
   "test/unit/test_achievement_icons.gd": 4,
   "test/unit/test_achievement_store.gd": 27,
   "test/unit/test_achievement_toast.gd": 8,
