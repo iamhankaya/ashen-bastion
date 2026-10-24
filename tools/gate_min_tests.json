@@ -166,7 +166,7 @@
   "test/unit/test_v202_wind_perf.gd": 3,
   "test/unit/test_v202_wind_renderer.gd": 6,
   "test/unit/test_v202_wind_system.gd": 16,
-  "test/unit/test_v202_wind_zones.gd": 16,
+  "test/unit/test_v202_wind_zones.gd": 17,
   "test/unit/test_v2_achievements.gd": 21,
   "test/unit/test_v2_characters.gd": 7,
   "test/unit/test_v2_flow.gd": 22,

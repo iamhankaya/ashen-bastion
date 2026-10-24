@@ -237,3 +237,39 @@ func test_storm_eye_level_5_multipliers() -> void:
 	var sim1 := WindKit.make(&"furtina_gozu", 1)
 	assert_almost_eq(sim1.stats.area_mult, 1.12, 0.0001)
 	assert_almost_eq(sim1.stats.wind_time_mult, 1.1, 0.0001)
+
+
+func test_hava_cebi_chain_with_a_full_pool_never_exceeds_cap_or_loses_giants() -> void:
+	var sim := WindKit.make(&"hava_cebi", 5)
+	WindKit.behavior_of(sim, &"hava_cebi")._chance = 1.0
+	# 56 cep (rezerv hariç doluluk; ilki tik atar) + 8 dev hortum = CAP 64.
+	WindSystem.spawn_zone(
+		sim,
+		ZonePool.KIND_POCKET,
+		Vector2(900, 900),
+		{"radius": 80.0, "life": 99.0, "tick_every": 0.1, "dmg": 9.0}
+	)
+	for k in ZonePool.CAP - ZonePool.RESERVE - 1:
+		WindSystem.spawn_zone(
+			sim,
+			ZonePool.KIND_POCKET,
+			Vector2(3000 + 300 * k, 0),
+			{"radius": 100.0, "life": 99.0, "tick_every": 99.0}
+		)
+	for k in ZonePool.RESERVE:
+		WindSystem.spawn_zone(
+			sim, ZonePool.KIND_GIANT, Vector2(0, 3000 + 300 * k), {"radius": 50.0, "life": 99.0}
+		)
+	assert_eq(sim.zones.count, ZonePool.CAP)
+	# Normal ölümler cep doğurmaya çalışır: havuz dolu => doğmaz, sayaç artar, taşma yok.
+	for k in 10:
+		_kill_one(sim, Vector2(500 + k, 500))
+	assert_eq(sim.zones.count, ZonePool.CAP)
+	assert_eq(sim.fx.zone_dropped, 10)
+	# Cep tiki ile ölen düşman zincir denemesi bile yapmaz: sayaç artmaz.
+	var id := sim.debug_spawn(&"curumus_piyade", Vector2(900, 900))
+	sim.enemies.hp[EnemyPool.index_of(id)] = 1.0
+	WindKit.zone_steps(sim, 10)
+	assert_eq(sim.kills, 11, "cep tiki öldürdü")
+	assert_eq(sim.fx.zone_dropped, 10, "zincir denemesi yok")
+	assert_eq(sim.zones.count, ZonePool.CAP)
