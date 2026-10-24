@@ -1,0 +1,140 @@
+extends SceneTree
+var out := "/tmp/cs/"
+var c: Node
+const NOTCH := Vector4(48, 130, 48, 80)
+func frames(n: int) -> void:
+	for i in n:
+		await process_frame
+func shot(n: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(out + n + ".png")
+	print("shot ", n)
+func fresh() -> void:
+	if c != null:
+		c.queue_free()
+		await process_frame
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await frames(3)
+func _initialize() -> void:
+	var a := OS.get_cmdline_user_args()
+	out = a[0].path_join("")
+	DirAccess.make_dir_recursive_absolute(out)
+	_run()
+func _run() -> void:
+	await fresh()
+	c.go_menu()
+	await frames(5)
+	await shot("01-menu")
+	c.menu.apply_safe_area(NOTCH)
+	await frames(5)
+	await shot("02-menu-centik")
+	c.menu.apply_safe_area(Vector4.ZERO)
+	# vitrin
+	c.open_characters()
+	await frames(30)
+	var scr: CharactersScreen = c.v2.characters.screen
+	await shot("03-vitrin-gunslinger")
+	scr.set_focus_id(&"barutcu")
+	await frames(40)
+	await shot("04-vitrin-barutcu")
+	scr.apply_safe_area(NOTCH)
+	await frames(10)
+	await shot("05-vitrin-barutcu-centik")
+	scr.apply_safe_area(Vector4.ZERO)
+	var d := GameData.load_dir("res://data")
+	d.get_character(&"barutcu").unlock_achievement = &"ilk_kan"
+	scr.open(d, null, &"gunslinger")
+	scr.set_focus_id(&"barutcu")
+	await frames(40)
+	await shot("06-vitrin-kilitli")
+	var d2 := GameData.load_dir("res://data")
+	d2.get_character(&"barutcu").portrait = ""
+	scr.open(d2, null, &"gunslinger")
+	scr.set_focus_id(&"barutcu")
+	await frames(40)
+	await shot("07-vitrin-portresiz")
+	# basarimlar
+	c.go_menu()
+	await frames(5)
+	var ach: V2Achievements = c.v2.achievements
+	var st: AchievementStore = ach.store
+	for id in [&"ilk_kan", &"bes_dakika", &"seviye_10"]:
+		st.unlock(id, 1790000000)
+	c.open_achievements()
+	await frames(30)
+	await shot("08-basarimlar-ust")
+	var s: AchievementsScreen = ach.screen
+	s.list.scroll_vertical = 1500
+	await frames(10)
+	s._update_sticky()
+	await frames(5)
+	await shot("09-basarimlar-sticky")
+	s.apply_safe_area(NOTCH)
+	await frames(10)
+	await shot("10-basarimlar-centik")
+	s.apply_safe_area(Vector4.ZERO)
+	# seviye atlama
+	root.get_node("Settings").character_id = "barutcu"
+	await fresh()
+	c.start_run()
+	await frames(2)
+	c.sim.max_hp = 1.0e9
+	c.sim.hp = 1.0e9
+	c.sim.debug_add_xp(30)
+	for k in 5:
+		if c.sim.state == GameSim.State.RUNNING:
+			c.sim.step(Vector2.ZERO)
+	c._after_step()
+	await frames(40)
+	await shot("11-seviye-barutcu")
+	root.get_node("Settings").character_id = ""
+	await fresh()
+	c.start_run()
+	await frames(2)
+	c.sim.max_hp = 1.0e9
+	c.sim.hp = 1.0e9
+	c.sim.debug_add_xp(30)
+	for k in 5:
+		if c.sim.state == GameSim.State.RUNNING:
+			c.sim.step(Vector2.ZERO)
+	c._after_step()
+	await frames(40)
+	await shot("12-seviye-gunslinger")
+	# oyun ici bildirim + debug seridi
+	await fresh()
+	c.start_run()
+	await frames(5)
+	for i in 120:
+		c.sim.step(Vector2(0.5, 0.2))
+	c._after_step()
+	c.v2.achievements.queue.push(&"seviye_10")
+	await frames(40)
+	await shot("13-oyun-bildirim")
+	c.v2.achievements.queue.clear()
+	c.v2.achievements.queue.push(&"ilk_kan")
+	c.v2.achievements.queue.push(&"bes_dakika")
+	await frames(60)
+	await shot("14-oyun-bildirim-2")
+	# sonuc
+	await fresh()
+	c.start_run()
+	await frames(2)
+	c.sim.hp = 0.0
+	for i in 60:
+		if c.sim.state == GameSim.State.RUNNING:
+			c.sim.step(Vector2.ZERO)
+	c._after_step()
+	await frames(30)
+	c.result_screen.finish_count()
+	await frames(10)
+	await shot("15-sonuc-cipsiz")
+	var nn: Array[String] = ["İlk Kan", "Beş Dakika", "Seviye Onu"]
+	c.result_screen.set_new_achievements(nn)
+	await frames(10)
+	await shot("16-sonuc-cipli")
+	c.result_screen.apply_safe_area(NOTCH)
+	await frames(10)
+	await shot("17-sonuc-cipli-centik")
+	quit()

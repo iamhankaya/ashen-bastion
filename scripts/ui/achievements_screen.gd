@@ -13,6 +13,7 @@ const Y_BAR := 340.0
 const BAR_H := 20.0
 const Y_LIST := 400.0
 const ROW_H := 156.0
+const DESC_H := 74.0  # SD-03: 28 px yazıda 2 satır = 70 px sığar
 const ROW_GAP := 12.0
 const GROUP_H := 72.0
 const PANEL_H := 108.0
@@ -317,11 +318,11 @@ func _update_sticky(scroll: float = -1.0) -> void:
 		sticky.size = Vector2(_w, GROUP_H)
 		sticky.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		sticky.add_theme_stylebox_override(
-			&"panel", UiKit.stylebox(Color(UiKit.MOR_900, 0.97), Color(0, 0, 0, 0), 0, 0)
+			&"panel", UiKit.stylebox(Color(UiKit.MOR_900, 1.0), Color(0, 0, 0, 0), 0, 0)
 		)
 		sticky.add_child(_group_header(g["tier"], g["opened"], g["total"]))
 		add_child(sticky)
-		move_child(sticky, _fade_top.get_index())
+		move_child(sticky, -1)  # SD-02: solma perdesinin ÜSTÜNDE, opak
 		_sticky_tier = cur
 	var push := 0.0
 	if cur + 1 < _groups.size():
@@ -425,7 +426,7 @@ func _make_row(d: AchievementDef, store: AchievementStore, bias: int) -> Control
 	var desc := UiKit.label(d.desc, &"", 28, UiKit.KEMIK_300)
 	desc.name = "Desc"
 	desc.position = Vector2(156.0, 72.0)
-	desc.size = Vector2(_w - 156.0 - 240.0 - 24.0, 68.0)
+	desc.size = Vector2(_w - 156.0 - 240.0 - 24.0, DESC_H)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.max_lines_visible = 2
 	desc.clip_text = true

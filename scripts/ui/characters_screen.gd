@@ -138,7 +138,7 @@ func _build() -> void:
 	add_child(name_label)
 	chip_label = UiKit.label("", &"", 26, UiKit.AMBER)
 	chip_label.add_theme_font_override(&"font", UiKit.font_bold())
-	chip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	chip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	add_child(chip_label)
 	_chip_lock = _LockGlyph.new()
 	_chip_lock.visible = false
@@ -196,17 +196,12 @@ func _build_panel() -> void:
 	var skill_row := HBoxContainer.new()
 	skill_row.add_theme_constant_override(&"separation", 18)
 	skill_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# 84 px çerçeveli ikon (DESIGN §4.2): çerçeve dokusu üstte, ikon içeride.
+	# 84 px çerçeveli ikon (DESIGN §4.2): çerçeve altta (önce eklenir), ikon üstte (SD-01).
 	var icon_box := Control.new()
 	icon_box.name = "SkillIconBox"
 	icon_box.custom_minimum_size = Vector2(84, 84)
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	skill_row.add_child(icon_box)
-	_skill_icon = TextureRect.new()
-	_skill_icon.name = "SkillIcon"
-	_skill_icon.position = Vector2(10, 10)
-	_skill_icon.size = Vector2(64, 64)
-	icon_box.add_child(_skill_icon)
 	var icon_frame := TextureRect.new()
 	icon_frame.name = "SkillFrame"
 	icon_frame.texture = UiKit.frame(&"active")
@@ -215,9 +210,14 @@ func _build_panel() -> void:
 	icon_frame.size = Vector2(84, 84)
 	icon_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon_box.add_child(icon_frame)
+	_skill_icon = TextureRect.new()
+	_skill_icon.name = "SkillIcon"
+	_skill_icon.position = Vector2(10, 10)
+	_skill_icon.size = Vector2(64, 64)
 	_skill_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_skill_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_skill_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon_box.add_child(_skill_icon)
 	var sc := VBoxContainer.new()
 	sc.alignment = BoxContainer.ALIGNMENT_CENTER
 	sc.add_theme_constant_override(&"separation", -2)
@@ -515,6 +515,7 @@ const PLACEHOLDER_TINT := Color(0.62, 0.78, 1.0)
 const CHIP_PAD_Y := 8.0
 const CHIP_PAD_X := 22.0
 const CHIP_LOCK_W := 26.0
+const CHIP_LOCK_GAP := 12.0  # SD-04: kilit glifi ile metin arası (>= 8 px)
 const _FALLBACK_PORTRAIT := "res://assets/ui/portre-seviye-atlama.png"
 
 
@@ -569,11 +570,12 @@ func _style_chip(st: int) -> void:
 		return
 	var locked := st == SelectState.LOCKED
 	var sb := UiKit.stylebox(UiKit.MOR_800, UiKit.KAHVE_500 if locked else UiKit.AMBER, 3, 999)
-	sb.content_margin_left = CHIP_PAD_X + (CHIP_LOCK_W + 10.0 if locked else 0.0)
+	sb.content_margin_left = CHIP_PAD_X + (CHIP_LOCK_W + CHIP_LOCK_GAP if locked else 0.0)
 	sb.content_margin_right = CHIP_PAD_X
 	sb.content_margin_top = CHIP_PAD_Y
 	sb.content_margin_bottom = CHIP_PAD_Y
 	chip_label.add_theme_stylebox_override(&"normal", sb)
+	chip_label.reset_size()  # SD-04: eski genişlikte ortalanmış metin kilide binmesin
 	_chip_lock.visible = locked
 	_chip_lock.position = Vector2(CHIP_PAD_X, CHIP_PAD_Y + 4.0)
 

@@ -280,3 +280,28 @@ func test_skill_icon_has_84px_frame() -> void:
 	assert_not_null(box)
 	assert_eq(box.custom_minimum_size, Vector2(84, 84))
 	assert_not_null(box.get_node_or_null("SkillFrame"))
+
+
+func test_sd01_skill_icon_is_drawn_above_frame() -> void:
+	var s := _screen(&"gunslinger")
+	var box := s.find_child("SkillIconBox", true, false) as Control
+	var icon := box.get_node("SkillIcon") as Control
+	var frame := box.get_node("SkillFrame") as Control
+	assert_gt(icon.get_index(), frame.get_index(), "çerçeve altta, ikon üstte")
+	for id in [&"gunslinger", &"barutcu"]:
+		s.set_focus_id(id)
+		assert_not_null((icon as TextureRect).texture, "başlangıç becerisi ikonu yüklü: %s" % id)
+
+
+func test_sd04_locked_chip_gap_between_lock_and_text() -> void:
+	_lock_barutcu()
+	var s := _screen(&"gunslinger")
+	s.set_focus_id(&"barutcu")
+	var sb := s.chip_label.get_theme_stylebox(&"normal")
+	var lock_end := s._chip_lock.position.x + s._chip_lock.size.x
+	assert_gte(sb.content_margin_left - lock_end, 8.0, "kilit ile metin arası >= 8 px")
+	assert_eq(
+		s.chip_label.horizontal_alignment,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		"metin ortalanıp kilide binmez"
+	)
