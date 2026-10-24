@@ -129,6 +129,7 @@ static func blast(
 		hits += 1
 	sim.log_event(SimEvents.BOMB_EXPLODE, {"pos": pos, "radius": radius, "hits": hits})
 	sim.bus.bomb_exploded.emit(pos, radius)
+	sim.bus.bomb_hits.emit(pos, radius, hits)
 	return hits
 
 

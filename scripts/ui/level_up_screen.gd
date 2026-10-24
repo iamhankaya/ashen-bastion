@@ -15,14 +15,26 @@ const CARD_GAP := 27.0
 const ICON := 180.0
 const PORTRAIT := "res://assets/ui/portre-seviye-atlama.png"
 const PORTRAIT_H := 1620.0
+## v2.0 başlık bloğu (N4): üst yazı y 880, başlık y ≈ 924; portre perdesi alt gradyan duraklı.
+const NAME_Y := 880.0
+const TITLE_Y := 924.0
+const CARDS_BOTTOM := 200.0
 
 var title_label: Label
+## v2.0: karakter adı (üst yazı) ve portre düğümü (portre yoksa null; bordo radyal zemin kullanılır).
+var name_label: Label
+var portrait_node: TextureRect = null
 var cards_box: VBoxContainer
 var cards: Array[Button] = []
 ## Görüntülenen kart sırası → sim'deki seçim indeksi.
 var order: PackedInt32Array = PackedInt32Array()
 
 var _lock_left: float = 0.0
+var _portrait_host: Control
+var _backdrop: TextureRect
+var _head: VBoxContainer
+var _hint: Label
+var _safe_bottom: float = 0.0
 var _data: GameData = null
 
 
@@ -40,17 +52,12 @@ func _build() -> void:
 	UiKit.fill(bg)
 	add_child(bg)
 
-	var tex := UiKit.texture(PORTRAIT)
-	if tex != null:
-		var portrait := TextureRect.new()
-		portrait.name = "Portrait"
-		portrait.texture = tex
-		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		portrait.anchor_right = 1.0
-		portrait.offset_bottom = PORTRAIT_H
-		add_child(portrait)
+	_portrait_host = Control.new()
+	_portrait_host.name = "PortraitHost"
+	_portrait_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_portrait_host.anchor_right = 1.0
+	_portrait_host.offset_bottom = PORTRAIT_H
+	add_child(_portrait_host)
 	var shade := TextureRect.new()
 	shade.name = "Shade"
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -68,15 +75,18 @@ func _build() -> void:
 	below.offset_top = PORTRAIT_H - 2.0
 	add_child(below)
 
-	var head := VBoxContainer.new()
-	head.position = Vector2(60, 130)
-	head.add_theme_constant_override(&"separation", -6)
-	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	head.add_child(UiKit.label("GUNSLINGER", &"LabelAccent", 34))
+	_head = VBoxContainer.new()
+	_head.position = Vector2(60, NAME_Y)
+	_head.add_theme_constant_override(&"separation", -6)
+	_head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_label = UiKit.label("GUNSLINGER", &"LabelAccent", 34)
+	name_label.add_theme_constant_override(&"shadow_offset_y", 3)
+	_head.add_child(name_label)
 	title_label = UiKit.label("SEVİYE 2", &"LabelTitle", 104)
 	title_label.add_theme_constant_override(&"shadow_offset_y", 4)
-	head.add_child(title_label)
-	add_child(head)
+	_head.add_child(title_label)
+	add_child(_head)
+	set_character(null)
 
 	cards_box = VBoxContainer.new()
 	cards_box.name = "Cards"
@@ -93,14 +103,14 @@ func _build() -> void:
 	cards_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	add_child(cards_box)
 
-	var hint := UiKit.label("Bir karta dokun", &"", 28, UiKit.KEMIK_300)
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.anchor_top = 1.0
-	hint.anchor_bottom = 1.0
-	hint.anchor_right = 1.0
-	hint.offset_top = -140.0
-	hint.offset_bottom = -90.0
-	add_child(hint)
+	_hint = UiKit.label("Bir karta dokun", &"", 28, UiKit.KEMIK_300)
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.anchor_top = 1.0
+	_hint.anchor_bottom = 1.0
+	_hint.anchor_right = 1.0
+	_hint.offset_top = -140.0
+	_hint.offset_bottom = -90.0
+	add_child(_hint)
 
 
 ## Kart sırası (saf): evrim kartları en alta; diğerlerinin göreli sırası korunur. Dönen: sim indeksleri.
@@ -116,8 +126,11 @@ static func display_order(kinds: Array) -> PackedInt32Array:
 
 
 ## Kartları göster ve 500 ms kilidi başlat.
-func show_choices(choices: Array, level: int, data: GameData = null) -> void:
+func show_choices(
+	choices: Array, level: int, data: GameData = null, character: CharacterDef = null
+) -> void:
 	_data = data
+	set_character(character)
 	title_label.text = "SEVİYE %d" % level
 	for c in cards:
 		c.queue_free()
@@ -138,6 +151,52 @@ func show_choices(choices: Array, level: int, data: GameData = null) -> void:
 	visible = true
 	if not cards.is_empty():
 		cards[0].grab_focus.call_deferred()  # varsayılan odak (klavye/gamepad)
+
+
+## Karakter başlığı + portre (null = v1.1: Gunslinger, varsayılan portre). Portre dosyası yoksa portresiz düzen:
+## bordo radyal zemin, başlık aynı yerde (çökmez).
+func set_character(character: CharacterDef) -> void:
+	var path := character.portrait if character != null else PORTRAIT
+	name_label.text = UiKit.character_upper(character) if character != null else "GUNSLINGER"
+	if portrait_node != null:
+		portrait_node.free()
+		portrait_node = null
+	if _backdrop != null:
+		_backdrop.free()
+		_backdrop = null
+	var tex := UiKit.texture(path) if path != "" else null
+	if tex != null:
+		portrait_node = TextureRect.new()
+		portrait_node.name = "Portrait"
+		portrait_node.texture = tex
+		portrait_node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait_node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		portrait_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		UiKit.fill(portrait_node)
+		_portrait_host.add_child(portrait_node)
+	else:
+		_backdrop = TextureRect.new()
+		_backdrop.name = "Backdrop"
+		_backdrop.texture = _backdrop_texture()
+		_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_backdrop.stretch_mode = TextureRect.STRETCH_SCALE
+		_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		UiKit.fill(_backdrop)
+		_portrait_host.add_child(_backdrop)
+
+
+## N7: alt pay kartları ve ipucunu yukarı alır; üst pay etkilemez (başlık y 880). extra: Vector4 ya da null.
+func apply_safe_area(extra: Variant = null) -> void:
+	var e := Vector4.ZERO
+	if extra is Vector4:
+		e = extra
+	else:
+		e = UiKit.current_safe_extra(Vector2(1080.0, 2400.0))
+	_safe_bottom = maxf(0.0, e.w)
+	cards_box.offset_top = -(CARDS_BOTTOM + _safe_bottom) - 3.0 * CARD_H - 2.0 * CARD_GAP
+	cards_box.offset_bottom = -(CARDS_BOTTOM + _safe_bottom)
+	_hint.offset_top = -(140.0 + _safe_bottom)
+	_hint.offset_bottom = -(90.0 + _safe_bottom)
 
 
 func is_locked() -> bool:
@@ -294,22 +353,41 @@ func _skill_kind(id: StringName) -> StringName:
 	return &"active"
 
 
+## Alt gradyan duraklı (void): y 560: 0 → y 860: 0,72 → y 1000: 0,90 → y 1150: 1 (üst perde yok).
 static func _shade_texture() -> GradientTexture2D:
 	var g := Gradient.new()
-	g.offsets = PackedFloat32Array([0.0, 0.18, 0.42, 0.75, 1.0])
+	g.offsets = PackedFloat32Array(
+		[0.0, 560.0 / PORTRAIT_H, 860.0 / PORTRAIT_H, 1000.0 / PORTRAIT_H, 1150.0 / PORTRAIT_H]
+	)
 	g.colors = PackedColorArray(
 		[
-			Color(UiKit.VOID, 0.7),
-			Color(UiKit.VOID, 0.1),
 			Color(UiKit.VOID, 0.0),
-			Color(UiKit.VOID, 0.75),
+			Color(UiKit.VOID, 0.0),
+			Color(UiKit.VOID, 0.72),
+			Color(UiKit.VOID, 0.90),
 			Color(UiKit.VOID, 1.0),
 		]
 	)
+	g.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_LINEAR
 	var t := GradientTexture2D.new()
 	t.gradient = g
 	t.fill_from = Vector2(0, 0)
 	t.fill_to = Vector2(0, 1)
 	t.width = 4
 	t.height = 256
+	return t
+
+
+## Portresiz zemin: bordo radyal (#5C1D26 α 0,55 → void).
+static func _backdrop_texture() -> GradientTexture2D:
+	var g := Gradient.new()
+	g.offsets = PackedFloat32Array([0.0, 1.0])
+	g.colors = PackedColorArray([Color(UiKit.BORDO_700, 0.55), Color(UiKit.VOID, 1.0)])
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.35)
+	t.fill_to = Vector2(1.0, 0.9)
+	t.width = 128
+	t.height = 128
 	return t

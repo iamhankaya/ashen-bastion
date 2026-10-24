@@ -30,3 +30,8 @@ signal bomb_planted(pos: Vector2, radius: float, fuse: float)
 signal bomb_exploded(pos: Vector2, radius: float)
 signal score_changed(score: int, mult: int, gain: int)
 signal streak_changed(mult: int, left: float)
+
+# --- v2.0 ---
+## PickupSystem.blast: bomb_exploded'ten hemen sonra. YALNIZ Kara Bomba (dinamit mermi havuzundan patlar, blast çağırmaz).
+## Sim durumunu etkilemez; dinleyicisiz de aynı state_hash (başarım #22 için; bomb_exploded imzası değişmez).
+signal bomb_hits(pos: Vector2, radius: float, hits: int)

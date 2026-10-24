@@ -1,0 +1,2 @@
+# user:// sızıntı denetimi izin listesi (tools/ci/user_leak.gd). Satır: `desen  # gerekçe`. BOŞ: v1.1 sızıntıları S3 enjeksiyon noktalarıyla giderildi.
+# Buraya girmek bir bulgudur; yeni izin verilmez.

@@ -1,0 +1,24 @@
+@import url("../../v1.1/mock/mock.css");
+.call{position:absolute;z-index:50;border:3px dashed #8DB58A;border-radius:10px;pointer-events:none}
+.call b{position:absolute;left:-3px;top:-34px;background:#8DB58A;color:#0D0910;font:700 22px/28px Inter;padding:0 9px;border-radius:6px;white-space:nowrap}
+.call b.in{top:auto;bottom:-34px}
+.tag{white-space:nowrap;display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:17px;font:700 26px Inter;letter-spacing:.06em}
+.tag.w{border:3px solid #E8A24A;color:#E8A24A}.tag.l{background:#5C1D26;border:3px solid #8F2A36;color:#EFE7D6}.tag.b{border:3px solid #A88A5C;color:#D2B47E}
+.btn.dis{background:#211832;border-color:#4A3830;box-shadow:0 8px 0 #171020;color:#CFC4AE}
+.btn.sel{background:#2F2342;border-color:#E8A24A;box-shadow:0 8px 0 #171020,0 0 30px rgba(232,162,74,.45);color:#E8A24A}
+.arow{position:absolute;left:72px;right:72px;height:156px;display:flex;align-items:center;gap:24px;padding:0 24px}
+.arow .plate{position:relative;width:108px;height:108px;flex:none}
+.arow .plate img.fr{position:absolute;inset:0;width:108px;height:108px}
+.arow .plate img.ic{position:absolute;left:20px;top:20px;width:68px;height:68px}
+.arow.locked .plate img.ic{opacity:.45;filter:grayscale(.6)}
+.arow .mid{flex:1;min-width:0}
+.arow .nm{font:700 38px/44px Cinzel;color:#EFE7D6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .ds{font:400 28px/34px Inter;color:#CFC4AE;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.arow .rt{width:240px;flex:none;text-align:right}
+.arow .rt .v{font:700 34px/40px Cinzel;color:#EFE7D6}
+.arow .rt .bar{height:14px;border-radius:7px;background:#171020;border:3px solid #7A6045;margin-top:10px;overflow:hidden}
+.arow .rt .bar i{display:block;height:100%;background:linear-gradient(90deg,#A88A5C,#D2B47E)}
+.arow .rt .dt{font:600 26px/30px Inter;color:#A39883;margin-top:6px}
+.ghead{position:absolute;left:72px;right:72px;height:72px;display:flex;align-items:center;gap:18px;font:700 34px Cinzel;letter-spacing:.14em;color:#D2B47E}
+.ghead .ct{margin-left:auto;font:700 28px Inter;letter-spacing:0;color:#CFC4AE}
+.pips{display:flex;gap:8px}.pips i{width:16px;height:16px;transform:rotate(45deg);border:3px solid #D2B47E;background:transparent}.pips i.on{background:#D2B47E}

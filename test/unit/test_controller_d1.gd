@@ -6,6 +6,7 @@ const DT := 1.0 / 60.0
 
 func _ctrl() -> GameController:
 	var gc := GameController.new()
+	gc.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	add_child_autofree(gc)
 	return gc
 

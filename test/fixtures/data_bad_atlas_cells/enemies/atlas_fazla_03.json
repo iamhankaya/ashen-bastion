@@ -1,0 +1,24 @@
+{
+  "id": "atlas_fazla_03",
+  "name": "Fazla 3",
+  "hp": 12,
+  "speed": 210,
+  "dmg": 4,
+  "radius": 18,
+  "armor": 0,
+  "xp": 1,
+  "ai": "air",
+  "scales_with_time": true,
+  "sprite": "placeholder:karga",
+  "display_height": 192,
+  "tint": "#ffffff",
+  "anim": {
+    "kind": "flap",
+    "hz": 3.0,
+    "bob": 7,
+    "rot": 12,
+    "hover": 36,
+    "death": "fall",
+    "death_ms": 420
+  }
+}

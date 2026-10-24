@@ -1,0 +1,64 @@
+{
+  "id": "gunslinger",
+  "name": "Gunslinger",
+  "max_hp": 100,
+  "move_speed": 300,
+  "mag_cap": 6,
+  "reload_time": 1.0,
+  "pickup_radius": 110,
+  "collision_radius": 22,
+  "starting_skill": "cift_tabanca",
+  "range": 700,
+  "rig": {
+    "body": "res://assets/gfx/char/gunslinger_body.png",
+    "arm": "res://assets/gfx/char/gunslinger_arm.png",
+    "display_height": 200,
+    "native_facing": "right",
+    "shoulders": [
+      [
+        0.4,
+        0.2
+      ],
+      [
+        0.64,
+        0.19
+      ]
+    ],
+    "arm_pivot": [
+      0.1,
+      0.47
+    ],
+    "muzzle": [
+      0.985,
+      0.29
+    ],
+    "arm_scale": 0.7,
+    "sway": {
+      "hem_from_y": 0.55,
+      "scarf_rect": [
+        0.05,
+        0.22,
+        0.5,
+        0.7
+      ],
+      "amp": 14,
+      "lag": 0.12
+    },
+    "walk": {
+      "frames": 0,
+      "stride": 136,
+      "strip": "res://assets/gfx/char/gunslinger_body_walk.png",
+      "cell": [
+        177,
+        320
+      ],
+      "shoulder_dev": []
+    }
+  },
+  "portrait": "res://assets/ui/portre-seviye-atlama.png",
+  "blurb": "Dengeli ve çevik; çift tabancasıyla sürüyü ateş altında tutar.",
+  "unlock": {
+    "achievement": "ilk_kan",
+    "extra": 1
+  }
+}

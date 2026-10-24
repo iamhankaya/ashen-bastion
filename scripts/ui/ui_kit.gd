@@ -80,6 +80,13 @@ static func current_safe_extra(view: Vector2) -> Vector4:
 
 
 ## Türkçe büyük harf: "Barut Kesesi" → "BARUT KESESİ", "Şifa" → "ŞİFA", "mermi" → "MERMİ".
+## Karakter adı büyük harfle: `display_upper` varsa o (özel ad, F-029), yoksa upper_tr.
+static func character_upper(c: CharacterDef) -> String:
+	if c == null:
+		return ""
+	return c.display_upper if c.display_upper != "" else upper_tr(c.display_name)
+
+
 static func upper_tr(text: String) -> String:
 	var out := ""
 	for k in text.length():
@@ -131,6 +138,13 @@ class Glyph:
 					w,
 					true
 				)
+			&"person":
+				draw_circle(c + Vector2(0.0, -r * 0.42), r * 0.34, color)
+				var body := PackedVector2Array()
+				for i in 13:
+					var a := PI + PI * float(i) / 12.0
+					body.append(c + Vector2(cos(a) * r * 0.78, r * 0.95 + sin(a) * r * 0.78))
+				draw_colored_polygon(body, color)
 			&"trophy":
 				var cup := PackedVector2Array(
 					[

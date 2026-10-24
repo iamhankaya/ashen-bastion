@@ -6,21 +6,48 @@ func _lord_spawned(sim: GameSim) -> bool:
 	return SimKit.count_events(sim, SimEvents.BOSS_SPAWN) > 0
 
 
-func test_lord_spawns_even_when_the_pool_is_full() -> void:
+## Havuz-dolu senaryosu (F-ver-006): Lord satırına gelmeden havuz doldurulur ve HER adım başında yeniden doldurulur.
+## Doğal boşalma (geri taşıma/öldürme) Lord'a yer açamaz, Lord yeniden denemeyle de doğamaz (satır bir kez denenir);
+## yalnız `_make_room` açarsa Lord doğar. `make_room` kancası kapatılabilir (M10/F-018 mutasyon sınaması).
+func _full_pool_run(make_room: bool) -> Dictionary:
 	var sim := SimKit.make(201, {"data_kind": "fixture_waves", "start_time": 1198.0})
+	sim.spawn_director.make_room_enabled = make_room
 	SimKit.godmode(sim)
-	assert_eq(sim.debug_fill(&"curumus_piyade", 400, 1100.0), 400)
-	# Havuz HER adım başında yeniden doldurulur: doğal boşalma (geri taşıma/öldürme) Lord'a yer açamaz, Lord yeniden
-	# denemeyle de doğamaz (satır bir kez denenir); yalnız `_make_room` açarsa test geçer (F-ver-006).
+	var filled := sim.debug_fill(&"curumus_piyade", 400, 1100.0)
 	for i in 400:
 		if sim.enemies.count < EnemyPool.CAP:
 			sim.debug_fill(&"curumus_piyade", EnemyPool.CAP - sim.enemies.count, 1100.0)
 		SimKit.godmode(sim)
 		sim.step(Vector2.ZERO)
+	return {"sim": sim, "filled": filled}
+
+
+func test_lord_spawns_even_when_the_pool_is_full() -> void:
+	var run := _full_pool_run(true)
+	var sim: GameSim = run["sim"]
+	assert_eq(run["filled"], 400)
 	assert_true(
 		_lord_spawned(sim), "havuz doluyken Lord yine de doğar (en uzak sıradan düşman yer açar)"
 	)
 	assert_eq(SimKit.count_events(sim, SimEvents.BOSS_SPAWN), 1, "Lord bir kez doğar")
+
+
+## M10 (F-018): `_make_room` etkisizleştirilince aynı senaryoda Lord doğmaz — havuz-dolu testi gerçekten `_make_room`'u
+## sınar (kaldırılırsa test_lord_spawns_even_when_the_pool_is_full kırmızı olur).
+func test_lord_spawn_needs_make_room() -> void:
+	var off := _full_pool_run(false)
+	var sim: GameSim = off["sim"]
+	assert_eq(off["filled"], 400, "ön koşul: havuz dolduruldu (kancasız v1.1 testiyle aynı)")
+	assert_false(_lord_spawned(sim), "kanca kapalı + havuz dolu: Lord doğmaz")
+	assert_eq(SimKit.count_events(sim, SimEvents.BOSS_SPAWN), 0)
+	assert_eq(sim.enemies.count, EnemyPool.CAP, "havuz her adım dolu kaldı (ön koşul)")
+	# Aynı tohum/adım sayısı, kanca açıkken Lord doğar: fark yalnız kancadandır.
+	var on := _full_pool_run(true)
+	assert_true(_lord_spawned(on["sim"]))
+
+
+func test_make_room_hook_defaults_to_enabled() -> void:
+	assert_true(SimKit.make(1).spawn_director.make_room_enabled)
 
 
 func test_lord_spawns_when_time_was_skipped_past_it() -> void:

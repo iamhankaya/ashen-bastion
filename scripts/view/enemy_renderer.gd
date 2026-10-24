@@ -11,6 +11,8 @@ const DEFAULT_HEIGHT := 110.0
 const RIM_SCREEN_PX := 1.5
 ## Taban düşman kontur rengi (shader varsayılanıyla aynı; zeminden >= 3:1 testlidir).
 const RIM_COLOR := Color(0.74, 0.64, 0.47)  # ekranda hedef kontur kalınlığı
+## Elit/Lord kontur rengi (N6): bronz ailesi (UiKit.BRONZ_300); tint'ten türetilmez (Lord #ffffff beyaza kaçıyordu).
+const RIM_ELITE_COLOR := Color(0.824, 0.706, 0.494)
 const RIM_ELITE_SCREEN_PX := 2.5
 const SHADOW_W := 0.8  # gölge genişliği / sprite genişliği
 const SHADOW_H := 0.2  # gölge yüksekliği / gölge genişliği
@@ -150,6 +152,7 @@ func bind(sim: GameSim) -> void:
 			rects.append(atlas.rects[i] if i < atlas.rects.size() else Vector4.ZERO)
 		(material as ShaderMaterial).set_shader_parameter("cell_rect", rects)
 		(material as ShaderMaterial).set_shader_parameter("atlas_tex", atlas.texture)
+		(material as ShaderMaterial).set_shader_parameter("rim_elite_color", RIM_ELITE_COLOR)
 	for type_id in sim.data.enemy_ids:
 		var def: EnemyDef = sim.data.get_enemy(type_id)
 		var h := DEFAULT_HEIGHT

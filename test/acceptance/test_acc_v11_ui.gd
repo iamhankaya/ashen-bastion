@@ -821,18 +821,24 @@ func test_u11_menu_order_column_top_hero_box_and_signal() -> void:
 	assert_eq(m.scores_button.text, "EN İYİ SKORLAR")
 	assert_lt(play.end.y, scores.position.y, "OYNA -> EN İYİ SKORLAR")
 	assert_lt(scores.end.y, sound.position.y, "EN İYİ SKORLAR -> ses/titreşim")
-	assert_gte(play.position.y, 1715.0 - 1.0, "sütun üstü >= 1715")
+	assert_gte(play.position.y, 1556.0 - 1.0, "sütun üstü >= 1556 (v2.0)")
 	# Not: sütun genişliği 936 olmalı; "TİTREŞİM: AÇIK" anahtarı 454'e sığmayıp sütunu 939'a büyütebilir (kozmetik, rapora yazıldı).
 	assert_almost_eq(scores.size.x, 936.0, 4.0)
 	assert_almost_eq(scores.size.y, 132.0, 1.0)
-	assert_almost_eq(play.position.y + play.size.y + 27.0, scores.position.y, 2.0, "aralık 27")
+	var half := m.characters_button.get_global_rect()
+	assert_almost_eq(
+		play.position.y + play.size.y + 27.0, half.position.y, 2.0, "OYNA -> KARAKTERLER aralık 27"
+	)
+	assert_almost_eq(
+		half.end.y + 27.0, scores.position.y, 2.0, "KARAKTERLER -> EN İYİ SKORLAR aralık 27"
+	)
 	assert_not_null(m.hero, "ana görsel")
 	if m.hero != null:
 		var hr := m.hero.get_global_rect()
 		assert_almost_eq(hr.size.x, 960.0, 1.0)
-		assert_almost_eq(hr.size.y, 1020.0, 1.0)
-		assert_lte(hr.end.y, 1680.5, "hero alt <= 1680")
-		assert_gte(hr.position.y, 660.0 - 1.0, "hero üst >= 660")
+		assert_almost_eq(hr.size.y, 960.0, 1.0)
+		assert_lte(hr.end.y, 1520.5, "hero alt <= 1520 (v2.0)")
+		assert_gte(hr.position.y, 560.0 - 1.0, "hero üst >= 560 (v2.0)")
 	watch_signals(m)
 	m.scores_button.pressed.emit()
 	assert_signal_emitted(m, "scores_requested")

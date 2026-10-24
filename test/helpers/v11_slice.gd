@@ -6,18 +6,9 @@ extends RefCounted
 const PATH := "res://tools/v11_slices.txt"
 
 
-## '#' ile başlayan satırlar atlanır; kalanlar boşlukla bölünür.
+## '#' ile başlayan satırlar atlanır; kalanlar boşlukla bölünür (ortak ayrıştırıcı: SliceFile).
 static func marks() -> PackedStringArray:
-	var out := PackedStringArray()
-	if not FileAccess.file_exists(PATH):
-		return out
-	for line in FileAccess.get_file_as_string(PATH).split("\n"):
-		var s := line.strip_edges()
-		if s.is_empty() or s.begins_with("#"):
-			continue
-		for tok in s.split(" ", false):
-			out.append(tok.strip_edges())
-	return out
+	return SliceFile.read(PATH)["marks"]
 
 
 static func done(id: String) -> bool:

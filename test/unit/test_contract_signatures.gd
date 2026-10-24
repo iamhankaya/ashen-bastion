@@ -395,7 +395,11 @@ func test_signal_signatures() -> void:
 
 
 func test_sim_bus_has_exactly_the_contract_signals() -> void:
-	assert_eq(SimBus.new().get_script().get_script_signal_list().size(), 25, "16 v1 + 9 v1.1")
+	assert_eq(
+		SimBus.new().get_script().get_script_signal_list().size(),
+		26,
+		"16 v1 + 9 v1.1 + 1 v2.0 (bomb_hits)"
+	)
 
 
 func test_constants_and_limits() -> void:

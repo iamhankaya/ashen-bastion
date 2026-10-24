@@ -80,3 +80,72 @@ Dengeye dokunan sonuçlar (geç oyun zorluğu vb.) ayrı denge görevine veridir
 36. **`user://highscores.json` boş/bozuk** — (a) dosya yokken En İyi Skorlar → "HENÜZ SKOR YOK" ve OYNA; (b) dosyayı boş/rastgele yazıyla bozup aç → çökme yok, liste boş, `highscores.json.bad` oluşur, bir sonraki oyun sonunda geçerli dosya yazılır.
 37. **Skor / SERİ hissi** — SERİ çipi ×N, hasar alınca bozulması, sonuç ekranı sayımı ve rekor bandı → okunuyor, tatmin edici; kombo ekranı sığıyor.
 38. **Geç oyun dengesi (veri: A/B raporu)** — eklentilerle 15+ dk oynayınca geç oyun "zor ama eklentilerle dengelenebilir" mi; denge ayarı şimdilik YOK (kullanıcı kararı).
+
+# v2.0 cihaz kontrol listesi (kullanıcıda doğrulanır — T20261024-55 sözleşmesi; dilim fazları kendi alt başlığına ekler)
+
+Aynı kural: bulutta telefon yok; bunlar yalnız cihazda görülür. Her satır: **ne** — nasıl bakılır → beklenen. Kurulum için A bölümü (debug APK).
+Her dilim yalnız kendi alt başlığına madde ekler (birleştirme çakışması olmasın); genel/sözleşme maddeleri aşağıdadır.
+
+## Genel (sözleşme)
+39. **Ana menü yeni düzeni** — KARAKTERLER ∣ BAŞARIMLAR yarım düğmeleri OYNA'nın altında, EN İYİ SKORLAR ve SES ∣ TİTREŞİM yerinde; alt satırda seçili karakter adı ve `açılan/toplam` → hiçbir öğe kesilmiyor, ana görsel (960×960) düğmelerin üstünde kalıyor; çentikli/yuvarlak köşeli cihazda da.
+40. **Sürüm etiketi** — menü en altında `Sürüm 2.0 · <karakter adı>`; uzun ad `…` ile kesilir (Türkçe `i`/`ı` bozulmaz).
+41. **Geri tuşu** — (K/B ekranları gelince) Android geri tuşu Karakterler ve Başarımlar ekranından ana menüye döner; menüde çıkar.
+
+### K — Karakterler
+- **K-1 Karakterler ekranı** — Ana menüden KARAKTERLER: portre nefes alıyor/yana sürükleniyor, kor parçacıkları yükseliyor; kenarlarda boşluk görünmüyor. Bilgi paneli (açıklama, başlangıç becerisi, 6 karo) taşmıyor.
+- **K-2 Seçim** — Karakter kartına dokun (ya da sahnede yatay kaydır): portre 260 ms'de yumuşak değişir. SEÇ'e bas: düğme "✓ SEÇİLİ" olur, kartta ✓ rozeti çıkar, ekrandan çıkılmaz; GERİ ile menüde KARAKTERLER alt satırı ve sürüm etiketi yeni adı yazar; OYNA o karakterle başlar (Barutçu: can 120, başlangıçta dinamit).
+- **K-3 Seviye atlama** — Seviye atlayınca üstte seçili karakterin adı ve altında "SEVİYE N" okunuyor (portre yüzünü örtmüyor); alt gradyan kartlara kadar karanlık.
+- **K-4 Çentik / güvenli alan** — Çentikli/yuvarlak köşeli cihazda başlık, SEÇ ve GERİ kesilmiyor; seviye atlama kartları alt çubuğa binmiyor.
+- **K-5 Yer tutucu görsel tonu** — Barutçu portresi Gunslinger'dan belirgin soluk/sepya tonda (yer tutucu); debug APK'da sağ üstte "YER TUTUCU" etiketi. Gerçek görsel gelince kalkacak.
+- **K-6 Performans** — Karakterler ekranı açıkken akıcılık (hedef ≤ 1,5 ms/kare vitrin); ekran kapanınca (menüye/koşuya) pil/ısı artışı yok (parçacıklar durur).
+- **K-7 2× yazı boyutu** — Sistem yazı boyutu 2× iken kart adları, SEÇ/KİLİTLİ ve GERİ metni taşmıyor.
+
+### B — Başarımlar
+(Başarım fazı ekler: bildirimin kalabalık üstünde okunurluğu ve y 820'nin başparmakla örtüşmemesi, çentik düzeni.)
+- [ ] Bir başarım açılınca kutu y 820'de belirir, ~2,5 sn kalır, dokunma/joystick kesilmez; üst üste açılışlarda tek tek gelir.
+- [ ] Başarımlar ekranı: liste kaydırılır, GERİ menüye döner, çentikli cihazda başlık/GERİ güvenli alan içinde.
+- [ ] Koşu sonunda açılan başarım varsa sonuç ekranında "YENİ BAŞARIM · N" çipi görünür; düğmeler ekran içinde.
+- [ ] Uygulamayı koşu ortasında arka plana alıp kapat/aç: o ana dek açılanlar listede durur.
+- [ ] Yer tutucu başarım ikonları (mevcut HUD/beceri ikonları) kabul edilebilir mi? (22 özel ikon üretilirse yalnız PNG + `icon` yolu eklenir.)
+
+### M — Bakım
+Bu bölümün maddeleri **M-n** diye numaralanır (K/B ile çakışmasın). Bulut yalnız masaüstü/headless koştu; aşağıdakiler cihazda görülür.
+
+**Cihaz değerlendirmesi (bulgu `deferred`; tasarım değişikliği yok):**
+- **M-1 (N3) Kalabalıkta rim** — geç oyunda (≈14. dk, 80+ düşman) kalabalığa bak → konturlar "tel kafes" gibi birleşiyor mu? Okunurluğa zarar vermiyorsa kabul; gerekirse `EnemyRenderer.RIM_*` kalınlığı/opaklığı (≈%70) ayarlanır.
+- **M-2 (N5) Oyuncu harabe önünde** — açık taşlı bir harabenin önünde dur → oyuncu siluetini kaybediyor mu (palto + rim taşa karışıyor mu)? Ayak ışığı yetiyorsa kabul.
+- **M-3 (N8) Duraklatma düğme sırası** — DEVAM ET üstte, BAŞTAN BAŞLA / ANA MENÜ başparmak bölgesinde → yanlışlıkla basma riski var mı? Onay diyaloğu (VAZGEÇ odakta) korunur; rahatsız ediyorsa karar verilir.
+- **M-4 (S-01) Gölge kazancı `GAIN` 2,2** — elit şövalye / Lord / hayalet gölgesi düşük parlaklık ve OLED'de ayağa oturuyor mu ("yüzüyor" izlenimi yok)? Kod ölçümü: koyulaşma ≥ %42 (eşik %40 + 0,02 pay). Yetersizse `EnemyShadowLayer.GAIN` artırılır.
+
+**Bu fazda değişenler (cihazda görülmeli):**
+- **M-5 (N6) Elit/Lord rim tonu** — Kale Lordu ve elitlerin konturu bronz/amber (beyaz "kesilmiş kağıt" değil), diğer düşmanlarla tutarlı; elitte yalnız kalınlık farklı.
+- **M-6 (S-02) Seviye halkası** — kart seçiminden sonra yer halkası belirgin: 4 px, parlak mor-mavi, yumuşak ışımalı, ≈0,45 sn'de solarak büyüyor; koyu çimende rahatça seçilir.
+- **M-7 (S-05) Ekran dışı ok** — eklenti ekran dışındayken ok (daire + üçgen ucu dahil) ekran/çentik kenarından ≥ 36 px içeride; köşelerde ve çentikli cihazda kesilmiyor.
+- **M-8 (N7) Güvenli alan** — duraklatma ekranı (ve K ile seviye atlama) çentik/yuvarlak köşeye girmiyor; ekranı döndür/pencere boyutunu değiştir → HUD yeniden hizalanıyor (M8a).
+- **M-9 (M8c) Kapanış** — uygulamadan çıkarken donma/kare atlaması yok (ses nesneleri artık 150 ms bekletmiyor); çıkışta çökme yok.
+- **M-10 (S-04) Debug etiketleri (yalnız debug APK)** — sayaç etiketleri ekranın üst kenarında (y 6–40), hiçbir düğmeyi/oku örtmüyor, dokunmayı yutmuyor; bayrağı çevirmek için oyun sırasında etiketin yanındaki küçük "dokun: AÇIK/KAPALI" alanına dokun (duraklatma ve sonuç ekranında dokunulmaz).
+- **M-11 (shader) Derleme** — elit rim değişikliği `enemy_flash.gdshader`'a `rim_elite_color` ekledi → cihazda (Mali/Adreno) düşmanlar render ediliyor, siyah/eksik sprite yok.
+
+### V — v2.0 doğrulama ekleri (T20261024-65; v1.1.1 aktarımı + düzeltme payı)
+Bu bölüm v2.0 listesinin tek giriş noktasını tamamlar: yukarıdaki Genel/K/B/M maddeleri geçerlidir; aşağıdakiler v1.1.1 ve düzeltme payından (T…-64) gelen, **yalnız cihazda görülebilen** eklerdir.
+
+**v1.1.1 oyuncu animasyonu (debug APK):**
+- **V-1 Sekme kademesi seçimi** — oyun sırasında sağ alttaki "sekme: …" etiketine dokun: ESKİ v1.1 → YUMUŞAK (varsayılan) → SAKİN döner. Üçünü de koş → hangisi doğal? Karar: varsayılan YUMUŞAK kalsın mı, SAKİN mi? (`PlayerAnim.BOUNCE_TIERS`; kademeler `docs/dev/v1.1.1/README.md`.)
+- **V-2 Kol hissi** — yürürken, nişan alırken ve doldururken sol kol: eski sürümdeki "sallanma/sıçrama" gitti mi; nişan yönü değişince kol takılmadan dönüyor mu (özellikle doldurma sırasında ve 165° aim sıçramasında).
+- **V-3 Sekme etiketi okunurluğu** — "sekme: ESKİ v1.1 1/3" gibi uzun etiket 166 px'e sığıyor, küçülse de okunuyor; hiçbir düğmeyi/oku örtmüyor, dokunuşu yutmuyor.
+
+**Düzeltme payı (T…-64) cihaz kontrolleri:**
+- **V-4 (K-01) Çentikli menü** — çentikli/yuvarlak köşeli telefonda ana menü: "BASTION" başlığının alt kenarı ile ana görselin üstü arasında boşluk var (başlık görsele binmiyor); alt düğmeler kesilmiyor; çentiksiz cihazla aynı boşluk.
+- **V-5 (K-02/K-04) SEÇ düğmesi durumu** — Karakterler ekranında Gunslinger → Barutçu → Gunslinger gez: SEÇ düğmesi odaktayken bordo (mor/amber kalıntı yok); "✓ SEÇİLİ" yazısı odakta da amber.
+- **V-6 (K-03) Yer tutucu karakter** — Barutçu kartı/sahnesi soğuk tonlu ve baş harf monogramlı, Gunslinger'dan ayırt ediliyor; portresiz kartta düz kahverengi blok yok.
+- **V-7 (K-05) Çip** — kart adının yanındaki çip kapsül biçimli, kilitli çipte asma kilit glifi var ve ad satırına hizalı.
+- **V-8 (F-029) Büyük harf** — adlar "GUNSLINGER" / "BARUTÇU" (noktalı İ yok) hem Karakterler ekranında hem seviye atlamada.
+- **V-9 Beceri ikon çerçevesi** — vitrindeki başlangıç becerisi 84 px çerçeveli; **Dinamit ikonu boş görünür** (asset yok — kullanıcıdan görsel beklenir, bkz. Kullanıcı kararları).
+- **V-10 Yapışkan grup başlığı** — Başarımlar ekranını kaydır: üstteki grup başlığı liste tepesinde kalıyor, sıradaki başlık yaklaşınca onu itiyor; en tepede gizleniyor (yalnız birim testi var, gerçek kaydırma görülmedi).
+
+**Kullanıcı kararları (uygulanmaz; VLAD önerir, karar sizde):**
+- **D-1 Barutçu konsepti/adı/becerileri ve görselleri** — şimdilik yer tutucu (`placeholder:true`); AI görseli kullanıcı üretir (`docs/dev/new-character.md`, yer tutucudan gerçeğe geçiş).
+- **D-2 Dinamit beceri ikonu** — görsel yok (V-9); PNG + beceri `icon` yolu eklenince kapanır.
+- **D-3 Başarım ödülü** — şu an yalnız kayıt; kilit açma (`unlock`) altyapısı var, hiçbir karakterde kullanılmıyor. Kilit kullanılacaksa hangi başarım hangi karakteri açsın?
+- **D-4 Başarım hedef kalibrasyonu ve denge** — bot verisi `docs/dev/v2.0-verification.md`'de; hedef/denge ayarı yapılmadı (v1.1 kararı: "denge şimdilik dursun").
+- **D-5 Açık görsel bulgular** — K-06, K-07 (asset düzeltmesi; kullanıcı/AI görseli gerekebilir), K-08 (v1.1 kökenli) ve Label'da bulunmayan başlık harf aralığı bilerek atlandı.

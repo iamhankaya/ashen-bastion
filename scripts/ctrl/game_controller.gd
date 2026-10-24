@@ -5,15 +5,11 @@ extends Node
 ## Android geri tuşu, arka plana alınınca otomatik duraklatma. Karar mantığı InputGate/PauseLogic'tedir;
 ## bu sınıf yalnız uygular. Tam oyun: 20 dk, Kale Lordu (lord modu).
 
-const CHARACTER := &"gunslinger"
 ## Tam oyun: 20 dk, 20. dk'da Kale Lordu (ölümü kazandırır).
 const RUN_OPTS := {"end_mode": "lord", "end_time": 1200.0}
 const WON_SUB := "Şafak söktü; kale seni yutamadı."
 const DAMAGE_VIBRATE_MS := 25
 const LORD_ID := &"kale_lordu"
-## Debug etiketleri sağ altta: sol alttaki rozet satırı (x ≤ 579 + çentik) ve tamburu örtmez (V-09).
-const DEBUG_LABEL_X := 636.0
-const DEBUG_LABEL_W := 408.0
 const LORD_SLAM_RING_SEC := 0.45
 ## Öfkeli Lord kor aurası (E9): en çok 20 parçacık/sn.
 const LORD_EMBER_RATE := 18.0
@@ -42,6 +38,9 @@ var level_up: LevelUpScreen
 var pause_screen: PauseScreen
 var result_screen: ResultScreen
 var menu: MainMenu
+## v2.0 cephesi (karakter/başarım/bakım dilimleri); testler `v2_opts`'u add_child'dan ÖNCE doldurur.
+var v2: V2Flow
+var v2_opts: Dictionary = {}
 ## v1.1 (iskelet): ilgili D fazları `_v11_*` işlevlerinde kurar/doldurur; o zamana dek v1 davranışı değişmez.
 var highscores: Highscores = Highscores.new()
 var scores_screen: HighscoreScreen
@@ -74,13 +73,22 @@ var _result_record: Dictionary = {}
 
 func _ready() -> void:
 	get_tree().quit_on_go_back = false  # geri tuşunu kendimiz yönetiriz
+	v2 = V2Flow.new(v2_opts)
 	_build_world()
 	_build_ui()
 	_v11_build_world()  # world ve ui kuruldu
 	audio = AudioDirector.new()
 	audio.name = "Audio"
 	add_child(audio)
+	var refs := {"ui_root": ui, "menu": menu, "hud": hud, "level_up": level_up}
+	refs.merge({"result_screen": result_screen, "pause_screen": pause_screen})
+	refs["set_screen"] = _set_screen
+	v2.build_world(refs)
 	go_menu()
+
+
+func _exit_tree() -> void:
+	v2.release()
 
 
 func _build_world() -> void:
@@ -168,19 +176,7 @@ func _build_ui() -> void:
 func _build_render_debug() -> void:
 	if not OS.is_debug_build():
 		return
-	_render_label = Label.new()
-	_render_label.name = "RenderDebug"
-	_render_label.position = Vector2(DEBUG_LABEL_X, 2132)
-	_render_label.size = Vector2(DEBUG_LABEL_W, 120)
-	_render_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_render_label.add_theme_font_size_override(&"font_size", 26)
-	_render_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
-	_render_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
-	_render_label.add_theme_constant_override(&"outline_size", 6)
-	_render_label.mouse_filter = Control.MOUSE_FILTER_STOP
-	_render_label.gui_input.connect(_on_render_label_input)
-	_render_label.visible = false
-	ui.add_child(_render_label)
+	_render_label = DebugLabels.build_render(ui, _on_render_label_input)
 
 
 func render_debug_text() -> String:
@@ -229,7 +225,7 @@ func go_menu() -> void:
 ## Yeni oyun (menüden OYNA, Baştan Başla, Tekrar Oyna).
 func start_run() -> void:
 	_stop_stress()
-	_bind(GameSim.new(randi(), CHARACTER, RUN_OPTS))
+	_bind(GameSim.new(randi(), v2.selected_character(), RUN_OPTS))
 	world.visible = true
 	atmosphere.visible = true
 	_update_views(0.0)
@@ -284,6 +280,7 @@ func _on_stress_finished(result: Dictionary) -> void:
 func pause_game() -> void:
 	if screen != PauseLogic.Screen.PLAYING:
 		return
+	v2.on_pause()
 	if _v11_skip_delay():  # geri tuşu / arka plan / duraklat düğmesi gecikmeyi atlar; oyun duraklatılmaz
 		return
 	pause_screen.open(
@@ -348,6 +345,7 @@ func _bind(new_sim: GameSim) -> void:
 		sim.bus.run_ended.connect(_on_run_ended)
 		sim.bus.player_damaged.connect(_on_player_damaged)
 	_v11_bind(sim)
+	v2.bind(null if _stress != null else sim)  # stres koşusu başarım saymaz
 
 
 # --- kare döngüsü ---------------------------------------------------------------------------
@@ -418,13 +416,14 @@ func _update_views(dt: float) -> void:
 	atmosphere.follow(camera.position, camera.view_size())
 	hud.refresh(dt)
 	_v11_update_views(dt if screen == PauseLogic.Screen.PLAYING else 0.0)
+	v2.update_views(dt if screen == PauseLogic.Screen.PLAYING else 0.0)
 	if _render_label != null and _render_label.visible:
 		_render_label.text = render_debug_text()
 
 
 func _show_level_up() -> void:
 	var shown_level := sim.level - maxi(sim.pending_levels, 1) + 1
-	level_up.show_choices(sim.pending_choices(), shown_level, sim.data)
+	level_up.show_choices(sim.pending_choices(), shown_level, sim.data, sim.character)
 	_set_screen(PauseLogic.Screen.LEVEL_UP)
 
 
@@ -484,6 +483,8 @@ func _v11_build_world() -> void:
 	scores_screen.back_requested.connect(go_menu)
 	scores_screen.play_requested.connect(start_run)
 	menu.scores_requested.connect(open_scores)
+	menu.characters_requested.connect(open_characters)
+	menu.achievements_requested.connect(open_achievements)
 	result_screen.record_stamped.connect(_on_record_stamped)
 	get_viewport().size_changed.connect(_apply_safe_areas)
 	_apply_safe_areas()
@@ -518,6 +519,7 @@ func _apply_safe_areas() -> void:
 	menu.apply_safe_area()
 	result_screen.apply_safe_area()
 	scores_screen.apply_safe_area()
+	v2.apply_safe_areas()
 
 
 ## Ana menüden En İyi Skorlar ekranı (vurgu yok: sonuçtan sıralamaya bağlantı v1.1 dışı).
@@ -526,6 +528,14 @@ func open_scores() -> void:
 		return
 	scores_screen.show_scores(highscores.entries, -1)
 	_set_screen(PauseLogic.Screen.SCORES)
+
+
+func open_characters() -> void:
+	v2.open_characters()
+
+
+func open_achievements() -> void:
+	v2.open_achievements()
 
 
 ## `_bind` sonunda (sim null olabilir): faz başına alt işlevlere dağıtır (her D yalnız kendi gövdesini doldurur).
@@ -568,7 +578,7 @@ func _v11_bind_pickups(new_sim: GameSim) -> void:
 	_pickup_sim = new_sim
 	pickup_renderer.bind(new_sim)
 	_v11_build_escape_debug()
-	_v111_build_bounce_debug()
+	_bounce_label = BounceDebug.ensure(_bounce_label, ui, BounceDebug.on_input)
 	if _escape_label != null and new_sim == null:
 		_escape_label.visible = false
 	if _bounce_label != null and new_sim == null:
@@ -624,7 +634,10 @@ func _v11_update_pickups(view_dt: float) -> void:
 	if pickup_renderer != null:
 		pickup_renderer.refresh(view_dt)
 	_v11_update_escape_debug()
-	_v111_update_bounce_debug()
+	BounceDebug.sync(
+		_bounce_label,
+		sim != null and screen in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
+	)
 
 
 ## F-ashen-bastion-021 (yalnız debug derleme): çıkmaz kaçışı AÇIK/KAPALI etiketi + sayaç; dokunmak bayrağı çevirir
@@ -632,26 +645,14 @@ func _v11_update_pickups(view_dt: float) -> void:
 func _v11_build_escape_debug() -> void:
 	if _escape_label != null or not OS.is_debug_build():
 		return
-	_escape_label = Label.new()
-	_escape_label.name = "EscapeDebug"
-	_escape_label.position = Vector2(DEBUG_LABEL_X, 2264)
-	_escape_label.size = Vector2(DEBUG_LABEL_W, 72)
-	_escape_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_escape_label.add_theme_font_size_override(&"font_size", 24)
-	_escape_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
-	_escape_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
-	_escape_label.add_theme_constant_override(&"outline_size", 6)
-	_escape_label.mouse_filter = Control.MOUSE_FILTER_STOP
-	_escape_label.gui_input.connect(_on_escape_label_input)
-	_escape_label.visible = false
-	ui.add_child(_escape_label)
+	_escape_label = DebugLabels.build_escape(ui, _on_escape_label_input)
 
 
 func escape_debug_text() -> String:
 	var live := EnemyEscape.escaping_count(sim) if sim != null else 0
 	return (
-		"çıkmaz kaçışı: %s (dokun)\nkaçışta %d  girilen %d"
-		% ["AÇIK" if EnemyEscape.enabled else "KAPALI", live, EnemyEscape.begun_total]
+		"kaçışta %d  girilen %d\nçıkmaz kaçışı: %s (dokun)"
+		% [live, EnemyEscape.begun_total, "AÇIK" if EnemyEscape.enabled else "KAPALI"]
 	)
 
 
@@ -667,53 +668,6 @@ func _v11_update_escape_debug() -> void:
 	)
 	if _escape_label.visible:
 		_escape_label.text = escape_debug_text()
-
-
-## v1.1.1 (yalnız debug derleme): yürüme sekmesi kademesi etiketi; dokunmak ESKİ v1.1 → YUMUŞAK → SAKİN arasında döndürür
-## (değerler PlayerAnim.BOUNCE_TIERS; cihazda karşılaştırılır). Oturum boyunca geçerli, kalıcı değil.
-func _v111_build_bounce_debug() -> void:
-	if _bounce_label != null or not OS.is_debug_build():
-		return
-	_bounce_label = Label.new()
-	_bounce_label.name = "BounceDebug"
-	_bounce_label.position = Vector2(DEBUG_LABEL_X, 2340)
-	_bounce_label.size = Vector2(DEBUG_LABEL_W, 48)
-	_bounce_label.add_theme_font_size_override(&"font_size", 24)
-	_bounce_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
-	_bounce_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
-	_bounce_label.add_theme_constant_override(&"outline_size", 6)
-	_bounce_label.mouse_filter = Control.MOUSE_FILTER_STOP
-	_bounce_label.gui_input.connect(_on_bounce_label_input)
-	_bounce_label.visible = false
-	ui.add_child(_bounce_label)
-
-
-func bounce_debug_text() -> String:
-	var n: int = PlayerAnim.BOUNCE_TIERS.size()
-	var i := clampi(PlayerAnim.bounce_tier, 0, n - 1)
-	return "sekme: %s (%d/%d, dokun)" % [PlayerAnim.BOUNCE_TIERS[i]["name"], i + 1, n]
-
-
-func cycle_bounce_tier() -> void:
-	PlayerAnim.bounce_tier = (PlayerAnim.bounce_tier + 1) % PlayerAnim.BOUNCE_TIERS.size()
-
-
-func _v111_update_bounce_debug() -> void:
-	if _bounce_label == null:
-		return
-	_bounce_label.visible = (
-		sim != null and screen in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
-	)
-	if _bounce_label.visible:
-		_bounce_label.text = bounce_debug_text()
-
-
-func _on_bounce_label_input(event: InputEvent) -> void:
-	if (
-		(event is InputEventMouseButton and event.pressed)
-		or (event is InputEventScreenTouch and event.pressed)
-	):
-		cycle_bounce_tier()
 
 
 func _on_escape_label_input(event: InputEvent) -> void:
@@ -829,6 +783,7 @@ func _on_record_stamped() -> void:
 ## `_set_screen` sonunda (next = PauseLogic.Screen). D3: SCORES ekranı, sonuç ekranı gecikmesi.
 func _v11_on_screen(next: int) -> void:
 	scores_screen.visible = next == PauseLogic.Screen.SCORES
+	v2.on_screen(next)
 
 
 # --- D1: oyuncu/Lord görünüm olayları ---------------------------------------------------------
@@ -945,7 +900,9 @@ func _events():
 func _on_run_ended(won: bool, stats: Dictionary) -> void:
 	_run_won = won
 	_run_stats = stats
+	v2.on_run_ended(won, stats)  # tracker.finish: sonuç ekranından ve skor kaydından ÖNCE
 	_v11_on_run_ended(won, stats)
+	v2.flush()
 
 
 func _on_player_damaged(_amount: float, _hp: float) -> void:

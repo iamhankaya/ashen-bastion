@@ -387,6 +387,7 @@ func test_h10_zero_or_negative_score_is_not_recorded() -> void:
 
 func _controller() -> GameController:
 	var c := GameController.new()
+	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.highscores = Highscores.new(_path())

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "ilk_kan",
+    "name": "İlk Kan",
+    "desc": "İlk düşmanını öldür.",
+    "stat": "total_kills",
+    "target": 1,
+    "scope": "total",
+    "tier": "kolay"
+  },
+  {
+    "id": "bes_dakika",
+    "name": "Beş Dakika",
+    "desc": "Tek koşuda 5 dakika hayatta kal.",
+    "stat": "run_time",
+    "target": 300,
+    "scope": "run",
+    "tier": "kolay"
+  },
+  {
+    "id": "seviye_10",
+    "name": "Onuncu Basamak",
+    "desc": "Tek koşuda 10. seviyeye ulaş.",
+    "stat": "run_level",
+    "target": 10,
+    "scope": "run",
+    "tier": "kolay"
+  }
+]

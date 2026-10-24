@@ -65,6 +65,8 @@ var score_block: ScoreBlock
 var buff_row: BuffRow
 var offscreen_arrow: OffscreenArrow
 var float_text: FloatText
+## v2.0: başarım bildirim katmanı. 'safe' altında, 'Layer' (HUD_ALPHA) dışında; IGNORE. B3 kendi düğümünü ekler.
+var toast_host: Control
 ## Cihaz güvenli alanı payı kadar içeri çekilmiş katman (rozet, çubuklar, yuvalar, tambur, duraklat).
 var safe: Control
 
@@ -325,6 +327,11 @@ func _build_v11(root: Control) -> void:
 	float_text.name = "FloatText"
 	UiKit.fill(float_text)
 	safe.add_child(float_text)
+	toast_host = Control.new()
+	toast_host.name = "ToastHost"
+	toast_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.fill(toast_host)
+	safe.add_child(toast_host)
 
 
 ## Güvenli alan payını (çentik, yuvarlak köşe) uygular; payı DisplayServer.get_display_safe_area'dan alır.

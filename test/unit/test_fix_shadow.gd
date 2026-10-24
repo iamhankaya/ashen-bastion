@@ -3,6 +3,8 @@ extends GutTest
 ## elit/Lord gölgesi ayağın en çok 10 px altında merkezlenir ve sprite kadar geniştir; oyuncu gölgesi aynı ölçüyü sağlar.
 
 const MIN_VISIBLE := 0.05
+## Eşik %40 + 0,02 pay (S-01/M3): ölçüm eşiğe yaslanmaz; parlaklık düşük/OLED'de "yüzüyor" izlenimine karşı marj.
+const MIN_DARKENING := 0.40 + 0.02
 
 
 ## Gölge dokusundan ve verilen tepe α'dan, görünür (>= MIN_VISIBLE) piksellerin ortalama koyulaşması.
@@ -36,7 +38,7 @@ func test_enemy_shadow_pixels_darken_at_least_40_percent() -> void:
 	var layer := EnemyShadowLayer.new()
 	add_child_autofree(layer)
 	var peak := EnemyShadowLayer.SHADOW_ALPHA * EnemyShadowLayer.GAIN
-	assert_gte(_mean_darkening(layer.texture, peak), 0.40, "ortalama koyulaşma >= %40")
+	assert_gte(_mean_darkening(layer.texture, peak), MIN_DARKENING, "ortalama koyulaşma >= %42")
 
 
 func test_shader_gain_matches_constant() -> void:
@@ -53,7 +55,7 @@ func test_player_shadow_pixels_darken_at_least_40_percent() -> void:
 	add_child_autofree(v)
 	assert_not_null(v.shadow.texture, "oyuncu gölgesi yumuşak dokuyla çizilir")
 	if v.shadow.texture != null:
-		assert_gte(_mean_darkening(v.shadow.texture, PlayerView.Shadow.ALPHA), 0.40)
+		assert_gte(_mean_darkening(v.shadow.texture, PlayerView.Shadow.ALPHA), MIN_DARKENING)
 
 
 func test_elite_and_lord_shadow_sits_within_10px_below_the_foot() -> void:

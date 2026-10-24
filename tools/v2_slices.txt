@@ -1,0 +1,8 @@
+# v2.0 tamamlanan dilim simgeleri (boşluk/satır ayraçlı; V11Slice ile aynı biçim). Geçerli simgeler: K (karakter), B (başarım), M (bakım).
+# Simge YALNIZ ilgili dilimin ayar turu (K-tur, B-tur, M-tur) ya da ürün hatası bıraktıysa düzeltme payı tarafından eklenir:
+# o dilimin kabul testleri gerçek kodda yeşildir, sızıntı yoktur, asgari test sayısı yükseltilmiştir.
+# Simgesi eklenmemiş dilimin kabul testleri V2Slice.require ile pending döner. İşaretli dilimde pending ya da sıfır test
+# gate'i KIRAR (tools/ci/check_slices.py). Yorum satırı dışında yalnız bu üç simge yazılabilir.
+K
+M
+B
