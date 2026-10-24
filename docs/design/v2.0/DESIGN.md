@@ -165,7 +165,7 @@ Geometri testi girdisi (B4): kutu dikdörtgeninin skor sütunu, SERİ çipi, eli
 ### 5.3 Sonuç özeti (`06-sonuc-yeni-basarim.png`, ölçülü `06a`)
 
 Koşuda ≥1 başarım açıldıysa istatistik şeridi ile "Kurulan kombolar" arasına **936×96 özet çipi** girer (y = şerit alt + 24 ≈ 1418): `panel`, **amber 4 px kenar**, ★ ikonu 44 + **"YENİ BAŞARIM · N"** Cinzel 700 30 `amber_glow` + ilk iki ad Inter 600 28 `kemik_300` ("İlk Kan, Beş Dakika"; N>2 ise "+k"), taşarsa `…`. Dokunulmaz. Girişi: döküm satırlarından sonra **1 100 ms**, 200 ms kayma-giriş (dokunma = atla).
-**Sığma kuralı:** özet varken kombolar **en çok 3 satır** (4. satır "+N" olur) → kombolar 1538–1838, düğmeler **1866–2181** (< 2328). Özet yokken v1.1 düzeni aynen (4 kombo, düğmeler ≥ y 1500). Ayrıntı yazısı **26 px** (S-03). `accessibility_name`: "2 yeni başarım: İlk Kan, Beş Dakika".
+**Sığma kuralı:** özet varken kombolar **en çok 3 satır** (4. satır "+N" olur) → kombolar 1538–1838, düğmeler **1928–2243** (gerçek yerleşim; güvenli alt sınır 2328 altında). Özet yokken v1.1 düzeni aynen (4 kombo, düğmeler ≥ y 1500). Ayrıntı yazısı **26 px** (S-03). `accessibility_name`: "2 yeni başarım: İlk Kan, Beş Dakika".
 
 ## 6. Seviye atlama, görsel kurallar, yer tutucu
 

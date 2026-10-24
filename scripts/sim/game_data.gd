@@ -69,6 +69,8 @@ const CHARACTER_KEYS: PackedStringArray = [
 	"portrait",
 	"unlock",
 	"placeholder",
+	"display_upper",
+	"order",
 ]
 const RIG_KEYS: PackedStringArray = [
 	"body",
@@ -245,6 +247,19 @@ static func load_dir(dir: String) -> GameData:
 	return g
 
 
+## Vitrin sırası: `order` artan, eşitlikte dosya adı sırası (kararlı). `order` yoksa sona düşer (F-030).
+func _sort_character_ids() -> void:
+	var idx := {}
+	for i in character_ids.size():
+		idx[character_ids[i]] = i
+	character_ids.sort_custom(
+		func(a: StringName, b: StringName) -> bool:
+			var oa: int = (_characters[a] as CharacterDef).order
+			var ob: int = (_characters[b] as CharacterDef).order
+			return idx[a] < idx[b] if oa == ob else oa < ob
+	)
+
+
 func get_character(id: StringName) -> CharacterDef:
 	return _characters.get(id)
 
@@ -327,6 +342,7 @@ func _load_all() -> void:
 			var c := CharacterDef.from_dict(d)
 			_characters[c.id] = c
 			character_ids.append(c.id)
+	_sort_character_ids()
 	for e in _raw_skills:
 		var d: Variant = e["data"]
 		if d is Dictionary and _valid_id(d.get("id")) and not _skills.has(StringName(d["id"])):

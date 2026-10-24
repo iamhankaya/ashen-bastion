@@ -42,10 +42,12 @@ g.get_achievement(id) -> AchievementDef        # null olabilir
 | `blurb` | metin ≤ 120 karakter, isteğe bağlı (v2.0) | vitrin açıklaması (`out_of_range`) |
 | `portrait` | görsel yolu, isteğe bağlı (v2.0) | vitrin ve seviye atlama portresi; var olmalı (`asset_missing`); yoksa portresiz düzen |
 | `unlock` | `{"achievement": "<id>"}`, isteğe bağlı (v2.0) | karakter bu başarım açılana dek kilitli; yoksa açık. Başarım var olmalı (`unknown_ref`); başka anahtar `unknown_key` |
-| `placeholder` | bool, isteğe bağlı (v2.0) | `true` = görsel yer tutucu; yalnız debug yapıda "YER TUTUCU" etiketi |
+| `placeholder` | bool, isteğe bağlı (v2.0) | `true` = görsel yer tutucu; yalnız debug yapıda "YER TUTUCU" etiketi. Release'te de kartta/sahnede soğuk ton + baş harf monogramı gösterilir |
+| `display_upper` | metin ≤ 22 karakter, isteğe bağlı (v2.0 düzeltme) | büyük harfli ad; özel adlarda `upper_tr` noktalı İ üretir ("GUNSLİNGER"), boşsa `upper_tr(name)` |
+| `order` | sayı, isteğe bağlı (v2.0 düzeltme) | vitrin sırası (küçük önce; eşitlikte dosya adı sırası); yoksa 1000 |
 
 `base_gun` v2.0'da YOKTUR (JSON'da görülürse `unknown_key`). Yeni karakter yalnız veri + görsel ekleyerek tanımlanır;
-sıra dosya adı sırasıdır (`character_ids`).
+sıra `order` alanıdır, eşitlikte dosya adı sırası (`character_ids`).
 
 `rig`: `body`, `arm` (görsel yolu), `display_height` (1..1000), `native_facing` (`left|right`), `shoulders` (iki `[x,y]`, 0..1),
 `arm_pivot`, `muzzle` (`[x,y]`, 0..1), `arm_scale` (0,01..5), `sway`: `hem_from_y` 0..1, `scarf_rect` `[x0,y0,x1,y1]` (0..1, x0<x1, y0<y1),

@@ -80,6 +80,13 @@ static func current_safe_extra(view: Vector2) -> Vector4:
 
 
 ## Türkçe büyük harf: "Barut Kesesi" → "BARUT KESESİ", "Şifa" → "ŞİFA", "mermi" → "MERMİ".
+## Karakter adı büyük harfle: `display_upper` varsa o (özel ad, F-029), yoksa upper_tr.
+static func character_upper(c: CharacterDef) -> String:
+	if c == null:
+		return ""
+	return c.display_upper if c.display_upper != "" else upper_tr(c.display_name)
+
+
 static func upper_tr(text: String) -> String:
 	var out := ""
 	for k in text.length():

@@ -89,6 +89,29 @@ func test_hero_box_960_square_y560_to_1520() -> void:
 	)
 
 
+func test_notch_top_inset_moves_hero_top_with_title_k01() -> void:
+	# K-01: üst pay başlığı indirir; ana görselin üstü de aynı farkla inmeli (başlık–görsel aralığı sabit).
+	var m := _menu()
+	await _settle()
+	if m.hero == null:
+		pending("ana görsel dosyası yok")
+		return
+	m.apply_safe_area(Vector4(48, 0, 48, 80))
+	await _settle()
+	var gap_flat := 1200.0 + m.hero.offset_top - m._head.offset_top
+	m.apply_safe_area(Vector4(48, 130, 48, 80))
+	await _settle()
+	var gap_notch := 1200.0 + m.hero.offset_top - m._head.offset_top
+	assert_almost_eq(gap_notch, gap_flat, 0.01, "başlık–görsel aralığı çentikte de korunur")
+	assert_gt(m._head.offset_top, 150.0, "başlık gerçekten indi")
+	assert_lte(
+		1200.0 + m.hero.offset_bottom, m.play_button.global_position.y, "görsel düğmelerin üstünde"
+	)
+	m.apply_safe_area(Vector4.ZERO)
+	await _settle()
+	assert_almost_eq(1200.0 + m.hero.offset_top, 560.0, 0.01, "çentiksiz görünüm değişmez")
+
+
 func test_signals() -> void:
 	var m := _menu()
 	watch_signals(m)

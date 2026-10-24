@@ -28,6 +28,17 @@ static func sync(label: Label, shown: bool) -> void:
 	label.visible = shown
 	if shown:
 		label.text = text()
+		fit_font(label)
+
+
+## Uzun kademe adı ("ESKİ v1.1 1/3") 166 px'e sığmazsa yazıyı küçültür (kırpılmasın); alt sınır 16.
+static func fit_font(label: Label) -> void:
+	var f := label.get_theme_default_font()
+	var base := DebugLabels.FONT_SIZE
+	var w := f.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, base).x
+	var avail := label.size.x - 8.0
+	var fs := base if w <= avail else maxi(16, int(floor(base * avail / w)))
+	label.add_theme_font_size_override(&"font_size", fs)
 
 
 ## Dokunuş (fare/dokunmatik basma) → kademeyi döndürür.

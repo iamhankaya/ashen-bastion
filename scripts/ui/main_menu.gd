@@ -302,13 +302,15 @@ func apply_safe_area(extra: Variant = null) -> void:
 	if _col == null:
 		return
 	var up := maxf(0.0, (72.0 + e.w) - (-COL_BOTTOM))
-	_head.offset_top = HEAD_TOP + maxf(0.0, e.y - (HEAD_TOP - TOP_DEFAULT))
+	var head_drop := maxf(0.0, e.y - (HEAD_TOP - TOP_DEFAULT))
+	_head.offset_top = HEAD_TOP + head_drop
 	_col.offset_top = COL_TOP - up
 	_col.offset_bottom = COL_BOTTOM - up
 	if hero != null:
-		hero.offset_top = HERO_TOP - up
+		# K-01: başlık üst paya göre inince görselin üstü de aynı farkla iner (görsel alt kenardan yukarı çıkarken üstten değil alttan küçülür; başlıkla aralık sabit kalır).
+		hero.offset_top = HERO_TOP + head_drop
 		hero.offset_bottom = HERO_BOTTOM - up
-	emblem.offset_top = -380.0 - up
+	emblem.offset_top = -380.0 + head_drop
 	emblem.offset_bottom = 280.0 - up
 
 

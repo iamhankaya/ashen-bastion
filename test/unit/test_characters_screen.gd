@@ -194,3 +194,89 @@ func test_missing_portrait_does_not_crash() -> void:
 	var s := _screen(&"gunslinger")
 	s.set_focus_id(&"barutcu")
 	assert_not_null(s._portrait.texture, "yer tutucu portre")
+
+
+# --- v2.0 düzeltme payı (K-02..K-05, F-029, F-030) ------------------------------------------------------
+
+
+func test_k02_select_state_drops_selected_overrides_so_primary_style_returns() -> void:
+	var s := _screen(&"gunslinger")
+	assert_true(s.select_button.has_theme_stylebox_override(&"focus"), "SEÇİLİ: özel stil")
+	s.set_focus_id(&"barutcu")
+	for st in [&"normal", &"hover", &"pressed", &"disabled", &"focus"]:
+		assert_false(
+			s.select_button.has_theme_stylebox_override(st), "SEÇ: %s varsayılan (bordo)" % st
+		)
+	s.set_focus_id(&"gunslinger")
+	assert_true(s.select_button.has_theme_stylebox_override(&"focus"))
+
+
+func test_k04_selected_text_is_amber_also_on_focus() -> void:
+	var s := _screen(&"gunslinger")
+	assert_eq(s.select_button.get_theme_color(&"font_focus_color"), UiKit.AMBER)
+	assert_eq(s.select_button.get_theme_color(&"font_color"), UiKit.AMBER)
+
+
+func test_k05_chip_is_capsule_and_locked_chip_has_lock_glyph() -> void:
+	_lock_barutcu()
+	var s := _screen(&"gunslinger")
+	assert_true(s.chip_label.has_theme_stylebox_override(&"normal"), "SEÇİLİ çipi kapsül")
+	assert_false(s._chip_lock.visible)
+	s.set_focus_id(&"barutcu")
+	assert_eq(s.chip_label.text, "KİLİTLİ")
+	assert_true(s._chip_lock.visible, "kilitli çipte kilit glifi")
+	assert_true(s.chip_label.has_theme_stylebox_override(&"normal"))
+
+
+func test_k03_card_without_portrait_uses_fallback_not_flat_block() -> void:
+	_data.get_character(&"barutcu").portrait = ""
+	var s := _screen(&"gunslinger")
+	var card := s.cards[1]
+	assert_not_null(card.get_node_or_null("Face"), "portresiz kartta varsayılan portre")
+
+
+func test_k03_placeholder_character_is_distinguishable_from_gunslinger() -> void:
+	var s := _screen(&"gunslinger")
+	var g_face := s.cards[0].get_node("Face") as TextureRect
+	var b_face := s.cards[1].get_node("Face") as TextureRect
+	assert_ne(g_face.self_modulate, b_face.self_modulate, "belirgin ton farkı")
+	assert_null(s.cards[0].get_node_or_null("Monogram"))
+	var m := s.cards[1].get_node_or_null("Monogram") as Label
+	assert_not_null(m, "yer tutucu kartta monogram")
+	assert_eq(m.text, "B")
+	s.set_focus_id(&"barutcu")
+	assert_eq(s._stage_mono.text, "B", "sahnede de monogram")
+	s.set_focus_id(&"gunslinger")
+	assert_eq(s._stage_mono.text, "")
+
+
+func test_f029_name_uses_display_upper_not_dotted_i() -> void:
+	var s := _screen(&"gunslinger")
+	assert_eq(s.name_label.text, "GUNSLINGER")
+	assert_eq(UiKit.character_upper(_data.get_character(&"barutcu")), "BARUTÇU")
+	var c := CharacterDef.new()
+	c.display_name = "Kirpi"
+	assert_eq(UiKit.character_upper(c), UiKit.upper_tr("Kirpi"), "display_upper yoksa upper_tr")
+
+
+func test_f030_gunslinger_first_by_order_field() -> void:
+	assert_eq(_data.character_ids[0], &"gunslinger")
+	_data.get_character(&"barutcu").order = 0
+	_data._sort_character_ids()
+	assert_eq(_data.character_ids[0], &"barutcu", "order küçük olan önce")
+	_data.get_character(&"barutcu").order = CharacterDef.ORDER_DEFAULT
+	_data.get_character(&"gunslinger").order = CharacterDef.ORDER_DEFAULT
+	_data._sort_character_ids()
+	assert_eq(
+		_data.character_ids,
+		[&"barutcu", &"gunslinger"] as Array[StringName],
+		"eşitlikte dosya sırası"
+	)
+
+
+func test_skill_icon_has_84px_frame() -> void:
+	var s := _screen(&"gunslinger")
+	var box := s.find_child("SkillIconBox", true, false) as Control
+	assert_not_null(box)
+	assert_eq(box.custom_minimum_size, Vector2(84, 84))
+	assert_not_null(box.get_node_or_null("SkillFrame"))

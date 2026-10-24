@@ -36,6 +36,8 @@ var title_label: Label
 var counter_label: Label
 var name_label: Label
 var chip_label: Label
+var _chip_lock: Control
+var _stage_mono: Label
 var blurb_label: Label
 var skill_label: Label
 var select_button: Button
@@ -107,6 +109,14 @@ func _build() -> void:
 	shade.stretch_mode = TextureRect.STRETCH_SCALE
 	UiKit.fill(shade)
 	stage.add_child(shade)
+	_stage_mono = UiKit.label("", &"LabelTitle", 480, UiKit.KEMIK_100)
+	_stage_mono.name = "Monogram"
+	_stage_mono.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage_mono.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stage_mono.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_stage_mono.modulate.a = 0.22
+	UiKit.fill(_stage_mono)
+	stage.add_child(_stage_mono)
 	_lock_ring = _LockRing.new()
 	_lock_ring.name = "LockRing"
 	_lock_ring.visible = false
@@ -128,7 +138,11 @@ func _build() -> void:
 	add_child(name_label)
 	chip_label = UiKit.label("", &"", 26, UiKit.AMBER)
 	chip_label.add_theme_font_override(&"font", UiKit.font_bold())
+	chip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(chip_label)
+	_chip_lock = _LockGlyph.new()
+	_chip_lock.visible = false
+	chip_label.add_child(_chip_lock)
 
 	_build_panel()
 
@@ -182,12 +196,28 @@ func _build_panel() -> void:
 	var skill_row := HBoxContainer.new()
 	skill_row.add_theme_constant_override(&"separation", 18)
 	skill_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 84 px çerçeveli ikon (DESIGN §4.2): çerçeve dokusu üstte, ikon içeride.
+	var icon_box := Control.new()
+	icon_box.name = "SkillIconBox"
+	icon_box.custom_minimum_size = Vector2(84, 84)
+	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	skill_row.add_child(icon_box)
 	_skill_icon = TextureRect.new()
-	_skill_icon.custom_minimum_size = Vector2(84, 84)
+	_skill_icon.name = "SkillIcon"
+	_skill_icon.position = Vector2(10, 10)
+	_skill_icon.size = Vector2(64, 64)
+	icon_box.add_child(_skill_icon)
+	var icon_frame := TextureRect.new()
+	icon_frame.name = "SkillFrame"
+	icon_frame.texture = UiKit.frame(&"active")
+	icon_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_frame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_frame.size = Vector2(84, 84)
+	icon_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon_box.add_child(icon_frame)
 	_skill_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_skill_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_skill_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	skill_row.add_child(_skill_icon)
 	var sc := VBoxContainer.new()
 	sc.alignment = BoxContainer.ALIGNMENT_CENTER
 	sc.add_theme_constant_override(&"separation", -2)
@@ -345,7 +375,11 @@ func _place_name_chip() -> void:
 	# Ad bloğu panelin üstüne yaslanır (panel uzarsa ad yukarı kayar).
 	var y := minf(NAME_Y - _safe.w, _panel.position.y - 150.0)
 	name_label.position.y = y
-	chip_label.position = Vector2(MARGIN + name_label.get_minimum_size().x + 28.0, y + 44.0)
+	# K-05: çip adın taban çizgisine oturur (ad yazısının ascent'i - çip ascent'i - üst boşluk).
+	var nf := name_label.get_theme_font(&"font")
+	var cf := chip_label.get_theme_font(&"font")
+	var base := nf.get_ascent(96) - cf.get_ascent(26) - CHIP_PAD_Y
+	chip_label.position = Vector2(MARGIN + name_label.get_minimum_size().x + 28.0, y + base)
 
 
 func _apply_running() -> void:
@@ -449,7 +483,7 @@ func _refresh_info() -> void:
 	var c := _data.get_character(_focus)
 	if c == null:
 		return
-	name_label.text = UiKit.upper_tr(c.display_name)
+	name_label.text = UiKit.character_upper(c)
 	blurb_label.text = c.blurb
 	var sk := _data.get_skill(c.starting_skill)
 	skill_label.text = UiKit.upper_tr(sk.display_name if sk != null else String(c.starting_skill))
@@ -470,10 +504,17 @@ func _refresh_info() -> void:
 		tex = UiKit.texture(CharactersScreen._FALLBACK_PORTRAIT)
 	_ghost.texture = _portrait.texture
 	_portrait.texture = tex
+	_portrait.self_modulate = PLACEHOLDER_TINT if c.placeholder else Color.WHITE
+	_stage_mono.text = UiKit.character_upper(c).substr(0, 1) if c.placeholder else ""
 	_placeholder_tag.visible = OS.is_debug_build() and c.placeholder
 	_place_name_chip.call_deferred()
 
 
+## Yer tutucu karakterlerin (placeholder:true) portresi: belirgin soğuk ton + baş harf; release'te de görünür (K-03).
+const PLACEHOLDER_TINT := Color(0.62, 0.78, 1.0)
+const CHIP_PAD_Y := 8.0
+const CHIP_PAD_X := 22.0
+const CHIP_LOCK_W := 26.0
 const _FALLBACK_PORTRAIT := "res://assets/ui/portre-seviye-atlama.png"
 
 
@@ -496,6 +537,7 @@ func _refresh_state() -> void:
 			select_button.disabled = false
 			select_button.accessibility_name = "Seç"
 			chip_label.text = ""
+			_style_chip(SelectState.SELECT)
 			_style_select(false, false)
 		SelectState.SELECTED:
 			select_button.text = "✓ SEÇİLİ"
@@ -504,6 +546,7 @@ func _refresh_state() -> void:
 			select_button.accessibility_name = "Seçili"
 			chip_label.text = "✓ SEÇİLİ"
 			chip_label.add_theme_color_override(&"font_color", UiKit.AMBER)
+			_style_chip(SelectState.SELECTED)
 			_style_select(true, false)
 		_:
 			select_button.text = "KİLİTLİ"
@@ -512,9 +555,27 @@ func _refresh_state() -> void:
 			_reason.text = why
 			chip_label.text = "KİLİTLİ"
 			chip_label.add_theme_color_override(&"font_color", UiKit.BRONZ_300)
+			_style_chip(SelectState.LOCKED)
 			select_button.accessibility_name = "%s, kilitli. %s" % [_display_name(_focus), why]
 			_style_select(false, true)
 	_place_name_chip.call_deferred()
+
+
+## K-05: ad yanı çip kapsül (mor zemin + kenar); kilitli çipte soluna çizili asma kilit.
+func _style_chip(st: int) -> void:
+	if st == SelectState.SELECT:
+		chip_label.remove_theme_stylebox_override(&"normal")
+		_chip_lock.visible = false
+		return
+	var locked := st == SelectState.LOCKED
+	var sb := UiKit.stylebox(UiKit.MOR_800, UiKit.KAHVE_500 if locked else UiKit.AMBER, 3, 999)
+	sb.content_margin_left = CHIP_PAD_X + (CHIP_LOCK_W + 10.0 if locked else 0.0)
+	sb.content_margin_right = CHIP_PAD_X
+	sb.content_margin_top = CHIP_PAD_Y
+	sb.content_margin_bottom = CHIP_PAD_Y
+	chip_label.add_theme_stylebox_override(&"normal", sb)
+	_chip_lock.visible = locked
+	_chip_lock.position = Vector2(CHIP_PAD_X, CHIP_PAD_Y + 4.0)
 
 
 ## SEÇİLİ: mor_700 zemin + 5 px amber kenar + ışıma, amber metin; KİLİTLİ: mor_800 + kahve_500 kenar, metin kemik_300.
@@ -531,13 +592,16 @@ func _style_select(is_selected: bool, locked: bool) -> void:
 		sb.content_margin_bottom = 56.0
 		fg = UiKit.KEMIK_300
 	else:
-		for st in [&"normal", &"hover", &"pressed", &"disabled"]:
+		# K-02: SEÇİLİ'den dönünce odak (focus) stili de temizlenir; yoksa odaktaki SEÇ mor/amber kalır.
+		for st in [&"normal", &"hover", &"pressed", &"disabled", &"focus"]:
 			select_button.remove_theme_stylebox_override(st)
 		select_button.remove_theme_color_override(&"font_color")
+		select_button.remove_theme_color_override(&"font_focus_color")
 		return
 	for st in [&"normal", &"hover", &"pressed", &"disabled", &"focus"]:
 		select_button.add_theme_stylebox_override(st, sb)
 	select_button.add_theme_color_override(&"font_color", fg)
+	select_button.add_theme_color_override(&"font_focus_color", fg)  # K-04: odakta da amber
 	select_button.add_theme_color_override(&"font_hover_color", fg)
 	select_button.add_theme_color_override(&"font_pressed_color", fg)
 	select_button.add_theme_color_override(&"font_disabled_color", fg)
@@ -567,6 +631,8 @@ func _make_card(id: StringName) -> Button:
 	b.add_theme_stylebox_override(&"normal", UiKit.stylebox(UiKit.MOR_800, UiKit.BRONZ_700, 4, 18))
 	b.pressed.connect(set_focus_id.bind(id))
 	var tex := UiKit.texture(c.portrait) if c != null and c.portrait != "" else null
+	if tex == null:
+		tex = UiKit.texture(_FALLBACK_PORTRAIT)  # K-03: sahne ile aynı varsayılan portre kırpması
 	if tex != null:
 		var pr := TextureRect.new()
 		pr.name = "Face"
@@ -577,14 +643,18 @@ func _make_card(id: StringName) -> Button:
 		# Yüz kırpması: genişliğe sığdır, üstten hizala.
 		pr.size = Vector2(CARD_W * 1.5, CARD_W * 1.5 * 1.5)
 		pr.position = Vector2(-CARD_W * 0.25, -8.0)
+		if c != null and c.placeholder:
+			pr.self_modulate = PLACEHOLDER_TINT
 		b.add_child(pr)
+		if c != null and c.placeholder:
+			b.add_child(_monogram(c, 120))
 	var scrim := ColorRect.new()
 	scrim.color = Color(UiKit.VOID, 0.7)
 	scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	scrim.size = Vector2(CARD_W, 64)
 	scrim.position = Vector2(0, CARD_H - 64.0)
 	b.add_child(scrim)
-	var nm := UiKit.label(UiKit.upper_tr(c.display_name if c != null else ""), &"LabelTimer", 28)
+	var nm := UiKit.label(UiKit.character_upper(c), &"LabelTimer", 28)
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.size = Vector2(CARD_W, 40)
 	nm.position = Vector2(0, CARD_H - 52.0)
@@ -600,6 +670,18 @@ func _make_card(id: StringName) -> Button:
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(badge)
 	return b
+
+
+## Yer tutucu karakterin baş harfi (monogram); kartta ve sahnede portrenin üstüne biner.
+func _monogram(c: CharacterDef, px: int) -> Label:
+	var m := UiKit.label(UiKit.character_upper(c).substr(0, 1), &"LabelTitle", px, UiKit.KEMIK_100)
+	m.name = "Monogram"
+	m.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	m.size = Vector2(CARD_W, px * 1.3)
+	m.position = Vector2(0, (CARD_H - 64.0 - px * 1.3) * 0.5)
+	m.modulate.a = 0.85
+	return m
 
 
 func _refresh_cards() -> void:
@@ -710,6 +792,21 @@ func _unhandled_input(ev: InputEvent) -> void:
 	elif ev.is_action_pressed(&"ui_right"):
 		_step(1)
 		get_viewport().set_input_as_handled()
+
+
+class _LockGlyph:
+	extends Control
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(CharactersScreen.CHIP_LOCK_W, 30)
+		size = custom_minimum_size
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var c := UiKit.BRONZ_300
+		draw_arc(Vector2(13, 11), 7.0, PI, TAU, 14, c, 3.0, true)
+		draw_rect(Rect2(3, 12, 20, 16), c)
+		draw_rect(Rect2(11, 17, 4, 6), UiKit.MOR_800)
 
 
 class _BadgeDot:

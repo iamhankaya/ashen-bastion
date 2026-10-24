@@ -57,5 +57,7 @@
   },
   "portrait": "res://assets/gfx/char/barutcu_portrait.png",
   "blurb": "Yavaş ve dayanıklı; yere dinamit bırakıp düşmanı havaya uçurur.",
-  "placeholder": true
+  "placeholder": true,
+  "display_upper": "BARUTÇU",
+  "order": 2
 }
