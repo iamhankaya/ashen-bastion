@@ -1,0 +1,54 @@
+{
+  "id": "hava_cebi",
+  "kind": "active",
+  "name": "Hava Cebi",
+  "icon": "res://assets/ui/icons/hava-cebi.svg",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "hava_cebi",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "chance": 0.25,
+      "radius": 70,
+      "damage": 8,
+      "life": 1.2,
+      "pull": 30
+    },
+    {
+      "chance": 0.3,
+      "radius": 76,
+      "damage": 10,
+      "life": 1.4,
+      "pull": 35
+    },
+    {
+      "chance": 0.35,
+      "radius": 82,
+      "damage": 12,
+      "life": 1.6,
+      "pull": 40
+    },
+    {
+      "chance": 0.4,
+      "radius": 90,
+      "damage": 14,
+      "life": 1.8,
+      "pull": 45
+    },
+    {
+      "chance": 0.5,
+      "radius": 100,
+      "damage": 16,
+      "life": 2.0,
+      "pull": 50
+    }
+  ],
+  "desc": [
+    "Ölen düşmanın yerinde bazen düşmanları çeken küçük bir hava cebi açılır.",
+    "Daha sık, daha geniş.",
+    "Daha sık, daha geniş.",
+    "Daha sık, daha uzun ömürlü.",
+    "Hava cebi en üst seviyede."
+  ]
+}

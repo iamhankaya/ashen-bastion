@@ -82,8 +82,13 @@ func test_evolution_sound_follows_skill_sfx_field() -> void:
 	for sk in gd.skills_of_kind(SkillDef.KIND_EVOLUTION):
 		assert_ne(sk.sfx, &"", "%s: sfx alanı" % sk.id)
 		assert_eq(AudioDirector.evolution_sound(gd, sk.id), sk.sfx)
-		seen[sk.sfx] = true
-	assert_eq(seen.size(), 4, "4 evrimin sesleri birbirinden farklı")
+		if sk.pool != &"zyfen":
+			seen[sk.sfx] = true
+	assert_eq(
+		seen.size(),
+		4,
+		"Gunslinger'ın 4 evriminin sesleri birbirinden farklı (Zyfen yer tutucuları ayrı grup)"
+	)
 	assert_eq(AudioDirector.evolution_sound(gd, &"gurleyen_yelpaze"), &"evolution_1")
 	director.bind(bus, gd)
 	bus.evolution_gained.emit(&"kiyamet_mermisi")

@@ -1,0 +1,39 @@
+{
+  "id": "hizli_doldurma",
+  "kind": "passive",
+  "name": "Hızlı Doldurma",
+  "icon": "placeholder:hizli_doldurma",
+  "max_level": 5,
+  "tags": [
+    "rhythm"
+  ],
+  "levels": [
+    {
+      "reload_time_mult": -0.1
+    },
+    {
+      "reload_time_mult": -0.2
+    },
+    {
+      "reload_time_mult": -0.3
+    },
+    {
+      "reload_time_mult": -0.4
+    },
+    {
+      "reload_time_mult": -0.5
+    }
+  ],
+  "desc": [
+    "Hızlı Doldurma seviye 1.",
+    "Hızlı Doldurma seviye 2.",
+    "Hızlı Doldurma seviye 3.",
+    "Hızlı Doldurma seviye 4.",
+    "Hızlı Doldurma seviye 5."
+  ],
+  "variants": {
+    "gunslinger": {
+      "name": "xxxxxxxxxxxxxxxxxxx"
+    }
+  }
+}

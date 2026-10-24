@@ -1,0 +1,49 @@
+{
+  "id": "hava_bicaklari",
+  "kind": "active",
+  "name": "Hava Bıçakları",
+  "icon": "res://assets/ui/icons/hava-bicaklari.svg",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "hava_bicaklari",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "cooldown": 3.4,
+      "pellets": 3,
+      "damage": 10,
+      "pierce": 1
+    },
+    {
+      "cooldown": 3.1,
+      "pellets": 3,
+      "damage": 11,
+      "pierce": 1
+    },
+    {
+      "cooldown": 2.8,
+      "pellets": 4,
+      "damage": 12,
+      "pierce": 1
+    },
+    {
+      "cooldown": 2.5,
+      "pellets": 4,
+      "damage": 13,
+      "pierce": 2
+    },
+    {
+      "cooldown": 2.2,
+      "pellets": 5,
+      "damage": 15,
+      "pierce": 2
+    }
+  ],
+  "desc": [
+    "Yakın düşmana yelpaze gibi açılan hava bıçakları fırlatır.",
+    "Daha sık ve daha sert.",
+    "Bir bıçak daha.",
+    "Daha sık, bıçaklar bir düşman daha deler.",
+    "Bıçak yelpazesi en üst seviyede."
+  ]
+}

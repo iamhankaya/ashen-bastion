@@ -502,11 +502,18 @@ func test_k7_every_real_character_runs_and_keeps_invariants() -> void:
 		SimKit.run(sim, 15, Vector2.RIGHT)
 		assert_eq(sim.check_invariants(), PackedStringArray(), "%s: değişmezler" % id)
 		var c := d.get_character(id)
-		var muzzle: Array = c.rig.get("muzzle", [])
-		assert_eq(muzzle.size(), 2, "%s: namlu noktası" % id)
-		if muzzle.size() == 2:
-			assert_between(float(muzzle[0]), 0.0, 1.0, "%s: namlu x kol kutusunda" % id)
-			assert_between(float(muzzle[1]), 0.0, 1.0, "%s: namlu y kol kutusunda" % id)
+		if c.armless:  # v2.0.2: kolsuzda namlu yok, atış noktası cast_point (±0,5)
+			var cp: Array = c.rig.get("cast_point", [])
+			assert_eq(cp.size(), 2, "%s: cast_point" % id)
+			if cp.size() == 2:
+				assert_between(float(cp[0]), -0.5, 0.5, "%s: cast_point x" % id)
+				assert_between(float(cp[1]), -0.5, 0.5, "%s: cast_point y" % id)
+		else:
+			var muzzle: Array = c.rig.get("muzzle", [])
+			assert_eq(muzzle.size(), 2, "%s: namlu noktası" % id)
+			if muzzle.size() == 2:
+				assert_between(float(muzzle[0]), 0.0, 1.0, "%s: namlu x kol kutusunda" % id)
+				assert_between(float(muzzle[1]), 0.0, 1.0, "%s: namlu y kol kutusunda" % id)
 		var skill := d.get_skill(c.starting_skill)
 		assert_not_null(skill, "%s: başlangıç becerisi" % id)
 		assert_eq(skill.kind, SkillDef.KIND_ACTIVE, "%s: kind=active" % id)
@@ -626,6 +633,9 @@ func test_k10_single_character_set_works() -> void:
 	var dir := SimKit.copy_data(REAL, "k10single")
 	DirAccess.remove_absolute(
 		ProjectSettings.globalize_path(dir.path_join("characters/barutcu.json"))
+	)
+	DirAccess.remove_absolute(
+		ProjectSettings.globalize_path(dir.path_join("characters/zyfen.json"))
 	)
 	var d := GameData.load_dir(dir)
 	assert_eq(d.character_ids.size(), 1)

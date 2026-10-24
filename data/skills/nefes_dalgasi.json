@@ -1,0 +1,46 @@
+{
+  "id": "nefes_dalgasi",
+  "kind": "active",
+  "name": "Nefes Dalgası",
+  "icon": "res://assets/ui/icons/nefes-dalgasi.svg",
+  "max_level": 5,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "nefes_dalgasi",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "radius": 200,
+      "damage": 14,
+      "push": 120
+    },
+    {
+      "radius": 230,
+      "damage": 17,
+      "push": 140
+    },
+    {
+      "radius": 260,
+      "damage": 20,
+      "push": 160
+    },
+    {
+      "radius": 290,
+      "damage": 23,
+      "push": 180
+    },
+    {
+      "radius": 320,
+      "damage": 27,
+      "push": 200
+    }
+  ],
+  "desc": [
+    "Rüzgar toplamaya başlarken çevrene bir dalga yayılır; vurur ve iter.",
+    "Dalga büyür.",
+    "Dalga büyür.",
+    "Dalga büyür.",
+    "Nefes dalgası en üst seviyede."
+  ]
+}

@@ -100,9 +100,9 @@ func test_single_character_hides_strip_and_counter() -> void:
 
 func test_counter_and_cards() -> void:
 	var s := _screen(&"gunslinger")
-	assert_eq(s.cards.size(), 2)
+	assert_eq(s.cards.size(), CharacterRoster.ids(_data).size())
 	var pos := CharacterRoster.ids(_data).find(&"gunslinger") + 1
-	assert_eq(s.counter_label.text, "%d / 2" % pos)
+	assert_eq(s.counter_label.text, "%d / %d" % [pos, s.cards.size()])
 	assert_eq(s.cards[0].custom_minimum_size, Vector2(252, 264))
 
 
@@ -124,8 +124,9 @@ func test_dpad_step_does_not_wrap() -> void:
 	assert_eq(s.focus_id(), ids[0])
 	s._step(1)
 	assert_eq(s.focus_id(), ids[1])
-	s._step(1)
-	assert_eq(s.focus_id(), ids[1])
+	for k in ids.size():
+		s._step(1)
+	assert_eq(s.focus_id(), ids[ids.size() - 1])
 
 
 func test_k5_hidden_stops_processing_and_particles_visible_again_restarts() -> void:
@@ -269,8 +270,8 @@ func test_f030_gunslinger_first_by_order_field() -> void:
 	_data._sort_character_ids()
 	assert_eq(
 		_data.character_ids,
-		[&"barutcu", &"gunslinger"] as Array[StringName],
-		"eşitlikte dosya sırası"
+		[&"zyfen", &"barutcu", &"gunslinger"] as Array[StringName],
+		"eşitlikte dosya sırası (zyfen order 2 olduğundan önde)"
 	)
 
 

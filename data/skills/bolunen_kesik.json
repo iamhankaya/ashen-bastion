@@ -1,0 +1,46 @@
+{
+  "id": "bolunen_kesik",
+  "kind": "active",
+  "name": "Bölünen Kesik",
+  "icon": "res://assets/ui/icons/bolunen-kesik.svg",
+  "max_level": 5,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "bolunen_kesik",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "every_n": 3,
+      "damage_mult": 1.0,
+      "count": 2
+    },
+    {
+      "every_n": 3,
+      "damage_mult": 1.1,
+      "count": 2
+    },
+    {
+      "every_n": 3,
+      "damage_mult": 1.2,
+      "count": 2
+    },
+    {
+      "every_n": 2,
+      "damage_mult": 1.3,
+      "count": 2
+    },
+    {
+      "every_n": 2,
+      "damage_mult": 1.4,
+      "count": 3
+    }
+  ],
+  "desc": [
+    "Her 3. kesik ilk isabette ikiye bölünür.",
+    "Çocuk kesikler daha sert.",
+    "Çocuk kesikler daha sert.",
+    "Her 2. kesik bölünür.",
+    "Üç kesiğe bölünür."
+  ]
+}

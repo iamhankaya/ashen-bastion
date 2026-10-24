@@ -1,0 +1,4 @@
+# Altın hash tohumları (GoldenKit.seeds); satır başına bir tamsayı.
+11
+23
+37

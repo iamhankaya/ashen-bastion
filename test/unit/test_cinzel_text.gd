@@ -80,7 +80,7 @@ func test_result_screen_combo_names_use_dotted_capitals() -> void:
 	var evos: Array = []
 	for id in data.skill_ids:
 		var def: SkillDef = data.get_skill(id)
-		if def.kind == &"evolution":
+		if def.kind == &"evolution" and def.available_to(&"gunslinger"):
 			evos.append(id)
 	assert_gt(evos.size(), 0)
 	var rows := UiKit.combo_rows(evos, data)

@@ -1,18 +1,30 @@
 extends GutTest
-## Sözleşme: 12 beceri kimliği SkillRegistry'de, belgede ve kanca/API/bayrak adları gerçekte var.
+## Sözleşme: 24 beceri kimliği (12 Gunslinger/Barutçu + v2.0.2 Zyfen'in 12'si; U1b dinamit'i siler) SkillRegistry'de, belgede ve kanca/API/bayrak adları gerçekte var.
 
 const DOC := "res://docs/dev/skill-hooks.md"
 const SKILL_IDS: Array[String] = [
+	"ay_oragi",
+	"bolunen_kesik",
 	"cift_tabanca",
+	"delen_ruzgar",
 	"dinamit",
 	"doldurma_sacilmasi",
+	"girdap",
+	"gogun_mizragi",
 	"gurleyen_yelpaze",
+	"hava_bicaklari",
+	"hava_cebi",
+	"hortum",
+	"kasirga_patlamasi",
 	"keskin_nisan",
 	"kiyamet_mermisi",
 	"mermi_firtinasi",
+	"nefes_dalgasi",
+	"ruzgar_kesigi",
 	"sarapnel",
 	"seken_mermi",
 	"son_mermi_patlar",
+	"tufan",
 	"yelpaze_atis",
 	"zincirleme_patlama",
 ]
@@ -31,7 +43,7 @@ const IMPLEMENTED: Array[String] = [
 	"yelpaze_atis",
 	"zincirleme_patlama",
 ]
-const API_EXTRA: Array[String] = ["magazine", "rng_combat"]
+const API_EXTRA: Array[String] = ["magazine", "rng_combat", "fx", "zones"]
 
 
 func before_each() -> void:
@@ -71,7 +83,7 @@ func _mapping() -> Dictionary:
 	return rows
 
 
-func test_all_twelve_skills_registered_in_alphabetical_order() -> void:
+func test_all_skills_registered_in_alphabetical_order() -> void:
 	var keys: Array[String] = []
 	for k in SkillRegistry.BEHAVIORS.keys():
 		keys.append(String(k))
@@ -91,7 +103,7 @@ func test_doc_mentions_every_skill_id() -> void:
 		assert_true(("`%s`" % id) in doc, "%s belgede yok" % id)
 
 
-func test_doc_mapping_has_exactly_the_twelve_skills() -> void:
+func test_doc_mapping_has_exactly_the_registered_skills() -> void:
 	var rows := _mapping()
 	var ids: Array[String] = []
 	for k in rows.keys():

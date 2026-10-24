@@ -7,6 +7,8 @@ extends RefCounted
 ## - Omuz: shoulders[gun] gövde kutusunda (0..1); sola bakışta x aynalanır.
 ## - Kol: uzunluğu L = arm_scale * H, yüksekliği L * ARM_ASPECT; pivot arm_pivot, namlu muzzle (kol kutusunda 0..1).
 ## - Kol aim_angle kadar döner; cos(aim_angle) < 0 ise kol dikey çevrilir (scale.y = -1).
+## Kolsuz karakter (rig.armless): atış noktası `cast_point` (display_height kesri, gövde kutusu merkezine göre,
+## +x = bakılan yön, +y aşağı); omuz/kol/namlu hesabı yoktur.
 const BODY_ASPECT := 0.553  # gerçek gövde görseli 177x320
 const ARM_ASPECT := 0.296  # gerçek kol görseli 240x71
 
@@ -73,8 +75,45 @@ static func muzzle_world(
 	return shoulder_world(gun, player_pos, facing_left, rig) + local.rotated(aim_angle)
 
 
+## Kolsuz (tek parça gövde) rig mi: `rig.armless` true.
+static func is_armless(rig: Dictionary) -> bool:
+	var a: Variant = rig.get("armless", false)
+	return a is bool and a
+
+
+## Kolsuz rigin atış (el) noktası. `facing_left`: +x yönü aynalanır (y aynı kalır, |x| korunur).
+static func cast_point_world(player_pos: Vector2, facing_left: bool, rig: Dictionary) -> Vector2:
+	var h := float(rig.get("display_height", 112.0))
+	var cp: Array = rig.get("cast_point", [0.30, -0.12])
+	var dx := float(cp[0]) * h
+	return player_pos + Vector2(-dx if facing_left else dx, float(cp[1]) * h)
+
+
+## Mermi çıkış noktası (sim `_fire` ve view için tek kaynak). Kolsuz: hedefe göre (`target.x < player.x`,
+## solve_aim ile AYNI kural) cast noktası. Kollu: namlu; hedef kolun menzilinden yakınsa omuzdan atılır.
+static func shot_origin(gun: int, player_pos: Vector2, target: Vector2, rig: Dictionary) -> Vector2:
+	if is_armless(rig):
+		return cast_point_world(player_pos, target.x < player_pos.x, rig)
+	var aim := solve_aim(gun, player_pos, target, rig)
+	var origin := muzzle_world(gun, player_pos, aim, cos(aim) < 0.0, rig)
+	var sh := shoulder_world(gun, player_pos, target.x < player_pos.x, rig)
+	if target.distance_to(sh) < origin.distance_to(sh) * 1.3:
+		origin = sh
+	return origin
+
+
+## Atıştan sonra bakış yönü: kolsuz hedefe göre (shot_origin ile aynı kural), kollu mermi yönüne göre.
+static func facing_left(
+	player_pos: Vector2, target: Vector2, dir: Vector2, rig: Dictionary
+) -> bool:
+	return target.x < player_pos.x if is_armless(rig) else dir.x < 0.0
+
+
 ## Namlunun hedefe baktığı kol açısı (radyan). Hedef kolun menzilinden yakınsa (namlu hedefi aşar) omuzdan hedefe bakılır.
+## Kolsuzda kol yoktur: açı atış noktasından hedefe (view hizası için).
 static func solve_aim(gun: int, player_pos: Vector2, target: Vector2, rig: Dictionary) -> float:
+	if is_armless(rig):
+		return (target - cast_point_world(player_pos, target.x < player_pos.x, rig)).angle()
 	var sh := shoulder_world(gun, player_pos, target.x < player_pos.x, rig)
 	var aim := (target - sh).angle()
 	var reach := muzzle_world(gun, player_pos, aim, cos(aim) < 0.0, rig).distance_to(sh)
