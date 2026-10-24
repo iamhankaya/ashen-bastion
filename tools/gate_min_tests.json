@@ -165,6 +165,7 @@
   "test/unit/test_v202_pool_golden.gd": 5,
   "test/unit/test_v202_pool_migration.gd": 7,
   "test/unit/test_v202_pool_real.gd": 11,
+  "test/unit/test_v202_rig_golden.gd": 4,
   "test/unit/test_v202_ruzgar_kesigi.gd": 7,
   "test/unit/test_v202_zyfen_perf.gd": 3,
   "test/unit/test_v2_achievements.gd": 21,

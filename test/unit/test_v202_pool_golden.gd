@@ -46,16 +46,15 @@ func test_u1b_gunslinger_live_run_equals_record() -> void:
 			assert_eq(got[k], int(want[k]), "tohum %d: %s" % [s, k])
 
 
-func test_u1b_zyfen_record_runs_and_live_run_equals_record() -> void:
+func test_u1b_zyfen_record_is_a_running_sim() -> void:
+	# u1b Zyfen kaydı tarihsel (no-op gövdeler). U2'de Rüzgar Kesiği gerçek davranış kazandı: canlı koşu artık bu kayda eşit
+	# değildir (bkz. test_v202_rig_golden.gd: u2). Kayıt yalnız "sim çalışıyordu" kanıtı olarak denetlenir.
 	var rec := _stage("u1b", "zyfen")
 	assert_eq(rec.size(), GoldenKit.seeds().size())
 	for s in GoldenKit.seeds():
 		var want: Dictionary = rec[str(s)]
 		assert_gte(int(want["steps"]), GoldenKit.STEPS, "Zyfen sim'i çalışır")
 		assert_eq(int(want["state"]), 0, "Zyfen koşusu RUNNING bitti")
-		var got := GoldenKit.run(s, &"zyfen")
-		assert_eq(got["hash"], int(want["hash"]), "tohum %d: state_hash" % s)
-		assert_eq(got["kills"], int(want["kills"]), "tohum %d: kills" % s)
 
 
 func test_u1b_seeds_share_rng_stream_with_u1a_at_start() -> void:
