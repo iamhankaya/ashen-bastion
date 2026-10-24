@@ -136,3 +136,16 @@ func test_shoulder_and_muzzle_view_are_the_cast_point_for_armless() -> void:
 	var cp := v.position + PlayerRig.cast_point_world(Vector2.ZERO, false, v._rig)
 	assert_almost_eq(v.muzzle_view(0).x, cp.x, 6.0)
 	assert_almost_eq(v.shoulder_view(0).y, cp.y, 6.0)
+
+
+func test_reload_while_walking_keeps_the_walk_cells_by_default() -> void:
+	var v := _view()
+	_walk(v, 5.0, 40)
+	v._sim.magazine.reloading = true
+	v._sim.magazine.reload_total = 1.3
+	v._sim.magazine.reload_left = 1.3
+	for i in 30:
+		_walk(v, 5.0, 1)
+		assert_lt(v.anim.frame_a, 8, "yürürken toplama karesi yok (kare %d)" % i)
+	v._sim.magazine.reloading = false
+	v._sim.magazine.reload_left = 0.0
