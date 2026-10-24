@@ -10,7 +10,7 @@
   "starting_skill": "dinamit",
   "range": 650,
   "rig": {
-    "body": "res://assets/gfx/char/zyfen_body.png",
+    "body": "res://assets/gfx/char/barutcu_body.png",
     "arm": "res://assets/gfx/char/barutcu_arm.png",
     "display_height": 200,
     "native_facing": "right",
@@ -55,7 +55,7 @@
       "shoulder_dev": []
     }
   },
-  "portrait": "res://assets/gfx/char/zyfen_portrait.png",
+  "portrait": "res://assets/gfx/char/barutcu_portrait.png",
   "blurb": "Yavaş ve dayanıklı; yere dinamit bırakıp düşmanı havaya uçurur.",
   "placeholder": true,
   "display_upper": "BARUTÇU",

@@ -45,10 +45,11 @@ func test_modify_shot_only_raises() -> void:
 func test_one_cut_hits_each_enemy_in_line_exactly_once() -> void:
 	var sim := _sim()
 	sim.gun_interval = 1000.0  # tek kesik: sonraki atış çok sonra
-	# y = cast_point.y: kesik avuçtan +x yönünde uçar
+	# kesik avuç noktasından +x yönünde uçar: düşmanlar o yükseklikte dizilir (cast_point JSON'dan)
+	var cp := PlayerRig.cast_point_world(sim.player_pos, false, sim.character.rig)
 	var ids: Array[int] = []
 	for k in 15:
-		var id := SimKit.add_enemy(sim, &"curumus_piyade", Vector2(120 + 40 * k, -24))
+		var id := SimKit.add_enemy(sim, &"curumus_piyade", Vector2(cp.x + 60.0 + 40.0 * k, cp.y))
 		sim.enemies.speed[EnemyPool.index_of(id)] = 0.0
 		ids.append(id)
 	SimKit.run(sim, 60)

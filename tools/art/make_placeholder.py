@@ -29,9 +29,9 @@ SEPIA_MATRIX = np.array(
 )
 # --barutcu: (kaynak, hedef)
 BARUTCU = [
-    ("assets/gfx/char/gunslinger_body.png", "assets/gfx/char/zyfen_body.png"),
+    ("assets/gfx/char/gunslinger_body.png", "assets/gfx/char/barutcu_body.png"),
     ("assets/gfx/char/gunslinger_arm.png", "assets/gfx/char/barutcu_arm.png"),
-    ("assets/ui/portre-seviye-atlama.png", "assets/gfx/char/zyfen_portrait.png"),
+    ("assets/ui/portre-seviye-atlama.png", "assets/gfx/char/barutcu_portrait.png"),
 ]
 
 
