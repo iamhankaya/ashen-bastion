@@ -2,10 +2,9 @@ extends GutTest
 ## U1: gerçek veride havuz ayrımı. Gunslinger ve Zyfen kendi havuzunu ve ortak pasifleri görür, birbirininkini görmez;
 ## ortak pasiflerin Zyfen adı/ikonu/açıklaması variant'tan gelir; havuz tükenince tek "Şifa" kartı çıkar.
 
-## U1a'da `dinamit` hâlâ var: Barutçu'nun `starting_skill`'i olduğu için havuzu `common` (doğrulayıcı başlangıç becerisini
-## karakter havuzu ya da ortak ister); Gunslinger hash'i için fark etmez. U1b'de dinamit silinir: Gunslinger 7, Zyfen 8.
-const GUNSLINGER_ACTIVES := 8
-const ZYFEN_ACTIVES := 9
+## U1b: `dinamit` silindi; Gunslinger 7 aktif, Zyfen 8 aktif.
+const GUNSLINGER_ACTIVES := 7
+const ZYFEN_ACTIVES := 8
 const COMMON_PASSIVES: Array[StringName] = [
 	&"agir_kursun",
 	&"cevik_cizme",
@@ -62,7 +61,7 @@ func test_no_cross_leak_and_common_passives_shared() -> void:
 
 
 func test_empty_character_id_keeps_old_unfiltered_behavior() -> void:
-	assert_eq(_ids(&"", SkillDef.KIND_ACTIVE).size(), GUNSLINGER_ACTIVES + 8)
+	assert_eq(_ids(&"", SkillDef.KIND_ACTIVE).size(), GUNSLINGER_ACTIVES + ZYFEN_ACTIVES)
 	assert_eq(_ids(&"", SkillDef.KIND_PASSIVE).size(), 7 + 2)
 	assert_eq(_ids(&"", SkillDef.KIND_EVOLUTION).size(), 8)
 

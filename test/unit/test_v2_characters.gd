@@ -65,17 +65,17 @@ func test_back_requests_menu() -> void:
 
 func test_select_saves_character_and_updates_menu() -> void:
 	_chars.open()
-	_chars.screen.set_focus_id(&"barutcu")
+	_chars.screen.set_focus_id(&"zyfen")
 	assert_true(_chars.screen.press_select())
-	assert_eq(get_tree().root.get_node("Settings").character_id, "barutcu")
-	assert_string_contains(_menu.version_label.text, "Barutçu")
+	assert_eq(get_tree().root.get_node("Settings").character_id, "zyfen")
+	assert_string_contains(_menu.version_label.text, "Zyfen")
 	assert_true(FileAccess.file_exists(TMP), "geçici yola yazıldı, gerçek dosyaya değil")
 
 
 func test_saved_character_is_focused_on_reopen() -> void:
-	get_tree().root.get_node("Settings").character_id = "barutcu"
+	get_tree().root.get_node("Settings").character_id = "zyfen"
 	_chars.open()
-	assert_eq(_chars.screen.focus_id(), &"barutcu")
+	assert_eq(_chars.screen.focus_id(), &"zyfen")
 
 
 func test_no_ui_root_is_safe() -> void:

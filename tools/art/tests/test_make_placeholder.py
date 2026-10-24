@@ -76,9 +76,9 @@ def test_cli_without_paths_fails(tmp_path):
     assert r.returncode != 0
 
 
-def test_committed_barutcu_images_match_the_tool_within_tolerance(tmp_path):
+def test_committed_zyfen_images_match_the_tool_within_tolerance(tmp_path):
     # Bayt eşitliği aranmaz (Pillow/numpy sürümleri küçük yuvarlama farkı verebilir): boyut, alfa ve piksel istatistiği.
-    for s, d in mp.BARUTCU:
+    for s, d in mp.ZYFEN:
         src = Image.open(ROOT / s)
         committed = Image.open(ROOT / d)
         assert committed.size == src.size, d
@@ -91,8 +91,8 @@ def test_committed_barutcu_images_match_the_tool_within_tolerance(tmp_path):
             assert np.array_equal(np.asarray(committed.getchannel("A")), np.asarray(src.getchannel("A"))), d
 
 
-def test_barutcu_differs_visibly_from_gunslinger():
-    for s, d in mp.BARUTCU:
+def test_zyfen_differs_visibly_from_gunslinger():
+    for s, d in mp.ZYFEN:
         a = np.asarray(Image.open(ROOT / s).convert("RGB"), dtype=np.float32)
         b = np.asarray(Image.open(ROOT / d).convert("RGB"), dtype=np.float32)
         assert np.abs(a - b).mean() > 3.0, d

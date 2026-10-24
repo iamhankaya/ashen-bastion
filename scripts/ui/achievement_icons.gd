@@ -25,7 +25,7 @@ const FAMILY := {
 	"run_evolutions": "zincirleme-patlama",
 	"run_unlimited_kills": "mermi-firtinasi",
 	"run_won": "kiyamet-mermisi",
-	"run_bomb_hits": "dinamit",
+	"run_bomb_hits": "hud-patlama",
 }
 
 

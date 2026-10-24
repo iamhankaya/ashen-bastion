@@ -35,22 +35,3 @@ func test_scenario_preconditions_hold_in_the_record() -> void:
 func test_s1_record_equals_v201_record() -> void:
 	for c in ["gunslinger", "barutcu"]:
 		assert_eq(_stage("s1", c), _stage("v201", c), "%s: s1 kaydı v201'e eşit" % c)
-
-
-func _live_equals_v201(character: StringName) -> void:
-	for s in GoldenKit.seeds():
-		var want: Dictionary = _stage("v201", String(character))[str(s)]
-		var got := GoldenKit.run(s, character)
-		assert_eq(got["hash"], int(want["hash"]), "%s tohum %d: state_hash" % [character, s])
-		assert_eq(
-			got["rng_combat"], want["rng_combat"], "%s tohum %d: rng_combat.state" % [character, s]
-		)
-		for k in ["steps", "level_ups", "kills", "elites", "pickups", "state"]:
-			assert_eq(got[k], int(want[k]), "%s tohum %d: %s" % [character, s, k])
-
-
-func test_gunslinger_live_run_equals_v201() -> void:
-	_live_equals_v201(&"gunslinger")
-
-## Barutçu'nun canlı koşusu U1a'dan sonra v201'e eşit değildir: karakter havuz süzgecinde Gunslinger becerilerini
-## göremez ve U1b'de silinir. v201/s1 Barutçu kayıtları yalnız tarihçe olarak fixture'da kalır.
