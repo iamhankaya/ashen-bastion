@@ -44,7 +44,7 @@ func test_iso_game_data_default_cache_not_mutated_by_acceptance_helpers() -> voi
 	var b := GameData.load_default()
 	assert_same(a, b, "önbellek tek örnek")
 	assert_eq(a.achievements.size(), 22)
-	assert_true(a.character_ids.has(&"barutcu"))
+	assert_true(a.character_ids.has(&"zyfen"))
 
 
 func test_iso_menu_label_shows_character_and_truncates_long_names() -> void:

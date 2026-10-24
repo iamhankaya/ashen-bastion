@@ -3,7 +3,7 @@ extends RefCounted
 ## Doğrulama (v2.0, T20261024-65): iki karakterle bot koşusu. `AbRunner` karakter seçmediği için ayrı koşucu.
 ## Gate'te kısaltılmış (test_ver_v2_*), uzun varyantta ve kalibrasyonda aynı kod kullanılır. Sim'e dokunmaz.
 
-const CHARACTERS: Array[StringName] = [&"gunslinger", &"barutcu"]
+const CHARACTERS: Array[StringName] = [&"gunslinger", &"zyfen"]
 
 
 ## opts: seed, policy, character, max_steps, check_every (0 = yok), godmode, tracker (true = gerçek AchievementTracker
