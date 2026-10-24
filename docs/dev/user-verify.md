@@ -98,4 +98,19 @@ Her dilim yalnız kendi alt başlığına madde ekler (birleştirme çakışmas�
 (Başarım fazı ekler: bildirimin kalabalık üstünde okunurluğu ve y 820'nin başparmakla örtüşmemesi, çentik düzeni.)
 
 ### M — Bakım
-(Bakım fazı ekler: N3 / N5 / N8 ve GAIN 2,2 notları, shader derlemesi.)
+Bu bölümün maddeleri **M-n** diye numaralanır (K/B ile çakışmasın). Bulut yalnız masaüstü/headless koştu; aşağıdakiler cihazda görülür.
+
+**Cihaz değerlendirmesi (bulgu `deferred`; tasarım değişikliği yok):**
+- **M-1 (N3) Kalabalıkta rim** — geç oyunda (≈14. dk, 80+ düşman) kalabalığa bak → konturlar "tel kafes" gibi birleşiyor mu? Okunurluğa zarar vermiyorsa kabul; gerekirse `EnemyRenderer.RIM_*` kalınlığı/opaklığı (≈%70) ayarlanır.
+- **M-2 (N5) Oyuncu harabe önünde** — açık taşlı bir harabenin önünde dur → oyuncu siluetini kaybediyor mu (palto + rim taşa karışıyor mu)? Ayak ışığı yetiyorsa kabul.
+- **M-3 (N8) Duraklatma düğme sırası** — DEVAM ET üstte, BAŞTAN BAŞLA / ANA MENÜ başparmak bölgesinde → yanlışlıkla basma riski var mı? Onay diyaloğu (VAZGEÇ odakta) korunur; rahatsız ediyorsa karar verilir.
+- **M-4 (S-01) Gölge kazancı `GAIN` 2,2** — elit şövalye / Lord / hayalet gölgesi düşük parlaklık ve OLED'de ayağa oturuyor mu ("yüzüyor" izlenimi yok)? Kod ölçümü: koyulaşma ≥ %42 (eşik %40 + 0,02 pay). Yetersizse `EnemyShadowLayer.GAIN` artırılır.
+
+**Bu fazda değişenler (cihazda görülmeli):**
+- **M-5 (N6) Elit/Lord rim tonu** — Kale Lordu ve elitlerin konturu bronz/amber (beyaz "kesilmiş kağıt" değil), diğer düşmanlarla tutarlı; elitte yalnız kalınlık farklı.
+- **M-6 (S-02) Seviye halkası** — kart seçiminden sonra yer halkası belirgin: 4 px, parlak mor-mavi, yumuşak ışımalı, ≈0,45 sn'de solarak büyüyor; koyu çimende rahatça seçilir.
+- **M-7 (S-05) Ekran dışı ok** — eklenti ekran dışındayken ok (daire + üçgen ucu dahil) ekran/çentik kenarından ≥ 36 px içeride; köşelerde ve çentikli cihazda kesilmiyor.
+- **M-8 (N7) Güvenli alan** — duraklatma ekranı (ve K ile seviye atlama) çentik/yuvarlak köşeye girmiyor; ekranı döndür/pencere boyutunu değiştir → HUD yeniden hizalanıyor (M8a).
+- **M-9 (M8c) Kapanış** — uygulamadan çıkarken donma/kare atlaması yok (ses nesneleri artık 150 ms bekletmiyor); çıkışta çökme yok.
+- **M-10 (S-04) Debug etiketleri (yalnız debug APK)** — sayaç etiketleri ekranın üst kenarında (y 6–40), hiçbir düğmeyi/oku örtmüyor, dokunmayı yutmuyor; bayrağı çevirmek için oyun sırasında etiketin yanındaki küçük "dokun: AÇIK/KAPALI" alanına dokun (duraklatma ve sonuç ekranında dokunulmaz).
+- **M-11 (shader) Derleme** — elit rim değişikliği `enemy_flash.gdshader`'a `rim_elite_color` ekledi → cihazda (Mali/Adreno) düşmanlar render ediliyor, siyah/eksik sprite yok.
