@@ -354,3 +354,22 @@ func test_f037_drag_starting_on_row_scrolls_and_back_still_taps() -> void:
 	m.pressed = false
 	get_viewport().push_input(m, true)
 	assert_signal_emitted(s, "back_requested", "GERİ dokunuşu hâlâ çalışır")
+
+
+func test_icon_locked_vs_open_state() -> void:
+	var st := AchievementStore.new(PATH)
+	st.unlock(&"ilk_kan", T0)
+	var s := _screen(st)
+	var open_icon := _icon(_row(s, &"ilk_kan"))
+	var locked_icon := _icon(_row(s, &"bes_dakika"))
+	assert_eq(open_icon.modulate, Color.WHITE)
+	assert_null(open_icon.material)
+	assert_eq(locked_icon.modulate, Color.WHITE)
+	assert_true(locked_icon.material is ShaderMaterial, "kilitli: gri tonlama etkin")
+
+
+func _icon(row: Control) -> TextureRect:
+	for c in row.get_children():
+		if c is TextureRect and (c as TextureRect).size == Vector2(84.0, 84.0):
+			return c
+	return null

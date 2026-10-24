@@ -6,7 +6,8 @@
     "stat": "total_kills",
     "target": 1,
     "scope": "total",
-    "tier": "kolay"
+    "tier": "kolay",
+    "icon": "res://assets/ui/achievements/ilk_kan.png"
   },
   {
     "id": "bes_dakika",
@@ -15,7 +16,8 @@
     "stat": "run_time",
     "target": 300,
     "scope": "run",
-    "tier": "kolay"
+    "tier": "kolay",
+    "icon": "res://assets/ui/achievements/bes_dakika.png"
   },
   {
     "id": "seviye_10",
@@ -24,7 +26,8 @@
     "stat": "run_level",
     "target": 10,
     "scope": "run",
-    "tier": "kolay"
+    "tier": "kolay",
+    "icon": "res://assets/ui/achievements/seviye_10.png"
   },
   {
     "id": "yerlesik",
@@ -33,7 +36,8 @@
     "stat": "total_runs",
     "target": 10,
     "scope": "total",
-    "tier": "kolay"
+    "tier": "kolay",
+    "icon": "res://assets/ui/achievements/yerlesik.png"
   },
   {
     "id": "tambur_ustasi",
@@ -42,7 +46,8 @@
     "stat": "run_reloads",
     "target": 100,
     "scope": "run",
-    "tier": "kolay"
+    "tier": "kolay",
+    "icon": "res://assets/ui/achievements/tambur_ustasi.png"
   },
   {
     "id": "alti_silah",
@@ -51,7 +56,8 @@
     "stat": "run_active_slots",
     "target": 6,
     "scope": "run",
-    "tier": "kolay"
+    "tier": "kolay",
+    "icon": "res://assets/ui/achievements/alti_silah.png"
   },
   {
     "id": "kirim",
@@ -60,7 +66,8 @@
     "stat": "run_kills",
     "target": 500,
     "scope": "run",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/kirim.png"
   },
   {
     "id": "on_dakika",
@@ -69,7 +76,8 @@
     "stat": "run_time",
     "target": 600,
     "scope": "run",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/on_dakika.png"
   },
   {
     "id": "seri_ustasi",
@@ -78,7 +86,8 @@
     "stat": "run_best_mult",
     "target": 5,
     "scope": "run",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/seri_ustasi.png"
   },
   {
     "id": "piyade_avcisi",
@@ -87,7 +96,8 @@
     "stat": "run_elit_piyade",
     "target": 1,
     "scope": "run",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/piyade_avcisi.png"
   },
   {
     "id": "eklenti_avcisi",
@@ -96,7 +106,8 @@
     "stat": "run_pickups",
     "target": 5,
     "scope": "run",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/eklenti_avcisi.png"
   },
   {
     "id": "dokunulmaz",
@@ -105,7 +116,8 @@
     "stat": "run_clean_secs",
     "target": 180,
     "scope": "run",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/dokunulmaz.png"
   },
   {
     "id": "seviye_20",
@@ -114,7 +126,8 @@
     "stat": "run_level",
     "target": 20,
     "scope": "run",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/seviye_20.png"
   },
   {
     "id": "kalabalik_kesici",
@@ -123,7 +136,8 @@
     "stat": "total_kills",
     "target": 10000,
     "scope": "total",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/kalabalik_kesici.png"
   },
   {
     "id": "cifte_yol",
@@ -132,7 +146,8 @@
     "stat": "total_chars5",
     "target": 2,
     "scope": "total",
-    "tier": "orta"
+    "tier": "orta",
+    "icon": "res://assets/ui/achievements/cifte_yol.png"
   },
   {
     "id": "on_bes_dakika",
@@ -141,7 +156,8 @@
     "stat": "run_time",
     "target": 900,
     "scope": "run",
-    "tier": "zor"
+    "tier": "zor",
+    "icon": "res://assets/ui/achievements/on_bes_dakika.png"
   },
   {
     "id": "uc_elit",
@@ -150,7 +166,8 @@
     "stat": "run_elite_kinds",
     "target": 3,
     "scope": "run",
-    "tier": "zor"
+    "tier": "zor",
+    "icon": "res://assets/ui/achievements/uc_elit.png"
   },
   {
     "id": "ilk_evrim",
@@ -159,7 +176,8 @@
     "stat": "run_evolutions",
     "target": 1,
     "scope": "run",
-    "tier": "zor"
+    "tier": "zor",
+    "icon": "res://assets/ui/achievements/ilk_evrim.png"
   },
   {
     "id": "skor_100k",
@@ -168,7 +186,8 @@
     "stat": "run_score",
     "target": 100000,
     "scope": "run",
-    "tier": "zor"
+    "tier": "zor",
+    "icon": "res://assets/ui/achievements/skor_100k.png"
   },
   {
     "id": "sinirsiz_kirim",
@@ -177,7 +196,8 @@
     "stat": "run_unlimited_kills",
     "target": 100,
     "scope": "run",
-    "tier": "zor"
+    "tier": "zor",
+    "icon": "res://assets/ui/achievements/sinirsiz_kirim.png"
   },
   {
     "id": "kale_lordu_devrildi",
@@ -186,7 +206,8 @@
     "stat": "run_won",
     "target": 1,
     "scope": "run",
-    "tier": "cok_zor"
+    "tier": "cok_zor",
+    "icon": "res://assets/ui/achievements/kale_lordu_devrildi.png"
   },
   {
     "id": "bomba_ustasi",
@@ -195,6 +216,7 @@
     "stat": "run_bomb_hits",
     "target": 20,
     "scope": "run",
-    "tier": "cok_zor"
+    "tier": "cok_zor",
+    "icon": "res://assets/ui/achievements/bomba_ustasi.png"
   }
 ]
