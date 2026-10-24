@@ -90,3 +90,54 @@ def test_check_music_lists_missing(tmp_path):
     (tmp_path / "assets/audio/music").mkdir(parents=True)
     (tmp_path / "assets/audio/music/a.ogg").write_bytes(b"x")
     assert check_music.missing(tmp_path) == ["b"]
+
+
+def test_trim_cuts_range_and_validates():
+    x = _music(10.0)
+    y = lib.trim(x, SR, 2.0, 5.0)
+    assert len(y) == 3 * SR
+    assert np.array_equal(y, x[2 * SR : 5 * SR])
+    assert len(lib.trim(x, SR, None, 4.0)) == 4 * SR
+    assert len(lib.trim(x, SR, 6.0, None)) == len(x) - 6 * SR
+    for bad in ((5.0, 5.0), (6.0, 2.0), (-1.0, 3.0), (0.0, 11.0)):
+        try:
+            lib.trim(x, SR, *bad)
+        except ValueError:
+            continue
+        raise AssertionError(f"ValueError bekleniyordu: {bad}")
+
+
+def test_loop_without_search_keeps_exact_length():
+    x = _music(30.0)
+    n = int(SR * 1.5)
+    y = lib.loop_crossfade(x, SR, 1.5, search_s=0.0)
+    assert len(y) == len(x) - n
+
+
+def test_process_track_honours_start_end(tmp_path):
+    src = tmp_path / "src.wav"
+    sf.write(src, _music(30.0), SR)
+    cfg = pa.load_manifest()
+    t = {"id": "t", "src": "src.wav", "loop": True, "start_s": 4.0, "end_s": 20.0}
+    r = pa.process_track(t, cfg, root=tmp_path, out_dir=tmp_path / "out")
+    # döngü = (end_s - start_s) - crossfade; Vorbis kodlama payı için küçük tolerans
+    assert 0 <= (16.0 - cfg["loop_crossfade_s"]) - r["seconds"] <= pa.LOOP_TRIM_SEARCH_S + 0.01
+    assert r["seam"]["rms_diff_db"] <= 1.5
+    bad = dict(t, end_s=99.0)
+    try:
+        pa.process_track(bad, cfg, root=tmp_path, out_dir=tmp_path / "out")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("kaynak dışı end_s reddedilmeli")
+
+
+def test_manifest_trim_fields_are_valid():
+    root = pa.ROOT
+    for t in pa.load_manifest()["tracks"]:
+        assert (root / t["src"]).exists(), t["id"]
+        assert not (t["src"].endswith(".wav") and t["id"] in ("menu", "savas-1", "savas-2", "kale-lordu")), t["id"]
+        if "start_s" in t or "end_s" in t:
+            assert t.get("end_s", 1e9) > t.get("start_s", 0.0), t["id"]
+        if t["loop"]:
+            assert "start_s" in t and "end_s" in t, f"{t['id']}: döngülü parça için kırpma gerekli"

@@ -5,10 +5,10 @@
   "sample_rate": 44100,
   "loop_crossfade_s": 1.5,
   "tracks": [
-    {"id": "menu", "src": "audio/muzik/menu.wav", "loop": true},
-    {"id": "savas-1", "src": "audio/muzik/savas-1.wav", "loop": true},
-    {"id": "savas-2", "src": "audio/muzik/savas-2.wav", "loop": true},
-    {"id": "kale-lordu", "src": "audio/muzik/kale-lordu.wav", "loop": true},
+    {"id": "menu", "src": "audio/muzik/menu.mp3", "loop": true, "start_s": 29.1, "end_s": 125.704},
+    {"id": "savas-1", "src": "audio/muzik/savas-1.mp3", "loop": true, "start_s": 79.0, "end_s": 155.487},
+    {"id": "savas-2", "src": "audio/muzik/savas-2.mp3", "loop": true, "start_s": 50.2, "end_s": 107.859},
+    {"id": "kale-lordu", "src": "audio/muzik/kale-lordu.mp3", "loop": true, "start_s": 116.4, "end_s": 177.468},
     {"id": "boss-uyari", "src": "audio/muzik/boss-uyari.wav", "loop": false},
     {"id": "kazandin", "src": "audio/muzik/kazandin.wav", "loop": false},
     {"id": "kaybettin", "src": "audio/muzik/kaybettin.wav", "loop": false}

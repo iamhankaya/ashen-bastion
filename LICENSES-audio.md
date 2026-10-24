@@ -1,9 +1,9 @@
 # Ses lisansları
 
-## Müzik (`audio/muzik/*.wav` kaynak, `assets/audio/music/*.ogg` işlenmiş)
-Kullanıcı tarafından sağlanan prototip müzikler (SoundFont tabanlı, `audio/muzik/README.txt`). Kaynak/üretim aracı ve
-ticari kullanım/yeniden dağıtım hakkı kullanıcıya aittir (repo public olduğu için **kullanıcı kararı**, bkz. rapor Açık noktalar).
-`tools/audio/process_audio.py` ile 44,1 kHz, -18 LUFS, döngü crossfade, OGG Vorbis.
+## Müzik (`audio/muzik/` kaynak, `assets/audio/music/*.ogg` işlenmiş)
+Kullanıcı tarafından Suno Pro ile üretilmiş müzikler (kullanıcı üretimi; Pro planı ticari kullanım hakkı verir), 2026-10-24,
+bkz. `audio/muzik/README.txt`. SoundFont lisans açığı (F-ashen-bastion-001) bununla kapanır.
+`tools/audio/process_audio.py`: 44,1 kHz, -18 LUFS, döngülerde start_s/end_s kırpma + crossfade, OGG Vorbis.
 
 ## Ses efektleri (`assets/audio/sfx/`)
 Henüz dosya yok: SFX çağrıları (atış, doldurma, patlama, XP çınlaması…) sessiz yer tutucudur. Dosya eklenince
