@@ -14,7 +14,7 @@ const FULL_BUILD: Array = [
 	[&"hizli_doldurma", 5],
 	[&"doldurma_sacilmasi", 5],
 	[&"fazladan_mermi", 5],
-	[&"dinamit", 5],
+	[&"yelpaze_atis", 5],
 	[&"keskin_nisan", 5],
 	[&"cift_tabanca", 5],
 	[&"agir_kursun", 5],

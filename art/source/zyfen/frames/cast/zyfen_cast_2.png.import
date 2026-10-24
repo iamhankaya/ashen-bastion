@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cplepgci23gua"
-path="res://.godot/imported/barutcu_arm.png-7e5f469bb2c378d7c1ab778871073ddc.ctex"
+uid="uid://cbrx5wfdqvvi8"
+path="res://.godot/imported/zyfen_cast_2.png-d4aab90ae553a9b25874dbe0e499ca0e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/gfx/char/barutcu_arm.png"
-dest_files=["res://.godot/imported/barutcu_arm.png-7e5f469bb2c378d7c1ab778871073ddc.ctex"]
+source_file="res://art/source/zyfen/frames/cast/zyfen_cast_2.png"
+dest_files=["res://.godot/imported/zyfen_cast_2.png-d4aab90ae553a9b25874dbe0e499ca0e.ctex"]
 
 [params]
 

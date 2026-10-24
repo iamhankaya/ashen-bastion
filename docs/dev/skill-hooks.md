@@ -28,7 +28,7 @@ tabloyu koda karşı doğrular (aşağıdaki tablo makine okunur: bir satır = b
 `damage_enemy(id, amount, kind)`, `pick_highest_hp(from, range_px) -> int` (eşitlikte en düşük indeks), `magazine`
 (`refund`), `rng_combat`, `fx` (yalnız görsel bildirimler: `beam_fired`, `volley_fired`), `kill_source_flags` (on_kill'de öldüren merminin bayrakları).
 
-Mermi bayrakları (`ProjectilePool.FLAG_*`): `EXPLODES` (isabette), `EXPLODE_ON_EXPIRE` (dinamit), `EXPLODE_ON_BOUNCE`
+Mermi bayrakları (`ProjectilePool.FLAG_*`): `EXPLODES` (isabette), `EXPLODE_ON_EXPIRE` (kullanan beceri yok), `EXPLODE_ON_BOUNCE`
 (zincirleme_patlama), `RICOCHET`, `RADIAL` (yalnız görsel), `LOB` (yay atış: düşmana çarpmaz, ömrü bitince patlar), `SHRAPNEL` (öldürdüğü düşman yeniden şarapnel saçmaz). `o` sözlüğü: `pierce, bounces, life (=1.2), flags, ex_radius,
 ex_dmg, push, gun, radius (=8, `DEFAULT_RADIUS`)`. Pierce/bounce'ta mermi bir düşmana yalnızca bir kez vurur (mermi başına `hit_ids`, `HIT_SLOTS = 96` halka tampon: 96'dan fazla düşmana vuran mermide en eski kayıt ezilir).
 
@@ -42,7 +42,6 @@ v2.0.2 eklemeleri (Zyfen davranışlarının giriş/gözlem/tolerans satırları
 | `bolunen_kesik` | `modify_shot`, `on_hit` | `spawn_projectile` | `WIND`, `SPLIT` | `index_in_mag` |
 | `cift_tabanca` | `modify_shot` | | | |
 | `delen_ruzgar` | `tick` | `pick_highest_hp`, `spawn_projectile` | `WIND` | `radius`, `speed` |
-| `dinamit` | `tick` | `spawn_projectile` | `LOB`, `EXPLODE_ON_EXPIRE` | |
 | `doldurma_sacilmasi` | `on_reload_start` | `spawn_projectile` | `RADIAL` | |
 | `girdap` | `tick` | `damage_enemy` | | |
 | `gogun_mizragi` | `tick` | `pick_highest_hp`, `spawn_projectile` | `WIND` | `radius`, `speed` |
@@ -68,7 +67,7 @@ Ayrıntılar (plan "Denge tabloları" ve "Sözleşme kanca eşlemesi"):
 - `cift_tabanca`: temel atışı sim şarjörden çıkarır, `modify_shot` çağrılır. Atış aralığı TABANCA BAŞINA, iki tabanca
   yarım aralık faz farkıyla sırayla ateş eder.
 - `seken_mermi`: `index_in_mag % N == 0` ise `bounces`, `damage ×`, RICOCHET.
-- `yelpaze_atis`: soğuma, ×N yelpaze (menzil 380, kısa ömür). `dinamit`: soğuma, yay atış (fitil 0,8 sn).
+- `yelpaze_atis`: soğuma, ×N yelpaze (menzil 380, kısa ömür).
 - `son_mermi_patlar`: `ctx.flags |= EXPLODES`, `ex_radius/ex_dmg`.
 - `doldurma_sacilmasi`: doldurma başında radyal ×N. `sarapnel`: `rng_combat` şans, ×N parça (menzil 260).
 - `keskin_nisan`: `pick_highest_hp` + `hitscan` (şarjörsüz; hitscan, mermi değil).

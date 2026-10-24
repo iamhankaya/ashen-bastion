@@ -13,7 +13,7 @@ const STRONG_BUILD: Array = [
 	[&"hizli_doldurma", 3],
 	[&"doldurma_sacilmasi", 5],
 	[&"fazladan_mermi", 3],
-	[&"dinamit", 5],
+	[&"yelpaze_atis", 5],
 	[&"keskin_nisan", 5],
 	[&"agir_kursun", 5],
 	[&"hizli_parmak", 5],

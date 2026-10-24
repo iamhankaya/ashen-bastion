@@ -27,10 +27,14 @@ func test_zyfen_character_data() -> void:
 	assert_eq(c.attack_range, 750.0)
 	assert_eq(c.starting_skill, &"ruzgar_kesigi")
 	assert_eq(c.display_upper, "ZYFEN")
-	assert_true(c.placeholder)
+	assert_false(c.placeholder, "U2: gerçek şerit ve portre bağlandı")
 	assert_false(c.action_while_moving, "karar: varsayılan false, JSON'da açıkça yazılı")
 	assert_true(c.rig.has("action_while_moving"))
-	assert_eq(c.walk["frames"], 0, "S1: prosedürel yürüme")
+	assert_eq(c.walk["frames"], 8, "U2: 8 yürüme karesi (kalite kapısı geçti)")
+	assert_eq(c.cast["frames"], 6)
+	assert_eq(c.cast["fire_frame"], 3)
+	assert_eq(c.gather["frames"], 4)
+	assert_eq(RigFrames.total_cells(c.rig), 19)
 	assert_eq(c.unlock_achievement, &"", "baştan açık")
 
 

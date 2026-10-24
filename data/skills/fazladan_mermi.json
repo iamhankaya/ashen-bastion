@@ -30,5 +30,19 @@
     "Şarjör +3 mermi.",
     "Şarjör +4 mermi.",
     "Şarjör +5 mermi."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Derin Nefes",
+      "icon": "res://assets/ui/icons/zyfen/fazladan-mermi.svg",
+      "desc": [
+        "Rüzgar toplamadan önce +1 kesik.",
+        "Rüzgar toplamadan önce +2 kesik.",
+        "Rüzgar toplamadan önce +3 kesik.",
+        "Rüzgar toplamadan önce +4 kesik.",
+        "Rüzgar toplamadan önce +5 kesik."
+      ]
+    }
+  }
 }

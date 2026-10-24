@@ -76,23 +76,6 @@ def test_cli_without_paths_fails(tmp_path):
     assert r.returncode != 0
 
 
-def test_committed_barutcu_images_match_the_tool_within_tolerance(tmp_path):
-    # Bayt eşitliği aranmaz (Pillow/numpy sürümleri küçük yuvarlama farkı verebilir): boyut, alfa ve piksel istatistiği.
-    for s, d in mp.BARUTCU:
-        src = Image.open(ROOT / s)
-        committed = Image.open(ROOT / d)
-        assert committed.size == src.size, d
-        assert committed.mode == src.mode, d
-        fresh = mp.shift(src)
-        a = np.asarray(committed.convert("RGB"), dtype=np.float32)
-        b = np.asarray(fresh.convert("RGB"), dtype=np.float32)
-        assert np.abs(a - b).mean() <= 2.0, d
-        if src.mode == "RGBA":
-            assert np.array_equal(np.asarray(committed.getchannel("A")), np.asarray(src.getchannel("A"))), d
-
-
-def test_barutcu_differs_visibly_from_gunslinger():
-    for s, d in mp.BARUTCU:
-        a = np.asarray(Image.open(ROOT / s).convert("RGB"), dtype=np.float32)
-        b = np.asarray(Image.open(ROOT / d).convert("RGB"), dtype=np.float32)
-        assert np.abs(a - b).mean() > 3.0, d
+def test_zyfen_placeholder_targets_are_retired_so_real_art_is_never_overwritten():
+    # v2.0.2 U2: zyfen_* gerçek varlık; --zyfen hiçbir dosyaya yazmaz.
+    assert mp.ZYFEN == []

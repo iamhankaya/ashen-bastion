@@ -487,8 +487,10 @@ func _refresh_info() -> void:
 	name_label.text = UiKit.character_upper(c)
 	blurb_label.text = c.blurb
 	var sk := _data.get_skill(c.starting_skill)
-	skill_label.text = UiKit.upper_tr(sk.display_name if sk != null else String(c.starting_skill))
-	_skill_icon.texture = UiKit.skill_icon(c.starting_skill, sk.icon if sk != null else "")
+	skill_label.text = UiKit.upper_tr(sk.name_for(c.id) if sk != null else String(c.starting_skill))
+	_skill_icon.texture = UiKit.skill_icon(
+		c.starting_skill, sk.icon_for(c.id) if sk != null else ""
+	)
 	var vals: Array[String] = [
 		_num(c.max_hp),
 		_num(c.move_speed),

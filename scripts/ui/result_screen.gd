@@ -231,7 +231,7 @@ func _build_breakdown() -> void:
 	var defs := [
 		["hud-oldurme", "Öldürme"],
 		["hud-xp", "Seri çarpanı"],
-		["dinamit", "Evrim bonusu"],
+		["hud-patlama", "Evrim bonusu"],
 		["hud-sure", "Hayatta kalma"],
 		["hud-can", "Lord bonusu"],
 	]

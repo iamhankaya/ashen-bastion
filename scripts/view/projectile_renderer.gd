@@ -10,6 +10,8 @@ const COLOR_BASIC := Color(1.0, 0.93, 0.78, 1.0)
 const COLOR_EXPLODES := Color("#e8a24a")
 const COLOR_RICOCHET := Color("#d2b47e")
 const COLOR_RADIAL := Color("#cfc4ae")
+## Rüzgar kesiği (hilal): soluk gök mavisi; ölçek çarpışma yarıçapından (yarıçap DEFAULT_RADIUS iken 1).
+const COLOR_WIND := Color(0.72, 0.9, 1.0, 0.85)
 
 var _sim: GameSim = null
 var _buf: PackedFloat32Array = PackedFloat32Array()
@@ -38,6 +40,8 @@ func bind(sim: GameSim) -> void:
 
 ## Bayrak rengi (saf; test edilebilir).
 static func color_for_flags(flags: int) -> Color:
+	if flags & ProjectilePool.FLAG_WIND:
+		return COLOR_WIND
 	if flags & (ProjectilePool.FLAG_EXPLODES | ProjectilePool.FLAG_EXPLODE_ON_EXPIRE):
 		return COLOR_EXPLODES
 	if flags & (ProjectilePool.FLAG_RICOCHET | ProjectilePool.FLAG_EXPLODE_ON_BOUNCE):
@@ -45,6 +49,15 @@ static func color_for_flags(flags: int) -> Color:
 	if flags & ProjectilePool.FLAG_RADIAL:
 		return COLOR_RADIAL
 	return COLOR_BASIC
+
+
+## Çizim ölçeği: patlayıcılar 1,4; rüzgar kesiği çarpışma yarıçapıyla orantılı (görsel = çarpışma); diğerleri 1.
+static func scale_for(flags: int, rad: float) -> float:
+	if flags & ProjectilePool.FLAG_WIND:
+		return maxf(rad, 1.0) / ProjectilePool.DEFAULT_RADIUS
+	if flags & (ProjectilePool.FLAG_EXPLODES | ProjectilePool.FLAG_EXPLODE_ON_EXPIRE):
+		return 1.4
+	return 1.0
 
 
 func refresh() -> void:
@@ -61,9 +74,7 @@ func refresh() -> void:
 		var d := v.normalized() if v.length_squared() > 0.0001 else Vector2.RIGHT
 		var f := flags[i]
 		var c := color_for_flags(f)
-		var s := 1.0
-		if f & (ProjectilePool.FLAG_EXPLODES | ProjectilePool.FLAG_EXPLODE_ON_EXPIRE):
-			s = 1.4
+		var s := scale_for(f, pool.rad[i])
 		var p := pos[i]
 		var o := i * STRIDE
 		_buf[o] = d.x * s

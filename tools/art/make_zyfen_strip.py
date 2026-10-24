@@ -1,30 +1,18 @@
 #!/usr/bin/env python3
-"""Zyfen şerit aracı (v2.0.2 S2): kolsuz, tek parça gövde kareleri -> tek yatay şerit + gövde görseli + manifest + kalite kapısı.
+"""Zyfen kolsuz rig şeridi (v2.0.2 U2): ayrı şeffaf kareler -> tek yatay şerit + manifest + kalite kapısı.
 
-Kullanım (kareler RGBA PNG; yeşil zeminliyse --chroma):
-  python tools/art/make_zyfen_strip.py --stand <png> --walk '<glob>' --cast '<glob>' --gather '<glob>' [--walk-cast '<glob>']
-         --strip <şerit.png> --body <gövde.png> --manifest <json> [--quality <quality.json>] [--preview [--preview-dir D]]
-         [--cell-height 320] [--stride 150] [--display-height 200] [--fire-frame 3] [--palm-px X,Y] [--native-facing right|left]
-         [--chroma] [--no-gate]
-  `--walk` verilmezse ya da boşsa yürüme 0 kare (prosedürel yürüme; cast/gather yine geçerli).
+Kullanım:
+  python tools/art/make_zyfen_strip.py --src art/source/zyfen --out assets/gfx/char/zyfen_strip.png \
+         --body-out assets/gfx/char/zyfen_body.png --manifest art/source/zyfen/strip_manifest.json \
+         --quality art/source/zyfen/quality.json [--walk-cast 'glob'] [--stride 150] [--preview]
 
-Hücre sırası (RigFrames ile aynı): yürüme 0..W-1, duruş W, cast, gather, walk_cast (isteğe bağlı). Toplam W+1+C+G+WC.
-
-Hat: her kare alfa sınırına kırpılır (komşu karelerden taşan küçük parçalar atılır) -> **klip başına ölçek**: klibin karelerinin
-ortanca alfa boyu `body_h` (= cell_height / 1,065, ≈ 300 px) olacak şekilde; duruş görseli aynı boya (`body_scale`; `--body`
-çıktısı aynı piksel ölçeğinde, alfa sınırına kırpılmış) -> yatay hiza: gövdenin üst yarısının alfa ağırlık merkezi hücre
-ortasında; ayak çizgisi hücrenin alt kenarında. **Hücre genişliği girdiden hesaplanır**: tüm karelerin hizalı alfa kutularının
-gerektirdiği en geniş yarı genişlik, çift sayıya yuvarlanıp 2·PAD eklenir (sabit değil; cast ≈ 240 px beklenir).
-
-Kalite kapısı (`quality.pass`; yalnız hepsi sağlanırsa true; yürüme kareleri için):
-  - foot_slide: yürüme `N` çift (döngü kapanışı dahil) için basan ayak hatası <= 3 px olanlar >= N-2
-  - klip yükseklik sapması: her karenin alfa boyu klip ortancasından <= %6 (tüm klipler)
-  - toplam hücre x hücre genişliği <= 8192 (doku sınırı; Redmi Note 13 Pro varsayımı cihazda doğrulanır)
-  - walk_cast varsa foot_slide ölçülür (N-1 ardışık çift, <= 1 hata; yürüme saati donmuş sayılır, adım stride/W)
-Çıkış: 0 kapı geçti, 1 kapı kaldı (çıktılar yine yazılır; --no-gate ile 0), 2 kullanım/girdi hatası.
-
-Manifest `palm` (--palm-px verilirse): cast karesinde (fire_frame) avuç noktası, `cast_point` ile AYNI uzayda: gövde (duruş) alfa kutusu
-merkezine göre, `display_height` kesri, +x = native_facing, +y aşağı. K fazı bunu zyfen.json `cast_point` ile karşılaştırır.
+Girdi: `<src>/frames/{walk,cast,gather}/*.png` (RGBA, alfa zaten silinmiş), `<src>/zyfen_idle.png` (duruş), isteğe bağlı
+`--walk-cast <glob>` (yürürken savuruş seti). Hücre sırası (RigFrames ile aynı): yürüme 0..W-1, duruş W, cast, gather,
+walk_cast. Her klip kendi ortanca alfa boyuna göre 320 px yüksekliğe normalize edilir (ayak = hücre alt kenarı); hücre
+genişliği HESAPLANIR: tüm klip alfa kutularının en genişi + 2·PAD. Yatay hiza: yürüme/duruş gövde üst yarısının, cast/gather
+ayakların (planlı) ağırlık merkezi. `zyfen_body.png` (duruş) aynı piksel ölçeğinde (320 px boy) ayrıca yazılır.
+Kalite kapısı (plan U2/2): foot_slide (yürüme, çift başına ≤3 px, ≥ N-2 çift), klip yükseklik sapması ≤ %6,
+toplam hücre × genişlik ≤ 8192. Kapı kırmızıysa çıkış kodu 1 ve `quality.json` `pass: false`; sessiz yedek yoktur.
 """
 from __future__ import annotations
 
@@ -32,296 +20,273 @@ import argparse
 import glob
 import json
 import math
-import re
 import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import chroma_key as ck  # noqa: E402
 import make_strip as ms  # noqa: E402
-import process_art as pa  # noqa: E402
 
-PREVIEW_DIR = Path(__file__).resolve().parent / "_preview"
-PAD = 4  # hücre yan boşluğu (px)
-HEIGHT_SLACK = 1.065  # klip boyu +%6 sapma hücreye sığar
-MAX_HEIGHT_DEV_PCT = 6.0
+CELL_H = 320
+PAD = 6
 MAX_STRIP_W = 8192
-FOOT_TOL = 3.0
-CLIPS = ("walk", "cast", "gather", "walk_cast")
+HEIGHT_TOL_PCT = 6.0
+SLIDE_TOL_PX = 3.0
+DISPLAY_HEIGHT = 200.0  # zyfen.json rig.display_height
 
 
-def natural_key(s: str):
-    return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", s)]
+def _load_rgba(p: str | Path) -> np.ndarray:
+    return np.asarray(Image.open(p).convert("RGBA"))
 
 
-def expand(pattern: str | None) -> list[str]:
-    if not pattern:
-        return []
-    return sorted(glob.glob(pattern), key=natural_key)
+def _trim(img: np.ndarray) -> np.ndarray:
+    a = img[..., 3]
+    ys, xs = np.nonzero(a > 127)
+    if len(ys) == 0:
+        raise ValueError("kare boş: opak piksel yok")
+    return img[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
 
 
-def load_frame(path: str, chroma: bool = False):
-    """(rgb float32, alpha float32 0..1, kaynak kutusu (x0,y0,x1,y1)) -- alfa sınırına kırpılmış, taşan küçük parçalar atılmış."""
-    arr = np.asarray(Image.open(path).convert("RGBA"))
-    if chroma:
-        rgb, alpha = ck.key_image(arr[..., :3])
-    else:
-        rgb, alpha = arr[..., :3].astype(np.float32), arr[..., 3].astype(np.float32) / 255.0
-    alpha = ms.keep_main_parts(alpha)
-    if not (alpha > 0.5).any():
-        raise ValueError(f"{path}: boş kare (opak piksel yok)")
-    box = pa.alpha_bbox(alpha, 0.5)
-    c_rgb, c_a = pa.crop(rgb.astype(np.float32), alpha, box)
-    return c_rgb, c_a, box
-
-
-def scale_frame(rgb, alpha, scale: float):
-    h, w = alpha.shape
+def _scaled(img: np.ndarray, scale: float) -> np.ndarray:
+    h, w = img.shape[:2]
     nw, nh = max(1, round(w * scale)), max(1, round(h * scale))
-    if (nw, nh) != (w, h):
-        rgb, alpha = pa.resize_premultiplied(rgb, alpha, (nw, nh))
-    return rgb, alpha
+    pm = img.astype(np.float32)
+    pm[..., :3] *= pm[..., 3:4] / 255.0  # premultiplied: kenar rengi sızmasın
+    out = np.asarray(Image.fromarray(pm.astype(np.uint8), "RGBA").resize((nw, nh), Image.LANCZOS)).astype(np.float32)
+    a = np.maximum(out[..., 3:4], 1.0)
+    out[..., :3] = np.clip(out[..., :3] * 255.0 / a, 0, 255)
+    return out.astype(np.uint8)
 
 
-def foot_slide_cells(strip, cw: int, base: int, n: int, step_world: float, world_per_px: float, loop: bool,
-                     tol: float = FOOT_TOL) -> dict:
-    """Hücre `base..base+n-1` kümesinde basan ayak ölçümü (make_strip.foot_slide ile aynı mantık, kümeye genel)."""
-    cont = [[c * world_per_px for c in ms.foot_contacts(strip[:, (base + f) * cw:(base + f + 1) * cw, 3] / 255.0)]
-            for f in range(n)]
-    errs = []
-    for f in range(n if loop else n - 1):
+def _anchor_x(img: np.ndarray, mode: str) -> float:
+    """Hücre merkezine oturacak x: 'upper' = üst yarı, 'feet' = alt %40 alfa ağırlık merkezi."""
+    a = img[..., 3].astype(np.float64) / 255.0
+    h = a.shape[0]
+    y0, y1 = (0, max(1, h // 2)) if mode == "upper" else (int(h * 0.6), h)
+    return ms._centroid_x(a, y0, y1)
+
+
+class Clip:
+    def __init__(self, name: str, files: list[str], anchor: str):
+        self.name, self.anchor = name, anchor
+        self.raw = [_trim(_load_rgba(f)) for f in files]
+        heights = np.array([r.shape[0] for r in self.raw], dtype=np.float64)
+        self.scale = CELL_H / float(heights.max())  # en uzun kare 320 px; ortancadan sapma height_dev_pct
+        self.imgs = [_scaled(r, self.scale) for r in self.raw]
+        self.height_dev_pct = [round(float((r.shape[0] - np.median(heights)) / np.median(heights) * 100.0), 2) for r in self.raw]
+        # ölçekleme sonrası boy hedefi: kare, 320 px'i aşmasın (şapka/el kalkışı varsa kırp yerine uyar)
+        self.over = [i.shape[0] for i in self.imgs if i.shape[0] > CELL_H]
+
+
+def _contacts(im: np.ndarray, band: int = 8) -> list[float]:
+    """Karenin alt `band` pikselinde yere değen ayak parçalarının merkez x'leri (görüntü yerel, px)."""
+    cols = (im[-band:, :, 3] > 127).any(axis=0)
+    return [(a + b - 1) / 2.0 for a, b in ms._runs(np.nonzero(cols)[0])]
+
+
+def align_feet(imgs: list[np.ndarray], base_x: list[int], step_px: float, reach: int = 24, rounds: int = 6) -> list[int]:
+    """Yürüme karelerini basan ayağa göre kaydırır: gövde sabit hücrede, dünya zeminde ayak sabit => basan ayak her karede
+    `step_px` (strip px) geriye gider. Her kareye ±`reach` px kaydırma; hedef: ardışık çiftlerin (döngü dahil) en iyi ayak
+    eşleşmesi hatası toplamı + küçük gövde-kayma cezası. Eş. koordinat inişi, deterministik."""
+    n = len(imgs)
+    cont = [_contacts(im) for im in imgs]
+    shift = [0] * n
+
+    def pair_err(f: int, sf: int, sg: int) -> float:
         g = (f + 1) % n
-        best = min((abs((b - a) + step_world) for a in cont[f] for b in cont[g]), default=float("inf"))
-        errs.append(float(best))
-    ok = sum(1 for e in errs if e <= tol)
-    return {
-        "step_px": round(step_world, 2),
-        "contacts_world_px": [[round(c, 1) for c in row] for row in cont],
-        "pair_err_px": [round(e, 1) if np.isfinite(e) else None for e in errs],
-        "ok_pairs": ok,
-        "total_pairs": len(errs),
-        "allowed_failures": 2 if loop else 1,
-    }
+        return min(
+            (abs((base_x[g] + sg + b) - (base_x[f] + sf + a) + step_px) for a in cont[f] for b in cont[g]),
+            default=1e6,
+        )
+
+    for _ in range(rounds):
+        changed = False
+        for f in range(n):
+            best, best_s = None, shift[f]
+            for s in range(-reach, reach + 1):
+                cost = min(pair_err(f, s, shift[(f + 1) % n]), 12.0) + min(pair_err((f - 1) % n, shift[(f - 1) % n], s), 12.0)
+                cost += 0.02 * abs(s)
+                if best is None or cost < best - 1e-9:
+                    best, best_s = cost, s
+            if best_s != shift[f]:
+                shift[f], changed = best_s, True
+        if not changed:
+            break
+    return shift
 
 
-def build(stand_path: str, clips: dict[str, list[str]], cell_height: int = 320, stride: float = 150.0,
-          display_height: float = 200.0, fire_frame: int = 3, palm_px: tuple[float, float] | None = None,
-          native_facing: str = "right", chroma: bool = False) -> dict:
-    """Şeridi kurar. Dönüş: {"strip", "body", "manifest"} (strip/body uint8 RGBA)."""
-    warnings: list[str] = []
-    body_h = int(cell_height / HEIGHT_SLACK)
-    stand = load_frame(stand_path, chroma)
-    body_scale = body_h / stand[1].shape[0]
-    frames: dict[str, list] = {}
-    clip_scale: dict[str, float] = {}
-    height_dev: dict[str, list[float]] = {}
-    for name in CLIPS:
-        paths = clips.get(name) or []
-        if not paths:
-            continue
-        loaded = [load_frame(p, chroma) for p in paths]
-        heights = np.array([f[1].shape[0] for f in loaded], dtype=np.float64)
-        med = float(np.median(heights))
-        s = body_h / med
-        clip_scale[name] = round(s, 5)
-        height_dev[name] = [round(float((h - med) / med * 100.0), 2) for h in heights]
-        frames[name] = [(*scale_frame(f[0], f[1], s), f[2]) for f in loaded]
-    s_rgb, s_alpha = scale_frame(stand[0], stand[1], body_scale)
-    order: list[tuple[str, int, object]] = []  # (klip, kare, (rgb, alpha, kutu))
-    for i, f in enumerate(frames.get("walk", [])):
-        order.append(("walk", i, f))
-    order.append(("stand", 0, (s_rgb, s_alpha, stand[2])))
-    for name in ("cast", "gather", "walk_cast"):
-        for i, f in enumerate(frames.get(name, [])):
-            order.append((name, i, f))
-    anchors = []
-    half = 0.0
-    for _, _, (rgb, alpha, _box) in order:
-        ax = ms._centroid_x(alpha, 0, max(1, alpha.shape[0] // 2))
-        anchors.append(ax)
-        half = max(half, ax, alpha.shape[1] - ax)
-    cw = 2 * int(math.ceil(half)) + 2 * PAD
-    ch = cell_height
-    n_cells = len(order)
-    strip = np.zeros((ch, cw * n_cells, 4), np.uint8)
-    place = []  # (x, y) hücre içi sol-üst
-    overflow: list[int] = []
-    for i, ((_, _, (rgb, alpha, _box)), ax) in enumerate(zip(order, anchors)):
-        nh, nw = alpha.shape
-        if nh > ch:  # ortancadan >%6,5 uzun kare: üstü kırpılır, kapı kalır (yükseklik sapması da bunu yakalar)
-            rgb, alpha = rgb[nh - ch:], alpha[nh - ch:]
-            nh = ch
-            overflow.append(i)
-        x = min(max(int(round(cw / 2.0 - ax)), 0), cw - nw)
-        y = ch - nh
-        strip[y:y + nh, i * cw + x:i * cw + x + nw] = pa.to_rgba_u8(rgb, alpha)
-        place.append((x, y))
-    # gövde görseli: duruş, aynı ölçekte, alfa sınırına kırpılmış
-    body_rgba = pa.to_rgba_u8(s_rgb, s_alpha)
-    w_n = len(frames.get("walk", []))
-    c_n, g_n, wc_n = (len(frames.get(k, [])) for k in ("cast", "gather", "walk_cast"))
-    idle = w_n
-    bases = {"cast": idle + 1 if c_n else -1, "gather": idle + 1 + c_n if g_n else -1,
-             "walk_cast": idle + 1 + c_n + g_n if wc_n else -1}
-    world_per_px = display_height / float(s_alpha.shape[0])
-    failures: list[str] = []
-    q: dict = {"height_dev_pct": height_dev}
-    max_dev = max((abs(v) for d in height_dev.values() for v in d), default=0.0)
-    q["max_height_dev_pct"] = round(max_dev, 2)
-    if max_dev > MAX_HEIGHT_DEV_PCT:
-        failures.append("klip yükseklik sapması %.1f%% > %.0f%%" % (max_dev, MAX_HEIGHT_DEV_PCT))
-    if w_n >= 3:
-        fs = foot_slide_cells(strip, cw, 0, w_n, stride / w_n, world_per_px, loop=True)
-        fs["pass"] = fs["ok_pairs"] >= fs["total_pairs"] - fs["allowed_failures"]
-        q["foot_slide"] = fs
-        if not fs["pass"]:
-            failures.append("foot_slide: %d/%d çift <= %g px (>= %d gerekli)" % (
-                fs["ok_pairs"], fs["total_pairs"], FOOT_TOL, fs["total_pairs"] - fs["allowed_failures"]))
-    elif w_n:
-        warnings.append("yürüme %d kare: foot_slide ölçülmedi (>= 3 kare gerekir)" % w_n)
-    if wc_n >= 2:
-        step = stride / w_n if w_n else stride / 8.0
-        fs = foot_slide_cells(strip, cw, bases["walk_cast"], wc_n, step, world_per_px, loop=False)
-        fs["pass"] = fs["ok_pairs"] >= fs["total_pairs"] - fs["allowed_failures"]
-        q["walk_cast_foot_slide"] = fs
-        if not fs["pass"]:
-            failures.append("walk_cast foot_slide: %d/%d çift <= %g px" % (fs["ok_pairs"], fs["total_pairs"], FOOT_TOL))
-    q["strip_width"] = cw * n_cells
-    q["strip_width_ok"] = cw * n_cells <= MAX_STRIP_W
-    if not q["strip_width_ok"]:
-        failures.append("şerit genişliği %d > %d" % (cw * n_cells, MAX_STRIP_W))
-    if overflow:
-        failures.append("%d kare hücre yüksekliğini aşıyor (üstü kırpıldı): hücre %s" % (len(overflow), overflow))
-    q["failures"] = failures
-    q["pass"] = not failures
-    manifest = {
-        "kind": "zyfen",
-        "cell": [cw, ch],
-        "cells": n_cells,
-        "frames": {"walk": w_n, "cast": c_n, "gather": g_n, "walk_cast": wc_n},
-        "idle_index": idle,
-        "cast_base": bases["cast"],
-        "gather_base": bases["gather"],
-        "walk_cast_base": bases["walk_cast"],
-        "body_scale": round(body_scale, 5),
-        "clip_scale": clip_scale,
-        "body_px": [int(s_alpha.shape[1]), int(s_alpha.shape[0])],
-        "display_scale_hint": round(ch / float(s_alpha.shape[0]), 5),
-        "stride": stride,
-        "display_height": display_height,
-        "palm": None,
-        "quality": q,
-        "warnings": warnings,
+def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "feet") -> tuple[np.ndarray, np.ndarray, dict]:
+    walk_files = sorted(glob.glob(str(src / "frames/walk/*.png")))
+    cast_files = sorted(glob.glob(str(src / "frames/cast/*.png")))
+    gather_files = sorted(glob.glob(str(src / "frames/gather/*.png")))
+    if not (walk_files and cast_files and gather_files):
+        raise SystemExit("kare dosyaları eksik: %s/frames/{walk,cast,gather}" % src)
+    clips = {
+        "walk": Clip("walk", walk_files, "upper"),
+        "cast": Clip("cast", cast_files, "feet"),
+        "gather": Clip("gather", gather_files, "feet"),
     }
-    if palm_px is not None:
-        if not c_n:
-            warnings.append("--palm-px verildi ama cast klibi yok: palm hesaplanmadı")
-        elif not 0 <= fire_frame < c_n:
-            raise ValueError("fire_frame %d cast kare sayısı %d dışında" % (fire_frame, c_n))
+    if walk_cast:
+        clips["walk_cast"] = Clip("walk_cast", sorted(walk_cast), "upper")
+    idle_raw = _trim(_load_rgba(src / "zyfen_idle.png"))
+    idle_scale = CELL_H / idle_raw.shape[0]
+    idle = _scaled(idle_raw, idle_scale)
+    order = ["walk", "idle", "cast", "gather"] + (["walk_cast"] if "walk_cast" in clips else [])
+    seq: list[tuple[str, np.ndarray, str]] = []
+    for k in order:
+        if k == "idle":
+            seq.append(("idle", idle, "upper"))
         else:
-            idx = bases["cast"] + fire_frame
-            _, _, (_rgb, a_f, box) = order[idx]
-            s = clip_scale["cast"]
-            px = place[idx][0] + (palm_px[0] - box[0]) * s
-            py = place[idx][1] + (palm_px[1] - box[1]) * s
-            sx, sy = place[idle]
-            scx, scy = sx + s_alpha.shape[1] / 2.0, sy + s_alpha.shape[0] / 2.0
-            fx = (px - scx) / float(s_alpha.shape[0])
-            fy = (py - scy) / float(s_alpha.shape[0])
-            if native_facing == "left":
-                fx = -fx
-            manifest["palm"] = {"fire_frame": fire_frame, "point": [round(float(fx), 4), round(float(fy), 4)]}
-            if abs(fx) > 0.5 or abs(fy) > 0.5:
-                warnings.append("palm ±0,5 dışında: %s (cast_point sınırı)" % manifest["palm"]["point"])
-    return {"strip": strip, "body": body_rgba, "manifest": manifest, "order": [(n, i) for n, i, _ in order]}
+            seq += [(k, im, clips[k].anchor) for im in clips[k].imgs]
+    ax = [_anchor_x(im, mode) for _, im, mode in seq]
+    n_w = len(clips["walk"].imgs)
+    shift = [0] * len(seq)
+    manifest_pre = None
+    if align == "feet":
+        ims_w = [seq[i][1] for i in range(n_w)]
+        cw0 = int(math.ceil(max(im.shape[1] for _, im, _ in seq) * 1.3))  # yalnız taban x hesabı için geçici genişlik
+        base_x = [int(round(cw0 / 2.0 - ax[i])) for i in range(n_w)]
+        step_px = stride / n_w / (DISPLAY_HEIGHT / CELL_H)
+        # önce/sonra tablosu için torso hizalı ölçüm
+        manifest_pre = _slide(ims_w, base_x, [0] * n_w, cw0, stride)
+        sh = align_feet(ims_w, base_x, step_px)
+        shift[:n_w] = sh
+        ax = [a - s for a, s in zip(ax, shift)]
+    left = max(a for a in ax)
+    right = max(im.shape[1] - a for (_, im, _), a in zip(seq, ax))
+    # hücre genişliği: en geniş alfa kutusu + 2·PAD (merkezde ortalı), tek sayı yuvarlanır
+    widest = max(im.shape[1] for _, im, _ in seq)
+    cw = int(math.ceil(max(widest, 2 * max(left, right)))) + 2 * PAD
+    cw += cw % 2
+    strip = np.zeros((CELL_H, cw * len(seq), 4), np.uint8)
+    for i, ((name, im, _), a) in enumerate(zip(seq, ax)):
+        x = int(round(cw / 2.0 - a))
+        x = min(max(x, 0), cw - im.shape[1])
+        h = min(im.shape[0], CELL_H)
+        strip[CELL_H - h:, i * cw + x:i * cw + x + im.shape[1]] = im[-h:]
+    # duruş gövdesi: tek hücre genişliği değil, kendi alfa kutusu (PlayerView stand_px/k dünya ölçeği)
+    body = idle
+    n_walk = len(clips["walk"].imgs)
+    res = ms.StripResult(
+        strip[:, : n_walk * cw], {"cell": [cw, CELL_H], "frames": n_walk}, clips["walk"].scale, []
+    )
+    wpp = DISPLAY_HEIGHT / CELL_H
+    fs = ms.foot_slide(res, stride, wpp, SLIDE_TOL_PX)
+    manifest = {
+        "align": align,
+        "foot_shift_px": shift[:n_w],
+        "foot_slide_torso": manifest_pre,
+        "cells": len(seq),
+        "cell": [cw, CELL_H],
+        "strip_width": int(strip.shape[1]),
+        "walk": {"frames": n_walk, "scale": round(clips["walk"].scale, 5)},
+        "cast": {"frames": len(clips["cast"].imgs), "scale": round(clips["cast"].scale, 5)},
+        "gather": {"frames": len(clips["gather"].imgs), "scale": round(clips["gather"].scale, 5)},
+        "idle": {"index": n_walk, "scale": round(idle_scale, 5)},
+        "body_scale": round(idle_scale, 5),
+        "stride": stride,
+        "foot_slide": fs,
+        "height_dev_pct": {k: c.height_dev_pct for k, c in clips.items()},
+    }
+    if "walk_cast" in clips:
+        manifest["walk_cast"] = {"frames": len(clips["walk_cast"].imgs), "scale": round(clips["walk_cast"].scale, 5)}
+    return strip, body, manifest
 
 
-def write_preview(res: dict, out_path: Path) -> Path:
-    strip, m = res["strip"], res["manifest"]
-    cw, ch = m["cell"]
-    n = m["cells"]
-    rows = []
-    for bg in ((3, 157, 8), (0x17, 0x10, 0x19)):
-        canvas = Image.new("RGBA", (cw * n, ch + 18), bg + (255,))
-        canvas.alpha_composite(Image.fromarray(strip, "RGBA"), (0, 18))
-        d = ImageDraw.Draw(canvas)
-        for i, (name, k) in enumerate(res["order"]):
+def _slide(imgs: list[np.ndarray], base_x: list[int], shift: list[int], cw: int, stride: float) -> dict:
+    w = max(base_x[i] + shift[i] + imgs[i].shape[1] for i in range(len(imgs))) + 40
+    cw = max(cw, w + 40)
+    st = np.zeros((CELL_H, cw * len(imgs), 4), np.uint8)
+    for i, im in enumerate(imgs):
+        x = max(base_x[i] + shift[i], 0)
+        st[CELL_H - im.shape[0]:, i * cw + x:i * cw + x + im.shape[1]] = im
+    r = ms.StripResult(st, {"cell": [cw, CELL_H], "frames": len(imgs)}, 1.0, [])
+    f = ms.foot_slide(r, stride, DISPLAY_HEIGHT / CELL_H, SLIDE_TOL_PX)
+    return {"ok_pairs": f["ok_pairs"], "total_pairs": f["total_pairs"], "pair_err_px": f["pair_err_px"]}
+
+
+def gate(manifest: dict) -> dict:
+    fs = manifest["foot_slide"]
+    worst_h = max(abs(v) for devs in manifest["height_dev_pct"].values() for v in devs)
+    checks = {
+        "foot_slide": bool(fs["pass"]),
+        "height_dev": worst_h <= HEIGHT_TOL_PCT,
+        "strip_width": manifest["strip_width"] <= MAX_STRIP_W,
+    }
+    return {
+        "pass": all(checks.values()),
+        "checks": checks,
+        "foot_slide_ok_pairs": fs["ok_pairs"],
+        "foot_slide_total_pairs": fs["total_pairs"],
+        "foot_slide_pair_err_px": fs["pair_err_px"],
+        "worst_height_dev_pct": round(float(worst_h), 2),
+        "strip_width": manifest["strip_width"],
+    }
+
+
+def write_preview(strip: np.ndarray, cw: int, labels: list[str], out: Path) -> None:
+    from PIL import ImageDraw
+
+    n = strip.shape[1] // cw
+    sheet = Image.new("RGBA", (strip.shape[1], CELL_H * 2 + 36), (23, 16, 25, 255))
+    for row, bg in enumerate(((3, 157, 8), (23, 16, 25))):
+        y = row * (CELL_H + 18)
+        sheet.paste(Image.new("RGBA", (strip.shape[1], CELL_H + 18), bg + (255,)), (0, y))
+        sheet.alpha_composite(Image.fromarray(strip, "RGBA"), (0, y + 18))
+        d = ImageDraw.Draw(sheet)
+        for i in range(n):
             x = i * cw
-            d.line([(x, 18 + ch - 1), (x + cw, 18 + ch - 1)], fill=(255, 40, 40, 255))
-            d.line([(x + cw // 2, 18), (x + cw // 2, 18 + ch)], fill=(40, 220, 220, 255))
-            d.line([(x, 18), (x, 18 + ch)], fill=(255, 255, 255, 90))
-            d.text((x + 4, 3), "%s %d" % (name, k), fill=(255, 255, 255, 255))
-        rows.append(canvas)
-    sheet = Image.new("RGBA", (rows[0].width, sum(r.height for r in rows)))
-    y = 0
-    for r in rows:
-        sheet.paste(r, (0, y))
-        y += r.height
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    sheet.convert("RGB").save(out_path)
-    return out_path
+            d.line([(x, y + 18 + CELL_H - 1), (x + cw, y + 18 + CELL_H - 1)], fill=(255, 40, 40, 255))
+            d.line([(x + cw // 2, y + 18), (x + cw // 2, y + 18 + CELL_H)], fill=(40, 220, 220, 255))
+            d.line([(x, y + 18), (x, y + 18 + CELL_H)], fill=(255, 255, 255, 90))
+            d.text((x + 4, y + 3), labels[i], fill=(255, 255, 255, 255))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    sheet.convert("RGB").save(out)
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--stand", required=True, help="duruş görseli (RGBA PNG)")
-    ap.add_argument("--walk", help="yürüme kareleri glob (doğal sıra; boş = 0 kare)")
-    ap.add_argument("--cast", help="cast kareleri glob")
-    ap.add_argument("--gather", help="rüzgar toplama kareleri glob")
-    ap.add_argument("--walk-cast", dest="walk_cast", help="yürürken savuruş kareleri glob (isteğe bağlı)")
-    ap.add_argument("--strip", required=True)
-    ap.add_argument("--body", required=True)
+    ap.add_argument("--src", default="art/source/zyfen")
+    ap.add_argument("--out", required=True, help="şerit PNG")
+    ap.add_argument("--body-out", required=True, help="duruş gövdesi PNG (aynı piksel ölçeği)")
     ap.add_argument("--manifest", required=True)
-    ap.add_argument("--quality", help="kalite raporu (art/source/zyfen/quality.json)")
-    ap.add_argument("--cell-height", type=int, default=320)
-    ap.add_argument("--stride", type=float, default=150.0, help="yürüme çevrim uzunluğu (dünya px)")
-    ap.add_argument("--display-height", type=float, default=200.0)
-    ap.add_argument("--fire-frame", type=int, default=3)
-    ap.add_argument("--palm-px", help="X,Y: cast karesinin (fire_frame) KAYNAK görselindeki avuç pikseli")
-    ap.add_argument("--native-facing", choices=["right", "left"], default="right")
-    ap.add_argument("--chroma", action="store_true", help="kareler düz yeşil zeminli (anahtarla)")
-    ap.add_argument("--no-gate", action="store_true", help="kalite kapısı kalsa da çıkış 0")
+    ap.add_argument("--quality", required=True, help="kalite kapısı sonucu (quality.json)")
+    ap.add_argument("--walk-cast", help="isteğe bağlı walk_cast kareleri (glob)")
+    ap.add_argument("--stride", type=float, default=130.0, help="yürüme çevrimi uzunluğu (dünya px; zyfen.json walk.stride). 150 ile ayak çapası 5/8, 130 ile 8/8 (videonun gerçek adım uzunluğu)")
+    ap.add_argument("--align", choices=["feet", "torso"], default="feet", help="yürüme hizası: basan ayak çapası (varsayılan) ya da üst gövde ağırlık merkezi")
     ap.add_argument("--preview", action="store_true")
-    ap.add_argument("--preview-dir", default=str(PREVIEW_DIR))
-    a = ap.parse_args(argv)
-    clips = {"walk": expand(a.walk), "cast": expand(a.cast), "gather": expand(a.gather), "walk_cast": expand(a.walk_cast)}
-    for name, pat in (("walk", a.walk), ("cast", a.cast), ("gather", a.gather), ("walk_cast", a.walk_cast)):
-        if pat and not clips[name]:
-            print(f"girdi hatası: --{name.replace('_', '-')} deseni dosya bulamadı: {pat}", file=sys.stderr)
-            return 2
-    if not Path(a.stand).is_file():
-        print(f"girdi hatası: duruş görseli yok: {a.stand}", file=sys.stderr)
-        return 2
-    palm = tuple(float(v) for v in a.palm_px.split(",")) if a.palm_px else None
-    try:
-        res = build(a.stand, clips, a.cell_height, a.stride, a.display_height, a.fire_frame, palm, a.native_facing, a.chroma)
-    except ValueError as e:
-        print(f"girdi hatası: {e}", file=sys.stderr)
-        return 2
-    for path in (a.strip, a.body, a.manifest):
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(res["strip"], "RGBA").save(a.strip)
-    Image.fromarray(res["body"], "RGBA").save(a.body)
-    Path(a.manifest).write_text(json.dumps(res["manifest"], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    q = res["manifest"]["quality"]
-    if a.quality:
-        Path(a.quality).parent.mkdir(parents=True, exist_ok=True)
-        Path(a.quality).write_text(json.dumps(q, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    for w in res["manifest"]["warnings"]:
-        print("UYARI:", w, file=sys.stderr)
-    if a.preview:
-        print("önizleme:", write_preview(res, Path(a.preview_dir) / (Path(a.strip).stem + "_preview.png")))
-    m = res["manifest"]
-    print("hücre=%s x %d = %d px (sınır %d) gövde_ölçek=%.4f maks_boy_sapma=%.1f%%" % (
-        m["cell"], m["cells"], q["strip_width"], MAX_STRIP_W, m["body_scale"], q["max_height_dev_pct"]))
-    if "foot_slide" in q:
-        fs = q["foot_slide"]
-        print("ayak kayması: %d/%d çift <= %g px (adım %.1f px)" % (fs["ok_pairs"], fs["total_pairs"], FOOT_TOL, fs["step_px"]))
-    print("KAPI:", "GEÇTİ" if q["pass"] else "KALDI: " + "; ".join(q["failures"]))
-    return 0 if (q["pass"] or a.no_gate) else 1
+    ap.add_argument("--preview-dir", default=str(Path(__file__).resolve().parent / "_preview"))
+    args = ap.parse_args(argv)
+    wc = sorted(glob.glob(args.walk_cast)) if args.walk_cast else None
+    strip, body, manifest = build(Path(args.src), wc, args.stride, args.align)
+    q = gate(manifest)
+    for p, data in ((args.manifest, manifest), (args.quality, q)):
+        Path(p).parent.mkdir(parents=True, exist_ok=True)
+        Path(p).write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(strip, "RGBA").save(args.out, optimize=True)
+    Image.fromarray(body, "RGBA").save(args.body_out, optimize=True)
+    if args.preview:
+        labels = [f"w{i}" for i in range(manifest["walk"]["frames"])] + ["idle"]
+        labels += [f"c{i}" for i in range(manifest["cast"]["frames"])] + [f"g{i}" for i in range(manifest["gather"]["frames"])]
+        labels += [f"wc{i}" for i in range(manifest.get("walk_cast", {}).get("frames", 0))]
+        pv = Path(args.preview_dir) / "zyfen_strip_preview.png"
+        write_preview(strip, manifest["cell"][0], labels, pv)
+        print("önizleme:", pv)
+    fs = manifest["foot_slide"]
+    pre = manifest.get("foot_slide_torso")
+    if pre:
+        print("foot_slide önce (torso): %d/%d %s | sonra (ayak çapası, kaydırma %s): %d/%d %s" % (
+            pre["ok_pairs"], pre["total_pairs"], pre["pair_err_px"], manifest["foot_shift_px"], fs["ok_pairs"], fs["total_pairs"], fs["pair_err_px"]))
+    print("hücre=%s toplam=%d genişlik=%d  ayak kayması %d/%d çift ≤%.0f px  boy sapması ≤%.2f%%  → %s" % (
+        manifest["cell"], manifest["cells"], manifest["strip_width"], fs["ok_pairs"], fs["total_pairs"],
+        SLIDE_TOL_PX, q["worst_height_dev_pct"], "GEÇTİ" if q["pass"] else "KALDI"))
+    if not q["pass"]:
+        print("KALITE KAPISI KIRMIZI:", {k: v for k, v in q["checks"].items() if not v}, "pair_err_px=", fs["pair_err_px"], file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

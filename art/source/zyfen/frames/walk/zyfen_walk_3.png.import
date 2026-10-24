@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b13i44xkbp6t8"
-path="res://.godot/imported/dinamit.svg-36b5e5ed3ae216c42db00565bfae899c.ctex"
+uid="uid://p6ltk2txdk2c"
+path="res://.godot/imported/zyfen_walk_3.png-ea0e52b15b03e0e29c8203450911dc83.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/icons/dinamit.svg"
-dest_files=["res://.godot/imported/dinamit.svg-36b5e5ed3ae216c42db00565bfae899c.ctex"]
+source_file="res://art/source/zyfen/frames/walk/zyfen_walk_3.png"
+dest_files=["res://.godot/imported/zyfen_walk_3.png-ea0e52b15b03e0e29c8203450911dc83.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=2.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
