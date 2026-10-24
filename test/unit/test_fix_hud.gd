@@ -109,8 +109,54 @@ func test_arrow_circle_keeps_36px_plus_inset_with_notch() -> void:
 	assert_gte(VIEW.y - (down["pos"] as Vector2).y - rad, 36.0 + 80.0 - 0.01, "alt")
 
 
-func test_arrow_margin_is_safe_edge_plus_radius() -> void:
-	assert_almost_eq(OffscreenArrow.MARGIN, UiKit.SAFE_EDGE + OffscreenArrow.SIZE * 0.5, 0.01)
+func test_arrow_margin_is_circle_edge_plus_radius() -> void:
+	assert_almost_eq(
+		OffscreenArrow.MARGIN, OffscreenArrow.CIRCLE_EDGE + OffscreenArrow.SIZE * 0.5, 0.01
+	)
+	assert_gte(OffscreenArrow.CIRCLE_EDGE, 62.0, "S-05: daire kenarı >= 62 px")
+
+
+## M7 (S-05/F-027): üçgen ucu dahil TÜM glif (daire + üçgen köşeleri) ekran kenarından >= 36 px; 8 yön + 4 köşe,
+## çentikli ve çentiksiz güvenli alan.
+func test_arrow_whole_glyph_keeps_36px_from_edge_in_all_directions() -> void:
+	var dirs: Array[Vector2] = []
+	for k in 8:
+		dirs.append(Vector2.from_angle(k * TAU / 8.0) * 4000.0)
+	for corner in [
+		Vector2(3000, 3000), Vector2(-3000, 3000), Vector2(3000, -3000), Vector2(-3000, -3000)
+	]:
+		dirs.append(corner)
+	var cases := {
+		"çentiksiz": Rect2(Vector2.ZERO, VIEW),
+		"çentikli": Rect2(Vector2(48.0, 130.0), VIEW - Vector2(96.0, 210.0)),
+	}
+	for label: String in cases:
+		var safe: Rect2 = cases[label]
+		for t in dirs:
+			var r := OffscreenArrow.place(t, Vector2.ZERO, VIEW, safe, OffscreenArrow.MARGIN)
+			var c: Vector2 = r["pos"]
+			var dir := Vector2.from_angle(r["angle"])
+			var nrm := Vector2(-dir.y, dir.x)
+			var rad := OffscreenArrow.SIZE * 0.5
+			var tip := c + dir * (rad + OffscreenArrow.TIP)
+			var base := c + dir * (rad - 2.0)
+			var pts := PackedVector2Array([tip, base + nrm * 12.0, base - nrm * 12.0])
+			var lo := safe.position + Vector2.ONE * UiKit.SAFE_EDGE
+			var hi := safe.end - Vector2.ONE * UiKit.SAFE_EDGE
+			for p in pts:
+				assert_true(
+					(
+						p.x >= lo.x - 0.01
+						and p.y >= lo.y - 0.01
+						and p.x <= hi.x + 0.01
+						and p.y <= hi.y + 0.01
+					),
+					"%s %s: üçgen noktası %s kenardan >= 36" % [label, t, p]
+				)
+			for e in [c.x - rad, c.y - rad, VIEW.x - c.x - rad, VIEW.y - c.y - rad]:
+				assert_gte(
+					e, OffscreenArrow.CIRCLE_EDGE - 0.01, "%s %s: daire kenarı >= 62" % [label, t]
+				)
 
 
 # --- V-06 --------------------------------------------------------------------------------------------------

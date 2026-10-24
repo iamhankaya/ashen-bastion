@@ -7,8 +7,13 @@ extends Control
 const SIZE := 84.0
 const ICON_PX := 50.0
 const ALPHA := 0.7
-## Daire merkezinin güvenli dikdörtgen kenarından içeri payı: daire kenara ≥ SAFE_EDGE (36) uzakta kalır (V-04).
-const MARGIN := UiKit.SAFE_EDGE + SIZE * 0.5
+## Dışa bakan üçgenin daire kenarından taşan ucu (px): `_draw` tip = merkez + yön * (SIZE/2 + TIP).
+const TIP := 12.0
+## Daire kenarının güvenli dikdörtgen kenarına en az uzaklığı (S-05/M7): üçgen ucu dahil tüm glif kenardan
+## ≥ SAFE_EDGE (36) uzakta kalır (62 - 12 = 50 ≥ 36).
+const CIRCLE_EDGE := 62.0
+## Daire merkezinin güvenli dikdörtgen kenarından içeri payı.
+const MARGIN := CIRCLE_EDGE + SIZE * 0.5
 const RING_W := 5.0
 
 var _sim: GameSim = null
@@ -115,7 +120,7 @@ func _draw() -> void:
 	# dışa bakan üçgen işaret
 	var dir := Vector2.from_angle(ang)
 	var nrm := Vector2(-dir.y, dir.x)
-	var tip := c + dir * (SIZE * 0.5 + 12.0)
+	var tip := c + dir * (SIZE * 0.5 + TIP)
 	var base := c + dir * (SIZE * 0.5 - 2.0)
 	draw_colored_polygon(
 		PackedVector2Array([tip, base + nrm * 12.0, base - nrm * 12.0]), Color(col, ALPHA)

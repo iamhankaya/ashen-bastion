@@ -10,9 +10,6 @@ const RUN_OPTS := {"end_mode": "lord", "end_time": 1200.0}
 const WON_SUB := "Şafak söktü; kale seni yutamadı."
 const DAMAGE_VIBRATE_MS := 25
 const LORD_ID := &"kale_lordu"
-## Debug etiketleri sağ altta: sol alttaki rozet satırı (x ≤ 579 + çentik) ve tamburu örtmez (V-09).
-const DEBUG_LABEL_X := 636.0
-const DEBUG_LABEL_W := 408.0
 const LORD_SLAM_RING_SEC := 0.45
 ## Öfkeli Lord kor aurası (E9): en çok 20 parçacık/sn.
 const LORD_EMBER_RATE := 18.0
@@ -178,19 +175,7 @@ func _build_ui() -> void:
 func _build_render_debug() -> void:
 	if not OS.is_debug_build():
 		return
-	_render_label = Label.new()
-	_render_label.name = "RenderDebug"
-	_render_label.position = Vector2(DEBUG_LABEL_X, 2132)
-	_render_label.size = Vector2(DEBUG_LABEL_W, 120)
-	_render_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_render_label.add_theme_font_size_override(&"font_size", 26)
-	_render_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
-	_render_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
-	_render_label.add_theme_constant_override(&"outline_size", 6)
-	_render_label.mouse_filter = Control.MOUSE_FILTER_STOP
-	_render_label.gui_input.connect(_on_render_label_input)
-	_render_label.visible = false
-	ui.add_child(_render_label)
+	_render_label = DebugLabels.build_render(ui, _on_render_label_input)
 
 
 func render_debug_text() -> String:
@@ -533,6 +518,7 @@ func _apply_safe_areas() -> void:
 	menu.apply_safe_area()
 	result_screen.apply_safe_area()
 	scores_screen.apply_safe_area()
+	v2.apply_safe_areas()
 
 
 ## Ana menüden En İyi Skorlar ekranı (vurgu yok: sonuçtan sıralamaya bağlantı v1.1 dışı).
@@ -651,26 +637,14 @@ func _v11_update_pickups(view_dt: float) -> void:
 func _v11_build_escape_debug() -> void:
 	if _escape_label != null or not OS.is_debug_build():
 		return
-	_escape_label = Label.new()
-	_escape_label.name = "EscapeDebug"
-	_escape_label.position = Vector2(DEBUG_LABEL_X, 2264)
-	_escape_label.size = Vector2(DEBUG_LABEL_W, 72)
-	_escape_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_escape_label.add_theme_font_size_override(&"font_size", 24)
-	_escape_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
-	_escape_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
-	_escape_label.add_theme_constant_override(&"outline_size", 6)
-	_escape_label.mouse_filter = Control.MOUSE_FILTER_STOP
-	_escape_label.gui_input.connect(_on_escape_label_input)
-	_escape_label.visible = false
-	ui.add_child(_escape_label)
+	_escape_label = DebugLabels.build_escape(ui, _on_escape_label_input)
 
 
 func escape_debug_text() -> String:
 	var live := EnemyEscape.escaping_count(sim) if sim != null else 0
 	return (
-		"çıkmaz kaçışı: %s (dokun)\nkaçışta %d  girilen %d"
-		% ["AÇIK" if EnemyEscape.enabled else "KAPALI", live, EnemyEscape.begun_total]
+		"kaçışta %d  girilen %d\nçıkmaz kaçışı: %s (dokun)"
+		% [live, EnemyEscape.begun_total, "AÇIK" if EnemyEscape.enabled else "KAPALI"]
 	)
 
 

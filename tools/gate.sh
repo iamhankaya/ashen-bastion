@@ -78,6 +78,7 @@ scan_log .gate/gut.log
 step "7. Sahte yeşil korumaları"
 [ -f .gate/junit.xml ] || fail "JUnit çıktısı yok"
 python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
+python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 60 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
 python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
 
 if [ -f test/acceptance/test_acc_perf_counters.gd ]; then
