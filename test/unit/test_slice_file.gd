@@ -51,12 +51,21 @@ func test_v2_marks_start_empty_in_contract_phase() -> void:
 
 
 func test_v2_require_returns_true_for_unmarked_and_false_for_marked() -> void:
-	if not OS.get_environment(SliceFile.FORCE_ENV).is_empty() or not V2Slice.marks().is_empty():
-		pending("işaret ya da V2_SLICES_FORCE açık")
+	# Tur fazları simge ekledikçe işaretsiz kalan ilk simge denenir; hepsi işaretliyse iddia anlamsızdır.
+	var open_symbol := ""
+	for s in V2Slice.SYMBOLS:
+		if not V2Slice.marks().has(s):
+			open_symbol = s
+			break
+	if not OS.get_environment(SliceFile.FORCE_ENV).is_empty() or open_symbol.is_empty():
+		pending("tüm simgeler işaretli ya da V2_SLICES_FORCE açık")
 		return
 	# `require` pending() çağırır; bu testin kendisi pending olmasın diye çağrı sahte GutTest'e yönlendirilir.
 	var probe := _Probe.new()
-	assert_true(V2Slice.require(probe, "K"), "K kapalıyken require true döner (pending)")
+	assert_true(
+		V2Slice.require(probe, open_symbol),
+		"%s kapalıyken require true döner (pending)" % open_symbol
+	)
 	assert_eq(probe.pending_calls, 1)
 	probe.free()
 
