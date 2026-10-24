@@ -72,11 +72,14 @@ func test_player_view_rig_nodes_and_arm_flip() -> void:
 		assert_not_null(v.get_node_or_null(n), n)
 	assert_lt(v.far_arm.z_index, v.body.z_index)
 	assert_gt(v.near_arm.z_index, v.body.z_index)
+	sim.gun_target[0] = 1  # hedefli tabanca aim'i tutar; hedefsiz bekleme pozuna döner
 	sim.gun_aim[0] = PI
-	v.update_view(1.0 / 60.0)
+	for i in 60:  # kol aim'e yumuşak yaklaşır (v1.1.1)
+		v.update_view(1.0 / 60.0)
 	assert_lt(v.near_arm.scale.y, 0.0, "cos(rot) < 0 ise scale.y = -1")
 	sim.gun_aim[0] = 0.2
-	v.update_view(1.0 / 60.0)
+	for i in 60:
+		v.update_view(1.0 / 60.0)
 	assert_gt(v.near_arm.scale.y, 0.0)
 	var rig := sim.character.rig
 	assert_eq(

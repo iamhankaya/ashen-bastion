@@ -50,6 +50,7 @@ var enemy_shadows: EnemyShadowLayer
 var ghosts: AshGhostRenderer
 var _pickup_sim: GameSim = null
 var _escape_label: Label = null
+var _bounce_label: Label = null
 
 var audio: AudioDirector
 ## D1: vuruş donması (sim adımlanmaz, _accum artmaz), Lord ölümü yavaş çekimi ve ardışık patlamaları.
@@ -567,8 +568,11 @@ func _v11_bind_pickups(new_sim: GameSim) -> void:
 	_pickup_sim = new_sim
 	pickup_renderer.bind(new_sim)
 	_v11_build_escape_debug()
+	_v111_build_bounce_debug()
 	if _escape_label != null and new_sim == null:
 		_escape_label.visible = false
+	if _bounce_label != null and new_sim == null:
+		_bounce_label.visible = false
 	if new_sim != null:
 		new_sim.bus.pickup_collected.connect(_on_pickup_collected)
 		new_sim.bus.bomb_exploded.connect(_on_bomb_exploded)
@@ -620,6 +624,7 @@ func _v11_update_pickups(view_dt: float) -> void:
 	if pickup_renderer != null:
 		pickup_renderer.refresh(view_dt)
 	_v11_update_escape_debug()
+	_v111_update_bounce_debug()
 
 
 ## F-ashen-bastion-021 (yalnız debug derleme): çıkmaz kaçışı AÇIK/KAPALI etiketi + sayaç; dokunmak bayrağı çevirir
@@ -662,6 +667,53 @@ func _v11_update_escape_debug() -> void:
 	)
 	if _escape_label.visible:
 		_escape_label.text = escape_debug_text()
+
+
+## v1.1.1 (yalnız debug derleme): yürüme sekmesi kademesi etiketi; dokunmak ESKİ v1.1 → YUMUŞAK → SAKİN arasında döndürür
+## (değerler PlayerAnim.BOUNCE_TIERS; cihazda karşılaştırılır). Oturum boyunca geçerli, kalıcı değil.
+func _v111_build_bounce_debug() -> void:
+	if _bounce_label != null or not OS.is_debug_build():
+		return
+	_bounce_label = Label.new()
+	_bounce_label.name = "BounceDebug"
+	_bounce_label.position = Vector2(DEBUG_LABEL_X, 2340)
+	_bounce_label.size = Vector2(DEBUG_LABEL_W, 48)
+	_bounce_label.add_theme_font_size_override(&"font_size", 24)
+	_bounce_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
+	_bounce_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
+	_bounce_label.add_theme_constant_override(&"outline_size", 6)
+	_bounce_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_bounce_label.gui_input.connect(_on_bounce_label_input)
+	_bounce_label.visible = false
+	ui.add_child(_bounce_label)
+
+
+func bounce_debug_text() -> String:
+	var n: int = PlayerAnim.BOUNCE_TIERS.size()
+	var i := clampi(PlayerAnim.bounce_tier, 0, n - 1)
+	return "sekme: %s (%d/%d, dokun)" % [PlayerAnim.BOUNCE_TIERS[i]["name"], i + 1, n]
+
+
+func cycle_bounce_tier() -> void:
+	PlayerAnim.bounce_tier = (PlayerAnim.bounce_tier + 1) % PlayerAnim.BOUNCE_TIERS.size()
+
+
+func _v111_update_bounce_debug() -> void:
+	if _bounce_label == null:
+		return
+	_bounce_label.visible = (
+		sim != null and screen in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
+	)
+	if _bounce_label.visible:
+		_bounce_label.text = bounce_debug_text()
+
+
+func _on_bounce_label_input(event: InputEvent) -> void:
+	if (
+		(event is InputEventMouseButton and event.pressed)
+		or (event is InputEventScreenTouch and event.pressed)
+	):
+		cycle_bounce_tier()
 
 
 func _on_escape_label_input(event: InputEvent) -> void:
