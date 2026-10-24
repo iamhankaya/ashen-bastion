@@ -15,13 +15,14 @@ func _init() -> void:
 		print("VERİ HATASI: ", e)
 	print(
 		(
-			"veri: %d karakter, %d beceri, %d düşman, %d eklenti, %d skor kaydı, %d hata"
+			"veri: %d karakter, %d beceri, %d düşman, %d eklenti, %d skor kaydı, %d başarım, %d hata"
 			% [
 				g.character_ids.size(),
 				g.skill_ids.size(),
 				g.enemy_ids.size(),
 				g.pickup_ids.size(),
 				g.score_table.kill_points.size(),
+				g.achievements.size(),
 				errs.size()
 			]
 		)

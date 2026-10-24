@@ -42,8 +42,11 @@ def enemy(eid, name, hp, speed, dmg, radius, armor, xp, ai, sprite, h, tint="#ff
 
 GUNSLINGER = json.load(open(Path(__file__).resolve().parents[2] / "data/characters/gunslinger.json"))
 
+ACHIEVEMENTS = json.load(open(Path(__file__).resolve().parents[2] / "data/achievements.json"))
+
 VALID = {
     "characters/gunslinger.json": GUNSLINGER,
+    "achievements.json": ACHIEVEMENTS,
     "skills/cift_tabanca.json": json.load(open(Path(__file__).resolve().parents[2] / "data/skills/cift_tabanca.json")),
     "skills/seken_mermi.json": active(
         "seken_mermi", "Seken Mermi", ["rhythm"],
@@ -111,6 +114,23 @@ def row(i, **kw):
     return f
 
 
+def atlas_enemies():
+    """17 düşman (valid 4 + 13): atlas 16 hücreyi aşar (F-013)."""
+    base = VALID["enemies/les_kargasi.json"]
+    out = {}
+    for i in range(13):
+        eid = f"atlas_fazla_{i:02d}"
+        d = copy.deepcopy(base)
+        d["id"] = eid
+        d["name"] = f"Fazla {i}"
+        out[f"enemies/{eid}.json"] = d
+    return out
+
+
+def ach(fn):
+    return {"achievements.json": mut("achievements.json", fn)}
+
+
 BAD = {
     "bad_json": {"skills/seken_mermi.json": "{ bu json degil"},
     "missing_file": {"waves.json.deleted": ""},
@@ -152,10 +172,29 @@ BAD = {
     "pickup_weight": {"pickups.json": mut("pickups.json", lambda d: [k.update(weight=0) for k in d["kinds"]])},
     "score_tiers": {"score.json": mut("score.json", lambda d: d["streak"].update(tiers=[[0, 1], [10, 3], [25, 2]]))},
     "no_character": {"characters/gunslinger.json.deleted": ""},
+    # v2.0
+    "unknown_stat": ach(lambda d: d[0].update(stat="bilinmeyen_stat")),
+    "ach_count": ach(lambda d: d.__delitem__(slice(3, None))),
+    "tier_missing": ach(lambda d: d.__delitem__(slice(20, None))),
+    "scope_mismatch": ach(lambda d: d[0].update(scope="run")),
+    "atlas_cells": atlas_enemies(),
+    "unknown_ref": {"characters/gunslinger.json": mut(
+        "characters/gunslinger.json", lambda d: d.update(unlock={"achievement": "olmayan_basarim"}))},
     "rhythm_count": {
         "skills/seken_mermi.json": mut("skills/seken_mermi.json", lambda d: d.update(tags=[])),
         "skills/son_mermi_patlar.json": mut("skills/son_mermi_patlar.json", lambda d: d.update(tags=[])),
     },
+}
+
+
+# v2.0 karakter alanı bindirmeleri (test/fixtures/char_bad_<durum>/): beklenen kod test_data_v2.gd'de.
+CHAR_BAD = {
+    "blurb_long": lambda d: d.update(blurb="x" * 121),
+    "portrait_missing": lambda d: d.update(portrait="res://assets/gfx/char/yok_boyle_portre.png"),
+    "unlock_unknown": lambda d: d.update(unlock={"achievement": "olmayan_basarim"}),
+    "unlock_key": lambda d: d.update(unlock={"achievement": "ilk_kan", "extra": 1}),
+    "placeholder_type": lambda d: d.update(placeholder="evet"),
+    "base_gun": lambda d: d.update(base_gun="cift_tabanca"),
 }
 
 
@@ -169,13 +208,15 @@ def write(base: Path, rel: str, content):
 
 
 def main():
-    for d in ROOT.glob("data_*"):
+    for d in list(ROOT.glob("data_*")) + list(ROOT.glob("char_bad_*")):
         shutil.rmtree(d)
     for rel, c in VALID.items():
         write(ROOT / "data_valid", rel, c)
     for code, files in BAD.items():
         for rel, c in files.items():
             write(ROOT / f"data_bad_{code}", rel, c)
+    for case, fn in CHAR_BAD.items():
+        write(ROOT / f"char_bad_{case}", "characters/gunslinger.json", mut("characters/gunslinger.json", fn))
 
 
 if __name__ == "__main__":

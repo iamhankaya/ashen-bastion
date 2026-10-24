@@ -2,7 +2,7 @@
 
 Veri **dosya başına kayıt** biçimindedir (birleşme çakışması yok): `data/characters/<id>.json`,
 `data/skills/<id>.json`, `data/enemies/<id>.json`, `data/waves.json` (U2: `data/ruins.json`;
-v1.1: `data/pickups.json`, `data/score.json`). Dosya adı = `id`.
+v1.1: `data/pickups.json`, `data/score.json`; v2.0: `data/achievements.json`). Dosya adı = `id`.
 Yükleme ve doğrulama: `scripts/sim/game_data.gd` (`GameData`, autoload DEĞİL). Komut satırı:
 `godot --headless -s res://tools/validate_data.gd [-- <kök>]` (gate adım 4). `tools/slice.txt = 2` ise "içerik
 tamamlandı" kuralları da denetlenir.
@@ -17,6 +17,8 @@ g.waves                                        # ham waves.json sözlüğü
 g.pickup_ids / g.get_pickup(id) -> PickupDef   # v1.1: pickups.json `kinds` DİZİ sırasında (PickupPool.kind_idx bu sıra)
 g.pickup_cfg                                   # v1.1: ham pickups.json sözlüğü {spawn, kinds}; dosya yoksa {}
 g.score_table -> ScoreTable                    # v1.1: score.json; dosya yoksa varsayılan (puan yok)
+g.achievement_ids / g.achievements             # v2.0: achievements.json, dosya sırasında (AchievementDef); dosya yoksa boş
+g.get_achievement(id) -> AchievementDef        # null olabilir
 ```
 
 **Hata biçimi:** her satır `"[kod] bağlam: açıklama"`. Kodlar `GameData.ERROR_CODES`'tadır; her kodun
@@ -37,6 +39,13 @@ g.score_table -> ScoreTable                    # v1.1: score.json; dosya yoksa v
 | `starting_skill` | beceri id | var olan, `kind:active` |
 | `range` | sayı 100..2000 | temel menzil (kodda `attack_range`) |
 | `rig` | nesne | aşağıda |
+| `blurb` | metin ≤ 120 karakter, isteğe bağlı (v2.0) | vitrin açıklaması (`out_of_range`) |
+| `portrait` | görsel yolu, isteğe bağlı (v2.0) | vitrin ve seviye atlama portresi; var olmalı (`asset_missing`); yoksa portresiz düzen |
+| `unlock` | `{"achievement": "<id>"}`, isteğe bağlı (v2.0) | karakter bu başarım açılana dek kilitli; yoksa açık. Başarım var olmalı (`unknown_ref`); başka anahtar `unknown_key` |
+| `placeholder` | bool, isteğe bağlı (v2.0) | `true` = görsel yer tutucu; yalnız debug yapıda "YER TUTUCU" etiketi |
+
+`base_gun` v2.0'da YOKTUR (JSON'da görülürse `unknown_key`). Yeni karakter yalnız veri + görsel ekleyerek tanımlanır;
+sıra dosya adı sırasıdır (`character_ids`).
 
 `rig`: `body`, `arm` (görsel yolu), `display_height` (1..1000), `native_facing` (`left|right`), `shoulders` (iki `[x,y]`, 0..1),
 `arm_pivot`, `muzzle` (`[x,y]`, 0..1), `arm_scale` (0,01..5), `sway`: `hem_from_y` 0..1, `scarf_rect` `[x0,y0,x1,y1]` (0..1, x0<x1, y0<y1),
@@ -51,6 +60,32 @@ g.score_table -> ScoreTable                    # v1.1: score.json; dosya yoksa v
 | `strip` | görsel yolu | `frames > 0` ise zorunlu ve var olmalı (`asset_missing`); yatay şerit: `frames` yürüme hücresi + 1 duruş hücresi (indeks `frames`) |
 | `cell` | `[w, h]` pozitif tamsayı | `frames > 0` ise zorunlu; şerit hücre boyutu (px) |
 | `shoulder_dev` | `[]` ya da `(frames+1)` adet `[dx, dy]` | −0,2..0,2 (display_height kesri); sola bakışta `dx` aynalanır |
+
+## Başarım — `achievements.json` (v2.0, isteğe bağlı)
+
+Kök dizi; her kayıt `AchievementDef` (`scripts/sim/achievement_def.gd`). Doğrulama: `scripts/sim/data_v2.gd`.
+
+| Alan | Tür / aralık | Not |
+|---|---|---|
+| `id` | `[a-z0-9_]{1,40}` | tekil (`dup_id`); ASCII |
+| `name` | metin ≤ 22 karakter | `out_of_range` |
+| `desc` | metin ≤ 60 karakter | iki satır sınırı |
+| `stat` | kapalı küme `AchievementDef.STATS` (20 ad) | bilinmeyen = `unknown_stat` |
+| `target` | tamsayı 1..999 999 999 | |
+| `scope` | `run` \| `total` | `stat`'ın kapsamıyla AYNI olmalı (`scope_mismatch`); `total_*` = koşular arası, gerisi tek koşu |
+| `tier` | `kolay` \| `orta` \| `zor` \| `cok_zor` | ASCII |
+| `icon` | görsel yolu, isteğe bağlı | var olmalı (`asset_missing`); yoksa stat ailesine göre mevcut ikon |
+
+Bilinmeyen anahtar `unknown_key`. "İçerik tamamlandı" modunda dosya zorunlu (`missing_file`), adet 15..25 (`ach_count`),
+her kademede en az bir kayıt (`tier_missing`). Kayıt dosyası şeması (`user://achievements.json`) belge değil kod
+sözleşmesidir: `docs/plan/v2.0-plan.md` "Kayıt dosyası".
+
+**Atlas sınırı (F-013):** düşman sayısı 16'yı aşarsa `atlas_cells` hatası (shader `cell_rect[16]`).
+
+Yeni hata kodları (v2.0): `unknown_stat`, `ach_count`, `tier_missing`, `scope_mismatch`, `atlas_cells`, `unknown_ref`
+(her birinin `test/fixtures/data_bad_<kod>/` fixture'ı vardır). Karakter v2.0 alanı bindirmeleri
+`test/fixtures/char_bad_<durum>/` altındadır (`blurb_long`, `portrait_missing`, `unlock_unknown`, `unlock_key`,
+`placeholder_type`, `base_gun`); `tools/ci/gen_data_fixtures.py` hepsini üretir.
 
 ## Beceri — `skills/<id>.json`
 
