@@ -34,6 +34,9 @@ const LEVELUP_NAME_Y := 880.0
 # --- Sonuç ekranı (M5) ---
 const RESULT_DETAIL_MIN_PX := 26
 const RESULT_BUTTONS_Y := Vector2(1866.0, 2181.0)
+# DESIGN §5.6 sığma kuralı: düğmeler (< 2328) güvenli alt sınırın içinde kalır. 1866–2181 tasarım metninin
+# tahmini; gerçek yerleşim kombo satır yüksekliğine (96) bağlı, kesin bağ alt sınırdır (B-tur gerekçesi).
+const RESULT_SAFE_BOTTOM := 2328.0
 
 # --- Ok (M7) ---
 const ARROW_GLYPH_MIN_EDGE := 36.0

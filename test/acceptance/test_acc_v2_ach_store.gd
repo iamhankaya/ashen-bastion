@@ -160,14 +160,23 @@ func test_b1_sanitize_non_dictionary_root_is_empty() -> void:
 	assert_eq(AchievementStore.sanitize(3), {})
 
 
-func test_b1_counter_cap_clamps_huge_raw_int() -> void:
+func test_b1_counter_cap_clamps_raw_int_below_int_limit() -> void:
+	if _gate():
+		return
+	# Plan B1: sayaç COUNTER_CAP'e kırpılır; ham int INT_LIMIT (1e15) üstü ayrı durumdur ve atılır.
+	var st := _raw(AchKit.tmp_path(), '{"v":1,"totals":{"kills":900000000000000}}')
+	st.load_file()
+	assert_eq(
+		int(st.totals["kills"]), AchievementStore.COUNTER_CAP, "INT_LIMIT altı ham int kırpılır"
+	)
+
+
+func test_b1_raw_int_above_int_limit_is_dropped() -> void:
 	if _gate():
 		return
 	var st := _raw(AchKit.tmp_path(), '{"v":1,"totals":{"kills":10000000000000000}}')
 	st.load_file()
-	assert_eq(
-		int(st.totals["kills"]), AchievementStore.COUNTER_CAP, "ham int COUNTER_CAP'e kırpılır"
-	)
+	assert_eq(int(st.totals.get("kills", 0)), 0, "1e15 üstü ham int atılır")
 
 
 func test_b1_huge_float_never_exceeds_cap_or_goes_negative() -> void:

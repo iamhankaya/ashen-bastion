@@ -2,12 +2,12 @@ extends GutTest
 ## Kabul (v2.0 B3/B4 bütçe): başarım motoru GÖZLEMCİDİR — tracker bağlı/bağsız aynı tohum aynı state_hash ve event_log.
 ## Matris: 2 karakter (gunslinger, barutcu) × 3 politika × 2 tohum × 2400 adım; iki simde de log_events=true. Her 300 adımda hash karşılaştırılır.
 ## Kara Bomba (bomb_hits) ve dinamit gerçekten patlar: testin kendisi bunu olay günlüğünden doğrular (bota güvenilmez).
-## Süre: S0 ölçümüne göre kısaltılmış matris; tam matris (daha çok tohum/adım) test/long/ varyantına ayrılabilir.
+## Süre: B-tur: 3 politika × 3 tohum × 2 karakter (plan matrisi); daha uzun koşu test/long/ varyantına ayrılabilir.
 ## Dilim B bitmeden pending (tracker gövdesi Stub.todo).
 
 const SEG := 300
 const STEPS := 2400
-const SEEDS := [101, 202]
+const SEEDS := [101, 202, 303]
 const CHARS := [&"gunslinger", &"barutcu"]
 const BOMB_STEPS := [200, 1100, 1700]
 
