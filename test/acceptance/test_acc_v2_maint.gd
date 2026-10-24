@@ -1,7 +1,8 @@
 extends GutTest
 ## Kabul (v2.0 M1–M10): bakım bulguları. M1/M9/M10(ön koşul)/M7/M8b dilimsiz koşar; görsel/yerleşim maddeleri (M2–M6, M8a/c) dilim M bitmeden pending.
 ## M9 değerleri v1.1 ANA sürümünde (ebc24c8, sözleşme öncesi) üretildi (aşağıdaki PIN); `karakterizasyon (F-ver-001: RNG akışları kaymaz)`.
-## M11 Python tarafında: tools/ci/tests/test_selftest_groups.py.
+## test_b4_m5_*: M5 sonuç çipi, B4 işi (ResultScreen.set_new_achievements); ad öneki B dilimine bağlar (check_slices.py), B-tur açar.
+## M11 Python tarafında: tools/ci/tests/test_selftest_gate_groups.py.
 
 const ROOT_DATA := "res://data"
 
@@ -94,6 +95,11 @@ func after_all() -> void:
 
 func _gate() -> bool:
 	return V2Slice.require(self, "M")
+
+
+## M5 (sonuç ekranı "Yeni başarım" çipi) `ResultScreen.set_new_achievements` ister: B4 işi, M dilimi değil.
+func _gate_b() -> bool:
+	return V2Slice.require(self, "B")
 
 
 # --- M1 (F-010): komşu chunk'lardaki katı harabeler MIN_GAP'i korur -----------------------------------------------
@@ -526,8 +532,8 @@ func _result_with_chip(combos: int) -> ResultScreen:
 	return r
 
 
-func test_m5_result_detail_text_is_at_least_26px() -> void:
-	if _gate():
+func test_b4_m5_result_detail_text_is_at_least_26px() -> void:
+	if _gate_b():
 		return
 	var r := _result_with_chip(2)
 	await get_tree().process_frame
@@ -546,8 +552,8 @@ func test_m5_result_detail_text_is_at_least_26px() -> void:
 	assert_gt(checked, 0)
 
 
-func test_m5_result_with_chip_keeps_layout_and_at_most_three_combo_rows() -> void:
-	if _gate():
+func test_b4_m5_result_with_chip_keeps_layout_and_at_most_three_combo_rows() -> void:
+	if _gate_b():
 		return
 	var r := _result_with_chip(5)
 	await get_tree().process_frame
@@ -573,8 +579,8 @@ func test_m5_result_with_chip_keeps_layout_and_at_most_three_combo_rows() -> voi
 	)
 
 
-func test_m5_result_without_chip_is_v11_layout() -> void:
-	if _gate():
+func test_b4_m5_result_without_chip_is_v11_layout() -> void:
+	if _gate_b():
 		return
 	var host := _host()
 	var plain := ResultScreen.new()

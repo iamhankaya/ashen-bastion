@@ -4,3 +4,4 @@
 # Simgesi eklenmemiş dilimin kabul testleri V2Slice.require ile pending döner. İşaretli dilimde pending ya da sıfır test
 # gate'i KIRAR (tools/ci/check_slices.py). Yorum satırı dışında yalnız bu üç simge yazılabilir.
 K
+M
