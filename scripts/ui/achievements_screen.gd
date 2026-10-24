@@ -160,6 +160,7 @@ func _build() -> void:
 	list.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	list.mouse_filter = Control.MOUSE_FILTER_STOP
 	list.scroll_deadzone = 12
+	UiKit.touch_scroll(list)
 	add_child(list)
 	content = VBoxContainer.new()
 	content.name = "Content"
