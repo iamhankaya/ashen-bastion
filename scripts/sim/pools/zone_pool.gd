@@ -26,6 +26,10 @@ var pull: PackedFloat32Array = PackedFloat32Array()
 var push: PackedFloat32Array = PackedFloat32Array()
 var fling: PackedFloat32Array = PackedFloat32Array()
 var retarget_left: PackedFloat32Array = PackedFloat32Array()
+## Hortum/Tufan hareketi (U3): hız px/sn, oyuncudan en fazla uzaklık, elit/Lord tik çarpanı (hash'e girmez: tohumdan türer).
+var speed: PackedFloat32Array = PackedFloat32Array()
+var max_dist: PackedFloat32Array = PackedFloat32Array()
+var boss_mult: PackedFloat32Array = PackedFloat32Array()
 
 var _next_gen: int = 1
 
@@ -45,10 +49,13 @@ func _init() -> void:
 	push.resize(CAP)
 	fling.resize(CAP)
 	retarget_left.resize(CAP)
+	speed.resize(CAP)
+	max_dist.resize(CAP)
+	boss_mult.resize(CAP)
 
 
-## o: radius, life, tick_every, dmg, pull, push, fling, retarget (sn), vel:Vector2, target:Vector2 (hepsi isteğe bağlı,
-## yok = 0). İlk tik `tick_every` sonra. Dönen değer bölge indeksidir (çıkarma olana kadar geçerli).
+## o: radius, life, tick_every, dmg, pull, push, fling, retarget (sn), speed, max_dist, boss_mult (=1), vel:Vector2,
+## target:Vector2 (hepsi isteğe bağlı, yok = 0). İlk tik `tick_every` sonra. Dönen değer bölge indeksidir (çıkarma olana kadar geçerli).
 ## -1 = dolu ya da rezerv (KIND_POCKET count >= CAP - RESERVE iken). Sessiz değildir: çağıran
 ## `WindSystem.spawn_zone` `sim.fx.zone_dropped` sayacını artırır.
 func spawn(k: int, p: Vector2, o: Dictionary = {}) -> int:
@@ -72,6 +79,9 @@ func spawn(k: int, p: Vector2, o: Dictionary = {}) -> int:
 	push[i] = float(o.get("push", 0.0))
 	fling[i] = float(o.get("fling", 0.0))
 	retarget_left[i] = float(o.get("retarget", 0.0))
+	speed[i] = float(o.get("speed", 0.0))
+	max_dist[i] = float(o.get("max_dist", 0.0))
+	boss_mult[i] = float(o.get("boss_mult", 1.0))
 	return i
 
 
@@ -95,6 +105,9 @@ func remove(i: int) -> void:
 		push[i] = push[last]
 		fling[i] = fling[last]
 		retarget_left[i] = retarget_left[last]
+		speed[i] = speed[last]
+		max_dist[i] = max_dist[last]
+		boss_mult[i] = boss_mult[last]
 	count = last
 
 

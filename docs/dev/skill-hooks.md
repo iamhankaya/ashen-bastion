@@ -32,14 +32,14 @@ Mermi bayrakları (`ProjectilePool.FLAG_*`): `EXPLODES` (isabette), `EXPLODE_ON_
 (zincirleme_patlama), `RICOCHET`, `RADIAL` (yalnız görsel), `LOB` (yay atış: düşmana çarpmaz, ömrü bitince patlar), `SHRAPNEL` (öldürdüğü düşman yeniden şarapnel saçmaz). `o` sözlüğü: `pierce, bounces, life (=1.2), flags, ex_radius,
 ex_dmg, push, gun, radius (=8, `DEFAULT_RADIUS`)`. Pierce/bounce'ta mermi bir düşmana yalnızca bir kez vurur (mermi başına `hit_ids`, `HIT_SLOTS = 96` halka tampon: 96'dan fazla düşmana vuran mermide en eski kayıt ezilir).
 
-v2.0.2 eklemeleri (Zyfen davranışlarının giriş/gözlem/tolerans satırları: `docs/design/v2.0.2/behavior-contract.md`; test itirazı yalnız oraya karşı açılır; ham DPS ölçümü: `test/helpers/dps_probe.gd`, başlangıç tablosu `docs/design/v2.0.2/balance/dps-baseline.md`): `FLAG_WIND` (rüzgar kesiği/hilal), `FLAG_SPLIT` (bölünen kesiğin çocuğu, tekrar bölünmez), `PIERCE_ALL = 99`; `ShotContext.radius/speed/life` (0 = varsayılan); `WindUtil.crescent/displace/pulse_circle`; `sim.zones` (`ZonePool`), `sim.wind` (`WindSystem`), `fx.wind_wave/wind_cast`.
+v2.0.2 eklemeleri (Zyfen davranışlarının giriş/gözlem/tolerans satırları: `docs/design/v2.0.2/behavior-contract.md`; test itirazı yalnız oraya karşı açılır; ham DPS ölçümü: `test/helpers/dps_probe.gd`, başlangıç tablosu `docs/design/v2.0.2/balance/dps-baseline.md`): `FLAG_WIND` (rüzgar kesiği/hilal), `FLAG_SPLIT` (bölünen kesiğin çocuğu, tekrar bölünmez), `FLAG_SPLITTER` (bölünen kesiğin ebeveyni: ilk isabette biter ve çocuk doğurur; U3), `PIERCE_ALL = 99`; `ShotContext.radius/speed/life` (0 = varsayılan); `WindUtil.crescent/displace/pulse_circle/spear/skill_origin/enemies_near`, `WindSystem.cast_twisters/spawn_zone`; `sim.zones` (`ZonePool`), `sim.wind` (`WindSystem`), `fx.wind_wave/wind_cast`.
 
 ## Beceri → kanca eşlemesi
 
 | Beceri | Kancalar | SkillApi | Bayraklar | Alanlar |
 |---|---|---|---|---|
-| `ay_oragi` | `modify_shot` | `spawn_projectile` | `WIND` | `radius`, `speed` |
-| `bolunen_kesik` | `modify_shot`, `on_hit` | `spawn_projectile` | `WIND`, `SPLIT` | `index_in_mag` |
+| `ay_oragi` | `modify_shot` | `spawn_projectile` | `WIND`, `SPLIT` | `radius`, `speed`, `life`, `pierce` |
+| `bolunen_kesik` | `modify_shot`, `on_hit` | `spawn_projectile` | `SPLITTER`, `WIND`, `SPLIT` | `index_in_mag` |
 | `cift_tabanca` | `modify_shot` | | | |
 | `delen_ruzgar` | `tick` | `pick_highest_hp`, `spawn_projectile` | `WIND` | `radius`, `speed` |
 | `doldurma_sacilmasi` | `on_reload_start` | `spawn_projectile` | `RADIAL` | |
@@ -61,6 +61,12 @@ v2.0.2 eklemeleri (Zyfen davranışlarının giriş/gözlem/tolerans satırları
 | `tufan` | `tick` | `zones`, `rng_combat` | | |
 | `yelpaze_atis` | `tick` | `spawn_projectile` | | |
 | `zincirleme_patlama` | `modify_shot` | | `RICOCHET`, `EXPLODE_ON_BOUNCE` | `bounces` |
+
+v2.0.2 rüzgar notları (tabloda makine tarafından okunmayan ayrıntı):
+- `delen_ruzgar`, `gogun_mizragi`: kesik `WindUtil.spear` (en yüksek canlı hedef, yarıçap 10, hız 1400, `PIERCE_ALL`); `girdap`, `nefes_dalgasi`, `kasirga_patlamasi`: `WindUtil.pulse_circle` (hasar `&"dot"`: zırhı yok sayar).
+- `hortum`, `tufan`: `WindSystem.cast_twisters` (çağrı başına tam 1 `rng_combat.randf()`); bölge hareketi/tik/ömür sonu `WindSystem.step`.
+- `hava_cebi`: `on_kill` etiket taşımaz; cep tiki ile ölen düşmandan zincir engeli `sim.wind.in_pocket_tick` bayrağıyla yapılır (bu durumda randf tüketilmez).
+- `bolunen_kesik`: ebeveyn `FLAG_SPLITTER` taşır; `on_hit` ebeveyni bitirir (`pierce` 0), çocukları `FLAG_WIND | FLAG_SPLIT` ile doğurur ve ebeveynin vurduğu düşmanı çocuklara `mark_hit` ile işler. `ay_oragi` `FLAG_SPLIT` koyar (bölünmez).
 
 Ayrıntılar (plan "Denge tabloları" ve "Sözleşme kanca eşlemesi"):
 

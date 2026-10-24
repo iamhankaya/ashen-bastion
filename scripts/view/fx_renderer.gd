@@ -67,6 +67,8 @@ var _part_head := 0
 var _rng := RandomNumberGenerator.new()
 ## Zemin kömürü (normal karışım): FxRenderer'ın çocuğu; GameController zemin ile gölgeler arasına taşır.
 var char_layer: CharLayer = null
+## Rüzgar bölgeleri ve Girdap halkası (v2.0.2): çocuk düğüm, aynı ek karışım.
+var wind_renderer: WindRenderer = null
 
 
 func _init() -> void:
@@ -102,6 +104,9 @@ func _init() -> void:
 	char_layer = CharLayer.new()
 	char_layer.name = "CharLayer"
 	add_child(char_layer)
+	wind_renderer = WindRenderer.new()
+	wind_renderer.name = "Wind"
+	add_child(wind_renderer)
 
 
 ## Zemin kömürü: yarıçap 0,7R elips, α 0,35, 4 sn'de solar, en çok 8. Normal karışım (additive siyah görünmez).
@@ -147,6 +152,9 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 			_sim.bus.gem_collected.disconnect(_on_gem)
 			_sim.bus.bomb_exploded.disconnect(_on_bomb_exploded)
 			_sim.fx.beam_fired.disconnect(_on_beam)
+			_sim.fx.wind_wave.disconnect(_on_wind_wave)
+			_sim.fx.wind_cast.disconnect(_on_wind_cast)
+			_sim.bus.shot_fired.disconnect(_on_shot)
 	_sim = sim
 	_camera = camera
 	_ex_left.fill(0.0)
@@ -159,6 +167,7 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 	char_layer.left.fill(0.0)
 	char_layer.queue_redraw()
 	_active = 0
+	wind_renderer.bind(sim, camera)
 	queue_redraw()
 	if sim == null:
 		return
@@ -167,6 +176,9 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 	sim.bus.gem_collected.connect(_on_gem)
 	sim.bus.bomb_exploded.connect(_on_bomb_exploded)
 	sim.fx.beam_fired.connect(_on_beam)
+	sim.fx.wind_wave.connect(_on_wind_wave)
+	sim.fx.wind_cast.connect(_on_wind_cast)
+	sim.bus.shot_fired.connect(_on_shot)
 
 
 ## Efekt var mı (testler/yeniden çizim).
@@ -299,6 +311,7 @@ func update_fx(dt: float) -> void:
 			_spark_left[i] = maxf(0.0, _spark_left[i] - dt)
 			n += 1
 	n += _update_v11(dt)
+	wind_renderer.refresh()
 	if n > 0 or _active > 0:
 		queue_redraw()
 	_active = n
@@ -483,3 +496,20 @@ func _on_gem(_value: int) -> void:
 
 func _on_beam(a: Vector2, b: Vector2) -> void:
 	add_beam(a, b)
+
+
+## Nefes Dalgası / Kasırga Patlaması: genişleyen halka (big: ekran boyu, kalın, kısa sarsıntı).
+func _on_wind_wave(origin: Vector2, radius: float, big: bool) -> void:
+	add_ring(origin, radius, 0.6 if big else 0.4, Color(0.7, 0.9, 0.95, 0.9), 10.0 if big else 6.0)
+	if big and _camera != null:
+		_camera.shake(8.0)
+
+
+## Avuçtaki savuruş: kolsuz karakterde (Zyfen) her atışta cast noktasında küçük, kısa halka (`fx.wind_cast` ile aynı efekt).
+func _on_shot(_gun: int, origin: Vector2, _dir: Vector2) -> void:
+	if _sim != null and PlayerRig.is_armless(_sim.character.rig):
+		_on_wind_cast(origin)
+
+
+func _on_wind_cast(origin: Vector2) -> void:
+	add_ring(origin, 28.0, 0.18, Color(0.75, 0.92, 1.0, 0.8), 3.0)

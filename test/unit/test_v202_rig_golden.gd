@@ -33,14 +33,14 @@ func test_u2_gunslinger_live_run_equals_u1b_record() -> void:
 		assert_eq(got["kills"], int(want["kills"]), "tohum %d: kills" % s)
 
 
-func test_u2_zyfen_live_run_equals_record_and_differs_from_u1b() -> void:
+## U3 Zyfen'in rüzgar davranışlarını da gerçek yaptı: canlı Zyfen koşusu artık u2 kaydına eşit değildir (beklenen).
+## u2 Zyfen kaydı TARİHSELDİR (yalnız RUNNING ve u1b'den farklı denetlenir); canlı Zyfen kanıtı `zyfen_u3` aşamasındadır
+## (test_v202_wind_golden.gd).
+func test_u2_zyfen_record_is_historical_running_and_differs_from_u1b() -> void:
 	for s in GoldenKit.seeds():
 		var k := str(s)
 		var want: Dictionary = _stage("u2", "zyfen")[k]
 		assert_eq(int(want["state"]), 0, "Zyfen koşusu RUNNING bitti")
-		var got := GoldenKit.run(s, &"zyfen")
-		assert_eq(got["hash"], int(want["hash"]), "tohum %d: state_hash" % s)
-		assert_eq(got["kills"], int(want["kills"]), "tohum %d: kills" % s)
 		assert_ne(
 			int(want["hash"]),
 			int(_stage("u1b", "zyfen")[k]["hash"]),
