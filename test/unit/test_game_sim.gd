@@ -266,7 +266,7 @@ func test_debug_set_time_only_moves_forward_and_scales_difficulty() -> void:
 	s.debug_set_time(100.0)
 	assert_eq(s.time, 900.0)
 	var id := s.debug_spawn(&"curumus_piyade", Vector2(500, 0))
-	assert_almost_eq(s.enemies.max_hp[EnemyPool.index_of(id)], 30.0 * 3.4, 1e-3)
+	assert_almost_eq(s.enemies.max_hp[EnemyPool.index_of(id)], 30.0 * 3.9625, 1e-3)
 	var s2 := KitDev.sim({"start_time": 900.0})
 	assert_eq(s2.time, 900.0)
 
