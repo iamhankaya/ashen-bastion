@@ -65,6 +65,10 @@ const CHARACTER_KEYS: PackedStringArray = [
 	"starting_skill",
 	"range",
 	"rig",
+	"blurb",
+	"portrait",
+	"unlock",
+	"placeholder",
 ]
 const RIG_KEYS: PackedStringArray = [
 	"body",
@@ -179,6 +183,13 @@ const ERROR_CODES: PackedStringArray = [
 	"unknown_key",
 	"pickup_weight",
 	"score_tiers",
+	# v2.0
+	"unknown_stat",
+	"ach_count",
+	"tier_missing",
+	"scope_mismatch",
+	"atlas_cells",
+	"unknown_ref",
 ]
 
 var root_dir: String = ""
@@ -193,6 +204,8 @@ var ruins: Array[Dictionary] = []
 var pickup_cfg: Dictionary = {}  # v1.1 pickups.json ham sözlüğü {spawn, kinds}; dosya yoksa {}
 var pickup_ids: Array[StringName] = []  # `kinds` DİZİ sırasında (PickupPool.kind_idx bu sıra)
 var score_table: ScoreTable = ScoreTable.new()  # v1.1 score.json; dosya yoksa varsayılan tablo
+var achievement_ids: Array[StringName] = []  # v2.0 achievements.json, dosya sırası
+var achievements: Array[AchievementDef] = []  # achievement_ids ile aynı sırada
 
 var _characters: Dictionary = {}  # StringName -> CharacterDef
 var _skills: Dictionary = {}  # StringName -> SkillDef
@@ -207,6 +220,8 @@ var _raw_ruins: Variant = null
 var _ruins_failed: bool = false
 var _pickups: Dictionary = {}  # StringName -> PickupDef
 var _v11: Dictionary = {}  # DataV11 ham durumu (pickups/score + yükleme başarısızlık bayrakları)
+var _v2: Dictionary = {}  # DataV2 ham durumu (achievements.json)
+var _achievements: Dictionary = {}  # StringName -> AchievementDef
 
 static var _default: GameData = null
 
@@ -246,6 +261,11 @@ func get_pickup(id: StringName) -> PickupDef:
 	return _pickups.get(id)
 
 
+## null olabilir (bilinmeyen kimlik).
+func get_achievement(id: StringName) -> AchievementDef:
+	return _achievements.get(id)
+
+
 func skills_of_kind(kind: StringName) -> Array[SkillDef]:
 	var out: Array[SkillDef] = []
 	for id in skill_ids:
@@ -266,6 +286,7 @@ func validate(registry: Dictionary = {}, complete: bool = false) -> PackedString
 	_validate_characters(out)
 	WavesValidator.run(self, out)
 	DataV11.validate(self, out)
+	DataV2.validate(self, out, complete)
 	if not _ruins_failed and _raw_ruins != null:
 		RuinsValidator.run(self, _raw_ruins, out)
 	if complete:
@@ -299,6 +320,7 @@ func _load_all() -> void:
 				if x is Dictionary:
 					ruins.append(x)
 	DataV11.load_tables(self)
+	DataV2.load_achievements(self, root_dir)
 	for e in _raw_characters:
 		var d: Variant = e["data"]
 		if d is Dictionary and _valid_id(d.get("id")) and not _characters.has(StringName(d["id"])):
@@ -808,6 +830,7 @@ func _validate_characters(out: PackedStringArray) -> void:
 
 func _validate_character(out: PackedStringArray, file: String, d: Dictionary) -> void:
 	_unknown_keys(out, file, d, CHARACTER_KEYS)
+	DataV2.validate_character(self, out, file, d)
 	_str(out, file, d, "name")
 	_num(out, file, d, "max_hp", 1, 10000)
 	_num(out, file, d, "move_speed", 50, 1000)

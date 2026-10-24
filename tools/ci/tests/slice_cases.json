@@ -1,0 +1,139 @@
+{
+  "valid": [
+    "K",
+    "B",
+    "M"
+  ],
+  "cases": [
+    {
+      "name": "bos_dosya",
+      "text": "",
+      "ok": true,
+      "marks": []
+    },
+    {
+      "name": "yalniz_yorum",
+      "text": "# K B M\n# yorum\n",
+      "ok": true,
+      "marks": []
+    },
+    {
+      "name": "tek_simge",
+      "text": "K\n",
+      "ok": true,
+      "marks": [
+        "K"
+      ]
+    },
+    {
+      "name": "uc_simge_bosluk",
+      "text": "K B M\n",
+      "ok": true,
+      "marks": [
+        "K",
+        "B",
+        "M"
+      ]
+    },
+    {
+      "name": "satir_ayracli",
+      "text": "K\nB\nM\n",
+      "ok": true,
+      "marks": [
+        "K",
+        "B",
+        "M"
+      ]
+    },
+    {
+      "name": "bosluk_ve_sekme",
+      "text": "  K\t B  \n\n  M\n",
+      "ok": true,
+      "marks": [
+        "K",
+        "B",
+        "M"
+      ]
+    },
+    {
+      "name": "yorum_arasi",
+      "text": "# basla\nK\n# orta\nB\n",
+      "ok": true,
+      "marks": [
+        "K",
+        "B"
+      ]
+    },
+    {
+      "name": "crlf",
+      "text": "K\r\nB\r\n",
+      "ok": true,
+      "marks": [
+        "K",
+        "B"
+      ]
+    },
+    {
+      "name": "yinelenen_simge",
+      "text": "K K\nK\n",
+      "ok": true,
+      "marks": [
+        "K"
+      ]
+    },
+    {
+      "name": "sira_korunur",
+      "text": "M K\n",
+      "ok": true,
+      "marks": [
+        "M",
+        "K"
+      ]
+    },
+    {
+      "name": "kucuk_harf",
+      "text": "k\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "esittir_isareti",
+      "text": "K=2\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "bilinmeyen_simge",
+      "text": "X\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "gecerli_arasinda_bilinmeyen",
+      "text": "K X B\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "satir_sonu_yorum_gecersiz",
+      "text": "K # bitti\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "virgul_gecersiz",
+      "text": "K,B\n",
+      "ok": false,
+      "marks": []
+    },
+    {
+      "name": "v11_simgesi_gecersiz",
+      "text": "D1\n",
+      "ok": false,
+      "marks": []
+    }
+  ],
+  "missing_file": {
+    "ok": false
+  }
+}

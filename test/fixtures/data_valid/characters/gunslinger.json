@@ -54,5 +54,7 @@
       ],
       "shoulder_dev": []
     }
-  }
+  },
+  "portrait": "res://assets/ui/portre-seviye-atlama.png",
+  "blurb": "Dengeli ve çevik; çift tabancasıyla sürüyü ateş altında tutar."
 }

@@ -1,10 +1,16 @@
 extends Node
 ## Kullanıcı ayarları (user://settings.cfg). Yol enjekte edilebilir (testte geçici yol).
+## v2.0: `karakter` (seçili karakter kimliği) aynı dosyada; geçersiz/kilitli kimlik yükte değil ÇÖZÜMLEMEDE
+## (`CharacterRoster.resolve`) düzeltilir. Settings yalnız dizgeyi tutar (sim/veri bağımlılığı kazanmaz).
 
 var sound_on: bool = true
 var vibration_on: bool = true
 ## F-ashen-bastion-002 kesme dikdörtgeni düzeltmesi (RenderFix); yalnız debug APK'da arayüzden değişir.
 var cull_fix: bool = true
+## v2.0: seçili karakter kimliği ("" = seçilmemiş -> varsayılan). İçerik güvenilmez (yalnız dizge alınır).
+var character_id: String = ""
+## v2.0: ayar dosyası yolu (boş yol parametreleri bunu kullanır). Testler geçici dosyaya çevirir, `after_each`'te geri alır.
+var store_path: String = "user://settings.cfg"
 
 
 func _ready() -> void:
@@ -13,7 +19,9 @@ func _ready() -> void:
 
 
 ## Dosya yoksa ya da bozuksa varsayılanlar korunur. Biçim: JSON (ayrıştırma hatası motor günlüğüne düşmez).
-func load_settings(path: String = "user://settings.cfg") -> void:
+func load_settings(path: String = "") -> void:
+	if path == "":
+		path = store_path
 	if not FileAccess.file_exists(path):
 		return
 	var json := JSON.new()
@@ -23,16 +31,31 @@ func load_settings(path: String = "user://settings.cfg") -> void:
 	sound_on = bool(d.get("ses", true))
 	vibration_on = bool(d.get("titresim", true))
 	cull_fix = bool(d.get("kesme_duzeltmesi", true))
+	var ch: Variant = d.get("karakter", "")
+	character_id = ch if ch is String else ""
 	RenderFix.enabled = cull_fix
 
 
 ## Yazılamazsa false döner (üretim kodunda push_error kullanılmaz).
-func save_settings(path: String = "user://settings.cfg") -> bool:
-	var f := FileAccess.open(path, FileAccess.WRITE)
+func save_settings(path: String = "") -> bool:
+	var f := FileAccess.open(path if path != "" else store_path, FileAccess.WRITE)
 	if f == null:
 		return false
-	f.store_string(
-		JSON.stringify({"ses": sound_on, "titresim": vibration_on, "kesme_duzeltmesi": cull_fix})
+	(
+		f
+		. store_string(
+			(
+				JSON
+				. stringify(
+					{
+						"ses": sound_on,
+						"titresim": vibration_on,
+						"kesme_duzeltmesi": cull_fix,
+						"karakter": character_id,
+					}
+				)
+			)
+		)
 	)
 	return true
 
@@ -55,6 +78,13 @@ func apply_audio() -> void:
 	var idx := AudioServer.get_bus_index(&"Master")
 	if idx >= 0:
 		AudioServer.set_bus_mute(idx, not sound_on)
+
+
+## Seçili karakteri kaydeder (boş yol = store_path) ve settings_changed yayınlar.
+func set_character(id: String, path: String = "") -> void:
+	character_id = id
+	save_settings(path)
+	Events.settings_changed.emit()
 
 
 func set_cull_fix(on: bool) -> void:

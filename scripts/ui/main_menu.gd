@@ -6,36 +6,49 @@ extends Control
 
 signal play_requested
 signal scores_requested
+signal characters_requested
+signal achievements_requested
 signal sound_toggled(on: bool)
 signal vibration_toggled(on: bool)
 signal debug_stress_requested
 
-const VERSION := "0.1"
+const VERSION := "2.0"
 const HERO_PATH := "res://assets/gfx/ui/ana_gorsel.png"
 const W := 936.0
 const TOGGLE_FONT := 36  # "TİTREŞİM: KAPALI" 454 px'e sığar; sütun 936'dan taşmaz (F-ashen-bastion-022)
 const TOGGLE_W := 454.0  # iki anahtar eşit genişlikte (etiket uzunluğu yerleşimi kaydırmaz)
+const HALF_FONT := 34  # KARAKTERLER | BAŞARIMLAR başlığı (Cinzel 700 34)
+const SUB_FONT := 26  # alt satır (seçili karakter adı, açılan/toplam)
+const NAME_MAX := 24  # sürüm satırındaki karakter adı (taşarsa "…")
+const DEFAULT_CHARACTER := "Gunslinger"
+const DEFAULT_ACH_TOTAL := 22
 const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
 
 var play_button: Button
 ## v1.1: EN İYİ SKORLAR düğmesi (D3-5 kurar; iskelette null).
 var scores_button: Button
+## v2.0: KARAKTERLER | BAŞARIMLAR yarım düğmeleri (454×132, OYNA'nın altında); alt satırlar bilgi taşır.
+var characters_button: Button
+var achievements_button: Button
 var sound_button: Button
 var vibration_button: Button
 var version_label: Label
 var emblem: Emblem
 var hero: TextureRect
 
-const COL_TOP := -685.0  # düğme sütunu üstü (alttan): y 1715
+const COL_TOP := -844.0  # düğme sütunu üstü (alttan): y 1556 (v1.1: 1715; +159 = bir 132'lik satır + aralık)
 const COL_BOTTOM := -120.0
-const HERO_TOP := -540.0  # ana görsel kutusu 960x1020, y 660-1680
-const HERO_BOTTOM := 480.0
+const HERO_TOP := -640.0  # ana görsel kutusu 960x960, y 560-1520 (v1.1: 960x1020, y 660-1680)
+const HERO_BOTTOM := 320.0
 const HEAD_TOP := 150.0
 const TOP_DEFAULT := 96.0
 
 var _head: Control
 var _col: VBoxContainer
+var _characters_sub: Label
+var _achievements_sub: Label
+var _char_name: String = DEFAULT_CHARACTER
 var _sound_on: bool = true
 var _vibration_on: bool = true
 var _taps: int = 0
@@ -156,6 +169,16 @@ func _build() -> void:
 	play_button.add_theme_font_size_override(&"font_size", 64)
 	play_button.pressed.connect(func() -> void: play_requested.emit())
 	col.add_child(play_button)
+	var half := HBoxContainer.new()
+	half.name = "HalfRow"
+	half.add_theme_constant_override(&"separation", 27)
+	characters_button = _half_button("KARAKTERLER", &"person", "CharactersButton")
+	characters_button.pressed.connect(func() -> void: characters_requested.emit())
+	achievements_button = _half_button("BAŞARIMLAR", &"star", "AchievementsButton")
+	achievements_button.pressed.connect(func() -> void: achievements_requested.emit())
+	half.add_child(characters_button)
+	half.add_child(achievements_button)
+	col.add_child(half)
 	scores_button = UiKit.button("EN İYİ SKORLAR", &"secondary")
 	scores_button.name = "ScoresButton"
 	scores_button.pressed.connect(func() -> void: scores_requested.emit())
@@ -177,7 +200,7 @@ func _build() -> void:
 	row.add_child(sound_button)
 	row.add_child(vibration_button)
 	col.add_child(row)
-	version_label = UiKit.label("Sürüm %s · Gunslinger" % VERSION, &"", 26, UiKit.KEMIK_500)
+	version_label = UiKit.label(version_text(_char_name), &"", 26, UiKit.KEMIK_500)
 	version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	version_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	version_label.gui_input.connect(_on_version_input)
@@ -185,7 +208,73 @@ func _build() -> void:
 	add_child(col)
 	_col = col
 	set_settings(_sound_on, _vibration_on)
+	set_character_name(_char_name)
+	set_achievement_count(0, DEFAULT_ACH_TOTAL)
 	_place_trophy()
+
+
+## Yarım düğme: ikon (52) solda, başlık ortada, alt satır (Inter 600 26 kemik_300) altta. Yazıyı yukarı almak için stil
+## alt kenar boşluğu artırılır (tema stil kutuları kopyalanır).
+func _half_button(title: String, glyph: StringName, node_name: String) -> Button:
+	var b := UiKit.button(title, &"secondary")
+	b.name = node_name
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.custom_minimum_size.x = TOGGLE_W
+	b.add_theme_font_size_override(&"font_size", HALF_FONT)
+	for st in [&"normal", &"hover", &"pressed", &"focus", &"disabled"]:
+		var sb: StyleBox = UiKit.theme().get_stylebox(st, &"ButtonSecondary")
+		if sb != null:
+			var d := sb.duplicate() as StyleBox
+			d.content_margin_bottom = 40.0
+			b.add_theme_stylebox_override(st, d)
+	var g := UiKit.Glyph.new(glyph, UiKit.BRONZ_300, 52.0)
+	g.position = Vector2(22.0, 40.0)
+	b.add_child(g)
+	var sub := UiKit.label("", &"", SUB_FONT, UiKit.KEMIK_300)
+	sub.name = "Sub"
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.anchor_left = 0.0
+	sub.anchor_right = 1.0
+	sub.anchor_top = 1.0
+	sub.anchor_bottom = 1.0
+	sub.offset_top = -48.0
+	sub.offset_bottom = -12.0
+	b.add_child(sub)
+	return b
+
+
+## KARAKTERLER alt satırı ve sürüm etiketi ("Sürüm 2.0 · <ad>"; ad en çok NAME_MAX harf, taşarsa "…").
+func set_character_name(p_name: String) -> void:
+	_char_name = p_name
+	if characters_button != null:
+		_characters_sub = characters_button.get_node("Sub") as Label
+		_characters_sub.text = clip_name(p_name)
+		version_label.text = version_text(p_name)
+
+
+## BAŞARIMLAR alt satırı: "açılan/toplam" (örn. "8/22").
+func set_achievement_count(open_count: int, total: int) -> void:
+	if achievements_button != null:
+		_achievements_sub = achievements_button.get_node("Sub") as Label
+		_achievements_sub.text = "%d/%d" % [open_count, total]
+
+
+static func version_text(p_name: String) -> String:
+	return "Sürüm %s · %s" % [VERSION, clip_name(p_name)]
+
+
+## En çok NAME_MAX harf (birleştirici işaretler harf sayılmaz ve kendi harfinden ayrılmaz); fazlası "…" ile kesilir.
+## Büyük/küçük harf dönüşümü yapılmaz (i/ı olduğu gibi kalır).
+static func clip_name(p_name: String) -> String:
+	var letters := 0
+	for i in p_name.length():
+		var c := p_name.unicode_at(i)
+		if c >= 0x300 and c <= 0x36F:  # birleştirici işaret: önceki harfe ait
+			continue
+		letters += 1
+		if letters > NAME_MAX:
+			return p_name.substr(0, i) + "…"
+	return p_name
 
 
 ## Kupa ikonu EN İYİ SKORLAR yazısının soluna oturur (yazı ortalı).

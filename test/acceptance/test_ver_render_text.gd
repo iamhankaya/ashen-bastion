@@ -13,10 +13,15 @@ const FORBIDDEN_EXT: Array[String] = ["jks", "p12", "pfx", "pem", "keystore", "e
 const ALLOWED_KEYSTORE := "res://tools/ci/debug.keystore"
 
 var _saved_cull: bool = true
+var _saved_store_path: String = ""
+const TMP_SETTINGS := "user://test_render_text_settings.cfg"
 
 
 func before_each() -> void:
 	_saved_cull = RenderFix.enabled
+	# v2.0 izolasyon: gerçek user://settings.cfg'ye yazılmaz (S3 Settings.store_path enjeksiyonu)
+	_saved_store_path = get_node("/root/Settings").store_path
+	get_node("/root/Settings").store_path = TMP_SETTINGS
 
 
 func after_each() -> void:
@@ -24,6 +29,10 @@ func after_each() -> void:
 	var s := get_node("/root/Settings")
 	s.cull_fix = _saved_cull
 	s.save_settings()
+	s.store_path = _saved_store_path
+	for p in [TMP_SETTINGS, TMP_SETTINGS + ".tmp"]:
+		if FileAccess.file_exists(p):
+			DirAccess.remove_absolute(p)
 
 
 func _src(path: String) -> String:

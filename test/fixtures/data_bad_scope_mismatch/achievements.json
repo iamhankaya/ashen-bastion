@@ -1,0 +1,200 @@
+[
+  {
+    "id": "ilk_kan",
+    "name": "İlk Kan",
+    "desc": "İlk düşmanını öldür.",
+    "stat": "total_kills",
+    "target": 1,
+    "scope": "run",
+    "tier": "kolay"
+  },
+  {
+    "id": "bes_dakika",
+    "name": "Beş Dakika",
+    "desc": "Tek koşuda 5 dakika hayatta kal.",
+    "stat": "run_time",
+    "target": 300,
+    "scope": "run",
+    "tier": "kolay"
+  },
+  {
+    "id": "seviye_10",
+    "name": "Onuncu Basamak",
+    "desc": "Tek koşuda 10. seviyeye ulaş.",
+    "stat": "run_level",
+    "target": 10,
+    "scope": "run",
+    "tier": "kolay"
+  },
+  {
+    "id": "yerlesik",
+    "name": "Yerleşik",
+    "desc": "10 koşu oyna.",
+    "stat": "total_runs",
+    "target": 10,
+    "scope": "total",
+    "tier": "kolay"
+  },
+  {
+    "id": "tambur_ustasi",
+    "name": "Tambur Ustası",
+    "desc": "Tek koşuda 100 kez doldur.",
+    "stat": "run_reloads",
+    "target": 100,
+    "scope": "run",
+    "tier": "kolay"
+  },
+  {
+    "id": "alti_silah",
+    "name": "Tam Kadro",
+    "desc": "6 aktif beceri yuvasını doldur.",
+    "stat": "run_active_slots",
+    "target": 6,
+    "scope": "run",
+    "tier": "kolay"
+  },
+  {
+    "id": "kirim",
+    "name": "Kırım",
+    "desc": "Tek koşuda 500 düşman öldür.",
+    "stat": "run_kills",
+    "target": 500,
+    "scope": "run",
+    "tier": "orta"
+  },
+  {
+    "id": "on_dakika",
+    "name": "On Dakika",
+    "desc": "Tek koşuda 10 dakika hayatta kal.",
+    "stat": "run_time",
+    "target": 600,
+    "scope": "run",
+    "tier": "orta"
+  },
+  {
+    "id": "seri_ustasi",
+    "name": "Seri Ustası",
+    "desc": "SERİ çarpanını ×5'e çıkar.",
+    "stat": "run_best_mult",
+    "target": 5,
+    "scope": "run",
+    "tier": "orta"
+  },
+  {
+    "id": "piyade_avcisi",
+    "name": "Piyade Avcısı",
+    "desc": "Elit piyadeyi öldür.",
+    "stat": "run_elit_piyade",
+    "target": 1,
+    "scope": "run",
+    "tier": "orta"
+  },
+  {
+    "id": "eklenti_avcisi",
+    "name": "Eklenti Avcısı",
+    "desc": "Tek koşuda 5 eklenti topla.",
+    "stat": "run_pickups",
+    "target": 5,
+    "scope": "run",
+    "tier": "orta"
+  },
+  {
+    "id": "dokunulmaz",
+    "name": "Dokunulmaz",
+    "desc": "İlk 3 dakika hiç hasar alma.",
+    "stat": "run_clean_secs",
+    "target": 180,
+    "scope": "run",
+    "tier": "orta"
+  },
+  {
+    "id": "seviye_20",
+    "name": "Yirminci Basamak",
+    "desc": "Tek koşuda 20. seviyeye ulaş.",
+    "stat": "run_level",
+    "target": 20,
+    "scope": "run",
+    "tier": "orta"
+  },
+  {
+    "id": "kalabalik_kesici",
+    "name": "Kalabalık Kesici",
+    "desc": "Toplam 10.000 düşman öldür.",
+    "stat": "total_kills",
+    "target": 10000,
+    "scope": "total",
+    "tier": "orta"
+  },
+  {
+    "id": "cifte_yol",
+    "name": "Çifte Yol",
+    "desc": "İki farklı karakterle 5 dakika hayatta kal.",
+    "stat": "total_chars5",
+    "target": 2,
+    "scope": "total",
+    "tier": "orta"
+  },
+  {
+    "id": "on_bes_dakika",
+    "name": "On Beş Dakika",
+    "desc": "Tek koşuda 15 dakika hayatta kal.",
+    "stat": "run_time",
+    "target": 900,
+    "scope": "run",
+    "tier": "zor"
+  },
+  {
+    "id": "uc_elit",
+    "name": "Üç Elit",
+    "desc": "Tek koşuda üç elit türünü de öldür.",
+    "stat": "run_elite_kinds",
+    "target": 3,
+    "scope": "run",
+    "tier": "zor"
+  },
+  {
+    "id": "ilk_evrim",
+    "name": "İlk Evrim",
+    "desc": "Bir evrim kazan.",
+    "stat": "run_evolutions",
+    "target": 1,
+    "scope": "run",
+    "tier": "zor"
+  },
+  {
+    "id": "skor_100k",
+    "name": "Yüz Bin",
+    "desc": "Tek koşuda 100.000 skor yap.",
+    "stat": "run_score",
+    "target": 100000,
+    "scope": "run",
+    "tier": "zor"
+  },
+  {
+    "id": "sinirsiz_kirim",
+    "name": "Sınırsız Kırım",
+    "desc": "Sonsuz Tambur sırasında 100 düşman öldür.",
+    "stat": "run_unlimited_kills",
+    "target": 100,
+    "scope": "run",
+    "tier": "zor"
+  },
+  {
+    "id": "kale_lordu_devrildi",
+    "name": "Kale Lordu Devrildi",
+    "desc": "Koşuyu kazan: Kale Lordu'nu devir.",
+    "stat": "run_won",
+    "target": 1,
+    "scope": "run",
+    "tier": "cok_zor"
+  },
+  {
+    "id": "bomba_ustasi",
+    "name": "Bomba Ustası",
+    "desc": "Tek Kara Bomba ile 20 düşmanı vur.",
+    "stat": "run_bomb_hits",
+    "target": 20,
+    "scope": "run",
+    "tier": "cok_zor"
+  }
+]

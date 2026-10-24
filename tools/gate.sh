@@ -7,8 +7,17 @@ cd "$(dirname "$0")/.."
 ROOT="$PWD"
 rm -rf .gate && mkdir -p .gate
 
-fail() { echo "GATE FAIL: $*" >&2; exit 1; }
-step() { echo "=== $*"; }
+# Adım süreleri (v2.0 S0/F-028): her adım bitince "süre: N sn" yazılır, sonda tablo basılır (.gate/times.log).
+STEP_NAME=""
+STEP_START=$SECONDS
+end_step() {
+  [ -n "$STEP_NAME" ] || return 0
+  echo "    süre: $((SECONDS - STEP_START)) sn" >&2
+  echo "$((SECONDS - STEP_START)) sn  $STEP_NAME" >> .gate/times.log
+  STEP_NAME=""
+}
+fail() { end_step; echo "GATE FAIL: $*" >&2; exit 1; }
+step() { end_step; STEP_NAME="$*"; STEP_START=$SECONDS; echo "=== $*"; }
 
 # Günlük taraması: izin listesi YOK. ANSI renk kodları atılır.
 scan_log() { # scan_log <dosya>
@@ -41,23 +50,35 @@ step "4. Veri doğrulama"
 "$GODOT_BIN" --headless -s res://tools/validate_data.gd > .gate/validate.log 2>&1 || { cat .gate/validate.log >&2; fail "validate_data"; }
 scan_log .gate/validate.log
 
+step "4b. Dilim işareti sözdizimi (tools/v2_slices.txt)"
+python3 tools/ci/check_slices.py tools/v2_slices.txt || fail "tools/v2_slices.txt (geçersiz simge / dosya yok)"
+
 step "5. Python testleri"
 PYDIRS=""
 for d in tools/ci/tests tools/art/tests tools/audio/tests; do [ -d "$d" ] && PYDIRS="$PYDIRS $d"; done
 if [ -n "$PYDIRS" ]; then
-  python3 -m pytest -q -p no:cacheprovider $PYDIRS || fail "pytest"
+  python3 -m pytest -q -p no:cacheprovider $PYDIRS > .gate/pytest.log 2>&1; py_rc=$?
+  tail -n 5 .gate/pytest.log
+  [ $py_rc -eq 0 ] || { cat .gate/pytest.log >&2; fail "pytest"; }
+  echo "PYTHON_TESTS: $(grep -oE '[0-9]+ passed' .gate/pytest.log | tail -1 | grep -oE '[0-9]+')"
 fi
 
 step "6. Birim + kabul (GUT)"
 "$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gconfig=res://.gutconfig.json > .gate/gut.log 2>&1
 gut_rc=$?
 tail -n 30 .gate/gut.log
+# user:// sızıntısı (tools/ci/gut_pre_hook.gd + gut_stub_hook.gd): her yol için "USER_LEAK: <yol>" satırı.
+if sed 's/\x1b\[[0-9;]*m//g' .gate/gut.log | grep -E 'USER_LEAK:' > .gate/leak.out; then
+  cat .gate/leak.out >&2
+  fail "user:// sızıntısı (USER_LEAK; izin listesi: tools/ci/user_leak_allow.txt)"
+fi
 [ $gut_rc -eq 0 ] || fail "GUT çıkış kodu $gut_rc"
 scan_log .gate/gut.log
 
 step "7. Sahte yeşil korumaları"
 [ -f .gate/junit.xml ] || fail "JUnit çıktısı yok"
 python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
+python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
 
 if [ -f test/acceptance/test_acc_perf_counters.gd ]; then
   step "8. İş sayacı kontrolü (6. adımda GUT içinde koştu)"
@@ -85,4 +106,7 @@ else
   echo "shader derlemesi doğrulanmadı (GATE_RENDER=1 değil)"
 fi
 
+end_step
+echo "=== Adım süreleri"
+cat .gate/times.log
 echo "GATE OK"

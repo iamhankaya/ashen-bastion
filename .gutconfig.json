@@ -11,5 +11,6 @@
   "junit_xml_file": "res://.gate/junit.xml",
   "junit_xml_timestamp": false,
   "log_level": 1,
+  "pre_run_script": "res://tools/ci/gut_pre_hook.gd",
   "post_run_script": "res://tools/ci/gut_stub_hook.gd"
 }
