@@ -26,10 +26,11 @@ CHUNK=5
 SEEDS_FILE="$ROOT/tools/balance/seeds_v202.txt"
 DEST="$ROOT/docs/design/v2.0.2/balance"
 ARMS_ALL="v201-A v201-B v201-nodyn-A"
+# Uzatılmış kollar (seeds_v202.txt A400/B400; yalnız strong+kite için): v201-A400 v201-B400 v201-nodyn-A400
 ARMS="${*:-$ARMS_ALL}"
 
-arm_src() { case "$1" in v201-nodyn-A) echo nodyn ;; *) echo v201 ;; esac; }
-arm_set() { case "$1" in *-B) echo B ;; *) echo A ;; esac; }
+arm_src() { case "$1" in v201-nodyn-*) echo nodyn ;; *) echo v201 ;; esac; }
+arm_set() { echo "${1##*-}"; }  # v201-A -> A, v201-B -> B, v201-nodyn-A400 -> A400
 godot_bin() { GODOT_BIN="${GODOT_BIN:-$(bash "$ROOT/tools/ci/ensure_godot.sh")}"; echo "$GODOT_BIN"; }
 
 # kümenin tohumları (boşlukla), ardışık olmalı (mid_run.gd ilk_tohum + sayı alır)

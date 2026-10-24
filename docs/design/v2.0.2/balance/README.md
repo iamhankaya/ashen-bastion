@@ -26,3 +26,14 @@ Diğer gözlemler:
 - `hp_mid` (ölen koşular 0) kite/greedy/idle için hep 0 (kimse 10-20 dk'da hayatta değil): ayırt edici değil; strong'ta GA çok geniş. `reach10` (strong %78, kite %42) daha bilgilendirici.
 - Dinamit kaybı (v201 → nodyn) strong/kite'ta anlamlı değil (GA sıfırı içerir): +%4,3 / +%2,5 nokta tahmini, gürültü içinde.
 - Her koşu ≈ 12 sn (ölümlü); 240 koşu/kol ≈ 20-40 dk.
+
+## Uzatılmış baseline (VLAD kararı: strong + kite, 400 tohum) — ayrı fazda koşulur
+Tohum kümeleri `seeds_v202.txt`: `A400` (3001-3400), `B400` (4001-4400). Kollar `v201-A400`, `v201-B400`, `v201-nodyn-A400`.
+```
+POLICIES="strong kite" bash tools/balance/baseline_run.sh run v201-A400 v201-B400 v201-nodyn-A400
+POLICIES="strong kite" bash tools/balance/baseline_run.sh collect v201-A400 v201-B400 v201-nodyn-A400
+python3 tools/balance/compare_baseline.py docs/design/v2.0.2/balance/baseline-v201-A400.jsonl <yeni A400 koşusu> \
+    --noise docs/design/v2.0.2/balance/baseline-v201-B400.jsonl --nodyn docs/design/v2.0.2/balance/baseline-v201-nodyn-A400.jsonl \
+    --gate-policies strong,kite --info-policies ""
+```
+Süre (4 çekirdek, tek koşu ≈ 12-20 sn): kol başına 800 koşu ≈ 50-70 dk; üç kol ≈ 3 saat. Yardımcı ölçütler (reach10 raporda var; 5. dk öldürme `kills5` ve `hp_early` jsonl'de mevcut) `compare_baseline.py`'ye karar dışı metrik olarak D fazında eklenir.

@@ -238,7 +238,7 @@ def main(argv=None) -> int:
     if not base or not new:
         print("girdi boş (karakter süzgeci?)", file=sys.stderr)
         return 2
-    res = compare(base, new, noise, nodyn, tuple(a.gate_policies.split(",")), tuple(a.info_policies.split(",")),
+    res = compare(base, new, noise, nodyn, tuple(p for p in a.gate_policies.split(",") if p), tuple(p for p in a.info_policies.split(",") if p),
                   a.boot, a.seed, a.band, a.noise_limit)
     md = render(res, os.path.basename(a.base.rstrip("/")), os.path.basename(a.new.rstrip("/")))
     print(md)
