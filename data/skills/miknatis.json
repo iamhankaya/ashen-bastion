@@ -28,5 +28,19 @@
     "Toplama alanı +%75.",
     "Toplama alanı +%100.",
     "Toplama alanı +%125."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Çeken Esinti",
+      "icon": "res://assets/ui/icons/zyfen/miknatis.svg",
+      "desc": [
+        "Toplama alanı +%25.",
+        "Toplama alanı +%50.",
+        "Toplama alanı +%75.",
+        "Toplama alanı +%100.",
+        "Toplama alanı +%125."
+      ]
+    }
+  }
 }

@@ -298,9 +298,9 @@ func test_b5_run_end_when_tracker_unaware_character_chars5_flow() -> void:
 	c.sim.hp = 0.0
 	c.sim.step(Vector2.ZERO)
 	c.flush_delay()
-	st.character_id = "barutcu"
+	st.character_id = "zyfen"
 	c.start_run()
-	assert_eq(c.sim.character.id, &"barutcu")
+	assert_eq(c.sim.character.id, &"zyfen")
 	c.sim.debug_set_time(300.0)
 	c.sim.hp = 0.0
 	c.sim.step(Vector2.ZERO)

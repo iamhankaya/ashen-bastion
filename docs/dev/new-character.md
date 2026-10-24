@@ -2,7 +2,7 @@
 
 Yeni karakter **yalnız veri + görsel ekleyerek** tanımlanır; kod değişmez. Karakter, `data/characters/<id>.json` dosyası
 eklenince seçim altyapısı (`CharacterRoster`), vitrin ekranı (`CharactersScreen`), seviye atlama başlığı ve koşu
-(`GameSim.new(seed, id, …)`) tarafından otomatik tanınır. Bu belge `barutcu` (yer tutucu görsel) örneğiyle yazılmıştır.
+(`GameSim.new(seed, id, …)`) tarafından otomatik tanınır. Bu belge `zyfen` örneğiyle yazılmıştır.
 
 ## JSON alanları
 
@@ -12,7 +12,7 @@ Dosya adı = `id` (`data/characters/<id>.json`). Tam şema ve doğrulama kodlar�
 |---|---|---|
 | `id`, `name` | evet | `id` dosya adıyla aynı; `name` ekranda gösterilir (`UiKit.upper_tr` ile büyütülür) |
 | `max_hp`, `move_speed`, `mag_cap`, `reload_time`, `pickup_radius`, `collision_radius`, `range` | evet | vitrin panelinde CAN · HIZ · ŞARJÖR · DOLDURMA · MENZİL · TOPLAMA olarak görünür |
-| `starting_skill` | evet | var olan `kind: active` beceri id'si (ör. `dinamit`, `cift_tabanca`) |
+| `starting_skill` | evet | var olan `kind: active` beceri id'si (ör. `cift_tabanca`); becerinin `pool`u karakterin kimliği ya da `common` olmalı (`requires_ref`) |
 | `rig` | evet | koşu içi sprite; bkz. "Rig ayarı" |
 | `portrait` | hayır (önerilir) | vitrin ve seviye atlama portresi, 1024×1536; yoksa yer tutucu portre / portresiz düzen |
 | `blurb` | hayır | vitrin açıklaması, ≤ 120 karakter |

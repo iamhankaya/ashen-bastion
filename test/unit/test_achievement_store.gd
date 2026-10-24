@@ -154,7 +154,7 @@ func test_note_char5_unique() -> void:
 	var s := AchievementStore.new(PATH)
 	assert_true(s.note_char5(&"gunslinger"))
 	assert_false(s.note_char5(&"gunslinger"))
-	assert_true(s.note_char5(&"barutcu"))
+	assert_true(s.note_char5(&"zyfen"))
 	assert_true(s.dirty)
 
 

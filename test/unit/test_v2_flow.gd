@@ -232,8 +232,15 @@ func test_selected_character_defaults_to_gunslinger() -> void:
 
 
 func test_selected_character_uses_saved_valid_id() -> void:
+	_settings().character_id = "zyfen"
+	assert_eq(V2Flow.new().selected_character(), &"zyfen")
+
+
+## Göç (U1b): Barutçu kaldırıldı; kayıtlı "barutcu" ayarı Gunslinger'a çözülür, çökme yok, ayar dosyası yeniden yazılmaz.
+func test_u1_saved_barutcu_resolves_to_gunslinger() -> void:
 	_settings().character_id = "barutcu"
-	assert_eq(V2Flow.new().selected_character(), &"barutcu")
+	assert_eq(V2Flow.new().selected_character(), &"gunslinger")
+	assert_eq(_settings().character_id, "barutcu", "kayıtlı değer silinmez; yalnız çözümlenir")
 
 
 func test_selected_character_falls_back_for_unknown_or_wrong_id() -> void:
@@ -289,12 +296,12 @@ func test_start_run_uses_selected_character_gunslinger_by_default() -> void:
 	assert_eq(gc.sim.character.id, &"gunslinger")
 
 
-func test_start_run_uses_barutcu_when_selected() -> void:
-	_settings().character_id = "barutcu"
+func test_start_run_uses_zyfen_when_selected() -> void:
+	_settings().character_id = "zyfen"
 	var gc := _ctrl()
 	gc.start_run()
-	assert_eq(gc.sim.character.id, &"barutcu")
-	assert_eq(gc.sim.max_hp, 120.0)
+	assert_eq(gc.sim.character.id, &"zyfen")
+	assert_eq(gc.sim.max_hp, 85.0)
 
 
 func test_menu_achievements_button_opens_screen_with_b_slice() -> void:

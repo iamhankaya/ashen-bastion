@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cplepgci23gua"
-path="res://.godot/imported/barutcu_arm.png-7e5f469bb2c378d7c1ab778871073ddc.ctex"
+uid="uid://bfuf5rcqa53gt"
+path="res://.godot/imported/cevik-cizme.svg-ab146e8ace6af18b327b7b42ff8734ad.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/gfx/char/barutcu_arm.png"
-dest_files=["res://.godot/imported/barutcu_arm.png-7e5f469bb2c378d7c1ab778871073ddc.ctex"]
+source_file="res://assets/ui/icons/zyfen/cevik-cizme.svg"
+dest_files=["res://.godot/imported/cevik-cizme.svg-ab146e8ace6af18b327b7b42ff8734ad.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

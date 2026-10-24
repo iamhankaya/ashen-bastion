@@ -1,6 +1,7 @@
 {
   "id": "zincirleme_patlama",
   "kind": "evolution",
+  "pool": "gunslinger",
   "name": "Zincirleme Patlama",
   "icon": "placeholder:zincirleme_patlama",
   "max_level": 1,

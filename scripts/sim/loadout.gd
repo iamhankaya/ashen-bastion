@@ -175,6 +175,7 @@ func _new_state(def: SkillDef, level: int) -> SkillState:
 	st.id = def.id
 	st.def = def
 	st.level = level
+	st.icon = def.icon_for(character_id)
 	if def.kind != SkillDef.KIND_PASSIVE and SkillRegistry.BEHAVIORS.has(def.behavior):
 		st.behavior = SkillRegistry.BEHAVIORS[def.behavior].new()
 	_setup(st)

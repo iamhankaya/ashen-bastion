@@ -44,10 +44,10 @@ func _gate() -> bool:
 	return V2Slice.require(self, "K")
 
 
-## Gerçek data/ kopyası; barutcu'ya unlock eklenmiş (K10 sözleşme fixture'ı).
-func _locked_barutcu_data(achievement: String = "bes_dakika") -> GameData:
+## Gerçek data/ kopyası; zyfen'ya unlock eklenmiş (K10 sözleşme fixture'ı).
+func _locked_zyfen_data(achievement: String = "bes_dakika") -> GameData:
 	var dir := SimKit.copy_data(REAL, "k10")
-	var path := dir.path_join("characters/barutcu.json")
+	var path := dir.path_join("characters/zyfen.json")
 	var j: Dictionary = SimKit.read_json(path)
 	j["unlock"] = {"achievement": achievement}
 	SimKit.write_json(path, j)
@@ -63,21 +63,21 @@ func test_k1_resolve_defaults_to_gunslinger_for_missing_empty_unknown() -> void:
 	for saved in ["", "yok_boyle", "BARUTCU", " barutcu", "../barutcu"]:
 		var got := CharacterRoster.resolve(saved, d, st)
 		assert_eq(got, &"gunslinger", "'%s' -> varsayılan" % saved)
-	assert_eq(CharacterRoster.resolve("barutcu", d, st), &"barutcu", "geçerli ve kilitsiz")
+	assert_eq(CharacterRoster.resolve("zyfen", d, st), &"zyfen", "geçerli ve kilitsiz")
 	assert_eq(CharacterRoster.resolve("gunslinger", d, st), &"gunslinger")
 
 
 func test_k1_resolve_locked_character_falls_back() -> void:
-	var d := _locked_barutcu_data()
+	var d := _locked_zyfen_data()
 	var st := AchKit.fake_store()
-	assert_eq(CharacterRoster.resolve("barutcu", d, st), &"gunslinger", "kilitli -> varsayılan")
+	assert_eq(CharacterRoster.resolve("zyfen", d, st), &"gunslinger", "kilitli -> varsayılan")
 	st.unlock(&"bes_dakika", 1700000000)
-	assert_eq(CharacterRoster.resolve("barutcu", d, st), &"barutcu", "kilit açıldı")
+	assert_eq(CharacterRoster.resolve("zyfen", d, st), &"zyfen", "kilit açıldı")
 	st.corrupt = true
 	assert_eq(
-		CharacterRoster.resolve("barutcu", d, st), &"gunslinger", "bozuk kayıt: güvenli yön kilitli"
+		CharacterRoster.resolve("zyfen", d, st), &"gunslinger", "bozuk kayıt: güvenli yön kilitli"
 	)
-	assert_eq(CharacterRoster.resolve("barutcu", d, null), &"gunslinger", "store null: kilitli")
+	assert_eq(CharacterRoster.resolve("zyfen", d, null), &"gunslinger", "store null: kilitli")
 
 
 func test_k1_resolve_edge_tables_single_and_none() -> void:
@@ -85,7 +85,7 @@ func test_k1_resolve_edge_tables_single_and_none() -> void:
 	assert_eq(CharacterRoster.ids(only), only.character_ids)
 	# Hiç karakter yoksa boş kimlik (yapay: kimlik listesini boşalt).
 	var none := GameData.new()
-	assert_eq(CharacterRoster.resolve("barutcu", none, AchKit.fake_store()), &"")
+	assert_eq(CharacterRoster.resolve("zyfen", none, AchKit.fake_store()), &"")
 	assert_eq(CharacterRoster.resolve("", none, null), &"")
 
 
@@ -98,12 +98,12 @@ func test_k1_resolve_when_default_is_locked_picks_first_unlocked() -> void:
 	var d := GameData.load_dir(dir)
 	assert_eq(
 		CharacterRoster.resolve("", d, AchKit.fake_store()),
-		&"barutcu",
+		&"zyfen",
 		"varsayılan kilitli: ilk kilitsiz"
 	)
 	assert_eq(
 		CharacterRoster.resolve("gunslinger", d, AchKit.fake_store()),
-		&"barutcu",
+		&"zyfen",
 		"kayıtlı kilitli: ilk kilitsiz"
 	)
 
@@ -121,21 +121,21 @@ func test_k1_roster_step_clamps_at_ends() -> void:
 
 func test_k1_settings_character_roundtrip_through_file() -> void:
 	var st := _settings()
-	st.set_character("barutcu")
+	st.set_character("zyfen")
 	assert_true(FileAccess.file_exists(st.store_path), "set_character kaydeder")
 	st.character_id = ""
 	st.load_settings()
-	assert_eq(st.character_id, "barutcu", "kaydet -> yükle turu")
+	assert_eq(st.character_id, "zyfen", "kaydet -> yükle turu")
 
 
 func test_k1_set_character_then_set_sound_keeps_character() -> void:
 	var st := _settings()
 	var sound_before: bool = st.sound_on
-	st.set_character("barutcu")
+	st.set_character("zyfen")
 	st.set_sound(false)
 	st.character_id = ""
 	st.load_settings()
-	assert_eq(st.character_id, "barutcu", "set_sound 'karakter'i silmez (karar 8)")
+	assert_eq(st.character_id, "zyfen", "set_sound 'karakter'i silmez (karar 8)")
 	st.set_sound(sound_before)
 
 
@@ -164,7 +164,7 @@ func test_k1_default_settings_file_is_untouched() -> void:
 		if FileAccess.file_exists(real_path)
 		else PackedByteArray()
 	)
-	_settings().set_character("barutcu")
+	_settings().set_character("zyfen")
 	var after := (
 		FileAccess.get_file_as_bytes(real_path)
 		if FileAccess.file_exists(real_path)
@@ -186,18 +186,17 @@ func test_k2_controller_source_has_no_hardcoded_character_constant() -> void:
 		assert_eq(code.findn('&"gunslinger"'), -1, "controller karakter kimliği yazmaz: %s" % line)
 
 
-func test_k2_selected_barutcu_builds_matching_sim() -> void:
+func test_k2_selected_zyfen_builds_matching_sim() -> void:
 	var st := _settings()
-	st.character_id = "barutcu"
+	st.character_id = "zyfen"
 	var flow := V2Flow.new({"data": AchKit.data(), "achievements_path": AchKit.tmp_path("flow")})
 	var id := flow.selected_character()
-	assert_eq(id, &"barutcu")
+	assert_eq(id, &"zyfen")
 	var sim := SimKit.make(11, {"data_kind": "real", "character": id})
-	assert_eq(sim.character.id, &"barutcu")
-	assert_eq(sim.max_hp, ExpectedTablesV2.BARUTCU["max_hp"])
-	assert_eq(sim.magazine.cap, ExpectedTablesV2.BARUTCU["mag_cap"])
-	assert_eq(String(sim.character.starting_skill), ExpectedTablesV2.BARUTCU["starting_skill"])
-	assert_eq(sim.loadout.level_of(&"dinamit"), 1, "başlangıç becerisi dinamit")
+	assert_eq(sim.character.id, &"zyfen")
+	# Zyfen sayıları (hp, şarjör) K fazının expected_tables_v202'sine kalır; burada yalnız kimlik ve başlangıç becerisi.
+	assert_eq(String(sim.character.starting_skill), "ruzgar_kesigi")
+	assert_eq(sim.loadout.level_of(&"ruzgar_kesigi"), 1, "başlangıç becerisi ruzgar_kesigi")
 	flow.release()
 
 
@@ -211,10 +210,10 @@ func test_k2_selected_character_falls_back_without_selection() -> void:
 
 
 func test_k2_game_controller_start_run_uses_saved_character() -> void:
-	_settings().character_id = "barutcu"
+	_settings().character_id = "zyfen"
 	var c := _controller()
 	c.start_run()
-	assert_eq(c.sim.character.id, &"barutcu", "start_run seçili karakteri kullanır")
+	assert_eq(c.sim.character.id, &"zyfen", "start_run seçili karakteri kullanır")
 	c.go_menu()
 	_settings().character_id = ""
 	c.start_run()
@@ -263,8 +262,10 @@ func test_k3_levelup_shows_upper_cased_character_name() -> void:
 		_label_with(s, UiKit.character_upper(d.get_character(&"gunslinger"))),
 		"GUNSLINGER üst yazısı"
 	)
-	var s2 := _levelup(d.get_character(&"barutcu"))
-	assert_not_null(_label_with(s2, UiKit.upper_tr("Barutçu")), "BARUTÇU üst yazısı")
+	var s2 := _levelup(d.get_character(&"zyfen"))
+	assert_not_null(
+		_label_with(s2, UiKit.character_upper(d.get_character(&"zyfen"))), "ZYFEN üst yazısı"
+	)
 
 
 func test_k3_levelup_turkish_dotted_dotless_i_in_name() -> void:
@@ -368,12 +369,12 @@ func test_k4_selecting_updates_settings_and_menu_label() -> void:
 	assert_not_null(scr, "CharactersScreen sahnede")
 	if scr == null:
 		return
-	scr.set_focus_id(&"barutcu")
+	scr.set_focus_id(&"zyfen")
 	assert_true(scr.press_select())
-	assert_eq(_settings().character_id, "barutcu", "seçim Settings'e yazıldı")
+	assert_eq(_settings().character_id, "zyfen", "seçim Settings'e yazıldı")
 	c._on_back()
 	assert_true(
-		AchKit.any_text_contains(c.menu, "Barutçu"),
+		AchKit.any_text_contains(c.menu, "Zyfen"),
 		"menü alt satırı/sürüm etiketi yeni karakteri gösterir"
 	)
 
@@ -479,7 +480,7 @@ func test_k6_base_gun_is_not_a_character_field() -> void:
 
 func test_k6_blurb_boundary_120_ok() -> void:
 	var dir := SimKit.copy_data(REAL, "k6blurb")
-	var p := dir.path_join("characters/barutcu.json")
+	var p := dir.path_join("characters/zyfen.json")
 	var j: Dictionary = SimKit.read_json(p)
 	j["blurb"] = "x".repeat(120)
 	SimKit.write_json(p, j)
@@ -519,25 +520,25 @@ func test_k7_every_real_character_runs_and_keeps_invariants() -> void:
 		assert_eq(skill.kind, SkillDef.KIND_ACTIVE, "%s: kind=active" % id)
 
 
-# --- K8: Barutçu determinizmi --------------------------------------------------------------------------------------
+# --- K8: Zyfen determinizmi --------------------------------------------------------------------------------------
 
 
-func test_k8_barutcu_same_seed_same_hash() -> void:
+func test_k8_zyfen_same_seed_same_hash() -> void:
 	var hashes: Array[int] = []
 	for run_i in 2:
-		var sim := SimKit.make(41, {"data_kind": "real", "character": &"barutcu"})
+		var sim := SimKit.make(41, {"data_kind": "real", "character": &"zyfen"})
 		var rng := Bots.make_rng(41)
 		Bots.play(sim, Bots.KITE, 900, rng, 0)
 		hashes.append(sim.state_hash())
-	assert_eq(hashes[0], hashes[1], "Barutçu aynı tohum aynı hash")
-	var other := SimKit.make(42, {"data_kind": "real", "character": &"barutcu"})
+	assert_eq(hashes[0], hashes[1], "Zyfen aynı tohum aynı hash")
+	var other := SimKit.make(42, {"data_kind": "real", "character": &"zyfen"})
 	Bots.play(other, Bots.KITE, 900, Bots.make_rng(42), 0)
 	assert_ne(other.state_hash(), hashes[0], "farklı tohum farklı hash")
 
 
-func test_k8_gunslinger_and_barutcu_diverge_with_same_seed() -> void:
+func test_k8_gunslinger_and_zyfen_diverge_with_same_seed() -> void:
 	var a := SimKit.make(43, {"data_kind": "real", "character": &"gunslinger"})
-	var b := SimKit.make(43, {"data_kind": "real", "character": &"barutcu"})
+	var b := SimKit.make(43, {"data_kind": "real", "character": &"zyfen"})
 	SimKit.run(a, 120)
 	SimKit.run(b, 120)
 	assert_ne(a.state_hash(), b.state_hash())
@@ -572,24 +573,22 @@ func test_k10_no_real_character_has_unlock() -> void:
 
 
 func test_k10_lock_reason_text_uses_achievement_name() -> void:
-	var d := _locked_barutcu_data()
-	assert_eq(
-		CharacterRoster.lock_reason(d.get_character(&"barutcu"), d), "Beş Dakika başarımını aç"
-	)
-	assert_false(CharacterRoster.is_unlocked(d.get_character(&"barutcu"), AchKit.fake_store()))
+	var d := _locked_zyfen_data()
+	assert_eq(CharacterRoster.lock_reason(d.get_character(&"zyfen"), d), "Beş Dakika başarımını aç")
+	assert_false(CharacterRoster.is_unlocked(d.get_character(&"zyfen"), AchKit.fake_store()))
 
 
 func test_k10_locked_character_cannot_be_selected_on_screen() -> void:
 	if _gate():
 		return
-	var d := _locked_barutcu_data()
+	var d := _locked_zyfen_data()
 	var st := AchKit.fake_store()
 	var s := CharactersScreen.new()
 	add_child_autofree(s)
 	s.open(d, st, &"gunslinger")
 	watch_signals(s)
-	s.set_focus_id(&"barutcu")
-	assert_eq(s.focus_id(), &"barutcu")
+	s.set_focus_id(&"zyfen")
+	assert_eq(s.focus_id(), &"zyfen")
 	assert_eq(s.select_button_state(), CharactersScreen.SelectState.LOCKED)
 	assert_false(s.press_select())
 	assert_signal_not_emitted(s, "selected")
@@ -599,14 +598,14 @@ func test_k10_locked_character_cannot_be_selected_on_screen() -> void:
 func test_k10_corrupt_store_keeps_locked_character_locked() -> void:
 	if _gate():
 		return
-	var d := _locked_barutcu_data()
+	var d := _locked_zyfen_data()
 	var st := AchKit.fake_store()
 	st.unlock(&"bes_dakika", 1700000000)
 	st.corrupt = true
 	var s := CharactersScreen.new()
 	add_child_autofree(s)
 	s.open(d, st, &"gunslinger")
-	s.set_focus_id(&"barutcu")
+	s.set_focus_id(&"zyfen")
 	assert_eq(s.select_button_state(), CharactersScreen.SelectState.LOCKED, "güvenli yön")
 
 
@@ -618,10 +617,10 @@ func test_k10_select_states_and_selected_signal() -> void:
 	assert_eq(s.select_button_state(), CharactersScreen.SelectState.SELECTED)
 	assert_false(s.press_select(), "odak == seçili: yeniden seçilmez")
 	watch_signals(s)
-	s.set_focus_id(&"barutcu")
+	s.set_focus_id(&"zyfen")
 	assert_eq(s.select_button_state(), CharactersScreen.SelectState.SELECT)
 	assert_true(s.press_select())
-	assert_signal_emitted_with_parameters(s, "selected", [&"barutcu"])
+	assert_signal_emitted_with_parameters(s, "selected", [&"zyfen"])
 	assert_eq(
 		s.select_button_state(), CharactersScreen.SelectState.SELECTED, "seçim sonrası SEÇİLİ"
 	)
@@ -632,7 +631,7 @@ func test_k10_single_character_set_works() -> void:
 		return
 	var dir := SimKit.copy_data(REAL, "k10single")
 	DirAccess.remove_absolute(
-		ProjectSettings.globalize_path(dir.path_join("characters/barutcu.json"))
+		ProjectSettings.globalize_path(dir.path_join("characters/zyfen.json"))
 	)
 	DirAccess.remove_absolute(
 		ProjectSettings.globalize_path(dir.path_join("characters/zyfen.json"))

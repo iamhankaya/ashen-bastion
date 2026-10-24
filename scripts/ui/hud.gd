@@ -512,11 +512,18 @@ func _xp_ratio() -> float:
 	return clampf(float(_sim.xp) / float(_sim.xp_to_next), 0.0, 1.0)
 
 
+## Karaktere göre çözülmüş ikon (SkillState.icon); boşsa tanımın ikonu.
+static func _icon_of(st: SkillState) -> String:
+	if st.icon != "":
+		return st.icon
+	return st.def.icon if st.def != null else ""
+
+
 func _refresh_slots(slots: Array[SkillSlot], states: Array[SkillState]) -> void:
 	for i in slots.size():
 		if i < states.size() and states[i] != null:
 			var st := states[i]
-			var icon_field := st.def.icon if st.def != null else ""
+			var icon_field := _icon_of(st)
 			var evolved := st.def != null and st.def.kind == SkillDef.KIND_EVOLUTION
 			slots[i].set_skill(st.id, st.level, icon_field, evolved)
 		else:

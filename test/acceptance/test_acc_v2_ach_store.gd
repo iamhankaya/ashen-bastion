@@ -327,7 +327,7 @@ func test_b1_save_file_stays_under_4kb_with_all_22_unlocked() -> void:
 	st.add_total(&"play_secs", 999999999)
 	st.note_best(999999999, 999999, 99)
 	st.note_char5(&"gunslinger")
-	st.note_char5(&"barutcu")
+	st.note_char5(&"zyfen")
 	assert_true(st.save())
 	assert_lt(FileAccess.get_file_as_bytes(p).size(), 4096)
 

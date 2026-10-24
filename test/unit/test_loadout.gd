@@ -3,7 +3,7 @@ extends GutTest
 
 ## 6 aktif yuva dolu; hiçbir evrim çifti hazır değil.
 const FULL_ACTIVES: Array[StringName] = [
-	&"cift_tabanca", &"seken_mermi", &"son_mermi_patlar", &"dinamit", &"sarapnel", &"keskin_nisan"
+	&"cift_tabanca", &"seken_mermi", &"son_mermi_patlar", &"girdap", &"sarapnel", &"keskin_nisan"
 ]
 
 var data: GameData

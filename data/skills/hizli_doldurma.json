@@ -30,5 +30,19 @@
     "Doldurma süresi -%30.",
     "Doldurma süresi -%40.",
     "Doldurma süresi -%50."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Çabuk Toplayış",
+      "icon": "res://assets/ui/icons/zyfen/hizli-doldurma.svg",
+      "desc": [
+        "Rüzgar toplama süresi -%10.",
+        "Rüzgar toplama süresi -%20.",
+        "Rüzgar toplama süresi -%30.",
+        "Rüzgar toplama süresi -%40.",
+        "Rüzgar toplama süresi -%50."
+      ]
+    }
+  }
 }

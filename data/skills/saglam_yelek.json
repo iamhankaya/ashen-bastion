@@ -33,5 +33,19 @@
     "Azami can +45, saniyede +0,75 can.",
     "Azami can +60, saniyede +1 can.",
     "Azami can +75, saniyede +1,25 can."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Yas Paltosu",
+      "icon": "res://assets/ui/icons/zyfen/saglam-yelek.svg",
+      "desc": [
+        "Azami can +15, saniyede +0,25 can.",
+        "Azami can +30, saniyede +0,5 can.",
+        "Azami can +45, saniyede +0,75 can.",
+        "Azami can +60, saniyede +1 can.",
+        "Azami can +75, saniyede +1,25 can."
+      ]
+    }
+  }
 }

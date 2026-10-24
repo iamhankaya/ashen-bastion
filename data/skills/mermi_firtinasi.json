@@ -1,6 +1,7 @@
 {
   "id": "mermi_firtinasi",
   "kind": "evolution",
+  "pool": "gunslinger",
   "name": "Mermi Fırtınası",
   "icon": "placeholder:mermi_firtinasi",
   "max_level": 1,

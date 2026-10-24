@@ -1,5 +1,5 @@
 extends GutTest
-## Sözleşme: 24 beceri kimliği (12 Gunslinger/Barutçu + v2.0.2 Zyfen'in 12'si; U1b dinamit'i siler) SkillRegistry'de, belgede ve kanca/API/bayrak adları gerçekte var.
+## Sözleşme: 23 beceri kimliği (11 Gunslinger + v2.0.2 Zyfen'in 12'si; Barutçu'nun `dinamit`i U1b'de silindi) SkillRegistry'de, belgede ve kanca/API/bayrak adları gerçekte var.
 
 const DOC := "res://docs/dev/skill-hooks.md"
 const SKILL_IDS: Array[String] = [
@@ -7,7 +7,6 @@ const SKILL_IDS: Array[String] = [
 	"bolunen_kesik",
 	"cift_tabanca",
 	"delen_ruzgar",
-	"dinamit",
 	"doldurma_sacilmasi",
 	"girdap",
 	"gogun_mizragi",
@@ -31,7 +30,6 @@ const SKILL_IDS: Array[String] = [
 ## Gerçek gövdesi olan davranışlar (uygulama-1). Yeni uygulanan beceri buraya eklenir.
 const IMPLEMENTED: Array[String] = [
 	"cift_tabanca",
-	"dinamit",
 	"doldurma_sacilmasi",
 	"gurleyen_yelpaze",
 	"keskin_nisan",

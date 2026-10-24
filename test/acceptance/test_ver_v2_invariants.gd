@@ -74,8 +74,6 @@ func test_ver_characters_produce_different_runs_with_expected_stats() -> void:
 	var g := VerV2Run.run(
 		{"seed": 43, "policy": &"kite", "character": &"gunslinger", "max_steps": 600}
 	)
-	var b := VerV2Run.run(
-		{"seed": 43, "policy": &"kite", "character": &"barutcu", "max_steps": 600}
-	)
+	var b := VerV2Run.run({"seed": 43, "policy": &"kite", "character": &"zyfen", "max_steps": 600})
 	assert_ne(g["state_hash"], b["state_hash"], "iki karakter aynı koşuyu üretmemeli")
 	assert_eq(int(b["steps"]), 600)
