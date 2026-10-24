@@ -28,7 +28,6 @@ func test_reload_and_misc_events_map_to_sounds() -> void:
 	bus.enemy_killed.emit(&"curumus_piyade", Vector2.ZERO)
 	bus.gem_collected.emit(1)
 	bus.player_damaged.emit(5.0, 95.0)
-	bus.level_up.emit(2)
 	bus.explosion.emit(Vector2.ZERO, 100.0)
 	bus.evolution_gained.emit(&"x")
 	assert_eq(
@@ -41,13 +40,65 @@ func test_reload_and_misc_events_map_to_sounds() -> void:
 				&"enemy_die",
 				&"xp_pickup",
 				&"player_hurt",
-				&"level_up",
 				&"explosion",
-				&"evolution"
+				&"evolution_1"
 			]
 			as Array[StringName]
 		)
 	)
+
+
+func test_hit_event_maps_to_hit_sound() -> void:
+	bus.enemy_hit.emit(Vector2.ZERO)
+	assert_eq(ids, [&"hit"] as Array[StringName])
+
+
+func test_level_up_signal_alone_is_silent() -> void:
+	bus.level_up.emit(2)
+	assert_eq(ids.size(), 0, "ses kartlar gösterilince çalar (play_level_up)")
+
+
+func _choice(kind: StringName, skill_id: StringName) -> Choice:
+	var c := Choice.new()
+	c.kind = kind
+	c.skill_id = skill_id
+	return c
+
+
+func test_level_up_sound_depends_on_evolution_card() -> void:
+	var plain: Array = [_choice(Choice.KIND_UPGRADE, &"a"), _choice(Choice.KIND_HEAL, &"")]
+	var with_evo: Array = [_choice(Choice.KIND_UPGRADE, &"a"), _choice(Choice.KIND_EVOLUTION, &"e")]
+	assert_eq(AudioDirector.level_up_sound(plain), &"level_up_normal")
+	assert_eq(AudioDirector.level_up_sound(with_evo), &"level_up_evolution")
+	assert_eq(AudioDirector.level_up_sound([]), &"level_up_normal")
+	director.play_level_up(plain)
+	director.play_level_up(with_evo)
+	assert_eq(ids, [&"level_up_normal", &"level_up_evolution"] as Array[StringName])
+
+
+func test_evolution_sound_follows_skill_sfx_field() -> void:
+	var gd := GameData.load_dir("res://data")
+	var seen := {}
+	for sk in gd.skills_of_kind(SkillDef.KIND_EVOLUTION):
+		assert_ne(sk.sfx, &"", "%s: sfx alanı" % sk.id)
+		assert_eq(AudioDirector.evolution_sound(gd, sk.id), sk.sfx)
+		seen[sk.sfx] = true
+	assert_eq(seen.size(), 4, "4 evrimin sesleri birbirinden farklı")
+	assert_eq(AudioDirector.evolution_sound(gd, &"gurleyen_yelpaze"), &"evolution_1")
+	director.bind(bus, gd)
+	bus.evolution_gained.emit(&"kiyamet_mermisi")
+	assert_eq(ids, [gd.get_skill(&"kiyamet_mermisi").sfx] as Array[StringName])
+
+
+func test_evolution_without_sfx_field_falls_back_to_evolution_1() -> void:
+	var gd := GameData.load_dir("res://data")
+	var sk := gd.get_skill(&"mermi_firtinasi")
+	var saved := sk.sfx
+	sk.sfx = &""
+	assert_eq(AudioDirector.evolution_sound(gd, &"mermi_firtinasi"), &"evolution_1")
+	assert_eq(AudioDirector.evolution_sound(null, &"mermi_firtinasi"), &"evolution_1")
+	assert_eq(AudioDirector.evolution_sound(gd, &"yok_boyle"), &"evolution_1")
+	sk.sfx = saved
 
 
 func test_playing_unknown_assets_is_silent_and_not_a_stub() -> void:

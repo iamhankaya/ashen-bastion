@@ -11,6 +11,7 @@ const ACH_KEYS: PackedStringArray = [
 const TIERS: PackedStringArray = ["kolay", "orta", "zor", "cok_zor"]
 const SCOPES: PackedStringArray = ["run", "total"]
 ## shaders: enemy_flash.gdshader `cell_rect[16]`, ash_ghost.gdshader `cell_rect[16]`.
+const SFX_DIR := "res://assets/audio/sfx/"
 const ATLAS_CELLS_MAX := 16
 const ACH_COUNT_MIN := 15
 const ACH_COUNT_MAX := 25
@@ -49,6 +50,9 @@ static func load_achievements(g: GameData, root_dir: String) -> void:
 ## complete: içerik tamamlandı modu (dosya zorunlu, adet 15..25, her kademede en az bir kayıt).
 static func validate(g: GameData, out: PackedStringArray, complete: bool) -> void:
 	_validate_atlas_cells(g, out)
+	for e in g._raw_skills:
+		if e["data"] is Dictionary:
+			validate_skill_sfx(out, e["file"], e["data"])
 	if not g._v2.get("ach_present", false):
 		if complete:
 			GameData._err(
@@ -70,6 +74,20 @@ static func validate(g: GameData, out: PackedStringArray, complete: bool) -> voi
 
 
 ## F-013: düşman atlası 16 hücreyi aşarsa shader `cell_rect[16]` taşar.
+## v2.0.1: isteğe bağlı `sfx` (yalnız evrimde): assets/audio/sfx/<sfx>.ogg var olmalı.
+## Hata kodları: unknown_key (evrim dışı), bad_type (boş/metin değil), asset_missing (dosya yok).
+static func validate_skill_sfx(out: PackedStringArray, file: String, d: Dictionary) -> void:
+	if not d.has("sfx"):
+		return
+	var sfx: Variant = d["sfx"]
+	if d.get("kind") != "evolution":
+		GameData._err(out, "unknown_key", file, "'sfx' yalnız evrimde olur")
+	elif not (sfx is String) or (sfx as String).is_empty():
+		GameData._err(out, "bad_type", file, "'sfx' boş olmayan metin olmalı")
+	elif not ResourceLoader.exists(SFX_DIR + (sfx as String) + ".ogg"):
+		GameData._err(out, "asset_missing", file, "'sfx' = '%s' için SFX dosyası yok" % sfx)
+
+
 static func _validate_atlas_cells(g: GameData, out: PackedStringArray) -> void:
 	if g.enemy_ids.size() > ATLAS_CELLS_MAX:
 		GameData._err(

@@ -8,6 +8,7 @@
     "rhythm"
   ],
   "behavior": "zincirleme_patlama",
+  "sfx": "evolution_4",
   "levels": [
     {
       "every_n": 2,

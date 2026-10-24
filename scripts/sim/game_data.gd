@@ -96,6 +96,7 @@ const SKILL_KEYS: PackedStringArray = [
 	"levels",
 	"desc",
 	"requires",
+	"sfx",
 ]
 const REQUIRES_KEYS: PackedStringArray = ["active", "active_level", "passive", "passive_min_level"]
 const ENEMY_KEYS: PackedStringArray = [

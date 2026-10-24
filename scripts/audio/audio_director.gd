@@ -14,7 +14,12 @@ const DUCK_DB := -6.0
 const DUCK_TIME := 6.0
 const PAUSE_DB := -8.0
 
+const EVOLUTION_DEFAULT := &"evolution_1"
+const LEVEL_UP_NORMAL := &"level_up_normal"
+const LEVEL_UP_EVOLUTION := &"level_up_evolution"
+
 var sim_bus: SimBus = null
+var data: GameData = null  # evrim `sfx` alanı için (isteğe bağlı)
 var track: StringName = &""
 
 var _players: Array[AudioStreamPlayer] = []
@@ -61,18 +66,19 @@ func _exit_tree() -> void:
 	_reset_bus_volume()
 
 
-func bind(bus: SimBus) -> void:
+func bind(bus: SimBus, game_data: GameData = null) -> void:
 	_unbind()
 	sim_bus = bus
+	data = game_data
 	_lord_alive = false
 	bus.shot_fired.connect(_on_shot)
 	bus.reload_started.connect(_on_reload_started)
 	bus.reload_finished.connect(_on_reload_finished)
 	bus.dry_fire.connect(_on_dry)
 	bus.enemy_killed.connect(_on_killed)
+	bus.enemy_hit.connect(_on_hit)
 	bus.gem_collected.connect(_on_gem)
 	bus.player_damaged.connect(_on_damaged)
-	bus.level_up.connect(_on_level_up)
 	bus.explosion.connect(_on_explosion)
 	bus.evolution_gained.connect(_on_evolution)
 	bus.boss_warning.connect(_on_boss_warning)
@@ -88,9 +94,9 @@ func _unbind() -> void:
 		[sim_bus.reload_finished, _on_reload_finished],
 		[sim_bus.dry_fire, _on_dry],
 		[sim_bus.enemy_killed, _on_killed],
+		[sim_bus.enemy_hit, _on_hit],
 		[sim_bus.gem_collected, _on_gem],
 		[sim_bus.player_damaged, _on_damaged],
-		[sim_bus.level_up, _on_level_up],
 		[sim_bus.explosion, _on_explosion],
 		[sim_bus.evolution_gained, _on_evolution],
 		[sim_bus.boss_warning, _on_boss_warning],
@@ -229,6 +235,10 @@ func _on_killed(type_id: StringName, _pos: Vector2) -> void:
 	_play(&"enemy_die")
 
 
+func _on_hit(_pos: Vector2) -> void:
+	_play(&"hit")
+
+
 func _on_shot(gun: int, _origin: Vector2, _dir: Vector2) -> void:
 	_play(&"shot_right" if gun == 0 else &"shot_left")
 
@@ -253,16 +263,33 @@ func _on_damaged(_a: float, _h: float) -> void:
 	_play(&"player_hurt")
 
 
-func _on_level_up(_l: int) -> void:
-	_play(&"level_up")
+## Seviye atlama kartları gösterilirken çağrılır (kartlar sim.pending_choices()): evrim kartı varsa belirgin ses.
+func play_level_up(choices: Array) -> void:
+	_play(level_up_sound(choices))
+
+
+static func level_up_sound(choices: Array) -> StringName:
+	for c in choices:
+		if c is Choice and (c as Choice).kind == Choice.KIND_EVOLUTION:
+			return LEVEL_UP_EVOLUTION
+	return LEVEL_UP_NORMAL
+
+
+## Evrim becerisinin `sfx` alanı; alan ya da veri yoksa evolution_1.
+static func evolution_sound(game_data: GameData, evo_id: StringName) -> StringName:
+	if game_data != null:
+		var sk := game_data.get_skill(evo_id)
+		if sk != null and sk.sfx != &"":
+			return sk.sfx
+	return EVOLUTION_DEFAULT
 
 
 func _on_explosion(_p: Vector2, _r: float) -> void:
 	_play(&"explosion")
 
 
-func _on_evolution(_e: StringName) -> void:
-	_play(&"evolution")
+func _on_evolution(evo_id: StringName) -> void:
+	_play(evolution_sound(data, evo_id))
 
 
 func _play(id: StringName) -> void:

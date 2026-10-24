@@ -16,6 +16,7 @@ var behavior: StringName = &""
 var levels: Array[Dictionary] = []
 var desc: PackedStringArray = PackedStringArray()
 var requires: Dictionary = {}  # yalnız evrim: active, active_level, passive, passive_min_level
+var sfx: StringName = &""  # yalnız evrim, isteğe bağlı: evrim sesi kimliği (boş: AudioDirector varsayılanı)
 
 
 static func from_dict(d: Dictionary) -> SkillDef:
@@ -41,6 +42,7 @@ static func from_dict(d: Dictionary) -> SkillDef:
 			s.desc.append(str(x))
 	var rq: Variant = d.get("requires", {})
 	s.requires = rq if rq is Dictionary else {}
+	s.sfx = StringName(str(d.get("sfx", "")))
 	return s
 
 

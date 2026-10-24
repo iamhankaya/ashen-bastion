@@ -77,19 +77,18 @@ func test_f_ver_002_fixed_player_is_never_left_inside_a_solid_ruin() -> void:
 	assert_eq(inside, 0, "resolve sonrası katı dairelerin içinde kalan nokta yok (F-ver-002)")
 
 
-func test_karakterizasyon_f_ver_003_no_sfx_files_ship_yet() -> void:
+func test_f_ver_003_fixed_sfx_files_ship() -> void:
 	var n := 0
 	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path("res://assets/audio/sfx")):
 		for f in DirAccess.get_files_at("res://assets/audio/sfx"):
-			if f.ends_with(".ogg") or f.ends_with(".wav"):
+			if f.ends_with(".ogg"):
 				n += 1
-	assert_eq(n, 0, "KARAKTERİZASYON (F-ver-003): SFX dosyası yok; atış/doldurma/patlama sessiz")
-	# sessiz çalma hata vermez
+	assert_gte(n, 21, "F-ver-003 kapandı: SFX OGG'leri (varyasyonlar, evrim, dry_fire dahil) gelir")
+	# dosyası olmayan kimlik sessiz çıkar, hata vermez
 	var host := Node.new()
 	add_child_autofree(host)
 	Sfx.setup(host)
-	Sfx.play(&"shot_right")
-	Sfx.play(&"explosion")
+	Sfx.play(&"hic_yok_boyle_ses")
 	Sfx.teardown()
 	var music := 0
 	for f in DirAccess.get_files_at("res://assets/audio/music"):
