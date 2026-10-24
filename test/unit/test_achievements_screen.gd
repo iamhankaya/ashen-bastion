@@ -255,7 +255,5 @@ func test_sd03_every_description_fits_its_label() -> void:
 		assert_not_null(d)
 		assert_gte(d.size.y, 72.0)
 		assert_lte(
-			d.get_line_count() * d.get_line_height(),
-			d.size.y,
-			"açıklama tam görünür: %s" % d.text
+			d.get_line_count() * d.get_line_height(), d.size.y, "açıklama tam görünür: %s" % d.text
 		)

@@ -82,7 +82,9 @@ static func _build(parent: Node, label_name: StringName, xs: Array, on_input: Ca
 
 ## SD-06: şerit güvenli üst pay (çentik/durum çubuğu) kadar iner; masaüstü/headless'ta 0.
 static func top_extra(extra: Variant = null) -> float:
-	var e: Vector4 = extra if extra is Vector4 else UiKit.current_safe_extra(Vector2(1080.0, 2400.0))
+	var e: Vector4 = (
+		extra if extra is Vector4 else UiKit.current_safe_extra(Vector2(1080.0, 2400.0))
+	)
 	return e.y
 
 

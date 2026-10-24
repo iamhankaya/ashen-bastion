@@ -300,4 +300,8 @@ func test_sd04_locked_chip_gap_between_lock_and_text() -> void:
 	var sb := s.chip_label.get_theme_stylebox(&"normal")
 	var lock_end := s._chip_lock.position.x + s._chip_lock.size.x
 	assert_gte(sb.content_margin_left - lock_end, 8.0, "kilit ile metin arası >= 8 px")
-	assert_eq(s.chip_label.horizontal_alignment, HORIZONTAL_ALIGNMENT_LEFT, "metin ortalanıp kilide binmez")
+	assert_eq(
+		s.chip_label.horizontal_alignment,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		"metin ortalanıp kilide binmez"
+	)
