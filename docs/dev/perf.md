@@ -102,3 +102,16 @@ ile eşitliği `test_transform_matches_pose_of_for_each_type` sınar. Masaüstü
 2. Tek/çift indeksleri iki karede bir güncelle (yarı düşman hareketi bayat kalır, gölge her kare).
 3. Animasyonu `INSTANCE_CUSTOM`'a taşı: `b`/`a` kanallarını tür başı uniform dizilerine (kontur/elit tür indeksiyle) boşalt,
    `a` = faz yap, hareketi vertex shader'da hesapla (GPU; `GATE_RENDER=1` ve cihaz doğrulaması gerekir).
+
+## v2.0 K — Karakterler vitrini
+
+Vitrin (`CharactersScreen`) yalnız görünürken çalışır: gizliyken `_process` ve `CPUParticles2D` (12 parçacık, additive) kapalıdır
+(`test_k5_*` sınar). Hareket `ShowcaseMotion` saf fonksiyonlarıdır (nefes ≤ %1,5 ölçek, ±8 px sürüklenme; sim/RNG yok).
+Bütçe ≤ 1,5 ms/kare. Ölçüm (bilgi; gate'e girmez, masaüstü sayıları cihazı temsil etmez):
+
+```
+xvfb-run -a godot --path . --rendering-driver opengl3 -s res://tools/perf/showcase_micro.gd
+```
+
+Çıktı: görünürken kare başı `_process` ms (600 kare ortalaması), gizliyken 0 iş ve parçacık sayacı (görünür ≤ 12, gizli 0).
+Cihaz ölçümü `docs/dev/user-verify.md` ### K-6.

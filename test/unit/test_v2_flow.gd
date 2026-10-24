@@ -290,13 +290,20 @@ func test_start_run_uses_barutcu_when_selected() -> void:
 	assert_eq(gc.sim.max_hp, 120.0)
 
 
-func test_menu_buttons_do_not_open_screens_in_contract_phase() -> void:
+func test_menu_achievements_button_does_not_open_screen_until_b_slice() -> void:
 	var gc := _ctrl()
 	assert_eq(gc.screen, PauseLogic.Screen.MENU)
-	gc.menu.characters_button.pressed.emit()
 	gc.menu.achievements_button.pressed.emit()
-	assert_eq(gc.screen, PauseLogic.Screen.MENU, "boş ekran açılmaz (dilimler doldurana dek)")
+	assert_eq(gc.screen, PauseLogic.Screen.MENU, "boş ekran açılmaz (B dilimi doldurana dek)")
 	assert_true(gc.menu.visible)
+
+
+func test_menu_characters_button_opens_showcase_with_k_slice() -> void:
+	var gc := _ctrl()
+	gc.menu.characters_button.pressed.emit()
+	assert_eq(gc.screen, PauseLogic.Screen.CHARACTERS)
+	assert_false(gc.menu.visible)
+	assert_true(gc.v2.characters.screen.visible)
 
 
 func test_back_from_new_screens_returns_to_menu_via_controller() -> void:
