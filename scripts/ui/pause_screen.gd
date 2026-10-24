@@ -13,6 +13,9 @@ signal vibration_toggled(on: bool)
 enum Confirm { NONE, RESTART, MENU }
 
 const BTN_W := 936.0
+const COL_TOP := 380.0
+const GAP_H := 170.0
+const GAP_MIN := 40.0
 
 var resume_button: Button
 var sound_button: Button
@@ -26,6 +29,8 @@ var dialog_text: Label
 var dialog_cancel: Button
 var dialog_ok: Button
 var confirm_kind: int = Confirm.NONE
+var column: VBoxContainer
+var gap: Control
 
 var _sound_on: bool = true
 var _vibration_on: bool = true
@@ -46,6 +51,7 @@ func _build() -> void:
 	add_child(scrim)
 
 	var col := VBoxContainer.new()
+	column = col
 	col.name = "Column"
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_theme_constant_override(&"separation", 27)
@@ -53,7 +59,7 @@ func _build() -> void:
 	col.anchor_right = 0.5
 	col.offset_left = -BTN_W * 0.5
 	col.offset_right = BTN_W * 0.5
-	col.offset_top = 380.0  # HUD yuva satırlarının (y<350) altında; başlık onlara binmez
+	col.offset_top = COL_TOP  # HUD yuva satırlarının (y<350) altında; başlık onlara binmez
 	add_child(col)
 
 	var title := UiKit.label("DURAKLATILDI", &"LabelTitle")
@@ -77,8 +83,8 @@ func _build() -> void:
 	panel.add_child(pv)
 	col.add_child(panel)
 
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 170)  # eylem düğmeleri makete göre aşağıda (başparmak bölgesi)
+	gap = Control.new()
+	gap.custom_minimum_size = Vector2(0, GAP_H)  # eylem düğmeleri makete göre aşağıda (başparmak bölgesi)
 	col.add_child(gap)
 
 	resume_button = UiKit.button("DEVAM ET", &"primary", 156.0)
@@ -109,6 +115,29 @@ func _build() -> void:
 
 	_build_dialog()
 	set_settings(_sound_on, _vibration_on)
+
+
+## Güvenli alan payı (N7): Vector4(sol, üst, sağ, alt); null = UiKit.current_safe_extra. Sütun üst payı kadar iner,
+## yan paylarda kayar; alt pay sütunu aşağıdan sıkıştırırsa boşluk (gap) küçülür. Pay 0 iken v1.1 düzeni birebir.
+func apply_safe_area(extra: Variant = null) -> void:
+	var view := Vector2(1080.0, 2400.0)
+	if is_inside_tree() and size.y > 0.0:
+		view = size
+	var e: Vector4
+	if extra is Vector4:
+		e = extra
+	else:
+		e = UiKit.current_safe_extra(view)
+	if column == null:
+		return
+	var shift := (e.x - e.z) * 0.5
+	column.offset_left = -BTN_W * 0.5 + shift
+	column.offset_right = BTN_W * 0.5 + shift
+	column.offset_top = COL_TOP + e.y
+	gap.custom_minimum_size.y = GAP_H
+	var bottom_limit := view.y - UiKit.DEFAULT_BOTTOM - e.w
+	var over := column.offset_top + column.get_combined_minimum_size().y - bottom_limit
+	gap.custom_minimum_size.y = clampf(GAP_H - maxf(over, 0.0), GAP_MIN, GAP_H)
 
 
 func _build_dialog() -> void:
