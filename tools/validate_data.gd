@@ -15,8 +15,15 @@ func _init() -> void:
 		print("VERİ HATASI: ", e)
 	print(
 		(
-			"veri: %d karakter, %d beceri, %d düşman, %d hata"
-			% [g.character_ids.size(), g.skill_ids.size(), g.enemy_ids.size(), errs.size()]
+			"veri: %d karakter, %d beceri, %d düşman, %d eklenti, %d skor kaydı, %d hata"
+			% [
+				g.character_ids.size(),
+				g.skill_ids.size(),
+				g.enemy_ids.size(),
+				g.pickup_ids.size(),
+				g.score_table.kill_points.size(),
+				errs.size()
+			]
 		)
 	)
 	quit(1 if errs.size() > 0 else 0)

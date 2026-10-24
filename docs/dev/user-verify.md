@@ -43,3 +43,40 @@ Kaynak: doğrulama-1 (T…-64), doğrulama-2 (T…-80), doğrulama-3 (T…-83) l
 ## E. Karar ve yayın
 15. Denge hissi (kullanıcı kararı, v1.1/backlog): geç oyun tehdidi ve kalabalık yeterli mi, Lord çok mu kolay/zor.
 16. APK imzalama (`docs/dev/release.md`, GitHub secret) ve aynı anahtarla güncelleme kurulumu (önce debug APK'yı kaldır).
+
+# v1.1 cihaz kontrol listesi (kullanıcıda doğrulanır — T20261023-98)
+
+Aynı kural: bulutta telefon yok; bunlar yalnız cihazda görülür. Her satır: **ne** — nasıl bakılır → beklenen. Kurulum için A bölümü (debug APK).
+Dengeye dokunan sonuçlar (geç oyun zorluğu vb.) ayrı denge görevine veridir; ayar bu listenin konusu değil (`docs/dev/v1.1-ab-report.md`).
+
+## F. Performans
+17. **view_ms (perf yedek merdiveni kararı)** — debug APK, menüde sürüm etiketine 3 dokun → 60 sn stres; ekrandaki/`user://perf.json` `view_ms_avg` ve `view_ms_p95` → orta sınıf cihazda avg ≤ 4 ms ve p95 ≤ 8 ms; avg > 4 ya da p95 > 8 ise `docs/dev/perf.md` yedek merdiveninin **1. adımı** (>200 canlıda yalnız bob).
+18. **FPS** — aynı koşuda ortalama/p95 kare süresi ve gerçek oyunda 15+ dk kalabalık → 60 FPS, p95 ≤ 16,7 ms; eklenti/skor/hayalet eklenince v1'e göre fark hissedilmiyor.
+
+## G. Ekran kenarları (çentik / güvenli alan)
+19. **Gerçek çentik / yuvarlak köşe** — çentikli ve yuvarlak köşeli telefonda oyun, menü, En İyi Skorlar, sonuç ve skor ekranı → hiçbir yazı/düğme kesilmiyor; yan boşluk ≥ 36 px.
+20. **Lord bandı** — 20. dk "KALE LORDU GELİYOR" sırasında SERİ çipi, skor, rozet satırı ve Lord çubuğu bandın altında kalmıyor → okunuyor.
+21. **Ekran dışı eklenti oku** — yerde eklenti varken kameradan uzaklaş → ok kenardan ≥ 36 px içeride, yuvarlak köşeye girmiyor, doğru yönü gösteriyor, eklenti ekrana girince kayboluyor.
+
+## H. Görünüm
+22. **Gölge koyuluğu (OLED / parlaklık)** — düşman ve oyuncu yer gölgesi; ekran parlaklığını düşük/orta/yüksek dene → gölge okunuyor (elit/Lord "yüzmüyor"), ama zemini batırmıyor; kalabalıkta (300) sorun yok.
+23. **İkon okunurluğu (54–80 px)** — eklenti rozetleri, yerdeki eklenti ikonları, menü/skor kupa ikonu → ilk bakışta ayırt ediliyor (İksir/Çekim/Barut/Namlu/Bomba/Sonsuz).
+24. **∞ tambur** — Sonsuz Tambur alınca HUD şarjör tamburu → ∞ simgesi, 6 yuva amber, doldurma halkası yok; süre bitince normale dönüyor.
+25. **Kupa ikonu** — ana menüde EN İYİ SKORLAR düğmesi → kupa ikonu net ve düğme yazısıyla hizalı.
+26. **Menü anahtar yazısı 36 px** — "SES: AÇIK / TİTREŞİM: KAPALI" → yazı sığıyor, satır taşmıyor, dokunma hedefi rahat.
+27. **Oyuncu yürüme omuz sapması (≈17 px, karar bekliyor)** — oyuncuyu tam hızda yürüt, silahlara/omuzlara bak → gövde kayıyor gibi görünüyor mu? Görünüyorsa kararını yaz (gerçek kareler D4'te bağlanmadı; prosedürel yedek çalışıyor).
+
+## I. His
+28. **Hasar / vuruş donması** — hasar al, düşman vur → parlama + kısa donma doğal, yorucu/gecikme gibi değil (parlama ≤ 3/sn).
+29. **Sonuç gecikmesi** — ölünce ≈1,3 sn, kazanınca ≈1,8 sn sonra sonuç ekranı → "ani kesilme" ya da "uzun bekleme" hissi yok.
+30. **Seviye ön vurgusu** — seviye atlayınca kısa (≈180 ms) altın vurgu sonra kartlar → akıcı, rahatsız etmiyor.
+31. **Seviye halkası kart seçiminden sonra** — kartı seçince mor halka dalgası yayılıyor (önce değil) → doğru sırada.
+32. **Bomba kamera sarsıntısı** — Kara Bomba al, 0,8 sn fitil, patlama → ≈18 px kısa sarsıntı; mide bulandırmıyor, titreşim deseni uygun.
+33. **Bomba etkisi** — toplama noktasında patlıyor, tüm haritayı temizlemiyor, çevredekiler hasar alıyor, sen etkilenmiyorsun → beklenen.
+
+## J. Karar / F-021
+34. **F-021 kaçış AÇIK/KAPALI** — debug etiketi sağ altta (`çıkmaz kaçışı: AÇIK|KAPALI`, dokunarak çevir; `kaçışta N  girilen M`): ~2 dk AÇIK, ~2 dk KAPALI oyna → AÇIK'ta harabeye takılan düşman kaçıp (22–36 sn sürüyor) tekrar yaklaşıyor mu, his nasıl; KAPALI'da takılı kalan oluyor mu.
+35. **Debug etiketi dokunmayı yutuyor mu** — etiketlerin (kesme düzeltmesi + çıkmaz kaçışı) altında kalan düğmelere/joystick'e dokun → etiket dışı dokunma etkilenmiyor; etiket rozet saniyelerini örtmüyor.
+36. **`user://highscores.json` boş/bozuk** — (a) dosya yokken En İyi Skorlar → "HENÜZ SKOR YOK" ve OYNA; (b) dosyayı boş/rastgele yazıyla bozup aç → çökme yok, liste boş, `highscores.json.bad` oluşur, bir sonraki oyun sonunda geçerli dosya yazılır.
+37. **Skor / SERİ hissi** — SERİ çipi ×N, hasar alınca bozulması, sonuç ekranı sayımı ve rekor bandı → okunuyor, tatmin edici; kombo ekranı sığıyor.
+38. **Geç oyun dengesi (veri: A/B raporu)** — eklentilerle 15+ dk oynayınca geç oyun "zor ama eklentilerle dengelenebilir" mi; denge ayarı şimdilik YOK (kullanıcı kararı).

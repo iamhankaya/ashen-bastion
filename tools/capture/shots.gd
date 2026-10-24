@@ -83,6 +83,26 @@ func fresh(opts: Dictionary = {}) -> void:
 	c.sim.hp = 1.0e9
 
 
+## Öz-kontrol için yerel skor listesini geçici dosyada kurar (gerçek kullanıcı dosyasına dokunmaz).
+func _fresh_scores(filled: bool) -> void:
+	var path := "user://shots_hs.json"
+	DirAccess.remove_absolute(path)
+	c.highscores = Highscores.new(path)
+	if filled:
+		var t := 1_761_000_000
+		for sc in [246350, 171900, 154200, 131775, 118420, 96050, 72310]:
+			c.highscores.submit(
+				{
+					"score": sc,
+					"time": 1200 - (246350 - sc) / 300,
+					"won": sc > 150000,
+					"level": 9,
+					"unix": t
+				}
+			)
+			t -= 86400
+
+
 func _run() -> void:
 	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
 	root.add_child(c)
@@ -190,6 +210,42 @@ func _run() -> void:
 				c.result_screen.finish_count()
 				await frames(30)
 				await shot(sc)
+			"d3hud":
+				await fresh()
+				advance(120, Vector2(0.6, 0.3))
+				for i in 12:
+					c.sim.score.on_kill(&"curumus_piyade", c.sim.step_count)
+				c.sim.score.on_kill(&"elit_karga", c.sim.step_count)
+				c.sim.bus.score_changed.emit(c.sim.score.total(), c.sim.score.mult, 1500)
+				await frames(6)
+				await shot("d3hud")
+			"d3menu":
+				c.go_menu()
+				await frames(20)
+				await shot("d3menu")
+			"d3scores", "d3scores_empty":
+				await fresh()
+				_fresh_scores(sc == "d3scores")
+				c.go_menu()
+				c.open_scores()
+				await frames(30)
+				await shot(sc)
+			"d3result", "d3result_top10", "d3result_lost":
+				await fresh()
+				_fresh_scores(sc != "d3result")
+				advance(240)
+				for i in 30:
+					c.sim.score.on_kill(&"elit_piyade", c.sim.step_count)
+				if sc == "d3result":
+					c.sim.score.on_lord()
+					c.sim.score.on_evolution()
+				c.sim.hp = 0.0
+				advance(10)
+				c.flush_delay()
+				await frames(90)
+				c.result_screen.finish_count()
+				await frames(10)
+				await shot(sc)
 			"levelup":
 				await fresh()
 				c.sim.debug_add_xp(30)
@@ -230,6 +286,8 @@ func _run() -> void:
 				await frames(3)
 				await shot("stress")
 				print("PERF ", FileAccess.get_file_as_string("user://perf.json"))
+			"d1_walk", "d1_hit", "d1_die", "d1_ash", "d1_crowd":
+				await _d1(sc)
 			"contrast":
 				await fresh()
 				for t in [&"curumus_piyade", &"les_kargasi", &"sovalye_hayaleti"]:
@@ -238,3 +296,48 @@ func _run() -> void:
 				await frames(3)
 				await shot("contrast")
 	quit()
+
+
+## v1.1 D1 görünüm öz-kontrolü: yürüme/vuruş/ölüm/kül/kalabalık gölgesi. Görünüm süresi `_update_views` ile ilerler.
+func _d1(sc: String) -> void:
+	await fresh()
+	var sim: GameSim = c.sim
+	sim.debug_set_time(900.0)
+	sim.debug_fill(&"curumus_piyade", 30, 330.0)
+	sim.debug_fill(&"les_kargasi", 10, 420.0)
+	sim.debug_fill(&"sovalye_hayaleti", 6, 470.0)
+	sim.debug_spawn(&"elit_piyade", sim.player_pos + Vector2(300, -250))
+	match sc:
+		"d1_walk":
+			for k in 40:
+				sim.step(Vector2(1.0, 0.0))
+				c._update_views(1.0 / 60.0)
+				await process_frame
+			await shot(sc)
+		"d1_hit":
+			advance(20)
+			sim.bus.player_damaged.emit(10.0, 90.0)
+			for k in 4:
+				c._update_views(1.0 / 60.0)
+			await shot(sc)
+		"d1_die":
+			advance(20)
+			sim.bus.player_damaged.emit(10.0, 90.0)
+			sim.bus.run_ended.emit(false, {})
+			for k in 40:
+				c._update_views(1.0 / 60.0)
+			await shot(sc)
+		"d1_ash":
+			advance(10)
+			var ids := sim.alive_ids()
+			for k in mini(ids.size(), 14):
+				var i := EnemyPool.index_of(ids[k])
+				sim.bus.enemy_killed.emit(sim.enemies.type_id_of(i), sim.enemies.pos[i])
+			for k in 9:
+				c._update_views(1.0 / 60.0)
+			await shot(sc)
+		"d1_crowd":
+			sim.debug_fill(&"curumus_piyade", 200, 360.0)
+			advance(30)
+			await frames(3)
+			await shot(sc)

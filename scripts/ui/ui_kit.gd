@@ -92,6 +92,82 @@ static func upper_tr(text: String) -> String:
 	return out
 
 
+## Yazı tiplerinde olmayan simgeler (★ ✓ kupa) çizim ile: Control olarak yerleştirilir, `size` içine sığar.
+class Glyph:
+	extends Control
+	var kind: StringName = &"star"
+	var color: Color = UiKit.AMBER
+
+	func _init(
+		p_kind: StringName = &"star", p_color: Color = UiKit.AMBER, p_size: float = 48.0
+	) -> void:
+		kind = p_kind
+		color = p_color
+		custom_minimum_size = Vector2(p_size, p_size)
+		size = custom_minimum_size
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r := minf(size.x, size.y) * 0.5
+		match kind:
+			&"star":
+				var pts := PackedVector2Array()
+				for i in 10:
+					var rad := r if i % 2 == 0 else r * 0.42
+					pts.append(c + Vector2.from_angle(-PI * 0.5 + TAU * i / 10.0) * rad)
+				draw_colored_polygon(pts, color)
+			&"check":
+				var w := maxf(2.0, r * 0.28)
+				draw_polyline(
+					PackedVector2Array(
+						[
+							c + Vector2(-r * 0.7, 0.0),
+							c + Vector2(-r * 0.2, r * 0.55),
+							c + Vector2(r * 0.75, -r * 0.6)
+						]
+					),
+					color,
+					w,
+					true
+				)
+			&"trophy":
+				var cup := PackedVector2Array(
+					[
+						c + Vector2(-r * 0.6, -r * 0.8),
+						c + Vector2(r * 0.6, -r * 0.8),
+						c + Vector2(r * 0.45, r * 0.1),
+						c + Vector2(r * 0.15, r * 0.35),
+						c + Vector2(-r * 0.15, r * 0.35),
+						c + Vector2(-r * 0.45, r * 0.1),
+					]
+				)
+				draw_colored_polygon(cup, color)
+				var w2 := maxf(2.0, r * 0.16)
+				draw_arc(
+					c + Vector2(-r * 0.62, -r * 0.45),
+					r * 0.3,
+					PI * 0.5,
+					PI * 1.5,
+					12,
+					color,
+					w2,
+					true
+				)
+				draw_arc(
+					c + Vector2(r * 0.62, -r * 0.45),
+					r * 0.3,
+					-PI * 0.5,
+					PI * 0.5,
+					12,
+					color,
+					w2,
+					true
+				)
+				draw_rect(Rect2(c + Vector2(-r * 0.1, r * 0.35), Vector2(r * 0.2, r * 0.3)), color)
+				draw_rect(Rect2(c + Vector2(-r * 0.45, r * 0.65), Vector2(r * 0.9, r * 0.2)), color)
+
+
 static func theme() -> Theme:
 	if _theme == null:
 		var t: Variant = load(THEME_PATH) if ResourceLoader.exists(THEME_PATH) else null
@@ -123,6 +199,22 @@ static func font_semibold() -> Font:
 		fv.fallbacks = [load(ext)]
 		f = fv
 	_tex_cache["font_semi"] = f
+	return f
+
+
+## Inter 700 (HUD etiketleri: SKOR, SERİ) — font_semibold ile aynı kalıp.
+static func font_bold() -> Font:
+	if _tex_cache.has("font_bold"):
+		return _tex_cache["font_bold"]
+	var base := "res://assets/fonts/inter-latin-700-normal.woff2"
+	var ext := "res://assets/fonts/inter-latin-ext-700-normal.woff2"
+	var f: Font = font_semibold()
+	if ResourceLoader.exists(base) and ResourceLoader.exists(ext):
+		var fv := FontVariation.new()
+		fv.base_font = load(base)
+		fv.fallbacks = [load(ext)]
+		f = fv
+	_tex_cache["font_bold"] = f
 	return f
 
 

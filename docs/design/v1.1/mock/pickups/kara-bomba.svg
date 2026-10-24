@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" fill="none" stroke-linejoin="round" stroke-linecap="round" role="img" aria-label="Kara Bomba"><title>Kara Bomba</title>
+<g stroke="#2B0E14" stroke-width="4"><circle cx="44" cy="58" r="30" fill="#2E211C"/><rect x="34" y="22" width="20" height="12" rx="3" fill="#7A6045"/></g>
+<path d="M16 58 C16 56 72 56 72 58" stroke="#8F2A36" stroke-width="7"/>
+<path d="M26 44 Q30 36 38 34" stroke="#EFE7D6" stroke-width="4" opacity=".55"/>
+<path d="M44 22 Q44 10 58 8 Q68 6 72 14" stroke="#CFC4AE" stroke-width="3.5"/>
+<path d="M72 14 L66 8 M72 14 L80 10 M72 14 L78 22 M72 14 L68 22" stroke="#E8A24A" stroke-width="3.5"/>
+<path d="M34 70 L44 58 L54 70" stroke="#B8404A" stroke-width="0"/>
+</svg>

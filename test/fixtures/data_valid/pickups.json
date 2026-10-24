@@ -1,0 +1,91 @@
+{
+  "spawn": {
+    "first": [
+      30,
+      45
+    ],
+    "interval": [
+      45,
+      60
+    ],
+    "dist": [
+      450,
+      700
+    ],
+    "clearance": 40,
+    "life": 25,
+    "blink_last": 5,
+    "collect_radius": 72,
+    "max_alive": 2
+  },
+  "kinds": [
+    {
+      "id": "kizil_iksir",
+      "name": "Kızıl İksir",
+      "rarity": "common",
+      "weight": 30,
+      "effect": "heal",
+      "amount": 25,
+      "toast": "+25 Can",
+      "icon": "res://assets/ui/icons/pickups/iksir.svg"
+    },
+    {
+      "id": "cekim_tasi",
+      "name": "Çekim Taşı",
+      "rarity": "common",
+      "weight": 20,
+      "effect": "magnet",
+      "toast": "Çekim",
+      "icon": "res://assets/ui/icons/pickups/cekim-tasi.svg"
+    },
+    {
+      "id": "ofke_barutu",
+      "name": "Öfke Barutu",
+      "rarity": "uncommon",
+      "weight": 15,
+      "effect": "buff",
+      "buff": "damage",
+      "mult": 1.5,
+      "duration": 12,
+      "toast": "Hasar arttı",
+      "icon": "res://assets/ui/icons/pickups/ofke-barutu.svg"
+    },
+    {
+      "id": "kizgin_namlu",
+      "name": "Kızgın Namlu",
+      "rarity": "uncommon",
+      "weight": 15,
+      "effect": "buff",
+      "buff": "fire_rate",
+      "mult": 1.4,
+      "duration": 12,
+      "toast": "Atış hızı arttı",
+      "icon": "res://assets/ui/icons/pickups/kizgin-namlu.svg"
+    },
+    {
+      "id": "kara_bomba",
+      "name": "Kara Bomba",
+      "rarity": "uncommon",
+      "weight": 15,
+      "effect": "bomb",
+      "radius": 320,
+      "fuse": 0.8,
+      "dmg": 600,
+      "elite_frac": 0.08,
+      "elite_min": 600,
+      "toast": "",
+      "icon": "res://assets/ui/icons/pickups/kara-bomba.svg"
+    },
+    {
+      "id": "sonsuz_tambur",
+      "name": "Sonsuz Tambur",
+      "rarity": "rare",
+      "weight": 5,
+      "effect": "buff",
+      "buff": "unlimited",
+      "duration": 10,
+      "toast": "Sınırsız şarjör",
+      "icon": "res://assets/ui/icons/pickups/sonsuz-tambur.svg"
+    }
+  ]
+}

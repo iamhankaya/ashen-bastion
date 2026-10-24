@@ -5,6 +5,7 @@ extends Control
 ## Sürüm etiketine 3 dokunuş: yalnız debug derlemede `debug_stress_requested` (stres koşusu, U1-10).
 
 signal play_requested
+signal scores_requested
 signal sound_toggled(on: bool)
 signal vibration_toggled(on: bool)
 signal debug_stress_requested
@@ -12,17 +13,29 @@ signal debug_stress_requested
 const VERSION := "0.1"
 const HERO_PATH := "res://assets/gfx/ui/ana_gorsel.png"
 const W := 936.0
+const TOGGLE_FONT := 36  # "TİTREŞİM: KAPALI" 454 px'e sığar; sütun 936'dan taşmaz (F-ashen-bastion-022)
 const TOGGLE_W := 454.0  # iki anahtar eşit genişlikte (etiket uzunluğu yerleşimi kaydırmaz)
 const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
 
 var play_button: Button
+## v1.1: EN İYİ SKORLAR düğmesi (D3-5 kurar; iskelette null).
+var scores_button: Button
 var sound_button: Button
 var vibration_button: Button
 var version_label: Label
 var emblem: Emblem
 var hero: TextureRect
 
+const COL_TOP := -685.0  # düğme sütunu üstü (alttan): y 1715
+const COL_BOTTOM := -120.0
+const HERO_TOP := -540.0  # ana görsel kutusu 960x1020, y 660-1680
+const HERO_BOTTOM := 480.0
+const HEAD_TOP := 150.0
+const TOP_DEFAULT := 96.0
+
+var _head: Control
+var _col: VBoxContainer
 var _sound_on: bool = true
 var _vibration_on: bool = true
 var _taps: int = 0
@@ -84,7 +97,7 @@ func _build() -> void:
 	var head := VBoxContainer.new()
 	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	head.anchor_right = 1.0
-	head.offset_top = 150.0
+	head.offset_top = HEAD_TOP
 	head.add_theme_constant_override(&"separation", 0)
 	var tag := UiKit.label("ASH AND STEEL", &"LabelAccent", 36)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -96,6 +109,7 @@ func _build() -> void:
 	title.add_theme_constant_override(&"shadow_offset_y", 6)
 	head.add_child(title)
 	add_child(head)
+	_head = head
 
 	emblem = Emblem.new()
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -124,8 +138,8 @@ func _build() -> void:
 		hero.anchor_bottom = 0.5
 		hero.offset_left = -480.0
 		hero.offset_right = 480.0
-		hero.offset_top = -560.0
-		hero.offset_bottom = 640.0
+		hero.offset_top = HERO_TOP
+		hero.offset_bottom = HERO_BOTTOM
 		add_child(hero)
 
 	var col := VBoxContainer.new()
@@ -136,21 +150,29 @@ func _build() -> void:
 	col.anchor_bottom = 1.0
 	col.offset_left = -W * 0.5
 	col.offset_right = W * 0.5
-	col.offset_top = -120.0 - 180.0 - 27.0 - 132.0 - 27.0 - 40.0
-	col.offset_bottom = -120.0
+	col.offset_top = COL_TOP
+	col.offset_bottom = COL_BOTTOM
 	play_button = UiKit.button("OYNA", &"primary", 180.0)
 	play_button.add_theme_font_size_override(&"font_size", 64)
 	play_button.pressed.connect(func() -> void: play_requested.emit())
 	col.add_child(play_button)
+	scores_button = UiKit.button("EN İYİ SKORLAR", &"secondary")
+	scores_button.name = "ScoresButton"
+	scores_button.pressed.connect(func() -> void: scores_requested.emit())
+	scores_button.add_child(UiKit.Glyph.new(&"trophy", UiKit.BRONZ_300, 52.0))
+	scores_button.resized.connect(_place_trophy)
+	col.add_child(scores_button)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override(&"separation", 27)
 	sound_button = UiKit.button("", &"secondary")
 	sound_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sound_button.custom_minimum_size.x = TOGGLE_W
+	sound_button.add_theme_font_size_override(&"font_size", TOGGLE_FONT)
 	sound_button.pressed.connect(_on_sound)
 	vibration_button = UiKit.button("", &"secondary")
 	vibration_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vibration_button.custom_minimum_size.x = TOGGLE_W
+	vibration_button.add_theme_font_size_override(&"font_size", TOGGLE_FONT)
 	vibration_button.pressed.connect(_on_vibration)
 	row.add_child(sound_button)
 	row.add_child(vibration_button)
@@ -161,7 +183,44 @@ func _build() -> void:
 	version_label.gui_input.connect(_on_version_input)
 	col.add_child(version_label)
 	add_child(col)
+	_col = col
 	set_settings(_sound_on, _vibration_on)
+	_place_trophy()
+
+
+## Kupa ikonu EN İYİ SKORLAR yazısının soluna oturur (yazı ortalı).
+func _place_trophy() -> void:
+	if scores_button == null or scores_button.get_child_count() == 0:
+		return
+	var g := scores_button.get_child(0) as Control
+	var f := scores_button.get_theme_font(&"font")
+	var fs := scores_button.get_theme_font_size(&"font_size")
+	var tw := f.get_string_size(scores_button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var bw := maxf(scores_button.size.x, W)
+	g.position = Vector2(
+		(bw - tw) * 0.5 - 52.0 - 18.0, (maxf(scores_button.size.y, 132.0) - 52.0) * 0.5
+	)
+
+
+## Güvenli alan payı: Vector4(sol, üst, sağ, alt); null = UiKit.current_safe_extra. Başlık üst paya göre iner,
+## düğme sütunu ve ana görsel alt paya göre yukarı çıkar (alt >= 72 + extra.w).
+func apply_safe_area(extra: Variant = null) -> void:
+	var e := Vector4.ZERO
+	if extra is Vector4:
+		e = extra
+	else:
+		e = UiKit.current_safe_extra(Vector2(1080.0, 2400.0))
+	if _col == null:
+		return
+	var up := maxf(0.0, (72.0 + e.w) - (-COL_BOTTOM))
+	_head.offset_top = HEAD_TOP + maxf(0.0, e.y - (HEAD_TOP - TOP_DEFAULT))
+	_col.offset_top = COL_TOP - up
+	_col.offset_bottom = COL_BOTTOM - up
+	if hero != null:
+		hero.offset_top = HERO_TOP - up
+		hero.offset_bottom = HERO_BOTTOM - up
+	emblem.offset_top = -380.0 - up
+	emblem.offset_bottom = 280.0 - up
 
 
 func set_settings(sound: bool, vib: bool) -> void:

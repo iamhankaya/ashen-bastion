@@ -43,7 +43,7 @@ const BOUNCE_RANGE := 300.0
 ## Mermi çarpışma sorgusunun ızgara yarıçapı payı; bundan büyük düşmanlar (_big_ids) ayrıca denetlenir.
 const SMALL_ENEMY_RADIUS := 40.0
 const DEFAULT_START_SKILL_RANGE := 700.0
-const RNG_STREAMS: Array[StringName] = [&"spawn", &"choice", &"map", &"combat"]
+const RNG_STREAMS: Array[StringName] = [&"spawn", &"choice", &"map", &"combat", &"pickup"]
 
 var bus: SimBus = SimBus.new()
 ## Yalnız görsel/işitsel efekt bildirimleri (sim kararları bağlı değil).
@@ -72,6 +72,12 @@ var projectiles: ProjectilePool = ProjectilePool.new()
 var gems: GemPool = GemPool.new()
 var zones: ZonePool = ZonePool.new()
 var stats: StatBlock = StatBlock.new()
+# v1.1: eklentiler ve skor.
+var pickups: PickupPool = PickupPool.new()
+var bombs: BombPool = BombPool.new()
+var buffs: BuffManager = BuffManager.new()
+var pickup_director: PickupDirector = null
+var score: ScoreKeeper = null
 var evolved_log: Array[StringName] = []
 var event_log: Array = []
 var work: Dictionary = {}
@@ -109,6 +115,8 @@ var rng_spawn: RandomNumberGenerator = RandomNumberGenerator.new()
 var rng_choice: RandomNumberGenerator = RandomNumberGenerator.new()
 var rng_map: RandomNumberGenerator = RandomNumberGenerator.new()
 var rng_combat: RandomNumberGenerator = RandomNumberGenerator.new()
+## Beşinci akış: eklenti doğuşu (mevcut dört akışın dizisi değişmez).
+var rng_pickup: RandomNumberGenerator = RandomNumberGenerator.new()
 
 var _seed: int = 0
 var _log_events: bool = false
@@ -125,6 +133,9 @@ var _big_ids: PackedInt32Array = PackedInt32Array()
 var _scratch: PackedInt32Array = PackedInt32Array()
 var _explode_buf: PackedInt32Array = PackedInt32Array()
 var _bounce_buf: PackedInt32Array = PackedInt32Array()
+var _buff_ended: PackedInt32Array = PackedInt32Array()
+var _bomb_ready: PackedInt32Array = PackedInt32Array()
+var _last_score: int = 0
 
 
 func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void:
@@ -152,6 +163,13 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	rng_choice.seed = _stream_seed(&"choice")
 	rng_map.seed = _stream_seed(&"map")
 	rng_combat.seed = _stream_seed(&"combat")
+	rng_pickup.seed = _stream_seed(&"pickup")
+	# opts.pickups=false: doğuş yok (boş yapılandırma). Varsayılan true.
+	var pk_cfg: Dictionary = data.pickup_cfg if bool(opts.get("pickups", true)) else {}
+	pickup_director = PickupDirector.new(pk_cfg, rng_pickup)
+	score = ScoreKeeper.new(data.score_table)
+	score.gained.connect(_on_score_gained)
+	score.streak_changed.connect(_on_streak_changed)
 	for k in WORK_KEYS:
 		work[k] = 0
 	magazine.changed.connect(_on_mag_changed)
@@ -210,6 +228,7 @@ func choose(index: int) -> bool:
 			evolved_log.append(c.skill_id)
 			log_event(SimEvents.EVOLUTION, {"evo_id": c.skill_id})
 			bus.evolution_gained.emit(c.skill_id)
+			score.on_evolution()
 		_:
 			loadout.add_or_upgrade(c.skill_id)
 	_refresh_stats()
@@ -260,6 +279,14 @@ func explode(pos: Vector2, radius: float, dmg: float, source: StringName) -> voi
 		var reach := r + enemies.radius[i]
 		if enemies.pos[i].distance_squared_to(pos) <= reach * reach:
 			damage.damage_enemy(self, id, d, &"explosion")
+
+
+## Kara Bomba alan hasarı: sabit boyut (area_mult/explosion_dmg_mult uygulanmaz), zırhı yok sayar; elit/Lord için
+## max(elite_min, elite_frac × maks. can). Vurulan düşman sayısını döndürür. Gövde: PickupSystem.blast (D2-1).
+func bomb_blast(
+	pos: Vector2, radius: float, dmg: float, elite_frac: float, elite_min: float
+) -> int:
+	return PickupSystem.blast(self, pos, radius, dmg, elite_frac, elite_min)
 
 
 ## Çizgi üzerindeki tüm düşmanlara vurur (mesafe sırasıyla); vurulan sayıyı döndürür.
@@ -362,6 +389,7 @@ func state_hash() -> int:
 	h.append(rng_choice.state)
 	h.append(rng_map.state)
 	h.append(rng_combat.state)
+	h.append_array(V11State.hash_items(self))  # v1.1: sona eklenir, mevcut sıra değişmez
 	return hash(h)
 
 
@@ -404,6 +432,7 @@ func check_invariants() -> PackedStringArray:
 		out.append("yuva sayısı sınırı aşıldı")
 	if gems.dropped_total - gems.collected_total != gems.total_value():
 		out.append("taş XP korunumu bozuldu")
+	V11State.check(self, out)
 	return out
 
 
@@ -448,10 +477,21 @@ func debug_set_time(t: float) -> void:
 	time = t
 	_last_time = t
 	spawn_director.skip_to(t)
+	pickup_director.skip_to(step_count)
 
 
 func debug_add_xp(n: int) -> void:
 	xp += n
+
+
+## Yerdeki bir eklenti doğurur (pickups.json ömrüyle). Dönüş: pickups indeksi; bilinmeyen tür ya da havuz dolu: -1.
+func debug_spawn_pickup(kind_id: StringName, pos: Vector2) -> int:
+	return PickupSystem.debug_spawn(self, kind_id, pos)
+
+
+## Toplama kuralını tek çağrıda işletir (testler; yürüyerek toplama _phase_deaths_xp sonunda aynı yolu kullanır).
+func debug_collect_pickups() -> void:
+	_collect_pickups()
 
 
 ## Sonraki roll_choices tam bu kimlikleri döner (tek kullanımlık).
@@ -488,6 +528,9 @@ func _trace(k: int) -> void:
 ## (1) tick'ler: şarjör, soğumalar, yenilenme.
 func _phase_ticks(_move: Vector2) -> void:
 	_trace(0)
+	buffs.tick(_buff_ended)
+	if not _buff_ended.is_empty():
+		_buffs_ended(_buff_ended)
 	magazine.tick(STEP, stats)
 	for g in 2:
 		gun_cd[g] -= STEP
@@ -668,6 +711,7 @@ func _phase_projectiles() -> void:
 		if consumed:
 			pr.remove(i)
 		i -= 1
+	_tick_bombs()
 
 
 ## Mermi `pi` aday düşmanlara (artan id sırası) çarpıyor mu; true = mermi tükendi.
@@ -766,17 +810,20 @@ func _phase_deaths_xp() -> void:
 				log_event(SimEvents.GEM_COLLECTED, {"value": v})
 			bus.gem_collected.emit(v)
 		i -= 1
+	_collect_pickups()
 
 
 ## (9) doğurma.
 func _phase_spawn() -> void:
 	_trace(8)
 	spawn_director.step(self)
+	pickup_director.step(self)
 
 
 ## (10) durum: oyun sonu, seviye atlama.
 func _phase_status() -> void:
 	_trace(9)
+	score.tick(step_count)
 	while xp >= xp_to_next:
 		xp -= xp_to_next
 		level += 1
@@ -807,7 +854,9 @@ func _end_run(won: bool) -> void:
 	var evos: Array = []
 	for e in evolved_log:
 		evos.append(e)
-	bus.run_ended.emit(won, {"time": time, "level": level, "kills": kills, "evolutions": evos})
+	var result := {"time": time, "level": level, "kills": kills, "evolutions": evos}
+	result.merge(V11State.end_stats(self))  # score, score_parts, best_mult
+	bus.run_ended.emit(won, result)
 
 
 ## Seçenekleri çeker (debug_force_choices varsa tam onları döndürür).
@@ -838,6 +887,34 @@ func _roll_choices() -> void:
 	for c in _choices:
 		ids.append(c.skill_id)
 	log_event(SimEvents.CHOICES, {"ids": ids})
+
+
+# --- eklentiler ve skor (gövdeler PickupSystem / ScoreKeeper'da: D2-1 / D3-1) ---------------------
+
+
+func _buffs_ended(ended: PackedInt32Array) -> void:
+	PickupSystem.buffs_ended(self, ended)
+
+
+func _apply_buffs() -> void:
+	PickupSystem.apply_buffs(self)
+
+
+func _tick_bombs() -> void:
+	PickupSystem.tick_bombs(self)
+
+
+func _collect_pickups() -> void:
+	PickupSystem.collect(self)
+
+
+## ScoreKeeper.gained -> score olayı + bus.score_changed.
+func _on_score_gained(gain: int, source: StringName) -> void:
+	V11State.on_score_gained(self, gain, source)
+
+
+func _on_streak_changed(mult: int, left: float) -> void:
+	V11State.on_streak_changed(self, mult, left)
 
 
 # --- şarjör sinyalleri -----------------------------------------------------------------------

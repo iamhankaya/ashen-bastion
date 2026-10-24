@@ -6,10 +6,15 @@ extends RefCounted
 const IDLE := &"idle"
 const KITE := &"kite"
 const GREEDY := &"greedy"
+## v1.1: greedy gibi taş toplar; ayrıca yerdeki en yakın eklentiye yürür (eklenti toplama yolunu sınar).
+## POLICIES'e GİRMEZ: v1 testlerinin 3 politikalı döngüleri değişmez.
+const GREEDY_PICKUP := &"greedy_pickup"
 const POLICIES: Array[StringName] = [IDLE, KITE, GREEDY]
+const PICKUP_POLICIES: Array[StringName] = [GREEDY_PICKUP]
 
 const THREAT_RADIUS := 350.0
 const GEM_RADIUS := 900.0
+const PICKUP_RADIUS := 1600.0
 
 
 static func make_rng(seed_value: int) -> RandomNumberGenerator:
@@ -23,10 +28,14 @@ static func move(policy: StringName, sim: GameSim) -> Vector2:
 	if policy == IDLE:
 		return Vector2.ZERO
 	var want := _kite_dir(sim)
-	if policy == GREEDY:
+	if policy == GREEDY or policy == GREEDY_PICKUP:
 		var g := _nearest_gem_dir(sim)
 		if g != Vector2.ZERO:
 			want = g
+	if policy == GREEDY_PICKUP:
+		var p := _nearest_pickup_dir(sim)
+		if p != Vector2.ZERO:
+			want = p
 	return _around_walls(sim, want)
 
 
@@ -128,6 +137,18 @@ static func _nearest_gem_dir(sim: GameSim) -> Vector2:
 		var d: Vector2 = sim.gems.pos[i] - sim.player_pos
 		var l2 := d.length_squared()
 		if l2 < best and _path_clear(sim, sim.player_pos, sim.gems.pos[i]):
+			best = l2
+			dir = d
+	return dir.normalized() if dir != Vector2.ZERO else Vector2.ZERO
+
+
+static func _nearest_pickup_dir(sim: GameSim) -> Vector2:
+	var best := PICKUP_RADIUS * PICKUP_RADIUS
+	var dir := Vector2.ZERO
+	for i in sim.pickups.count:
+		var d: Vector2 = sim.pickups.pos[i] - sim.player_pos
+		var l2 := d.length_squared()
+		if l2 < best and _path_clear(sim, sim.player_pos, sim.pickups.pos[i]):
 			best = l2
 			dir = d
 	return dir.normalized() if dir != Vector2.ZERO else Vector2.ZERO

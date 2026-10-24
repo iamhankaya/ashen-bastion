@@ -11,5 +11,14 @@
   "scales_with_time": true,
   "sprite": "placeholder:karga",
   "display_height": 192,
-  "tint": "#ffffff"
+  "tint": "#ffffff",
+  "anim": {
+    "kind": "flap",
+    "hz": 3.0,
+    "bob": 7,
+    "rot": 12,
+    "hover": 36,
+    "death": "fall",
+    "death_ms": 420
+  }
 }

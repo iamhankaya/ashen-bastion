@@ -24,6 +24,11 @@ var max_hp: PackedFloat32Array = PackedFloat32Array()
 var ai_timer: PackedFloat32Array = PackedFloat32Array()
 var ai_aux: PackedFloat32Array = PackedFloat32Array()
 var ai_dir: PackedVector2Array = PackedVector2Array()
+## F-021 çıkmaz kaçışı (yalnız yer düşmanı): son harabe itme normali, ardışık "ilerleme yok" sayısı, kaçış süresi ve yönü.
+var push_n: PackedVector2Array = PackedVector2Array()
+var stuck_n: PackedByteArray = PackedByteArray()
+var esc_left: PackedFloat32Array = PackedFloat32Array()
+var esc_side: PackedFloat32Array = PackedFloat32Array()
 
 ## Tür başına yapay zekâ sınıfı (sıcak yolda def aramasını önler): 0 düz, 1 yer (engelden kayar), 2 özel (şarj/çağırma).
 const KIND_PLAIN := 0
@@ -50,6 +55,10 @@ func _init(data: GameData = null) -> void:
 	ai_timer.resize(CAP)
 	ai_aux.resize(CAP)
 	ai_dir.resize(CAP)
+	push_n.resize(CAP)
+	stuck_n.resize(CAP)
+	esc_left.resize(CAP)
+	esc_side.resize(CAP)
 	_free.resize(CAP)
 	for k in CAP:
 		_free[k] = CAP - 1 - k  # en düşük indeks yığının tepesinde
@@ -108,6 +117,10 @@ func spawn(
 	radius[i] = def.radius
 	ai_aux[i] = 0.0
 	ai_dir[i] = Vector2.ZERO
+	push_n[i] = Vector2.ZERO
+	stuck_n[i] = 0
+	esc_left[i] = 0.0
+	esc_side[i] = 0.0
 	if not def.charge.is_empty():
 		ai_timer[i] = float(def.charge.get("every", 4.0))
 	elif not def.summon.is_empty():

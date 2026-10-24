@@ -11,18 +11,49 @@ const BODY_ASPECT := 0.553  # gerçek gövde görseli 177x320
 const ARM_ASPECT := 0.296  # gerçek kol görseli 240x71
 
 
-## Omuz (dünya).
+## Omuz (dünya): duruş geometrisi (sim ve namlu için tek kaynak). Kare başına sapmayı bilen sürüm `shoulder_world_f`.
 static func shoulder_world(
 	gun: int, player_pos: Vector2, facing_left: bool, rig: Dictionary
+) -> Vector2:
+	return shoulder_world_f(gun, player_pos, facing_left, rig, _stand_frame(rig))
+
+
+## Kare modunda `frame` karesinin omzu: duruş omzu + `rig.walk.shoulder_dev[frame]` (display_height kesri; sola
+## bakışta dx aynalanır). Tablo yok/bozuk/boyu (frames+1) değil ya da kare aralık dışı ise duruş omzu döner.
+static func shoulder_world_f(
+	gun: int, player_pos: Vector2, facing_left: bool, rig: Dictionary, frame: int
 ) -> Vector2:
 	var h := float(rig.get("display_height", 112.0))
 	var sh: Array = rig.get("shoulders", [[0.38, 0.195], [0.62, 0.20]])
 	var s: Array = sh[clampi(gun, 0, sh.size() - 1)]
 	var dx := (float(s[0]) - 0.5) * h * BODY_ASPECT
 	var dy := (float(s[1]) - 0.5) * h
+	var dev := _frame_dev(rig, frame)
+	dx += dev.x * h
+	dy += dev.y * h
 	if facing_left:
 		dx = -dx
 	return player_pos + Vector2(dx, dy)
+
+
+## Duruş hücresinin indeksi (= yürüme kare sayısı); walk yoksa -1.
+static func _stand_frame(rig: Dictionary) -> int:
+	var w: Variant = rig.get("walk", null)
+	return int(w.get("frames", 0)) if w is Dictionary else -1
+
+
+static func _frame_dev(rig: Dictionary, frame: int) -> Vector2:
+	var w: Variant = rig.get("walk", null)
+	if not (w is Dictionary):
+		return Vector2.ZERO
+	var n := int(w.get("frames", 0))
+	var tbl: Variant = w.get("shoulder_dev", null)
+	if n < 1 or frame < 0 or frame >= n or not (tbl is Array) or tbl.size() != n + 1:
+		return Vector2.ZERO
+	var d: Variant = tbl[frame]
+	if not (d is Array) or d.size() < 2:
+		return Vector2.ZERO
+	return Vector2(float(d[0]), float(d[1]))
 
 
 ## gun: 0 sağ, 1 sol tabanca. rig: karakter verisindeki "rig" sözlüğü.

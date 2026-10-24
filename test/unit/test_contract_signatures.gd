@@ -13,6 +13,7 @@ const S := TYPE_STRING
 const SN := TYPE_STRING_NAME
 const PI := TYPE_PACKED_INT32_ARRAY
 const PS := TYPE_PACKED_STRING_ARRAY
+const V4 := TYPE_VECTOR4
 
 # sınıf -> {yöntem: [argüman adları, dönüş türü]}
 const METHODS := {
@@ -38,6 +39,10 @@ const METHODS := {
 		"debug_force_choices": ["ids", N],
 		"take_forced_choices": ["", A],
 		"log_event": ["type,fields", N],
+		# v1.1
+		"bomb_blast": ["pos,radius,dmg,elite_frac,elite_min", I],
+		"debug_spawn_pickup": ["kind_id,pos", I],
+		"debug_collect_pickups": ["", N],
 	},
 	"Magazine":
 	{
@@ -48,6 +53,7 @@ const METHODS := {
 		"start_reload": ["stats", N],
 		"set_cap": ["new_cap", N],
 		"reset_cycle_flags": ["", N],
+		"set_unlimited": ["on", N],
 	},
 	"Loadout":
 	{
@@ -60,7 +66,7 @@ const METHODS := {
 		"apply_evolution": ["evo_id", N],
 		"roll_choices": ["rng", A],
 	},
-	"StatBlock": {"rebuild": ["loadout,data", N]},
+	"StatBlock": {"rebuild": ["loadout,data", N], "set_buffs": ["dmg,rate", N]},
 	"SkillBehavior":
 	{
 		"setup": ["api,def,level", N],
@@ -123,6 +129,171 @@ const METHODS := {
 		"get_enemy": ["id", O],
 		"skills_of_kind": ["kind", A],
 		"validate": ["registry,complete", PS],
+		# v1.1
+		"get_pickup": ["id", O],
+	},
+	# --- v1.1 sim ---
+	"PickupPool":
+	{
+		"spawn": ["kind,p,life_steps", I],
+		"remove": ["i", N],
+		"tick": ["expired_kinds", N],
+	},
+	"BombPool":
+	{
+		"is_full": ["", B],
+		"plant": ["p,fuse,r,kind", I],
+		"tick": ["ready", N],
+		"remove": ["i", N],
+	},
+	"BuffManager":
+	{
+		"start": ["kind,duration_steps,m", B],
+		"active": ["kind", B],
+		"ratio": ["kind", F],
+		"tick": ["ended", N],
+		"damage_mult": ["", F],
+		"fire_rate_mult": ["", F],
+		"unlimited": ["", B],
+		"kind_of": ["name", I],
+		"name_of": ["kind", SN],
+	},
+	"PickupDirector":
+	{
+		"_init": ["cfg,rng", O],
+		"step": ["sim", N],
+		"skip_to": ["step_count", N],
+		"progress_hash": ["", I],
+	},
+	"ScoreKeeper":
+	{
+		"_init": ["table", O],
+		"on_kill": ["type_id,step", I],
+		"on_evolution": ["", I],
+		"on_lord": ["", I],
+		"break_streak": ["step", N],
+		"tick": ["step", N],
+		"total": ["", I],
+		"streak_left": ["step", F],
+		"parts": ["", D],
+	},
+	"ScoreTable": {"points": ["type_id", I], "mult_for": ["streak", I]},
+	# --- v1.1 görünüm ---
+	"WalkCycle":
+	{
+		"advance": ["phase,dist,stride", F],
+		"frame_at": ["phase,frames", I],
+		"nearest_contact": ["phase,frames", I],
+		"foot_shift_per_frame": ["stride,frames", F],
+	},
+	"PlayerAnim":
+	{
+		"configure": ["rig", N],
+		"reset": ["", N],
+		"update": ["dt,vel,facing_left,reload_progress", N],
+		"on_shot": ["gun", N],
+		"on_damaged": ["amount,from_dir", N],
+		"on_level_up": ["", N],
+		"on_buffs": ["mask", N],
+		"on_died": ["from_dir", N],
+		"on_won": ["", N],
+		"death_done": ["", B],
+	},
+	"EnemyAnim":
+	{
+		"bind": ["data,atlas", N],
+		"sync_slot": ["i,gen,pos", N],
+		"pose_of": ["kind,hz,bob,rot_rad,sq,t,phase0", V4],
+	},
+	"EnemyShadowLayer": {"write": ["buf,n", N]},
+	"EnemyRenderer": {"set_ghosts": ["g", N]},
+	"AshGhostRenderer":
+	{
+		"bind": ["sim,enemy_renderer", N],
+		"update_ghosts": ["dt", N],
+		"ghost_count": ["", I],
+	},
+	"PickupRenderer": {"bind": ["sim", N], "refresh": ["dt", N]},
+	"FxRenderer":
+	{
+		"add_ring": ["pos,r_max,dur,color,width", N],
+		"add_shell": ["pos,dir", N],
+		"add_particle": ["kind,pos,vel,life", N],
+		"add_char": ["pos,radius", N],
+	},
+	# --- v1.1 UI, kontrol, depo ---
+	"ScoreBlock":
+	{
+		"bind": ["sim", N],
+		"refresh": ["dt", N],
+		"eased": ["shown,target,dt", F],
+		"should_pop": ["gain,since_last_pop", B],
+		"is_big_gain": ["gain", B],
+		"tier_of": ["mult", I],
+		"format_score": ["n", S],
+	},
+	"BuffRow":
+	{
+		"bind": ["sim", N],
+		"refresh": ["dt", N],
+		"badge_x": ["n", F],
+		"seconds_text": ["left_steps", S],
+		"blinking": ["left_s", B],
+	},
+	"OffscreenArrow":
+	{
+		"bind": ["sim", N],
+		"refresh": ["dt", N],
+		"place": ["target,cam_pos,view,safe,margin", D],
+	},
+	"FloatText": {"show_text": ["text,world_to_screen_pos", N], "refresh": ["dt", N]},
+	"MagazineDrum": {"set_unlimited": ["on", N]},
+	"Highscores":
+	{
+		"_init": ["p_path", O],
+		"load_file": ["", B],
+		"submit": ["entry", D],
+		"save": ["", B],
+		"sanitize": ["raw", A],
+		"better": ["a,b", B],
+		"format_date": ["unix,tz_bias_min", S],
+	},
+	"HighscoreScreen":
+	{
+		"show_scores": ["entries,highlight_index", N],
+		"apply_safe_area": ["extra", N],
+	},
+	"ResultScreen":
+	{
+		"show_result": ["p_won,p_stats,combos,subtitle,record", N],
+		"content_bottom": ["", F],
+		"apply_safe_area": ["extra", N],
+	},
+	"ResultTimeline": {"buttons_ready_at": ["skip_t", F]},
+	"MainMenu": {"apply_safe_area": ["extra", N]},
+	"ScreenDelay":
+	{
+		"start": ["p_target,seconds", N],
+		"tick": ["dt", B],
+		"skip": ["", B],
+	},
+	"HitStop": {"request": ["sec", N], "tick": ["dt", B]},
+	"PauseLogic": {"result_delay": ["won", F]},
+	"GameController":
+	{
+		"_v11_build_world": ["", N],
+		"_v11_bind": ["new_sim", N],
+		"_v11_bind_player": ["new_sim", N],
+		"_v11_bind_pickups": ["new_sim", N],
+		"_v11_bind_score": ["new_sim", N],
+		"_v11_update_views": ["view_dt", N],
+		"_v11_update_player": ["view_dt", N],
+		"_v11_update_pickups": ["view_dt", N],
+		"_v11_process": ["delta", N],
+		"_v11_hit_stop": ["delta", B],
+		"_v11_after_step": ["", N],
+		"_v11_on_run_ended": ["won,stats", N],
+		"_v11_on_screen": ["next", N],
 	},
 }
 
@@ -145,7 +316,20 @@ const SIGNALS := {
 		"boss_spawned": "type_id",
 		"explosion": "pos,radius",
 		"run_ended": "won,stats",
+		# v1.1
+		"pickup_spawned": "kind_id,pos",
+		"pickup_collected": "kind_id,pos",
+		"pickup_expired": "kind_id",
+		"buff_started": "kind,duration",
+		"buff_ended": "kind",
+		"bomb_planted": "pos,radius,fuse",
+		"bomb_exploded": "pos,radius",
+		"score_changed": "score,mult,gain",
+		"streak_changed": "mult,left",
 	},
+	"ScoreKeeper": {"gained": "gain,source", "streak_changed": "mult,left"},
+	"MainMenu": {"scores_requested": ""},
+	"HighscoreScreen": {"back_requested": "", "play_requested": ""},
 	"Magazine":
 	{
 		"changed": "count,cap",
@@ -177,7 +361,16 @@ func test_class_names_are_registered() -> void:
 		"Stub",
 		"SkillRegistry",
 		"ZonePool",
-		"AudioDirector"
+		"AudioDirector",
+		# v1.1
+		"PickupDef",
+		"ScoreTable",
+		"DataV11",
+		"WavesValidator",
+		"PickupSystem",
+		"V11State",
+		"Motion",
+		"ResultTimeline"
 	]:
 		assert_not_null(_script_of(cls), "%s global class olarak kayıtlı değil" % cls)
 
@@ -202,7 +395,7 @@ func test_signal_signatures() -> void:
 
 
 func test_sim_bus_has_exactly_the_contract_signals() -> void:
-	assert_eq(SimBus.new().get_script().get_script_signal_list().size(), 16)
+	assert_eq(SimBus.new().get_script().get_script_signal_list().size(), 25, "16 v1 + 9 v1.1")
 
 
 func test_constants_and_limits() -> void:
@@ -219,6 +412,39 @@ func test_constants_and_limits() -> void:
 	assert_eq(Loadout.ACTIVE_SLOTS, 6)
 	assert_eq(Loadout.PASSIVE_SLOTS, 6)
 	assert_eq(SpatialHash.new().cell, 96.0)
+
+
+func test_v11_constants_and_limits() -> void:
+	assert_eq(PickupPool.CAP, 8)
+	assert_eq(BombPool.CAP, 4)
+	assert_eq(BuffManager.COUNT, 3)
+	assert_eq(BuffManager.Kind.DAMAGE, 0)
+	assert_eq(BuffManager.Kind.FIRE_RATE, 1)
+	assert_eq(BuffManager.Kind.UNLIMITED, 2)
+	assert_eq(ScoreKeeper.WINDOW_STEPS, 180)
+	assert_eq(
+		GameSim.RNG_STREAMS,
+		[&"spawn", &"choice", &"map", &"combat", &"pickup"] as Array[StringName]
+	)
+	assert_eq(AshGhostRenderer.CAP, 64)
+	assert_eq(AshGhostRenderer.LOD_ALIVE, 150)
+	assert_eq(EnemyAnim.LUT_SIZE, 256)
+	assert_eq(HitStop.MAX_SEC, 0.15)
+	assert_eq(Highscores.VERSION, 1)
+	assert_eq(Highscores.MAX_ENTRIES, 10)
+	assert_eq(Highscores.DEFAULT_PATH, "user://highscores.json")
+	assert_eq(PauseLogic.LEVEL_UP_PREROLL, 0.18)
+	assert_eq(PauseLogic.Screen.SCORES, 6, "Screen.SCORES sona eklendi")
+	assert_eq(PauseLogic.Screen.RESULT, 5)
+	assert_eq(PlayerAnim.Mode.IDLE, 0)
+	assert_eq(PlayerAnim.Mode.WALK, 1)
+	assert_eq(PlayerAnim.Mode.DEAD, 2)
+	assert_eq(BuffManager.kind_of("damage"), 0)
+	assert_eq(BuffManager.kind_of("fire_rate"), 1)
+	assert_eq(BuffManager.kind_of("unlimited"), 2)
+	assert_eq(BuffManager.kind_of("shield"), -1)
+	assert_eq(BuffManager.name_of(2), &"unlimited")
+	assert_eq(BuffManager.name_of(3), &"")
 
 
 func test_projectile_flags_are_distinct_bits() -> void:
@@ -273,13 +499,17 @@ func test_data_shape_of_value_classes() -> void:
 		"max_hp_add",
 		"regen",
 		"pickup_mult",
-		"range_mult"
+		"range_mult",
+		"buff_dmg_mult",
+		"buff_rate_mult"
 	]:
 		assert_true(p in st, "StatBlock.%s" % p)
 	assert_eq(st.bullet_dmg_mult, 1.0)
 	assert_eq(st.mag_add, 0)
 	var m := Magazine.new()
-	for p in ["count", "cap", "reloading", "reload_left", "reload_total", "refund_used"]:
+	for p in [
+		"count", "cap", "reloading", "reload_left", "reload_total", "refund_used", "unlimited"
+	]:
 		assert_true(p in m, "Magazine.%s" % p)
 	assert_eq(m.cap, 6)
 
@@ -322,6 +552,116 @@ func test_game_sim_public_state_variables() -> void:
 		"rng_spawn",
 		"rng_choice",
 		"rng_map",
-		"rng_combat"
+		"rng_combat",
+		# v1.1
+		"rng_pickup",
+		"pickups",
+		"bombs",
+		"buffs",
+		"pickup_director",
+		"score"
 	]:
 		assert_true(p in sim, "GameSim.%s" % p)
+
+
+func test_v11_value_classes_have_their_contract_fields() -> void:
+	var pd := PickupDef.new()
+	for p in [
+		"id",
+		"display_name",
+		"rarity",
+		"weight",
+		"effect",
+		"amount",
+		"buff",
+		"mult",
+		"duration",
+		"radius",
+		"fuse",
+		"dmg",
+		"elite_frac",
+		"elite_min",
+		"toast",
+		"icon"
+	]:
+		assert_true(p in pd, "PickupDef.%s" % p)
+	var st := ScoreTable.new()
+	for p in [
+		"kill_points",
+		"tiers",
+		"window_steps",
+		"evolution_bonus",
+		"survival_per_sec",
+		"lord_bonus",
+		"display_cap"
+	]:
+		assert_true(p in st, "ScoreTable.%s" % p)
+	var pool := PickupPool.new()
+	for p in ["count", "pos", "kind_idx", "age_steps", "left_steps", "uid"]:
+		assert_true(p in pool, "PickupPool.%s" % p)
+	var bp := BombPool.new()
+	for p in ["count", "pos", "fuse_steps", "fuse_total", "radius", "kind_idx"]:
+		assert_true(p in bp, "BombPool.%s" % p)
+	var bm := BuffManager.new()
+	for p in ["left_steps", "total_steps", "mult"]:
+		assert_true(p in bm, "BuffManager.%s" % p)
+	var sk := ScoreKeeper.new(st)
+	for p in [
+		"kills_part",
+		"streak_part",
+		"evolution_part",
+		"survival_part",
+		"lord_part",
+		"streak_count",
+		"mult",
+		"best_mult",
+		"last_kill_step"
+	]:
+		assert_true(p in sk, "ScoreKeeper.%s" % p)
+	assert_true("next_step" in PickupDirector.new({}, RandomNumberGenerator.new()))
+	var pa := PlayerAnim.new()
+	for p in [
+		"mode",
+		"lean",
+		"bob_px",
+		"sx",
+		"sy",
+		"turn_x",
+		"frame_a",
+		"frame_b",
+		"frame_mix",
+		"walk_phase",
+		"hit",
+		"tint_amt",
+		"desat",
+		"scarf_amp",
+		"arm_rot",
+		"arm_back",
+		"arm_len",
+		"knock_px",
+		"body_rot",
+		"sink_px",
+		"fade",
+		"halo",
+		"level_ring",
+		"aura_mask"
+	]:
+		assert_true(p in pa, "PlayerAnim.%s" % p)
+	var er := EnemyRenderer.new()
+	for p in ["last_anim_instances", "last_frame_selects", "last_shadow_instances", "shadows"]:
+		assert_true(p in er, "EnemyRenderer.%s" % p)
+	er.free()
+	var ea := EnemyAnim.new()
+	assert_true("last_anim_instances" in ea and "last_frame_selects" in ea)
+	var hs := Highscores.new("user://x.json")
+	assert_true("entries" in hs and "corrupt" in hs)
+	var sd := ScreenDelay.new()
+	assert_true("active" in sd and "target" in sd and "left" in sd)
+	for sc in [ScoreBlock, BuffRow, OffscreenArrow, FloatText, HighscoreScreen]:
+		var node: Control = sc.new()
+		assert_not_null(node, "yüklenir: %s" % sc)
+		node.free()
+	var gc := GameController.new()
+	for p in ["highscores", "scores_screen", "pickup_renderer", "enemy_shadows", "ghosts"]:
+		assert_true(p in gc, "GameController.%s" % p)
+	gc.free()

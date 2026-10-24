@@ -31,6 +31,7 @@ func _controller() -> GameController:
 func _tick(c: GameController, move: Vector2 = Vector2.ZERO) -> void:
 	c.sim.step(move)
 	c._after_step()
+	c.flush_delay()  # v1.1: seviye ön vurgusu / sonuç gecikmesi süresini beklemeden biter
 
 
 func _find_label(root: Node, text: String) -> Label:

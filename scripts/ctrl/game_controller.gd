@@ -10,6 +10,14 @@ const CHARACTER := &"gunslinger"
 const RUN_OPTS := {"end_mode": "lord", "end_time": 1200.0}
 const WON_SUB := "Şafak söktü; kale seni yutamadı."
 const DAMAGE_VIBRATE_MS := 25
+const LORD_ID := &"kale_lordu"
+## Debug etiketleri sağ altta: sol alttaki rozet satırı (x ≤ 579 + çentik) ve tamburu örtmez (V-09).
+const DEBUG_LABEL_X := 636.0
+const DEBUG_LABEL_W := 408.0
+const LORD_SLAM_RING_SEC := 0.45
+## Öfkeli Lord kor aurası (E9): en çok 20 parçacık/sn.
+const LORD_EMBER_RATE := 18.0
+const BOMB_SHAKE := 18.0
 
 var screen: int = PauseLogic.Screen.MENU
 var sim: GameSim = null
@@ -34,20 +42,40 @@ var level_up: LevelUpScreen
 var pause_screen: PauseScreen
 var result_screen: ResultScreen
 var menu: MainMenu
+## v1.1 (iskelet): ilgili D fazları `_v11_*` işlevlerinde kurar/doldurur; o zamana dek v1 davranışı değişmez.
+var highscores: Highscores = Highscores.new()
+var scores_screen: HighscoreScreen
+var pickup_renderer: PickupRenderer
+var enemy_shadows: EnemyShadowLayer
+var ghosts: AshGhostRenderer
+var _pickup_sim: GameSim = null
+var _escape_label: Label = null
 
 var audio: AudioDirector
+## D1: vuruş donması (sim adımlanmaz, _accum artmaz), Lord ölümü yavaş çekimi ve ardışık patlamaları.
+var hit_stop: HitStop = HitStop.new()
+var _v11_sim: GameSim = null
+var _lord_slow_left: float = 0.0
+var _lord_blast_t := PackedFloat32Array()
+var _lord_blast_pos := PackedVector2Array()
+var _lord_ember_acc: float = 0.0
 var _stress: StressRun = null
 var _stress_label: Label = null
 var _render_label: Label = null
 var _accum: float = 0.0
 var _run_won: bool = false
 var _run_stats: Dictionary = {}
+## v1.1 D3: ekran gecikmesi (ölüm 1,3 / kazanma 1,8 / seviye ön vurgusu 0,18 sn), tek yazma bayrağı, rekor bilgisi.
+var _delay: ScreenDelay = ScreenDelay.new()
+var _run_saved: bool = false
+var _result_record: Dictionary = {}
 
 
 func _ready() -> void:
 	get_tree().quit_on_go_back = false  # geri tuşunu kendimiz yönetiriz
 	_build_world()
 	_build_ui()
+	_v11_build_world()  # world ve ui kuruldu
 	audio = AudioDirector.new()
 	audio.name = "Audio"
 	add_child(audio)
@@ -141,8 +169,9 @@ func _build_render_debug() -> void:
 		return
 	_render_label = Label.new()
 	_render_label.name = "RenderDebug"
-	_render_label.position = Vector2(300, 2236)
-	_render_label.size = Vector2(480, 96)
+	_render_label.position = Vector2(DEBUG_LABEL_X, 2132)
+	_render_label.size = Vector2(DEBUG_LABEL_W, 120)
+	_render_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_render_label.add_theme_font_size_override(&"font_size", 26)
 	_render_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
 	_render_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
@@ -237,11 +266,13 @@ func _stop_stress() -> void:
 
 func _on_stress_finished(result: Dictionary) -> void:
 	_stress_label.text = (
-		"STRES BİTTİ\nort %.1f ms (%.0f FPS)\np95 %.1f ms\nçizim %d  nesne %d\nbellek %.0f MB\nuser://perf.json"
+		"STRES BİTTİ\nort %.1f ms (%.0f FPS)\np95 %.1f ms\ngörünüm ort %.2f p95 %.2f ms\nçizim %d  nesne %d\nbellek %.0f MB\nuser://perf.json"
 		% [
 			result["avg_frame_ms"],
 			result["avg_fps"],
 			result["p95_frame_ms"],
+			result["view_ms_avg"],
+			result["view_ms_p95"],
 			result["draw_calls_max"],
 			result["objects"],
 			result["static_memory_mb"],
@@ -251,6 +282,8 @@ func _on_stress_finished(result: Dictionary) -> void:
 
 func pause_game() -> void:
 	if screen != PauseLogic.Screen.PLAYING:
+		return
+	if _v11_skip_delay():  # geri tuşu / arka plan / duraklat düğmesi gecikmeyi atlar; oyun duraklatılmaz
 		return
 	pause_screen.open(
 		sim.loadout.actives(),
@@ -289,6 +322,7 @@ func _set_screen(next: int) -> void:
 	level_up.visible = next == PauseLogic.Screen.LEVEL_UP
 	pause_screen.visible = next == PauseLogic.Screen.PAUSED
 	result_screen.visible = next == PauseLogic.Screen.RESULT
+	_v11_on_screen(next)
 
 
 func _bind(new_sim: GameSim) -> void:
@@ -312,6 +346,7 @@ func _bind(new_sim: GameSim) -> void:
 		audio.bind(sim.bus)
 		sim.bus.run_ended.connect(_on_run_ended)
 		sim.bus.player_damaged.connect(_on_player_damaged)
+	_v11_bind(sim)
 
 
 # --- kare döngüsü ---------------------------------------------------------------------------
@@ -323,9 +358,12 @@ func _process(delta: float) -> void:
 		_stress.advance(delta)
 		if not _stress.is_done():
 			_stress_label.text = _stress.status_text()
+		var t0 := Time.get_ticks_usec()
 		_update_views(delta)
+		_stress.record_view(float(Time.get_ticks_usec() - t0) / 1000.0)  # D1-4: view_ms
 		return
-	if sim != null and PauseLogic.sim_should_step(screen, sim.state):
+	_v11_process(delta)
+	if sim != null and not _v11_hit_stop(delta) and PauseLogic.sim_should_step(screen, sim.state):
 		_accum += delta
 		var n := PauseLogic.steps_for(_accum, GameSim.STEP)
 		var done := 0
@@ -353,6 +391,9 @@ func _update_music() -> void:
 
 
 func _after_step() -> void:
+	_v11_after_step()
+	if _delay.active:
+		return  # gecikme sürerken ekran geçişi geri sayımın işidir (_v11_process)
 	var next := PauseLogic.screen_after_step(screen, sim.state)
 	if next == screen:
 		return
@@ -365,16 +406,17 @@ func _after_step() -> void:
 func _update_views(dt: float) -> void:
 	if sim == null:
 		return
-	player_view.update_view(dt)
+	player_view.update_view(_v11_view_dt(dt))
 	camera.follow(sim.player_pos, dt)
 	ruin_view.follow(sim.player_pos)
 	ground.follow(camera.position, camera.view_size())
 	enemy_renderer.refresh()
 	gem_renderer.refresh()
 	projectile_renderer.refresh()
-	fx_renderer.update_fx(dt)
+	fx_renderer.update_fx(_v11_view_dt(dt))
 	atmosphere.follow(camera.position, camera.view_size())
 	hud.refresh(dt)
+	_v11_update_views(dt if screen == PauseLogic.Screen.PLAYING else 0.0)
 	if _render_label != null and _render_label.visible:
 		_render_label.text = render_debug_text()
 
@@ -389,6 +431,7 @@ func _on_choice(index: int) -> void:
 	if screen != PauseLogic.Screen.LEVEL_UP or sim == null:
 		return
 	sim.choose(index)
+	player_view.on_level_chosen()
 	if sim.state == GameSim.State.LEVEL_UP:
 		_show_level_up()
 	elif sim.state == GameSim.State.RUNNING:
@@ -401,13 +444,392 @@ func _show_result() -> void:
 	var stats := _run_stats
 	if stats.is_empty():
 		stats = {"time": sim.time, "level": sim.level, "kills": sim.kills, "evolutions": []}
+		stats.merge(V11State.end_stats(sim))
 		_run_won = sim.state == GameSim.State.WON
 	var combos := UiKit.combo_rows(stats.get("evolutions", []), sim.data)
 	var sub := ""
 	if _run_won:
 		sub = WON_SUB
-	result_screen.show_result(_run_won, stats, combos, sub)
+	result_screen.show_result(_run_won, stats, combos, sub, _result_record)
 	_set_screen(PauseLogic.Screen.RESULT)
+
+
+# --- v1.1 bağlama noktaları (S3 sözleşmesi) -------------------------------------------------
+# Çağrı satırları S3'te bir kez yerleştirildi; her D fazı YALNIZ kendi bölgesinin gövdesini doldurur, başka işlevi
+# yeniden yazmaz (docs/plan/v1.1-plan.md "Paylaşılan dosyalar"). Gövdeler boş: v1 davranışı aynen korunur.
+
+
+## Açılışta bir kez, `world` ve `ui` kurulduktan sonra: yeni görünümleri ve ekranı kurar.
+## D1: enemy_shadows, ghosts (+ oyuncu rig kurulumu). D2: pickup_renderer. D3: scores_screen, highscores.load_file.
+func _v11_build_world() -> void:
+	enemy_shadows = EnemyShadowLayer.new()
+	enemy_shadows.name = "Shadows"
+	world.add_child(enemy_shadows)
+	ghosts = AshGhostRenderer.new()
+	ghosts.name = "Ghosts"
+	world.add_child(ghosts)
+	enemy_renderer.shadows = enemy_shadows
+	enemy_renderer.set_ghosts(ghosts)
+	enemy_renderer.set_effects(fx_renderer, camera)
+	enemy_renderer.apply_cull_fix()
+	enemy_renderer.lord_enraged.connect(_on_lord_enraged)
+	enemy_renderer.lord_slammed.connect(_on_lord_slammed)
+	fx_renderer.char_layer.reparent(world)  # kömür zemin ile gölgeler arasında (normal karışım)
+	_v11_order_world()
+	highscores.load_file()
+	scores_screen = HighscoreScreen.new()
+	scores_screen.name = "Scores"
+	ui.add_child(scores_screen)
+	scores_screen.back_requested.connect(go_menu)
+	scores_screen.play_requested.connect(start_run)
+	menu.scores_requested.connect(open_scores)
+	result_screen.record_stamped.connect(_on_record_stamped)
+	get_viewport().size_changed.connect(_apply_safe_areas)
+	_apply_safe_areas()
+
+
+## Katman sırası (plan A3): zemin → kömür → gölgeler → taşlar → eklentiler → düşmanlar → hayaletler → aktörler → mermiler → FX.
+## Adlarla yerleştirir; var olmayan düğüm atlanır (D2 `Pickups` ekleyince bu işlevden sonra çağırır ya da adı korur).
+func _v11_order_world() -> void:
+	var names: Array[StringName] = [
+		&"Ground",
+		&"CharLayer",
+		&"Shadows",
+		&"Gems",
+		&"Pickups",
+		&"Enemies",
+		&"Ghosts",
+		&"Actors",
+		&"Projectiles",
+		&"Fx",
+		&"Camera"
+	]
+	var idx := 0
+	for n in names:
+		var node := world.get_node_or_null(NodePath(n))
+		if node != null:
+			world.move_child(node, idx)
+			idx += 1
+
+
+## Yeni ekranların güvenli alanı (çentik, yuvarlak köşe); pencere boyutu değişince yenilenir.
+func _apply_safe_areas() -> void:
+	menu.apply_safe_area()
+	result_screen.apply_safe_area()
+	scores_screen.apply_safe_area()
+
+
+## Ana menüden En İyi Skorlar ekranı (vurgu yok: sonuçtan sıralamaya bağlantı v1.1 dışı).
+func open_scores() -> void:
+	if screen != PauseLogic.Screen.MENU:
+		return
+	scores_screen.show_scores(highscores.entries, -1)
+	_set_screen(PauseLogic.Screen.SCORES)
+
+
+## `_bind` sonunda (sim null olabilir): faz başına alt işlevlere dağıtır (her D yalnız kendi gövdesini doldurur).
+func _v11_bind(new_sim: GameSim) -> void:
+	_v11_bind_player(new_sim)
+	_v11_bind_pickups(new_sim)
+	_v11_bind_score(new_sim)
+
+
+## D1: oyuncu olayları (shot_fired, reload_*, player_damaged, level_up, run_ended).
+func _v11_bind_player(new_sim: GameSim) -> void:
+	if _v11_sim != null and _v11_sim.bus.shot_fired.is_connected(_on_shot_for_shell):
+		_v11_sim.bus.shot_fired.disconnect(_on_shot_for_shell)
+		_v11_sim.bus.player_damaged.disconnect(_on_damage_shake)
+		_v11_sim.bus.enemy_killed.disconnect(_on_enemy_killed_fx)
+	_v11_sim = new_sim
+	hit_stop.left = 0.0
+	_lord_slow_left = 0.0
+	_lord_blast_t.clear()
+	_lord_blast_pos.clear()
+	_lord_ember_acc = 0.0
+	ghosts.bind(new_sim, enemy_renderer)
+	if new_sim == null:
+		return
+	new_sim.bus.shot_fired.connect(_on_shot_for_shell)
+	new_sim.bus.player_damaged.connect(_on_damage_shake)
+	new_sim.bus.enemy_killed.connect(_on_enemy_killed_fx)
+
+
+## D2: eklenti olayları ve FX (pickup_*, buff_*, bomb_*; bomb_exploded -> kamera + HitStop).
+func _v11_bind_pickups(new_sim: GameSim) -> void:
+	if pickup_renderer == null:
+		pickup_renderer = PickupRenderer.new()
+		pickup_renderer.name = "Pickups"
+		world.add_child(pickup_renderer)
+		world.move_child(pickup_renderer, gem_renderer.get_index() + 1)  # taşlardan sonra, düşmanlardan önce
+	if _pickup_sim != null and _pickup_sim.bus.pickup_collected.is_connected(_on_pickup_collected):
+		_pickup_sim.bus.pickup_collected.disconnect(_on_pickup_collected)
+		_pickup_sim.bus.bomb_exploded.disconnect(_on_bomb_exploded)
+	_pickup_sim = new_sim
+	pickup_renderer.bind(new_sim)
+	_v11_build_escape_debug()
+	if _escape_label != null and new_sim == null:
+		_escape_label.visible = false
+	if new_sim != null:
+		new_sim.bus.pickup_collected.connect(_on_pickup_collected)
+		new_sim.bus.bomb_exploded.connect(_on_bomb_exploded)
+
+
+## D3: skor olayları (score_changed, streak_changed).
+@warning_ignore("unused_parameter")
+func _v11_bind_score(new_sim: GameSim) -> void:
+	_delay = ScreenDelay.new()
+	_run_saved = new_sim == null
+	_result_record = {}
+
+
+## Her karede `_update_views` sonunda. view_dt = ekran PLAYING iken dt, değilse 0 (plan A4).
+func _v11_update_views(view_dt: float) -> void:
+	_v11_update_player(view_dt)
+	_v11_update_pickups(view_dt)
+
+
+## D1: hayalet/Lord efektleri güncellemesi. view_dt = PLAYING iken dt, aksi halde 0; Lord yavaş çekimi ×0,4 uygulanır.
+func _v11_update_player(view_dt: float) -> void:
+	var vdt := view_dt * (Motion.LORD_SLOWMO_SCALE if _lord_slow_left > 0.0 else 1.0)
+	_lord_slow_left = maxf(0.0, _lord_slow_left - view_dt)
+	ghosts.update_ghosts(vdt)
+	_tick_lord_blasts(view_dt)  # gerçek süre: 900 ms içinde 3 patlama, yavaş çekimden bağımsız
+	if enemy_renderer.lord_enraged_now and vdt > 0.0:
+		_lord_ember_acc += vdt * LORD_EMBER_RATE
+		while _lord_ember_acc >= 1.0:
+			_lord_ember_acc -= 1.0
+			var a := randf() * TAU
+			fx_renderer.add_particle(
+				&"ember",
+				enemy_renderer.lord_pos + Vector2.from_angle(a) * 70.0,
+				Vector2(cos(a) * 25.0, -50.0),
+				0.8
+			)
+
+
+## A4: oyuncu/FX/hayalet görünüm süresi. Yalnız PLAYING iken dt (sonuç gecikmesi dönemleri dahil), aksi halde 0;
+## Lord ölümünde 1,2 sn ×0,4 yavaş çekim. Düşman animasyonu sim.time'a bağlıdır, ayrıca yönetilmez.
+func _v11_view_dt(dt: float) -> float:
+	if screen != PauseLogic.Screen.PLAYING:
+		return 0.0
+	return dt * (Motion.LORD_SLOWMO_SCALE if _lord_slow_left > 0.0 else 1.0)
+
+
+## D2: pickup_renderer.refresh.
+func _v11_update_pickups(view_dt: float) -> void:
+	if pickup_renderer != null:
+		pickup_renderer.refresh(view_dt)
+	_v11_update_escape_debug()
+
+
+## F-ashen-bastion-021 (yalnız debug derleme): çıkmaz kaçışı AÇIK/KAPALI etiketi + sayaç; dokunmak bayrağı çevirir
+## (cihazda iki durum karşılaştırılır). Etiket oyun/duraklatma ekranında görünür.
+func _v11_build_escape_debug() -> void:
+	if _escape_label != null or not OS.is_debug_build():
+		return
+	_escape_label = Label.new()
+	_escape_label.name = "EscapeDebug"
+	_escape_label.position = Vector2(DEBUG_LABEL_X, 2264)
+	_escape_label.size = Vector2(DEBUG_LABEL_W, 72)
+	_escape_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_escape_label.add_theme_font_size_override(&"font_size", 24)
+	_escape_label.add_theme_color_override(&"font_color", Color(1, 1, 1, 0.75))
+	_escape_label.add_theme_color_override(&"font_outline_color", Color.BLACK)
+	_escape_label.add_theme_constant_override(&"outline_size", 6)
+	_escape_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_escape_label.gui_input.connect(_on_escape_label_input)
+	_escape_label.visible = false
+	ui.add_child(_escape_label)
+
+
+func escape_debug_text() -> String:
+	var live := EnemyEscape.escaping_count(sim) if sim != null else 0
+	return (
+		"çıkmaz kaçışı: %s (dokun)\nkaçışta %d  girilen %d"
+		% ["AÇIK" if EnemyEscape.enabled else "KAPALI", live, EnemyEscape.begun_total]
+	)
+
+
+func toggle_escape_fix() -> void:
+	EnemyEscape.enabled = not EnemyEscape.enabled
+
+
+func _v11_update_escape_debug() -> void:
+	if _escape_label == null:
+		return
+	_escape_label.visible = (
+		sim != null and screen in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
+	)
+	if _escape_label.visible:
+		_escape_label.text = escape_debug_text()
+
+
+func _on_escape_label_input(event: InputEvent) -> void:
+	if (
+		(event is InputEventMouseButton and event.pressed)
+		or (event is InputEventScreenTouch and event.pressed)
+	):
+		toggle_escape_fix()
+
+
+## Toplama başlığı: pickups.json `toast` (boşsa yok), oyuncunun üstünde kayar.
+func _on_pickup_collected(kind_id: StringName, _pos: Vector2) -> void:
+	if sim == null:
+		return
+	var def := sim.data.get_pickup(kind_id)
+	if def == null or def.toast == "":
+		return
+	var screen_pos := (
+		get_viewport().get_canvas_transform() * (sim.player_pos + Vector2(0.0, -140.0))
+	)
+	hud.float_text.show_text(UiKit.upper_tr(def.toast), screen_pos)
+
+
+## Bomba patlaması: kamera 18 px + vuruş donması 0,06 sn (FX halkası/ses mevcut `explosion` yolundan gelir).
+func _on_bomb_exploded(_pos: Vector2, _radius: float) -> void:
+	camera.shake(BOMB_SHAKE)
+	_v11_request_hit_stop(Motion.sec(Motion.HITSTOP_BOMB))
+
+
+## Vuruş donması isteği: D1-3'ün `hit_stop` (HitStop) üyesi varsa ona iletir; yoksa yok sayılır.
+func _v11_request_hit_stop(sec: float) -> void:
+	var hs: Variant = get("hit_stop")
+	if hs is HitStop:
+		(hs as HitStop).request(sec)
+
+
+## `_process` başında (stres koşusu dışında), her karede. D3: ScreenDelay.tick geri sayımı.
+func _v11_process(delta: float) -> void:
+	if _delay.tick(delta):
+		_fire_delay(_delay.target)
+
+
+## true = bu karede vuruş donması: sim adımlanmaz ve `_accum` artmaz. D1-3: HitStop.tick(delta).
+func _v11_hit_stop(delta: float) -> bool:
+	if screen != PauseLogic.Screen.PLAYING:
+		return false
+	return hit_stop.tick(delta)
+
+
+## `_after_step` başında (ekran geçişinden önce). D3: gecikme başlatma, seviye ön vurgusu.
+func _v11_after_step() -> void:
+	if sim != null and sim.state == GameSim.State.LEVEL_UP and screen == PauseLogic.Screen.PLAYING:
+		_delay.start(PauseLogic.Screen.LEVEL_UP, PauseLogic.LEVEL_UP_PREROLL)
+
+
+## Aktif gecikmeyi hemen tetikler (dokunma, geri tuşu, arka plan). Tetiklediyse true.
+func _v11_skip_delay() -> bool:
+	var target := _delay.target
+	if _delay.skip():
+		_fire_delay(target)
+		return true
+	return false
+
+
+## Gecikme bitti: hedef ekrana geç (seviye atlama kartları ya da sonuç ekranı); tek kez çağrılır.
+func _fire_delay(target: int) -> void:
+	if sim == null:
+		return
+	if target == PauseLogic.Screen.LEVEL_UP and sim.state == GameSim.State.LEVEL_UP:
+		_show_level_up()
+	elif target == PauseLogic.Screen.RESULT and screen == PauseLogic.Screen.PLAYING:
+		_show_result()
+
+
+## Testler ve araçlar için: bekleyen gecikmeyi süresini beklemeden bitirir.
+func flush_delay() -> void:
+	_v11_skip_delay()
+
+
+## `run_ended` işleyicisinde (sonuç ekranından önce). D3: skor kaydı (tek yazma), gecikme başlatma.
+func _v11_on_run_ended(won: bool, stats: Dictionary) -> void:
+	if _stress != null:
+		return  # debug stres koşusu skor listesine yazmaz
+	_save_score(won, stats)
+	_delay.start(PauseLogic.Screen.RESULT, PauseLogic.result_delay(won))
+
+
+## Skoru yerel listeye yazar: koşu başına tek kez (`_run_saved`), sonuç ekranından önce (çökme riski).
+func _save_score(won: bool, stats: Dictionary) -> void:
+	if _run_saved:
+		return
+	_run_saved = true
+	_result_record = (
+		highscores
+		. submit(
+			{
+				"score": int(stats.get("score", 0)),
+				"time": floori(float(stats.get("time", 0.0))),
+				"won": won,
+				"level": int(stats.get("level", 1)),
+				"unix": int(Time.get_unix_time_from_system()),
+			}
+		)
+	)
+	if int(_result_record.get("rank", 0)) > 0:
+		highscores.save()
+
+
+func _on_record_stamped() -> void:
+	_settings().vibrate(40)
+
+
+## `_set_screen` sonunda (next = PauseLogic.Screen). D3: SCORES ekranı, sonuç ekranı gecikmesi.
+func _v11_on_screen(next: int) -> void:
+	scores_screen.visible = next == PauseLogic.Screen.SCORES
+
+
+# --- D1: oyuncu/Lord görünüm olayları ---------------------------------------------------------
+
+
+## Boş kovan (P8): silindir hizasından, ateş yönünün tersine yatay fırlar.
+func _on_shot_for_shell(gun: int, origin: Vector2, dir: Vector2) -> void:
+	var port := (origin + player_view.shoulder_view(gun)) * 0.5
+	fx_renderer.add_shell(port, Vector2(-signf(dir.x), 0.0))
+
+
+## Kamera `shake(min(hasar·0,4, 10))` (P10).
+func _on_damage_shake(amount: float, _hp: float) -> void:
+	camera.shake(minf(amount * 0.4, 10.0))
+
+
+## Lord ölümü (E10): vuruş donması 150 ms, kamera 18 px, 900 ms içinde 3 patlama (±120 px), yavaş çekim 0,4× (1,2 sn).
+func _on_enemy_killed_fx(type_id: StringName, pos: Vector2) -> void:
+	if type_id != LORD_ID:
+		return
+	hit_stop.request(Motion.sec(Motion.HITSTOP_LORD_DEATH))
+	camera.shake(18.0)
+	_lord_slow_left = Motion.sec(Motion.LORD_SLOWMO)
+	for k in 3:
+		_lord_blast_t.append(0.1 + 0.3 * float(k) + randf() * 0.1)
+		_lord_blast_pos.append(
+			pos + Vector2(randf_range(-120.0, 120.0), randf_range(-120.0, 120.0))
+		)
+
+
+func _tick_lord_blasts(vdt: float) -> void:
+	var k := 0
+	while k < _lord_blast_t.size():
+		_lord_blast_t[k] -= vdt
+		if _lord_blast_t[k] <= 0.0:
+			fx_renderer.add_explosion(_lord_blast_pos[k], 150.0)
+			_lord_blast_t.remove_at(k)
+			_lord_blast_pos.remove_at(k)
+		else:
+			k += 1
+
+
+## Lord öfkesi (E9): vuruş donması 80 ms, kamera 16 px, halka.
+func _on_lord_enraged(pos: Vector2) -> void:
+	hit_stop.request(Motion.sec(Motion.HITSTOP_LORD_RAGE))
+	camera.shake(16.0)
+	fx_renderer.add_ring(pos, 420.0, 0.9, EnemyRenderer.ENRAGE_TINT, 6.0)
+
+
+## Lord çağırma vuruşu (E8): şok halkası 0→360 px 450 ms, kamera 10 px/200 ms.
+func _on_lord_slammed(pos: Vector2) -> void:
+	fx_renderer.add_ring(pos, 360.0, LORD_SLAM_RING_SEC, Color(0.91, 0.635, 0.29, 0.9), 6.0)
+	camera.shake(10.0)
 
 
 # --- girdi ve sistem bildirimleri -----------------------------------------------------------
@@ -421,6 +843,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if screen != PauseLogic.Screen.PLAYING:
 		return
 	if event is InputEventScreenTouch:
+		if event.pressed and _v11_skip_delay():
+			return
 		gate.touch(event.index, event.pressed, event.position)
 	elif event is InputEventScreenDrag:
 		gate.drag(event.index, event.position)
@@ -469,6 +893,7 @@ func _events():
 func _on_run_ended(won: bool, stats: Dictionary) -> void:
 	_run_won = won
 	_run_stats = stats
+	_v11_on_run_ended(won, stats)
 
 
 func _on_player_damaged(_amount: float, _hp: float) -> void:

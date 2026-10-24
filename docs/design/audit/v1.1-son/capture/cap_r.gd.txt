@@ -1,0 +1,53 @@
+extends SceneTree
+var c: Node
+func frames(n: int) -> void:
+	for i in n:
+		await process_frame
+func shot(n: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(OS.get_cmdline_user_args()[0] + n + ".png")
+func fresh() -> void:
+	if c != null:
+		c.queue_free()
+		await process_frame
+	c = (load("res://scenes/boot.tscn") as PackedScene).instantiate()
+	root.add_child(c)
+	await frames(3)
+	c.start_run()
+	await frames(2)
+	c.sim.max_hp = 1.0e9
+	c.sim.hp = 1.0e9
+func _initialize() -> void:
+	_run()
+func _run() -> void:
+	await frames(5)
+	for mode in ["norekor", "notch", "norekor_notch"]:
+		await fresh()
+		var path := "user://cap_hs.json"
+		DirAccess.remove_absolute(path)
+		c.highscores = Highscores.new(path)
+		for k in 10:
+			c.highscores.submit({"score": 900000 - k * 1000, "time": 1200, "won": true, "level": 9, "unix": 1_761_000_000 - k * 86400})
+		if mode == "notch":
+			c.highscores = Highscores.new(path)
+			DirAccess.remove_absolute(path)
+			c.highscores = Highscores.new(path)
+		for i in 60:
+			if c.sim.state == GameSim.State.RUNNING:
+				c.sim.step(Vector2.ZERO)
+		for i in 30:
+			c.sim.score.on_kill(&"elit_piyade", c.sim.step_count)
+		c.sim.hp = 0.0
+		for i in 10:
+			if c.sim.state == GameSim.State.RUNNING:
+				c.sim.step(Vector2.ZERO)
+		c._after_step()
+		if mode != "norekor":
+			c.result_screen.apply_safe_area(Vector4(48, 130, 48, 80))
+		c.flush_delay()
+		await frames(90)
+		c.result_screen.finish_count()
+		await frames(10)
+		await shot("res_" + mode)
+	quit()
