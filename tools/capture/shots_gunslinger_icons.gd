@@ -53,16 +53,23 @@ func _cards(ids: Array) -> Array:
 
 func _run() -> void:
 	var sets := {
-		"gs": [[&"cift_tabanca", &"keskin_nisan", &"sarapnel"], [&"saglam_yelek", &"barut_kesesi", &"miknatis"]],
-		"zy": [[&"ruzgar_kesigi", &"girdap", &"tufan"], [&"saglam_yelek", &"agir_kursun", &"miknatis"]],
+		"gs":
+		[
+			[&"cift_tabanca", &"keskin_nisan", &"sarapnel"],
+			[&"saglam_yelek", &"barut_kesesi", &"miknatis"]
+		],
+		"zy":
+		[[&"ruzgar_kesigi", &"girdap", &"tufan"], [&"saglam_yelek", &"agir_kursun", &"miknatis"]],
 	}
 	for key in ["gs", "zy"]:
 		await fresh("gunslinger" if key == "gs" else "zyfen")
 		var actives: Array = sets[key][0]
 		var passives: Array = sets[key][1]
-		var card_ids: Array = [actives[0], passives[0], actives[1]] if key == "zy" else [
-			actives[0], passives[0], &"kiyamet_mermisi"
-		]
+		var card_ids: Array = (
+			[actives[0], passives[0], actives[1]]
+			if key == "zy"
+			else [actives[0], passives[0], &"kiyamet_mermisi"]
+		)
 		c.level_up.show_choices(_cards(card_ids), 7, c.sim.data, c.sim.character)
 		await frames(40)
 		await shot(key + "_levelup")

@@ -67,7 +67,9 @@ func test_icons_are_square_with_content_centered_in_80_percent() -> void:
 		assert_eq(img.get_width(), img.get_height(), "%s kare" % id)
 		var box := img.get_used_rect()
 		var side := maxi(box.size.x, box.size.y)
-		assert_almost_eq(float(side) / float(img.get_width()), 0.8, 0.02, "%s uzun kenar ~%%80" % id)
+		assert_almost_eq(
+			float(side) / float(img.get_width()), 0.8, 0.02, "%s uzun kenar ~%%80" % id
+		)
 		var c := Vector2(box.position) + Vector2(box.size) * 0.5
 		assert_almost_eq(c.x, img.get_width() * 0.5, 3.0, "%s yatay ortalı" % id)
 		assert_almost_eq(c.y, img.get_height() * 0.5, 3.0, "%s dikey ortalı" % id)
