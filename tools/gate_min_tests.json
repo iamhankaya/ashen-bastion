@@ -112,6 +112,7 @@
   "test/unit/test_magazine.gd": 16,
   "test/unit/test_magazine_drum.gd": 2,
   "test/unit/test_main_menu_v11.gd": 6,
+  "test/unit/test_main_menu_settings.gd": 3,
   "test/unit/test_main_menu_v2.gd": 16,
   "test/unit/test_map_sim.gd": 10,
   "test/unit/test_music_plan.gd": 5,

@@ -23,9 +23,9 @@ const SUB_FONT := 26  # alt satır (seçili karakter adı, açılan/toplam)
 const NAME_MAX := 24  # sürüm satırındaki karakter adı (taşarsa "…")
 const DEFAULT_CHARACTER := "Gunslinger"
 const DEFAULT_ACH_TOTAL := 22
-const SETTINGS_W := 214.0
+const SETTINGS_W := 214.0  # 'AYARLAR' 26 px etiketinin asgari genişliği (sığmazsa düğme sağa taşar)
 const SETTINGS_H := 88.0
-const SETTINGS_TOP := 200.0  # içerik üstü >= 196 (UiKit güvenli alan sözleşmesi)
+const SETTINGS_TOP := 590.0  # başlığın altı, ana görselin sağ üst boşluğu; içerik üstü >= 196 sözleşmesi korunur
 const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
 
@@ -214,7 +214,7 @@ func _build() -> void:
 	add_child(col)
 	_col = col
 	settings_button = UiKit.button("AYARLAR", &"secondary", SETTINGS_H)
-	settings_button.add_theme_font_size_override(&"font_size", 30)
+	settings_button.add_theme_font_size_override(&"font_size", 26)
 	settings_button.anchor_left = 1.0
 	settings_button.anchor_right = 1.0
 	settings_button.offset_left = -SETTINGS_W - UiKit.SIDE
@@ -328,6 +328,11 @@ func apply_safe_area(extra: Variant = null) -> void:
 		hero.offset_bottom = HERO_BOTTOM - up
 	emblem.offset_top = -380.0 + head_drop
 	emblem.offset_bottom = 280.0 - up
+	# AYARLAR: başlıkla aynı üst kaydırma, sağ pay kadar içeri.
+	settings_button.offset_left = -SETTINGS_W - UiKit.SIDE - e.z
+	settings_button.offset_right = -UiKit.SIDE - e.z
+	settings_button.offset_top = SETTINGS_TOP + head_drop
+	settings_button.offset_bottom = SETTINGS_TOP + head_drop + SETTINGS_H
 
 
 func set_settings(sound: bool, vib: bool) -> void:
