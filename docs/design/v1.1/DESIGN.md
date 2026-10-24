@@ -1,5 +1,7 @@
 # Ashen Bastion v1.1 — Tasarım
 
+> **v2.0 notu:** S-01…S-05 denetim bulguları bu belgede işlendi (E3 satırı, §8-2, §3.3, P11, §5.2); ayrıntı `docs/design/v2.0/DESIGN.md` §9. S-04 (debug etiketi konumu) v2.0 §9'da kural olarak tanımlıdır.
+
 Tarih: 2026-10-23 · Görev: T20261023-85 (çatı T20261023-84) · Aşama: yalnız tasarım, kod yok.
 Girdiler: `docs/design/2026-10-23-ashen-bastion-v1-design.md`, `docs/ui/DESIGN-UI.md` (+ `tokens.json`), `docs/design/audit/son-denetim/FINDINGS.md`, `art/ref/`, kod: `scripts/view/player_view.gd`, `assets/shaders/player_sway.gdshader`, `data/characters/gunslinger.json`, `scripts/view/enemy_renderer.gd`, `enemy_atlas.gd`, `assets/shaders/enemy_flash.gdshader`, `scripts/view/fx_renderer.gd`, `scripts/ui/hud.gd`, `result_screen.gd`, `main_menu.gd`.
 Maketler: `mock/` (statik HTML + Chromium ekran görüntüsü, 1080×2400). AI görsel promptları: `prompts.md`.
@@ -53,7 +55,7 @@ Mevcut: `BOB_PX 4`, `SQUASH 0,04`, `BOB_HZ 2,2` (|sin| → 4,4 adım/sn), `RECOI
 | P8 | **Boş kovan** | `shot_fired` | 350 ms yay: yan-geri 30–50 px, 6 px yükselip düşer, bronz 4×2 px dörtgen, FxRenderer'da halka tampon (16) | — | (a) |
 | P9 | **Doldurma** | `reload_started(duration)` → `reload_finished` | 0–12 %: iki kol göğse iner (aim → aşağı 70°, quad-in); 12–70 %: ±10° titreme 8 Hz, gövde sy 0,97; 80–100 %: kollar **+6° aşarak** geri kalkar (cubic-out). Tamamlanınca halka 1→1,5 ölçek + solma 150 ms + tık anında amber nabız | kol 70°; titreme ±10°; sy 0,97 | (a); (b) isteğe bağlı: silindiri açık kol karesi |
 | P10 | **Hasar (sarsıntı + parlama)** | `player_damaged(amount, hp)` | 0–90 ms **kemik-beyaz** parlama (`hit`=1, `#EFE7D6`), sonra 200 ms'de **bordo ton** (`tint #E0584F`, %35) söner. t=50 ms: **8 px geri** (fiziksel olmayan itme, ayakta kalır) + sx 1,10 / sy 0,90; sonra 12 Hz sönümlü yay 220 ms. Atkı `scarf_amp ×2,5` 300 ms sönüm. Kamera `shake(min(amount·0,4, 10))`. Beyaz parlama en çok 150 ms'de bir | 8 px · %10 · 10 px kamera | (a) |
-| P11 | **Seviye atlama vurgusu** | `level_up` | **Ön:** 180 ms, sim durmuşken (görünüm kendi zamanında): gövde altın parlama (`#E8A24A`→kemik), halo ×1,3. **Sonra** ekran 220 ms girer (portre kaplar). **Devam:** kart seçilince halka dalgası 0→180 px, 450 ms (cubic-out), `xp_parlak` renk, ince 3 px; HUD rozeti 1→1,35→1 (260 ms) | halka 180 px | (a) |
+| P11 | **Seviye atlama vurgusu** | `level_up` | **Ön:** 180 ms, sim durmuşken (görünüm kendi zamanında): gövde altın parlama (`#E8A24A`→kemik), halo ×1,3. **Sonra** ekran 220 ms girer (portre kaplar). **Devam:** kart seçilince halka dalgası 0→180 px, 450 ms (cubic-out), `xp_parlak` renk, ince **4 px** *(v2.0, S-02: 3 → 4 px, başlangıç α 0,9 → 0; koyu zeminde ≥ 3:1)*; HUD rozeti 1→1,35→1 (260 ms) | halka 180 px | (a) |
 | P12 | **Ölüm** | durum `LOST` | 0–120 ms **vuruş donması** + beyaz parlama; 120–720 ms gövde ayak pivotunda **devrilme** −75° (quad-in), 720'de ±4° sekme; kollar 350 ms'de sarkar (aim → ~100°); `desat` 0→0,6, amber ışık 600 ms'de söner; 720–1300 ms kül solması. Dokunma = atla. **Sonuç ekranı 1,3 sn gecikmeyle girer** | −75°, ~8 px yere gömülme | (a); (b) isteğe bağlı: yığılma karesi |
 | P13 | **Süreli etki aurası** | eklenti etkin | ayak halkası: Hasar = bordo 4 px halka + parlama (0,8 Hz nabız); Atış hızı = bronz dönen yaylar; Sınırsız = amber çift halka + kol kenar ışığı amber | halka 80×28 px elips | (a) |
 
@@ -70,6 +72,7 @@ Ortak: örnek dönüşümü `rotate(θ) · scale(sx, sy)` ayak noktası etrafın
 | E1 | **Çürümüş Piyade** (104 px, 95 px/sn) | Sürünen yürüyüş (**yedek**; kare gelince §1.7: bob/θ kare+biner) | sürekli | 1,1 Hz; `θ = 5°(0,6 sin φ + 0,4 sin 2φ)` (topallama); bob \|sin\|; ileri eğim 4° | bob 5 px; sx/sy ±%5; θ ±5° | (a) |
 | E2 | **Leş Kargası** (64 px) | Uçuş salınımı | sürekli | kanat: mevcut 3 kare, **[0,1,2,1] ping-pong @ 12 kare/sn** (şimdi 9 kare/sn döngü); gövde 3 Hz dikey salınım; yatış = yanal hızın ±12°'si | ±7 px, ±12°; hızda sx 1,10 | (a) |
 | E3 | **Şövalye Hayaleti** (150 px, 70 px/sn) | Süzülme | sürekli | 0,7 Hz sinüs dikey; 0,9 Hz sy ±%3 "ağır adım"; yavaş θ ±2,5°; α 0,9–1,0 | ±6 px | (a) |
+|  | *v2.0 güncellemesi (S-01):* **elit şövalye ve Lord zemine oturur** — gölge ayrılığı en çok **8 px** (`SHADOW_ELITE_HOVER_MAX`), gövde ±6 px sekmesi gölgeden ayrılıp bu sınırda kalır; "ağır süzülme" yalnız (elit olmayan) Şövalye Hayaleti içindir. Gölge koyulaşma ölçümü ≥ 0,40 eşiği +0,02 pay ile (hedef ≥ 0,42; v1.1 ölçümü 0,411); düşük parlaklık/OLED değerlendirmesi ve `GAIN` 2,2 cihazda. | | | | |
 | E4 | **Elitler** (230–270 px) | Tür hareketi, yavaşlatılmış | sürekli | frekans × √(h₀/h) (≈ ×0,67); genlik % olarak aynı (px büyür); **adım temasında toz** (FxRenderer puff, sn'de ≤ 4) ve yakında (<400 px) kamera 1,5 px | — | (a) |
 | E4b | **Elit Karga şarjı** | Ön hazırlık | `ai_timer < 0,35` (okunabilir) | 350 ms: kanatlar geri (sx 0,9), oyuncuya dönük −10° yatış, kırmızı göz nabzı (tint ×1,3); şarj: sx 1,25, 3 kare artçı iz (FxRenderer çizgi) | — | (a) |
 | E5 | **Vurulma tepkisi** (hepsi) | Geri itilme + parlama + vuruş squash | `flash` değeri (hasarda 1,0 → 8/sn sönüm = **125 ms**); ayrı durum yok | itme = `(düşman − oyuncu)` yönünde `itme_px × flash²`; squash `1 ± k·flash` | piyade **10 px**, karga **14 px** + ±15° dönme, hayalet **4 px**, elit **2 px**, Lord **0 px** (yalnız parlama %50 + sy 0,985); k 0,12 / 0,12 / 0,04 / 0,03 / 0,015 | (a) |
@@ -269,7 +272,7 @@ Akış (mevcut ekranın genişletilmesi; ölçü 1080×2400, kolon x 72–1008):
 | Başlık + alt başlık + çizgi | 170–400 | mevcut (OYUN BİTTİ / KAZANDIN) |
 | **SKOR** hero | 404–570 | "SKOR" (sec-t 34) + değer Cinzel 900 **120 px**; kazanınca ve rekorda amber, kaybedince kemik |
 | **YENİ REKOR** | 590–740 | bkz. 3.4 |
-| **Döküm paneli** | rekor bandına göre (≈ 760) | 5 satır × 84 px + 24: ikon 48 · etiket Inter 600 32 · ayrıntı Inter 600 24 `kemik_500` · değer Cinzel 700 44 sağa hizalı: **Öldürme**, **Seri çarpanı** (ayrıntı "en yüksek ×5"), **Evrim bonusu** ("2 evrim"), **Hayatta kalma** ("20:00"), **Lord bonusu** |
+| **Döküm paneli** | rekor bandına göre (≈ 760) | 5 satır × 84 px + 24: ikon 48 · etiket Inter 600 32 · ayrıntı Inter 600 **26** `kemik_500` *(v2.0 güncellemesi, S-03: min metin 26 px ile §6'daki çelişki giderildi; kod 26 px olmalı, %35 opak satırlarda da ≥ 26)* · değer Cinzel 700 44 sağa hizalı: **Öldürme**, **Seri çarpanı** (ayrıntı "en yüksek ×5"), **Evrim bonusu** ("2 evrim"), **Hayatta kalma** ("20:00"), **Lord bonusu** |
 | İstatistik şeridi | döküm +24 | 3 sütun: Süre · Seviye · Öldürme (ikon 44 · Cinzel 48 · Inter 26 etiket), yükseklik 170 |
 | Kurulan kombolar | şerit +24 | slot 80 px + ad Cinzel 36 (`upper_tr`) + çift Inter 26; satır 96; en çok 4 satır görünür (v1 hedefi ~4 evrim), 5.'de "+1" |
 | Düğmeler | içeriğin 24 px altı, **en erken y 1500** | TEKRAR OYNA 936×156, ANA MENÜ 936×132, aralık 27 (mevcut) |
@@ -351,7 +354,7 @@ Tip: skor 60 (Cinzel 700) · skor hero 120 (Cinzel 900) · rozet saniye 26 (Inte
 | SERİ çipi | ≥160×48 | sağ 36, üst 388 |
 | Etki rozeti | 108×108, aralık 12 | x 231 + n·120, alt 72 |
 | Yerdeki eklenti | ikon 80, parlama 140×80, gölge 60×16 | — |
-| Ekran dışı ok | 84 daire | kenar 50, güvenli içi |
+| Ekran dışı ok | 84 daire | kenar 50, güvenli içi · *v2.0 (S-05): işaret üçgeninin ucu dahil tüm glif kenardan ≥ 36 px içeride* |
 | Bomba yarıçapı | 320 (çap 640) | dünya |
 | Ana menü yeni düğme | 936×132 | y 1715+180+27 |
 | Sonuç skor hero | 120 px yazı | y 404–570 |
@@ -401,7 +404,7 @@ Maket notları: Chromium ile üretildi (`--headless --screenshot`), Godot render
 
 **Açık:**
 1. **Eklenti doğma kuralı** (aralık, ağırlık) ve tüm etki/puan sayıları *öneri*; kesin değer plan/denge fazı.
-2. **Şövalye Hayaleti ve elit şövalye** bilinçli **süzülür** (prosedürel, kare yok) varsayıldı; ek mesaj "yeniden kullanılabilir döngü" diyordu — yalnız **elit piyade** piyade karelerini renk/ölçekle paylaşır. Zırhlı yürüyen şövalye döngüsü isterseniz ayrı prompt eklenir.
+2. **Şövalye Hayaleti** bilinçli **süzülür**; **elit şövalye ve Lord v2.0'da zemine oturur (gölge ayrılığı ≤ 8 px, S-01)**. (Önceki karar: ikisi de süzülür) (prosedürel, kare yok) varsayıldı; ek mesaj "yeniden kullanılabilir döngü" diyordu — yalnız **elit piyade** piyade karelerini renk/ölçekle paylaşır. Zırhlı yürüyen şövalye döngüsü isterseniz ayrı prompt eklenir.
 3. **Kare hazır olana dek** prosedürel yedek kalır; ilk teslim sırası: oyuncu 6 kare → piyade 6 kare (kullanıcıya bağlı).
 4. **Cihazda doğrulanacaklar:** düşman animasyon maliyeti (≤0,4 ms/kare), gölge MultiMesh, kare seçimi ek maliyeti, atlas bellek artışı (§1.7.5), ∞ glifi, kenar oku güvenli alanı.
 5. Karga için kare eklenmedi (mevcut 3 kare yeterli); hayalet/elit şövalye yalnız süzülür.
