@@ -298,4 +298,30 @@ func test_idle_guns_point_along_the_facing_direction() -> void:
 	for i in 90:
 		v.update_view(1.0 / 60.0)
 	for g in 2:
-		assert_lt(absf(rad_to_deg(angle_difference(0.0, _arm_world(v, g)))), 5.0, "gövde sağa: namlu sağa")
+		assert_lt(
+			absf(rad_to_deg(angle_difference(0.0, _arm_world(v, g)))), 5.0, "gövde sağa: namlu sağa"
+		)
+
+
+func test_arm_offset_does_not_flip_sign_when_aim_crosses_vertical() -> void:
+	var sim := _sim()
+	var v := _view(sim)
+	sim.gun_target[0] = 1
+	sim.gun_target[1] = 2
+	sim.gun_aim[0] = deg_to_rad(70.0)
+	sim.gun_aim[1] = deg_to_rad(70.0)
+	v.update_view(1.0 / 24.0)
+	sim.magazine.start_reload(sim.stats)
+	sim.magazine.reload_left = sim.magazine.reload_total * 0.5  # doldurma ortası: kaldırma tam
+	v.update_view(1.0 / 24.0)  # kaldırma pozuna girişi ölçümden önce yap
+	var prev := _arm_world(v, 0)
+	var worst := 0.0
+	for k in 8:
+		var a := deg_to_rad(70.0 + 10.0 * float(k))  # 70° -> 140° (dikeyi geçer), kare başına 10°
+		sim.gun_aim[0] = a
+		sim.gun_aim[1] = a
+		v.update_view(1.0 / 24.0)
+		var now := _arm_world(v, 0)
+		worst = maxf(worst, absf(rad_to_deg(angle_difference(prev, now))))
+		prev = now
+	assert_lte(worst, 25.0, "dikeyi geçerken kol açısı sıçramaz")

@@ -269,6 +269,21 @@ func test_track_aim_snaps_first_then_never_jumps_more_than_25_degrees_at_24fps()
 	assert_almost_eq(a.aim_cur[1], -PI * 0.5, 0.05)
 
 
+func test_big_aim_flip_sweeps_below_the_body_not_over_the_head() -> void:
+	var a := _anim()
+	var on := PackedByteArray([1, 1])
+	a.track_aim(1.0 / 24.0, _aims(0.0, 0.0), on, false)
+	var min_y := 0.0  # sin(aim) > 0 = ekranda aşağı
+	for i in 30:
+		a.track_aim(1.0 / 24.0, _aims(PI, PI), on, false)
+		min_y = minf(min_y, sin(a.aim_cur[0]))
+	assert_gte(min_y, -0.05, "sağdan sola geçerken namlu yukarı (kafa üstü) çıkmaz")
+	for i in 30:
+		a.track_aim(1.0 / 24.0, _aims(0.0, 0.0), on, false)
+		min_y = minf(min_y, sin(a.aim_cur[0]))
+	assert_gte(min_y, -0.05, "soldan sağa da aşağıdan")
+
+
 func test_idle_without_target_guns_return_to_facing_direction() -> void:
 	var a := _anim()
 	var off := PackedByteArray([0, 0])

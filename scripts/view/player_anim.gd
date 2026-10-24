@@ -19,9 +19,30 @@ const BREATH_ARM := 1.5  # derece
 ## kademeyi değiştirir. bob = tepe px, contact = temas squash (sx, sy), air = havada gerilme (sx, sy), lean = tepe eğim °, wobble = adım sallanması °
 ## (lean + wobble = gövde eğimi tavanı; YUMUŞAK <= 5°).
 const BOUNCE_TIERS := [
-	{"name": "ESKİ v1.1", "bob": 9.0, "contact": Vector2(1.05, 0.93), "air": Vector2(0.97, 1.04), "lean": 6.0, "wobble": 2.0},
-	{"name": "YUMUŞAK", "bob": 4.5, "contact": Vector2(1.03, 0.96), "air": Vector2(0.985, 1.02), "lean": 4.0, "wobble": 1.0},
-	{"name": "SAKİN", "bob": 2.5, "contact": Vector2(1.015, 0.98), "air": Vector2(0.992, 1.01), "lean": 3.0, "wobble": 0.7},
+	{
+		"name": "ESKİ v1.1",
+		"bob": 9.0,
+		"contact": Vector2(1.05, 0.93),
+		"air": Vector2(0.97, 1.04),
+		"lean": 6.0,
+		"wobble": 2.0
+	},
+	{
+		"name": "YUMUŞAK",
+		"bob": 4.5,
+		"contact": Vector2(1.03, 0.96),
+		"air": Vector2(0.985, 1.02),
+		"lean": 4.0,
+		"wobble": 1.0
+	},
+	{
+		"name": "SAKİN",
+		"bob": 2.5,
+		"contact": Vector2(1.015, 0.98),
+		"air": Vector2(0.992, 1.01),
+		"lean": 3.0,
+		"wobble": 0.7
+	},
 ]
 const BOUNCE_TIER_DEFAULT := 1
 const BOB_PX := 4.5  # varsayılan kademenin bob'u (üst sınır karşılaştırmaları için)
@@ -44,9 +65,9 @@ const RELOAD_ARM_DEG := 14.0
 const RELOAD_SHAKE_DEG := 4.0
 const RELOAD_SHAKE_HZ := 8.0
 const RELOAD_OVERSHOOT_DEG := 3.0
-## Kol aim takibi: gösterilen açı sim aim'ine yumuşak yaklaşır (tek karede sıçrama yok); 24 fps'te kare başına <=20°.
+## Kol aim takibi: gösterilen açı sim aim'ine yumuşak yaklaşır (tek karede sıçrama yok); 24 fps'te kare başına <=15°.
 const AIM_TAU := 0.05
-const AIM_MAX_RATE_DEG := 480.0
+const AIM_MAX_RATE_DEG := 360.0
 ## Hedefsiz bu kadar sn sonra kollar bakış yönündeki bekleme pozuna döner.
 const AIM_REST_HOLD := 0.4
 const RELOAD_SY := 0.97
@@ -233,7 +254,9 @@ func update(dt: float, vel: Vector2, facing_left: bool, reload_progress: float) 
 
 ## Kol aim takibi. aims = sim'in dünya aim açıları, has_target[g] = o tabancanın hedefi var mı. Hedefsiz AIM_REST_HOLD sn
 ## sonra hedef = bakış yönü (0 / PI). Gösterilen açı üstel yaklaşır, hız AIM_MAX_RATE_DEG ile sınırlı; ilk çağrı yakalar.
-func track_aim(dt: float, aims: PackedFloat32Array, has_target: PackedByteArray, facing_left: bool) -> void:
+func track_aim(
+	dt: float, aims: PackedFloat32Array, has_target: PackedByteArray, facing_left: bool
+) -> void:
 	var rest := PI if facing_left else 0.0
 	for g in 2:
 		var want := aims[g]
@@ -248,11 +271,22 @@ func track_aim(dt: float, aims: PackedFloat32Array, has_target: PackedByteArray,
 			continue
 		if dt <= 0.0:
 			continue
-		var diff := angle_difference(aim_cur[g], want)
+		var diff := _aim_diff(aim_cur[g], want)
 		var step := diff * (1.0 - exp(-dt / AIM_TAU))
 		var cap := deg_to_rad(AIM_MAX_RATE_DEG) * dt
 		aim_cur[g] = wrapf(aim_cur[g] + clampf(step, -cap, cap), -PI, PI)
 	_aim_seen = true
+
+
+## Kol açı farkı: en kısa yol; ~180° dönüşlerde (hedef sağdan sola, yön değiştirme) kol kafanın üstünden değil AŞAĞIDAN
+## (+90°, ekranda aşağı) geçer — silah savurma değil indirip kaldırma gibi görünür.
+static func _aim_diff(from: float, to: float) -> float:
+	var d := angle_difference(from, to)
+	if absf(d) < deg_to_rad(150.0):
+		return d
+	var ccw := wrapf(to - from, 0.0, TAU)
+	var down_in_ccw := wrapf(PI * 0.5 - from, 0.0, TAU) <= ccw
+	return ccw if down_in_ccw else ccw - TAU
 
 
 func on_shot(gun: int) -> void:

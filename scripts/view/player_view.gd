@@ -9,6 +9,7 @@ extends Node2D
 ## Animasyon durumu PlayerAnim'dedir (saf); bu sınıf yalnız uygular. dt = görünüm süresi (duraklatmada 0).
 ## Pivot/omuz/namlu headless'ta görsel doğrulanamaz; kullanıcıda ekran görüntüsüyle doğrulanır.
 
+const ARM_FLIP_BAND := 0.5  # sin(30°): kol aynasında arm_rot işaretinin yumuşak geçiş bandı
 const SWAY_SHADER := "res://assets/shaders/player_sway.gdshader"
 const RIM_SHADER := "res://assets/shaders/rim_sprite.gdshader"
 const DEFAULT_HEIGHT := 112.0
@@ -459,7 +460,9 @@ func _place_arm(arm: Sprite2D, gun: int, aim: float) -> void:
 	var kx := _arm_len / maxf(_arm_orig.x, 1.0)
 	var ky := _arm_len * PlayerRig.ARM_ASPECT / maxf(_arm_orig.y, 1.0)
 	var local_aim := aim - rig_node.rotation
-	arm.rotation = local_aim - anim.arm_rot[gun] * flip
+	# arm_rot "yukarı" işareti aim dikeyi geçerken flip ile 2×arm_rot sıçrardı: ±30° bandında yumuşak geçiş
+	var soft := clampf(cos(aim) / ARM_FLIP_BAND, -1.0, 1.0)
+	arm.rotation = local_aim - anim.arm_rot[gun] * soft
 	arm.scale = Vector2(kx * anim.arm_len[gun], ky * flip)
 	var sh := _shoulder_now(gun)
 	var half_h := body_size(_rig).y * 0.5
