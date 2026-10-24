@@ -44,6 +44,6 @@ func test_zyfen_u3_live_run_equals_record_twice() -> void:
 		for f in ["steps", "level_ups", "kills", "elites", "pickups", "state"]:
 			assert_eq(got[f], int(want[f]), "tohum %d: %s" % [s, f])
 	var s0: int = GoldenKit.seeds()[0]
-	var a := GoldenKit.run(s0, &"zyfen", GoldenKit.STEPS, GoldenKit.ZYFEN_U3_GRANTS)["hash"]
-	var b := GoldenKit.run(s0, &"zyfen", GoldenKit.STEPS, GoldenKit.ZYFEN_U3_GRANTS)["hash"]
+	var a: Variant = GoldenKit.run(s0, &"zyfen", GoldenKit.STEPS, GoldenKit.ZYFEN_U3_GRANTS)["hash"]
+	var b: Variant = GoldenKit.run(s0, &"zyfen", GoldenKit.STEPS, GoldenKit.ZYFEN_U3_GRANTS)["hash"]
 	assert_eq(a, b)
