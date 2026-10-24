@@ -30,3 +30,35 @@ func test_explicit_icon_wins_when_it_exists_else_falls_back() -> void:
 func test_tier_colors_are_distinct_per_family() -> void:
 	assert_ne(AchievementIcons.tier_color(&"kolay"), AchievementIcons.tier_color(&"orta"))
 	assert_eq(AchievementIcons.tier_color(&"zor"), AchievementIcons.tier_color(&"cok_zor"))
+
+
+func test_all_achievements_have_existing_own_png() -> void:
+	var g := GameData.load_default()
+	var seen := 0
+	for a in g.achievements:
+		var d: AchievementDef = a
+		assert_eq(d.icon, "res://assets/ui/achievements/%s.png" % d.id, d.id)
+		assert_eq(AchievementIcons.path_for(d), d.icon, d.id)
+		seen += 1
+	assert_eq(seen, 22)
+
+
+func test_apply_state_open_has_white_modulate_and_no_material() -> void:
+	var r := TextureRect.new()
+	r.modulate = Color(0.5, 0.5, 0.5, 0.4)
+	AchievementIcons.apply_state(r, false)
+	assert_eq(r.modulate, Color.WHITE)
+	assert_null(r.material)
+	r.free()
+
+
+func test_apply_state_locked_uses_desaturate_shader_with_white_modulate() -> void:
+	var r := TextureRect.new()
+	AchievementIcons.apply_state(r, true)
+	assert_eq(r.modulate, Color.WHITE)
+	assert_true(r.material is ShaderMaterial)
+	assert_not_null((r.material as ShaderMaterial).shader)
+	assert_almost_eq(
+		float((r.material as ShaderMaterial).get_shader_parameter(&"desaturate")), 1.0, 1e-6
+	)
+	r.free()
