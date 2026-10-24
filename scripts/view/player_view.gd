@@ -497,7 +497,6 @@ func _shoulder_now(gun: int) -> Vector2:
 	return a.lerp(shoulder_local(_rig, gun, _facing_left, anim.frame_b), anim.frame_mix)
 
 
-
 func _anim_rig(rig: Dictionary) -> Dictionary:
 	var w: Variant = rig.get("walk", null)
 	if _strip_ready or not (w is Dictionary) or int(w.get("frames", 0)) <= 0:

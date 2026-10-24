@@ -34,7 +34,11 @@ func _view(frames: int = 0) -> PlayerView:
 		_rig_ref = sim.character.rig
 		_walk_backup = _rig_ref.get("walk", null)
 		_rig_ref["walk"] = {
-			"frames": frames, "stride": 136, "strip": STRIP, "cell": [CELL.x, CELL.y], "shoulder_dev": []
+			"frames": frames,
+			"stride": 136,
+			"strip": STRIP,
+			"cell": [CELL.x, CELL.y],
+			"shoulder_dev": []
 		}
 	var v := PlayerView.new()
 	add_child_autofree(v)
