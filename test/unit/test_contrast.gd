@@ -103,6 +103,15 @@ func test_level_ring_is_thick_visible_and_fades_from_point_nine() -> void:
 	assert_gte(ratio(UiKit.XP_PARLAK, g[0]), MIN_RATIO, "halka / ortalama zemin")
 	assert_gte(ratio(UiKit.XP_PARLAK, g[1]), MIN_RATIO, "halka / en parlak zemin")
 	assert_gte(PlayerView.Aura.RING_W, 4.0, "kalınlık >= 4 px")
+	# çizimdeki sayılar sabitlerle aynı (kabul testi kaynak metnine bakar: çekirdek 4, ışıma 4 + 8)
+	var src := FileAccess.get_file_as_string("res://scripts/view/player_view.gd")
+	assert_true(
+		src.contains("col, %.1f, true)" % PlayerView.Aura.RING_W), "çekirdek kalınlığı sabit"
+	)
+	assert_true(
+		src.contains("glow, %.1f, true)" % (PlayerView.Aura.RING_W + PlayerView.Aura.RING_GLOW_W)),
+		"ışıma kalınlığı sabit"
+	)
 	assert_almost_eq(PlayerView.Aura.ring_alpha(0.0), 0.9, 1e-4)
 	assert_almost_eq(PlayerView.Aura.ring_alpha(PlayerView.Aura.RING_MAX), 0.0, 1e-4)
 	assert_gt(PlayerView.Aura.ring_alpha(120.0), 0.2, "yarıdan sonra da seçilir")

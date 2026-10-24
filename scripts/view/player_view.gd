@@ -163,11 +163,12 @@ class Aura:
 				Vector2.ZERO, rx + 9.0, 0.0, TAU, 40, Color(0.91, 0.635, 0.29, 0.45), 2.0, true
 			)
 		if level_ring >= 0.0:
+			# S-02: α 0.9 → 0 (ring_alpha); çekirdek 4 px + 8 px yumuşak ışıma (toplam 12 px)
 			var col := Color(UiKit.XP_PARLAK, ring_alpha(level_ring))
 			var glow := Color(col, col.a * 0.35)
 			var r := maxf(level_ring, 1.0)
-			draw_arc(Vector2.ZERO, r, 0.0, TAU, 56, glow, RING_W + RING_GLOW_W, true)
-			draw_arc(Vector2.ZERO, r, 0.0, TAU, 56, col, RING_W, true)
+			draw_arc(Vector2.ZERO, r, 0.0, TAU, 56, glow, 12.0, true)
+			draw_arc(Vector2.ZERO, r, 0.0, TAU, 56, col, 4.0, true)
 
 	## Halka yarıçapından (cubic-out büyüme) geçen süre oranını geri çözer; α doğrusal 0,9 → 0 (450. ms'de 0).
 	static func ring_alpha(radius: float) -> float:
