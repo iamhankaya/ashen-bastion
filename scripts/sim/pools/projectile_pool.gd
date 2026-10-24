@@ -20,6 +20,7 @@ const FLAG_LOB := 32  # yay atış (dinamit): düşmana çarpmaz, ömrü bitince
 const FLAG_SHRAPNEL := 64  # şarapnel parçası: öldürdüğü düşman yeniden şarapnel saçmaz
 const FLAG_WIND := 128  # rüzgar kesiği (hilal): yalnız görsel/etiket
 const FLAG_SPLIT := 256  # bölünen kesiğin çocuğu: tekrar bölünmez
+const FLAG_SPLITTER := 512  # bölünen kesiğin ebeveyni: ilk isabette biter ve çocuk doğurur (U3)
 ## Sınırsız delme: pierce bu değerde sayaç tükenmez (her isabette azalsa da pratikte biter).
 const PIERCE_ALL := 99
 

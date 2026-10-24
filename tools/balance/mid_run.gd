@@ -22,6 +22,15 @@ const PRIORITY: Array[StringName] = [
 	&"saglam_yelek",
 	&"cevik_cizme",
 	&"miknatis",
+	# v2.0.2 Zyfen (kart kimlikleri Gunslinger'ınkilerle çakışmaz; yalnız kendi havuzunda görünür)
+	&"hortum",
+	&"bolunen_kesik",
+	&"nefes_dalgasi",
+	&"delen_ruzgar",
+	&"girdap",
+	&"hava_cebi",
+	&"hava_bicaklari",
+	&"furtina_gozu",
 ]
 
 

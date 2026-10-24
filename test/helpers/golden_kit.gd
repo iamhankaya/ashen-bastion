@@ -10,6 +10,17 @@ const MOVE_PERIOD := 150
 const TURN := 2.399963  # altın açı: yön her MOVE_PERIOD adımda bu kadar döner (adım indeksinin saf fonksiyonu)
 const FIXTURE := "res://test/fixtures/golden_hashes.json"
 const SEEDS_FILE := "res://tools/golden/seeds.txt"
+## `zyfen_u3` aşamasının sabit yükü: Tufan, Girdap, Hava Cebi, Nefes Dalgası + Fırtına Gözü/Bilenmiş Rüzgar. (Kasırga
+## Patlaması bilerek yok: ekran boyu dalga düşmanları 900 px'te öldürür, taşlar sabit betiğin menzili dışında kalır ve
+## "≥ 4 seviye atlama" önkoşulu sağlanamaz.)
+const ZYFEN_U3_GRANTS := {
+	"tufan": 1,
+	"girdap": 5,
+	"hava_cebi": 5,
+	"nefes_dalgasi": 5,
+	"furtina_gozu": 5,
+	"agir_kursun": 3,
+}
 
 
 ## Adım indeksinin saf fonksiyonu olan hareket betiği.
@@ -18,10 +29,14 @@ static func move_at(step_index: int) -> Vector2:
 
 
 ## Koşar; ≥ MIN_LEVEL_UPS seviye atlama olana dek en çok MAX_STEPS adıma uzar. Sonuç sözlüğü kayda yazılır.
-static func run(seed_value: int, character: StringName, steps: int = STEPS) -> Dictionary:
+static func run(
+	seed_value: int, character: StringName, steps: int = STEPS, grants: Dictionary = {}
+) -> Dictionary:
 	var sim := GameSim.new(
 		seed_value, character, {"data": GameData.load_default(), "log_events": false}
 	)
+	for skill_id in grants:  # v2.0.2 U3: Tufan'lı Zyfen koşusu (beceri kimliği -> seviye)
+		sim.debug_grant(StringName(skill_id), int(grants[skill_id]))
 	var counts := {"elites": 0, "pickups": 0}
 	var data := sim.data
 	sim.bus.enemy_killed.connect(
