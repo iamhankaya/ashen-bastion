@@ -3,6 +3,8 @@ extends RefCounted
 ## Havuzlu ses efekti çalma (16 oyuncu, kimlik başına eşzamanlı sınır; sınırda en eski kesilir). Dosya yoksa
 ## (assets/audio/sfx/<kimlik>.ogg) sessizce çıkar: SFX paketi gelene kadar oyun sessiz SFX ile çalışır.
 ## Havuz AudioDirector tarafından `setup` ile kurulur. XP çınlaması ardışık toplamada perde yükseltir.
+## Varyasyon: <kimlik>_1.._N dosyaları varsa her çalışta biri rastgele seçilir (üst üste aynısı değil). Seçim sunum
+## RNG'siyle yapılır; sim RNG'sine dokunmaz (state_hash değişmez).
 
 const DIR := "res://assets/audio/sfx/"
 const POOL_SIZE := 16
@@ -22,6 +24,9 @@ static var _players: Array[AudioStreamPlayer] = []
 static var _ids: Array[StringName] = []
 static var _stamp: PackedInt64Array = PackedInt64Array()
 static var _streams: Dictionary = {}
+static var _variants: Dictionary = {}  # StringName -> Array[AudioStream] (_1.._N; boşsa tek dosya)
+static var _last_variant: Dictionary = {}  # StringName -> son seçilen indeks
+static var _rng := RandomNumberGenerator.new()
 static var _clock: int = 0
 static var _combo: int = 0
 static var _last_pickup_ms: int = -100000
@@ -53,10 +58,19 @@ static func teardown() -> void:
 ## Test/özel kullanım: kimliğe akış bağlar (dosya aramasını atlar).
 static func register_stream(id: StringName, stream: AudioStream) -> void:
 	_streams[id] = stream
+	_variants.clear()
 
 
 static func clear_registered() -> void:
 	_streams.clear()
+	_variants.clear()
+	_last_variant.clear()
+
+
+## Test: sunum RNG'sini sabitler (üretimde rastgele tohumlu).
+static func seed_presentation(seed_value: int) -> void:
+	_rng.seed = seed_value
+	_last_variant.clear()
 
 
 ## Ardışık toplama perdesi: 1 + 0,06 x min(combo, 12).
@@ -86,7 +100,7 @@ static func playing_count(id: StringName) -> int:
 static func play(id: StringName, opts: Dictionary = {}) -> void:
 	if _players.is_empty():
 		return
-	var stream := _stream_for(id)
+	var stream := pick_stream(id)
 	if stream == null:
 		return
 	_clock += 1
@@ -120,6 +134,51 @@ static func play(id: StringName, opts: Dictionary = {}) -> void:
 	_ids[slot] = id
 	_stamp[slot] = _clock
 	p.play()
+
+
+## Kimliğin bu çalışta kullanılacak akışı: varyasyon varsa rastgele biri (önceki seçimden farklı), yoksa tek dosya.
+static func pick_stream(id: StringName) -> AudioStream:
+	var list := _variants_of(id)
+	if list.is_empty():
+		return null
+	var n := list.size()
+	var idx := 0
+	if n > 1:
+		var last: int = _last_variant.get(id, -1)
+		idx = _rng.randi_range(0, n - 2)
+		if last >= 0 and idx >= last:
+			idx += 1  # son seçilen hariç n-1 adaydan biri
+		_last_variant[id] = idx
+	return list[idx]
+
+
+## Kimliğin varyasyon sayısı (0: ses yok; 1: tek dosya).
+static func variant_count(id: StringName) -> int:
+	return _variants_of(id).size()
+
+
+static func _variants_of(id: StringName) -> Array[AudioStream]:
+	if _variants.has(id):
+		return _variants[id]
+	var list: Array[AudioStream] = []
+	var direct: AudioStream = _streams.get(id)
+	if direct != null:  # açıkça kaydedilmiş (test) tek akış varyasyondan önce gelir
+		list.append(direct)
+		_variants[id] = list
+		return list
+	var i := 1
+	while true:
+		var v := _stream_for(StringName("%s_%d" % [id, i]))
+		if v == null:
+			break
+		list.append(v)
+		i += 1
+	if list.is_empty():
+		var single := _stream_for(id)
+		if single != null:
+			list.append(single)
+	_variants[id] = list
+	return list
 
 
 static func _stream_for(id: StringName) -> AudioStream:

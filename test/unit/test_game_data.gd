@@ -30,6 +30,15 @@ func test_default_data_is_valid() -> void:
 	assert_eq(GameData.load_dir("res://data").validate(), PackedStringArray())
 
 
+func test_shipped_evolutions_have_distinct_existing_sfx() -> void:
+	var gd := GameData.load_dir("res://data")
+	var used := {}
+	for sk in gd.skills_of_kind(SkillDef.KIND_EVOLUTION):
+		assert_true(ResourceLoader.exists("res://assets/audio/sfx/%s.ogg" % sk.sfx), str(sk.id))
+		assert_false(used.has(sk.sfx), "ses tekrarı: %s" % sk.sfx)
+		used[sk.sfx] = true
+
+
 func test_bad_fixtures_report_their_code() -> void:
 	var dirs := DirAccess.get_directories_at(FIX)
 	dirs.sort()

@@ -1,0 +1,33 @@
+{
+  "sample_rate": 44100,
+  "peak_ceiling_db": -1.0,
+  "lufs_tolerance": 1.0,
+  "trim_below_peak_db": -36.0,
+  "preroll_s": 0.005,
+  "tail_s": 0.03,
+  "fade_in_s": 0.002,
+  "fade_out_s": 0.02,
+  "sounds": [
+    {"id": "shot_right", "target_lufs": -22.0, "max_s": 0.45},
+    {"id": "shot_left", "target_lufs": -22.0, "max_s": 0.45},
+    {"id": "reload_spin_1", "target_lufs": -28.0, "max_s": 0.5},
+    {"id": "reload_spin_2", "target_lufs": -28.0, "max_s": 0.5},
+    {"id": "reload_click", "target_lufs": -30.0, "max_s": 0.15},
+    {"id": "hit_1", "target_lufs": -22.0, "max_s": 0.35},
+    {"id": "hit_2", "target_lufs": -22.0, "max_s": 0.35},
+    {"id": "enemy_die_1", "target_lufs": -22.0, "max_s": 0.9},
+    {"id": "enemy_die_2", "target_lufs": -22.0, "max_s": 0.9},
+    {"id": "player_hurt", "target_lufs": -24.0, "max_s": 0.4},
+    {"id": "xp_pickup", "target_lufs": -28.0, "max_s": 0.4},
+    {"id": "level_up_normal", "target_lufs": -20.0, "max_s": 1.5, "lowpass_hz": 9000},
+    {"id": "level_up_evolution", "target_lufs": -17.0, "max_s": 1.5},
+    {"id": "evolution_1", "target_lufs": -17.0, "max_s": 1.8},
+    {"id": "evolution_2", "target_lufs": -17.0, "max_s": 1.8},
+    {"id": "evolution_3", "target_lufs": -17.0, "max_s": 1.8},
+    {"id": "evolution_4", "target_lufs": -17.0, "max_s": 1.8},
+    {"id": "evolution_5", "target_lufs": -17.0, "max_s": 1.8},
+    {"id": "evolution_6", "target_lufs": -17.0, "max_s": 1.8},
+    {"id": "explosion", "target_lufs": -26.0, "max_s": 2.2},
+    {"id": "dry_fire", "target_lufs": -26.0, "max_s": 0.3}
+  ]
+}

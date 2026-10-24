@@ -341,7 +341,7 @@ func _bind(new_sim: GameSim) -> void:
 	player_view.bind(sim)
 	hud.bind(sim)
 	if sim != null:
-		audio.bind(sim.bus)
+		audio.bind(sim.bus, sim.data)
 		sim.bus.run_ended.connect(_on_run_ended)
 		sim.bus.player_damaged.connect(_on_player_damaged)
 	_v11_bind(sim)
@@ -424,6 +424,7 @@ func _update_views(dt: float) -> void:
 func _show_level_up() -> void:
 	var shown_level := sim.level - maxi(sim.pending_levels, 1) + 1
 	level_up.show_choices(sim.pending_choices(), shown_level, sim.data, sim.character)
+	audio.play_level_up(sim.pending_choices())
 	_set_screen(PauseLogic.Screen.LEVEL_UP)
 
 
