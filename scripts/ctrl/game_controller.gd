@@ -635,7 +635,8 @@ func _v11_update_pickups(view_dt: float) -> void:
 		pickup_renderer.refresh(view_dt)
 	_v11_update_escape_debug()
 	BounceDebug.sync(
-		_bounce_label, sim != null and screen in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
+		_bounce_label,
+		sim != null and screen in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
 	)
 
 
