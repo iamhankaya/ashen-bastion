@@ -1,0 +1,6 @@
+{
+  "gate_job_minutes": 15,
+  "selftest_job_minutes": 20,
+  "warn_percent": 80,
+  "note": "ci.yml iş sınırları (test_ci_budget.py bu değerleri ci.yml ile karşılaştırır). Gate toplamı sınırın %80'ine yaklaşınca (check_budget.py uyarısı) VLAD'a bölme ya da sınır artırma işi bildirilir; yeni uzun test <= 20 sn, aşanlar test/long'a."
+}

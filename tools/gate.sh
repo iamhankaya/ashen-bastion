@@ -112,4 +112,5 @@ fi
 end_step
 echo "=== Adım süreleri"
 cat .gate/times.log
+python3 tools/ci/check_budget.py .gate/times.log || true
 echo "GATE OK"

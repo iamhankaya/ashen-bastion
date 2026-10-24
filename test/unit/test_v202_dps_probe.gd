@@ -2,6 +2,10 @@ extends GutTest
 ## DpsProbe (test/helpers/dps_probe.gd): kukla düzeni, determinizm, beceri eklenince DPS değişimi, önbelleğe yazmama.
 
 
+func after_all() -> void:
+	SimKit.remove_tmp()
+
+
 func test_measure_is_deterministic_and_positive_for_gunslinger() -> void:
 	var a := DpsProbe.measure(&"gunslinger", {}, &"ring", 8, 6.0)
 	var b := DpsProbe.measure(&"gunslinger", {}, &"ring", 8, 6.0)

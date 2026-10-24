@@ -32,7 +32,7 @@ Mermi bayrakları (`ProjectilePool.FLAG_*`): `EXPLODES` (isabette), `EXPLODE_ON_
 (zincirleme_patlama), `RICOCHET`, `RADIAL` (yalnız görsel), `LOB` (yay atış: düşmana çarpmaz, ömrü bitince patlar), `SHRAPNEL` (öldürdüğü düşman yeniden şarapnel saçmaz). `o` sözlüğü: `pierce, bounces, life (=1.2), flags, ex_radius,
 ex_dmg, push, gun, radius (=8, `DEFAULT_RADIUS`)`. Pierce/bounce'ta mermi bir düşmana yalnızca bir kez vurur (mermi başına `hit_ids`, `HIT_SLOTS = 96` halka tampon: 96'dan fazla düşmana vuran mermide en eski kayıt ezilir).
 
-v2.0.2 eklemeleri: `FLAG_WIND` (rüzgar kesiği/hilal), `FLAG_SPLIT` (bölünen kesiğin çocuğu, tekrar bölünmez), `PIERCE_ALL = 99`; `ShotContext.radius/speed/life` (0 = varsayılan); `WindUtil.crescent/displace/pulse_circle`; `sim.zones` (`ZonePool`), `sim.wind` (`WindSystem`), `fx.wind_wave/wind_cast`.
+v2.0.2 eklemeleri (Zyfen davranışlarının giriş/gözlem/tolerans satırları: `docs/design/v2.0.2/behavior-contract.md`; test itirazı yalnız oraya karşı açılır; ham DPS ölçümü: `test/helpers/dps_probe.gd`, başlangıç tablosu `docs/design/v2.0.2/balance/dps-baseline.md`): `FLAG_WIND` (rüzgar kesiği/hilal), `FLAG_SPLIT` (bölünen kesiğin çocuğu, tekrar bölünmez), `PIERCE_ALL = 99`; `ShotContext.radius/speed/life` (0 = varsayılan); `WindUtil.crescent/displace/pulse_circle`; `sim.zones` (`ZonePool`), `sim.wind` (`WindSystem`), `fx.wind_wave/wind_cast`.
 
 ## Beceri → kanca eşlemesi
 
