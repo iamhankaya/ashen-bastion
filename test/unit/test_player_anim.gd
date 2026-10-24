@@ -47,13 +47,13 @@ func test_mode_hysteresis_idle_walk() -> void:
 	assert_eq(a.mode, PlayerAnim.Mode.IDLE)
 
 
-func test_procedural_bob_peaks_at_nine_px_and_scales_with_speed() -> void:
+func test_procedural_bob_peaks_at_tier_bob_and_scales_with_speed() -> void:
 	var a := _anim()
 	var peak := 0.0
 	for i in roundi(2.0 / DT):
 		a.update(DT, Vector2(300.0, 0.0), false, -1.0)
 		peak = maxf(peak, a.bob_px)
-	assert_almost_eq(peak, 9.0, 0.35, "tepe bob 9 px")
+	assert_almost_eq(peak, PlayerAnim.BOB_PX, 0.2, "tepe bob = varsayılan kademe (v1.1.1: 4,5 px)")
 	var f_full := _phase_rate(300.0)
 	assert_almost_eq(f_full, 2.2, 0.05, "tam hızda 2,2 Hz")
 	assert_almost_eq(_phase_rate(75.0), 1.1, 0.05, "hız/300 0,5'e kenetlenir: 1,1 Hz")
@@ -82,19 +82,19 @@ func test_frame_mode_has_no_bob_no_walk_squash_and_reduced_lean() -> void:
 		assert_almost_eq(a.sx, 1.0, 1e-4)
 		assert_almost_eq(a.sy, 1.0, 1e-4)
 	assert_eq(peak, 0.0, "kare modunda prosedürel bob 0")
-	assert_almost_eq(rad_to_deg(a.lean), 3.6, 0.1, "kare modunda eğim %60")
+	assert_almost_eq(rad_to_deg(a.lean), 2.4, 0.1, "kare modunda eğim %60")
 
 
-func test_lean_reaches_six_degrees_and_ninety_percent_in_120ms() -> void:
+func test_lean_reaches_four_degrees_and_ninety_percent_in_120ms() -> void:
 	var a := _anim()
 	_run(a, 0.12, Vector2(300.0, 0.0))
-	assert_gte(rad_to_deg(a.lean), 0.9 * 6.0)
+	assert_gte(rad_to_deg(a.lean), 0.9 * 4.0)
 	_run(a, 0.5, Vector2(300.0, 0.0))
-	assert_almost_eq(rad_to_deg(a.lean), 6.0, 0.05)
+	assert_almost_eq(rad_to_deg(a.lean), 4.0, 0.05)
 	_run(a, 0.5, Vector2(-300.0, 0.0))
-	assert_almost_eq(rad_to_deg(a.lean), -6.0, 0.05, "yön işareti")
+	assert_almost_eq(rad_to_deg(a.lean), -4.0, 0.05, "yön işareti")
 	_run(a, 0.5, Vector2(150.0, 0.0))
-	assert_almost_eq(rad_to_deg(a.lean), 3.0, 0.05, "orantılı")
+	assert_almost_eq(rad_to_deg(a.lean), 2.0, 0.05, "orantılı")
 
 
 func test_turn_mirrors_at_midpoint_with_quarter_width() -> void:
@@ -193,25 +193,131 @@ func test_reload_pose_timeline() -> void:
 	var a := _anim()
 	_run(a, 0.1)
 	a.update(DT, Vector2.ZERO, false, 0.12)
-	assert_almost_eq(rad_to_deg(a.arm_rot[0]), -70.0, 1.0, "%12'de kollar 70° aşağı")
+	assert_almost_eq(rad_to_deg(a.arm_rot[0]), 14.0, 1.0, "%12'de kollar aim'e göre 14° kalkar")
 	var max_dev := 0.0
 	var sy_mid := 0.0
 	for k in 40:
 		var p := 0.12 + 0.58 * float(k) / 39.0
 		a.update(DT, Vector2.ZERO, false, p)
-		max_dev = maxf(max_dev, absf(rad_to_deg(a.arm_rot[0]) + 70.0))
+		max_dev = maxf(max_dev, absf(rad_to_deg(a.arm_rot[0]) - 14.0))
 		if k == 20:
 			sy_mid = a.sy
-	assert_lte(max_dev, 10.5, "titreme ±10°")
-	assert_gt(max_dev, 4.0)
+	assert_lte(max_dev, 4.5, "titreme ±4°")
+	assert_gt(max_dev, 1.5)
 	assert_almost_eq(sy_mid, 0.97, 0.02, "doldururken gövde sy 0,97")
-	var over := -99.0
+	var over := 99.0
 	for k in 21:
 		a.update(DT, Vector2.ZERO, false, 0.8 + 0.2 * float(k) / 20.0)
-		over = maxf(over, rad_to_deg(a.arm_rot[0]))
-	assert_almost_eq(over, 6.0, 0.5, "+6° aşma")
+		over = minf(over, rad_to_deg(a.arm_rot[0]))
+	assert_almost_eq(over, -3.0, 0.5, "−3° aşma")
 	a.update(DT, Vector2.ZERO, false, 1.0)
 	assert_almost_eq(rad_to_deg(a.arm_rot[0]), 0.0, 1.0)
+
+
+# --- v1.1.1: doldurma süreklilik, aim takibi, bekleme pozu, kademeler ---------------------------------------------
+
+
+func test_reload_never_strays_more_than_30_degrees_or_25_per_frame_at_24fps() -> void:
+	var a := _anim()
+	_run(a, 0.3)
+	var dt24 := 1.0 / 24.0
+	var prev := 0.0
+	var worst := 0.0
+	var worst_step := 0.0
+	var p := 0.0
+	while p <= 1.0:
+		a.update(dt24, Vector2.ZERO, false, p)
+		for g in 2:
+			worst = maxf(worst, absf(rad_to_deg(a.arm_rot[g])))
+		worst_step = maxf(worst_step, absf(rad_to_deg(a.arm_rot[0]) - prev))
+		prev = rad_to_deg(a.arm_rot[0])
+		p += dt24  # 1 sn doldurma
+	assert_lte(worst, 30.0, "aim'den en çok 30°")
+	assert_lte(worst_step, 25.0, "kare başına en çok 25°")
+
+
+func test_reload_eases_in_and_out_for_at_least_80ms() -> void:
+	var a := _anim()
+	_run(a, 0.3)
+	var t_in := 0.0
+	var p := 0.0
+	while p < 0.5:
+		a.update(DT, Vector2.ZERO, false, p)
+		if absf(a.arm_rot[0]) >= 0.9 * deg_to_rad(PlayerAnim.RELOAD_ARM_DEG) and t_in == 0.0:
+			t_in = p
+		p += DT
+	assert_gte(t_in, 0.08, "giriş >= 80 ms (1 sn doldurma)")
+
+
+func _aims(a0: float, a1: float) -> PackedFloat32Array:
+	return PackedFloat32Array([a0, a1])
+
+
+func test_track_aim_snaps_first_then_never_jumps_more_than_25_degrees_at_24fps() -> void:
+	var a := _anim()
+	var on := PackedByteArray([1, 1])
+	a.track_aim(1.0 / 24.0, _aims(0.0, 0.0), on, false)
+	assert_eq(a.aim_cur[0], 0.0, "ilk çağrı yakalar")
+	var worst := 0.0
+	var prev := 0.0
+	for i in 30:
+		a.track_aim(1.0 / 24.0, _aims(PI, -PI * 0.5), on, false)  # 180° ve −90° ani hedef
+		worst = maxf(worst, absf(rad_to_deg(angle_difference(prev, a.aim_cur[0]))))
+		prev = a.aim_cur[0]
+	assert_lte(worst, 25.0, "kare başına <= 25°")
+	assert_almost_eq(absf(angle_difference(a.aim_cur[0], PI)), 0.0, 0.05, "sonunda hedefe oturur")
+	assert_almost_eq(a.aim_cur[1], -PI * 0.5, 0.05)
+
+
+func test_idle_without_target_guns_return_to_facing_direction() -> void:
+	var a := _anim()
+	var off := PackedByteArray([0, 0])
+	var stale := deg_to_rad(150.0)  # eski hedef sol-aşağı kaldı
+	a.track_aim(DT, _aims(stale, stale), off, false)
+	for i in roundi(1.5 / DT):
+		a.track_aim(DT, _aims(stale, stale), off, false)
+	for g in 2:
+		assert_lt(absf(rad_to_deg(a.aim_cur[g])), 3.0, "sağa bakarken namlu sağda (tabanca %d)" % g)
+	for i in roundi(1.5 / DT):
+		a.track_aim(DT, _aims(stale, stale), off, true)
+	for g in 2:
+		assert_gt(absf(rad_to_deg(a.aim_cur[g])), 177.0, "sola bakarken namlu solda")
+
+
+func test_track_aim_holds_last_aim_briefly_and_paused_dt_does_not_move() -> void:
+	var a := _anim()
+	a.track_aim(DT, _aims(1.0, 1.0), PackedByteArray([0, 0]), false)
+	for i in 10:
+		a.track_aim(DT, _aims(1.0, 1.0), PackedByteArray([0, 0]), false)
+	assert_almost_eq(a.aim_cur[0], 1.0, 1e-4, "0,4 sn dolmadan bekleme pozuna dönmez")
+	var before := a.aim_cur[0]
+	a.track_aim(0.0, _aims(-2.0, -2.0), PackedByteArray([1, 1]), false)
+	assert_eq(a.aim_cur[0], before, "dt=0 ilerletmez")
+
+
+func test_default_bounce_tier_is_softened_and_in_one_table() -> void:
+	assert_eq(PlayerAnim.bounce_tier, PlayerAnim.BOUNCE_TIER_DEFAULT)
+	var t: Dictionary = PlayerAnim.BOUNCE_TIERS[PlayerAnim.BOUNCE_TIER_DEFAULT]
+	var old: Dictionary = PlayerAnim.BOUNCE_TIERS[0]
+	assert_lte(float(t["bob"]), 0.5 * float(old["bob"]) + 1e-4, "bob genliği yarıya iner")
+	assert_lte((t["contact"] as Vector2).x, 1.03 + 1e-4)
+	assert_gte((t["contact"] as Vector2).y, 0.96 - 1e-4)
+	assert_lte(float(t["lean"]) + float(t["wobble"]), 5.0 + 1e-4, "gövde eğimi <= 5°")
+
+
+func test_walk_body_tilt_and_squash_stay_within_softened_limits() -> void:
+	var a := _anim()
+	var rot := 0.0
+	var sx_hi := 0.0
+	var sy_lo := 9.0
+	for i in roundi(3.0 / DT):
+		a.update(DT, Vector2(300.0, 0.0), false, -1.0)
+		rot = maxf(rot, absf(rad_to_deg(a.body_rot)))
+		sx_hi = maxf(sx_hi, a.sx)
+		sy_lo = minf(sy_lo, a.sy)
+	assert_lte(rot, 5.0, "eğim + sallanma <= 5°")
+	assert_lte(sx_hi, 1.03 + 1e-4)
+	assert_gte(sy_lo, 0.96 - 1e-4)
 
 
 func test_damage_flash_tint_and_knock_timeline() -> void:

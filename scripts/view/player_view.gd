@@ -38,6 +38,7 @@ var anim: PlayerAnim = PlayerAnim.new()
 var _sim: GameSim = null
 var _rig: Dictionary = {}
 var _height: float = DEFAULT_HEIGHT
+var _aim_dt: float = 0.0
 var _arm_len: float = 70.0
 var _facing_left: bool = false
 var _last_pos: Vector2 = Vector2.ZERO
@@ -330,6 +331,7 @@ func update_view(dt: float) -> void:
 	elif moved != Vector2.ZERO and dt > 0.0:
 		_vel = moved / dt  # sim dışı konum değişimi (ışınlanma/test): doğrudan
 	anim.update(dt, _vel, _facing_left, rp)
+	_aim_dt = dt
 	_apply_pose(dt, moved)
 	_update_ring(dt, mag, rp)
 	_update_flash(dt)
@@ -433,14 +435,20 @@ func _update_flash(dt: float) -> void:
 		muzzle_flash.queue_redraw()
 
 
+## Sim aim'i (ham) → PlayerAnim.track_aim ile yumuşatılmış gösterim açısı. Hedefsiz tabanca bekleme pozuna (bakış yönü) döner.
 func _aims() -> PackedFloat32Array:
 	var base := PI if _facing_left else 0.0
-	var out := PackedFloat32Array([base, base])
+	var raw := PackedFloat32Array([base, base])
 	var v := _sim.gun_aim
 	if v.size() >= 2:
-		out[0] = v[0]
-		out[1] = v[1]
-	return out
+		raw[0] = v[0]
+		raw[1] = v[1]
+	var t := _sim.gun_target
+	var has := PackedByteArray([0, 0])
+	for g in 2:
+		has[g] = 1 if t.size() > g and t[g] >= 0 else 0
+	anim.track_aim(_aim_dt, raw, has, _facing_left)
+	return anim.aim_cur
 
 
 ## Kol Rig'in çocuğudur: dünya açısını korumak için dönüşü Rig dönüşünden çıkarır; omuz Rig yerelinde görünüm omzudur.

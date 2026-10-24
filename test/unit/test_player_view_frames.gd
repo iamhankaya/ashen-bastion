@@ -165,7 +165,7 @@ func test_shoulders_stay_within_5px_of_the_sim_while_walking_in_frame_mode() -> 
 		v._sim.player_facing_left = facing
 		for i in 60:
 			_walk(v, -5.0 if facing else 5.0, 1)  # 300 px/sn: en büyük eğim
-		assert_gt(absf(rad_to_deg(v.anim.lean)), 3.0, "eğim %60'a inmiş ama var")
+		assert_gt(absf(rad_to_deg(v.anim.lean)), 2.0, "eğim %60'a inmiş ama var")
 		for g in 2:
 			var want := PlayerRig.shoulder_world(g, v._sim.player_pos, facing, v._sim.character.rig)
 			var dev := v.shoulder_view(g).distance_to(want)

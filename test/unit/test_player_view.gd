@@ -53,7 +53,7 @@ func test_shoulder_deviation_follows_lean_geometry() -> void:
 		sim.player_pos += Vector2(5.0, 0.0)  # 300 px/sn
 		v.update_view(DT)
 	var lean := v.anim.lean
-	assert_gt(rad_to_deg(lean), 5.5)
+	assert_gt(rad_to_deg(lean), 3.5)
 	var h := float(sim.character.rig["display_height"])
 	var want := PlayerRig.shoulder_world(0, sim.player_pos, false, sim.character.rig)
 	var dev := v.shoulder_view(0).distance_to(want)
@@ -66,14 +66,15 @@ func test_muzzle_view_matches_sim_muzzle_when_standing() -> void:
 	var v := _view(sim)
 	sim.gun_aim[0] = -0.3
 	sim.gun_aim[1] = 0.4
-	for i in 3:
+	for i in 20:  # kol aim'e yumuşak yaklaşır (v1.1.1)
 		v.update_view(DT)
 	for g in 2:
 		var aim := float(sim.gun_aim[g])
 		var want := PlayerRig.muzzle_world(
 			g, sim.player_pos, aim, cos(aim) < 0.0, sim.character.rig
 		)
-		assert_lt(v.muzzle_view(g).distance_to(want), 2.0, "namlu g=%d" % g)
+		# nefes payı: 1,5° kol salınımı ~2 px namlu kayması verir
+		assert_lt(v.muzzle_view(g).distance_to(want), 4.0, "namlu g=%d" % g)
 
 
 func test_shot_starts_recoil_and_muzzle_flash_from_the_view_muzzle() -> void:
@@ -236,3 +237,65 @@ func test_walk_does_not_flicker_when_the_sim_skips_render_frames() -> void:
 			modes[v.anim.mode] = true
 	assert_eq(modes.size(), 1, "yürüme 1-0-1-0 titremez")
 	assert_eq(v.anim.mode, PlayerAnim.Mode.WALK)
+
+
+# --- v1.1.1: kol açısı sürekliliği (kullanıcı ekran kaydı, 24 fps) ------------------------------------------------
+
+
+func _arm_world(v: PlayerView, g: int) -> float:
+	var arm := v.near_arm if g == 0 else v.far_arm
+	return v.rig_node.rotation + arm.rotation
+
+
+func test_arm_does_not_jump_when_target_flips_sides_at_24fps() -> void:
+	var sim := _sim()
+	var v := _view(sim)
+	sim.gun_target[0] = 1
+	sim.gun_target[1] = 2
+	sim.gun_aim[0] = 0.0
+	sim.gun_aim[1] = 0.0
+	v.update_view(1.0 / 24.0)
+	var prev := _arm_world(v, 0)
+	var worst := 0.0
+	for i in 12:
+		sim.gun_aim[0] = PI * 0.95  # hedef bir anda solda
+		v.update_view(1.0 / 24.0)
+		var now := _arm_world(v, 0)
+		worst = maxf(worst, absf(rad_to_deg(angle_difference(prev, now))))
+		prev = now
+	assert_lte(worst, 25.0, "tek karede sıçrama yok")
+
+
+func test_reload_arm_stays_within_30_degrees_of_aim_in_the_view() -> void:
+	var sim := _sim()
+	var v := _view(sim)
+	sim.gun_target[0] = 1
+	sim.gun_target[1] = 2
+	sim.gun_aim[0] = 0.3
+	sim.gun_aim[1] = 0.3
+	v.update_view(1.0 / 24.0)
+	sim.magazine.start_reload(sim.stats)
+	var worst := 0.0
+	var prev := _arm_world(v, 0)
+	var worst_step := 0.0
+	for i in 30:
+		sim.magazine.reload_left = maxf(0.0, sim.magazine.reload_total * (1.0 - float(i) / 24.0))
+		v.update_view(1.0 / 24.0)
+		var now := _arm_world(v, 0)
+		worst = maxf(worst, absf(rad_to_deg(angle_difference(0.3, now))))
+		worst_step = maxf(worst_step, absf(rad_to_deg(angle_difference(prev, now))))
+		prev = now
+	assert_lte(worst, 30.0, "doldurmada aim'den <= 30°")
+	assert_lte(worst_step, 25.0, "kare başına <= 25°")
+
+
+func test_idle_guns_point_along_the_facing_direction() -> void:
+	var sim := _sim()
+	var v := _view(sim)
+	sim.gun_aim[0] = deg_to_rad(150.0)  # eski hedef: sol-aşağı
+	sim.gun_aim[1] = deg_to_rad(150.0)
+	sim.player_facing_left = false
+	for i in 90:
+		v.update_view(1.0 / 60.0)
+	for g in 2:
+		assert_lt(absf(rad_to_deg(angle_difference(0.0, _arm_world(v, g)))), 5.0, "gövde sağa: namlu sağa")
