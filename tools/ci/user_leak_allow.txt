@@ -1,8 +1,2 @@
-# user:// sızıntı denetimi izin listesi (tools/ci/user_leak.gd). Her satır: `desen  # gerekçe`. Desen user:// köküne göre
-# `String.match` kalıbıdır. Buraya girmek BİR BULGUDUR (düzeltilemeyen v1/v1.1 sızıntısı), kalıcı çözüm değildir:
-# sahibi düzeltince satır silinir. Yeni testler için izin verilmez; gate bu dosyada olmayan her sızıntıda `USER_LEAK:` verir.
-# İzinli dosyalar koşu sonunda yine taban içeriğine geri yazılır (gerçek kayıt bozulmaz).
-#
-# S0 ölçümü (bulgu kodları docs/dev/v2.0-s0-measure.md): her test betiği tek tek koşturularak yazma anları (mtime) bulundu.
-highscores.json  # V2-L1: test/acceptance/test_ver_end_to_end.gd (tester) GameController'ın varsayılan Highscores yoluna yazar; çözüm: controller.highscores = Highscores.new(<geçici yol>)
-settings.cfg  # V2-L2: test/acceptance/test_ver_render_text.gd (tester) Settings'i gerçek yola yazar; çözüm: Settings.store_path = <geçici yol> + after_each'te geri al
+# user:// sızıntı denetimi izin listesi (tools/ci/user_leak.gd). Satır: `desen  # gerekçe`. BOŞ: v1.1 sızıntıları S3 enjeksiyon noktalarıyla giderildi.
+# Buraya girmek bir bulgudur; yeni izin verilmez.
