@@ -1,0 +1,94 @@
+{
+  "_comment": "v2.0 ek token'ları (takma ad/ölçü/hareket). Renk icat edilmedi. Birim: 1080x2400 tasarım pikseli, ms.",
+  "color_alias": {
+    "tier_kolay": "rarity_common",
+    "tier_orta": "rarity_uncommon",
+    "tier_zor": "rarity_rare",
+    "tier_cok_zor": "record",
+    "ach_open": "dogru",
+    "locked_edge": "kahve_500",
+    "toast_bg": "mor_800@0.94"
+  },
+  "placeholder_tint": {
+    "sepia": 0.55,
+    "hue_deg": -18,
+    "saturation": 0.75,
+    "brightness": 0.92
+  },
+  "size": {
+    "menu_col_top": 1556,
+    "menu_half_btn": [
+      454,
+      132
+    ],
+    "menu_hero_box": [
+      960,
+      960
+    ],
+    "menu_hero_y": 560,
+    "char_stage": [
+      1080,
+      1060
+    ],
+    "char_stage_y": 190,
+    "char_panel_h": 446,
+    "char_stat_tile": [
+      282,
+      78
+    ],
+    "char_card": [
+      252,
+      264
+    ],
+    "char_select_btn": [
+      936,
+      156
+    ],
+    "back_btn": [
+      936,
+      132
+    ],
+    "ach_row": [
+      936,
+      156
+    ],
+    "ach_group_h": 72,
+    "ach_plate": 108,
+    "ach_right_col": 240,
+    "ach_list_y": [
+      400,
+      2172
+    ],
+    "toast": [
+      780,
+      120
+    ],
+    "toast_y": 820,
+    "result_chip_h": 96,
+    "result_combo_max": 4,
+    "result_combo_max_with_chip": 3,
+    "levelup_title_y": 880,
+    "levelup_ring_px": 4,
+    "arrow_glyph_margin": 36
+  },
+  "motion_ms": {
+    "showcase_breath": 2400,
+    "showcase_drift": 6000,
+    "showcase_swap": 260,
+    "char_focus": 140,
+    "select_confirm": 140,
+    "toast_in": 220,
+    "toast_hold": 2100,
+    "toast_out": 180,
+    "toast_gap": 150,
+    "result_chip_in": 1100
+  },
+  "limits": {
+    "blurb": 120,
+    "ach_name": 22,
+    "ach_desc": 60,
+    "toast_queue": 3,
+    "toast_visible": 1,
+    "showcase_embers": 12
+  }
+}
