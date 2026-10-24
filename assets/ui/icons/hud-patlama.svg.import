@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://i5xxr8bnoota"
-path="res://.godot/imported/dinamit.svg-afdbb4c5759349d06452d2b274acad19.ctex"
+uid="uid://cpgfdgv4w2nbq"
+path="res://.godot/imported/hud-patlama.svg-5740f02e7456f1d9bee09f1970c1cecf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/ui/icons/dinamit.svg"
-dest_files=["res://.godot/imported/dinamit.svg-afdbb4c5759349d06452d2b274acad19.ctex"]
+source_file="res://assets/ui/icons/hud-patlama.svg"
+dest_files=["res://.godot/imported/hud-patlama.svg-5740f02e7456f1d9bee09f1970c1cecf.ctex"]
 
 [params]
 

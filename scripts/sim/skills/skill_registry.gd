@@ -9,7 +9,6 @@ const BEHAVIORS := {
 	&"bolunen_kesik": preload("res://scripts/sim/skills/bolunen_kesik.gd"),
 	&"cift_tabanca": preload("res://scripts/sim/skills/cift_tabanca.gd"),
 	&"delen_ruzgar": preload("res://scripts/sim/skills/delen_ruzgar.gd"),
-	&"dinamit": preload("res://scripts/sim/skills/dinamit.gd"),
 	&"doldurma_sacilmasi": preload("res://scripts/sim/skills/doldurma_sacilmasi.gd"),
 	&"girdap": preload("res://scripts/sim/skills/girdap.gd"),
 	&"gogun_mizragi": preload("res://scripts/sim/skills/gogun_mizragi.gd"),

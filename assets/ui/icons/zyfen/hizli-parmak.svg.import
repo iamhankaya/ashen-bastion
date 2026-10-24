@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccch81oq1uowb"
-path="res://.godot/imported/barutcu_body.png-ea1cc58636c177bb3f74ae2620542b38.ctex"
+uid="uid://bpur40gmj5qag"
+path="res://.godot/imported/hizli-parmak.svg-67d580598b0234157b38771d6c91bd19.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/gfx/char/barutcu_body.png"
-dest_files=["res://.godot/imported/barutcu_body.png-ea1cc58636c177bb3f74ae2620542b38.ctex"]
+source_file="res://assets/ui/icons/zyfen/hizli-parmak.svg"
+dest_files=["res://.godot/imported/hizli-parmak.svg-67d580598b0234157b38771d6c91bd19.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

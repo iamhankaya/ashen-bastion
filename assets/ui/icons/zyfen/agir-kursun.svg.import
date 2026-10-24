@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b13i44xkbp6t8"
-path="res://.godot/imported/dinamit.svg-36b5e5ed3ae216c42db00565bfae899c.ctex"
+uid="uid://3er6aijqlw1u"
+path="res://.godot/imported/agir-kursun.svg-eb72583e485f0f18249a66fefb316e8a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/icons/dinamit.svg"
-dest_files=["res://.godot/imported/dinamit.svg-36b5e5ed3ae216c42db00565bfae899c.ctex"]
+source_file="res://assets/ui/icons/zyfen/agir-kursun.svg"
+dest_files=["res://.godot/imported/agir-kursun.svg-eb72583e485f0f18249a66fefb316e8a.ctex"]
 
 [params]
 
@@ -38,6 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=2.0
+svg/scale=1.0
 editor/scale_with_editor_scale=false
 editor/convert_colors_with_editor_theme=false

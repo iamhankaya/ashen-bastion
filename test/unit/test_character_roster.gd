@@ -40,10 +40,8 @@ class _FakeStore:
 
 
 func test_ids_follow_order_field() -> void:
-	# F-030: vitrin sırası `order` alanı (gunslinger 1, barutcu 2, zyfen 2 → eşitlikte dosya adı), dosya adı sırası değil.
-	assert_eq(
-		CharacterRoster.ids(_real), [&"gunslinger", &"barutcu", &"zyfen"] as Array[StringName]
-	)
+	# F-030: vitrin sırası `order` alanı (gunslinger 1, zyfen 2), dosya adı sırası değil.
+	assert_eq(CharacterRoster.ids(_real), [&"gunslinger", &"zyfen"] as Array[StringName])
 
 
 func test_resolve_empty_unknown_or_missing_goes_to_default() -> void:
@@ -52,16 +50,16 @@ func test_resolve_empty_unknown_or_missing_goes_to_default() -> void:
 
 
 func test_resolve_valid_saved_wins() -> void:
-	assert_eq(CharacterRoster.resolve("barutcu", _real, null), &"barutcu")
+	assert_eq(CharacterRoster.resolve("zyfen", _real, null), &"zyfen")
 	assert_eq(CharacterRoster.resolve("gunslinger", _real, null), &"gunslinger")
 
 
 func test_resolve_default_is_order_independent() -> void:
-	# barutcu `order` ile öne alınsa da varsayılan gunslinger'dır.
+	# zyfen `order` ile öne alınsa da varsayılan gunslinger'dır.
 	var d := GameData.load_dir("res://data")  # özel kopya
-	d.get_character(&"barutcu").order = 0
+	d.get_character(&"zyfen").order = 0
 	d._sort_character_ids()
-	assert_eq(CharacterRoster.ids(d)[0], &"barutcu")
+	assert_eq(CharacterRoster.ids(d)[0], &"zyfen")
 	assert_eq(CharacterRoster.resolve("", d, null), &"gunslinger")
 	assert_eq(CharacterRoster.resolve("", _real, null), &"gunslinger")
 
@@ -111,7 +109,7 @@ func test_locked_character_unlocks_with_the_achievement() -> void:
 
 
 func test_is_unlocked_without_unlock_field_is_always_true() -> void:
-	var c := _real.get_character(&"barutcu")
+	var c := _real.get_character(&"zyfen")
 	assert_true(CharacterRoster.is_unlocked(c, null))
 	assert_true(CharacterRoster.is_unlocked(c, _store([], true)))
 

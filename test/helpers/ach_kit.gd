@@ -120,7 +120,7 @@ static func sim_at(time_sec: float, seed_value: int = 1) -> GameSim:
 static func fill_actives(sim: GameSim, n: int) -> void:
 	var ids: Array[StringName] = [
 		&"cift_tabanca",
-		&"dinamit",
+		&"doldurma_sacilmasi",
 		&"keskin_nisan",
 		&"yelpaze_atis",
 		&"seken_mermi",

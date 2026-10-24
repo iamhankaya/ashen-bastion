@@ -1,14 +1,14 @@
 extends GutTest
 ## Kabul (v2.0 B3/B4 bütçe): başarım motoru GÖZLEMCİDİR — tracker bağlı/bağsız aynı tohum aynı state_hash ve event_log.
-## Matris: 2 karakter (gunslinger, barutcu) × 3 politika × 2 tohum × 2400 adım; iki simde de log_events=true. Her 300 adımda hash karşılaştırılır.
-## Kara Bomba (bomb_hits) ve dinamit gerçekten patlar: testin kendisi bunu olay günlüğünden doğrular (bota güvenilmez).
+## Matris: 2 karakter (gunslinger, zyfen) × 3 politika × 2 tohum × 2400 adım; iki simde de log_events=true. Her 300 adımda hash karşılaştırılır.
+## Kara Bomba (bomb_hits) gerçekten patlar: testin kendisi bunu olay günlüğünden doğrular (bota güvenilmez).
 ## Süre: B-tur: 3 politika × 3 tohum × 2 karakter (plan matrisi); daha uzun koşu test/long/ varyantına ayrılabilir.
 ## Dilim B bitmeden pending (tracker gövdesi Stub.todo).
 
 const SEG := 300
 const STEPS := 2400
 const SEEDS := [101, 202, 303]
-const CHARS := [&"gunslinger", &"barutcu"]
+const CHARS := [&"gunslinger", &"zyfen"]
 const BOMB_STEPS := [200, 1100, 1700]
 
 
@@ -98,12 +98,6 @@ func test_b3_bomb_and_dynamite_paths_actually_execute_in_the_matrix() -> void:
 			"%s: Kara Bomba patladı" % character
 		)
 		assert_gt(hits_seen[0], 0, "%s: bomb_hits yayını geldi" % character)
-		var dynamite := 0
-		for e in sim.event_log:
-			if e["type"] == SimEvents.EXPLOSION and e.get("source", &"") != &"bomb":
-				dynamite += 1
-		if character == &"barutcu":
-			assert_gt(dynamite, 0, "Barutçu: dinamit patlaması >0")
 		tr.detach()
 
 
@@ -149,8 +143,8 @@ func test_b3_same_seed_two_runs_with_observer_agree() -> void:
 		return
 	var out: Array = []
 	for i in 2:
-		var sim := _sim(77, &"barutcu")
-		var tr := _tracker_for(sim, &"barutcu")
+		var sim := _sim(77, &"zyfen")
+		var tr := _tracker_for(sim, &"zyfen")
 		out.append(_play(sim, Bots.GREEDY, tr)[0])
 		tr.detach()
 	assert_eq(out[0], out[1])

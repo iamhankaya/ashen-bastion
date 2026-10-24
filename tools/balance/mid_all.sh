@@ -10,7 +10,7 @@ mkdir -p "$OUT"
 CHUNK=5
 jobs_file="$(mktemp)"
 for pol in strong kite greedy idle; do
-  for ch in gunslinger barutcu; do
+  for ch in gunslinger zyfen; do
     for ((s = FIRST; s < FIRST + N; s += CHUNK)); do
       n=$(( CHUNK < FIRST + N - s ? CHUNK : FIRST + N - s ))
       echo "$pol $ch $s $n $OUT/${pol}_${ch}_${s}.jsonl" >> "$jobs_file"

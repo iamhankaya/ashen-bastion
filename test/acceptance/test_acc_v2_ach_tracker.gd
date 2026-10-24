@@ -132,7 +132,7 @@ func test_b2_total_chars5() -> void:
 	a2.finish(false, _stats(300.0))
 	assert_eq(Array(st.chars5), ["gunslinger"])
 	assert_false(st.is_unlocked(&"cifte_yol"), "tek karakter: açmaz")
-	var b := AchievementTracker.new(AchKit.data(), st, &"barutcu", AchKit.clock())
+	var b := AchievementTracker.new(AchKit.data(), st, &"zyfen", AchKit.clock())
 	b.attach(SimBus.new())
 	b.finish(false, _stats(300.0))
 	assert_eq(st.chars5.size(), 2)

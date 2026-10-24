@@ -5,7 +5,7 @@ extends GutTest
 const SEG := 300
 const STEPS := 1800
 const SEEDS := [101, 202]
-const CHARS := [&"gunslinger", &"barutcu"]
+const CHARS := [&"gunslinger", &"zyfen"]
 
 
 func _sim(seed_value: int, character: StringName) -> GameSim:

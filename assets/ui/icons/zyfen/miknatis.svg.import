@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dkmxxb4bwa6xr"
-path="res://.godot/imported/barutcu_portrait.png-e8391489797f411bf5188e45d3308567.ctex"
+uid="uid://cnb1qilno3xnr"
+path="res://.godot/imported/miknatis.svg-7321bc88d7967fab4acebc0d80736e82.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/gfx/char/barutcu_portrait.png"
-dest_files=["res://.godot/imported/barutcu_portrait.png-e8391489797f411bf5188e45d3308567.ctex"]
+source_file="res://assets/ui/icons/zyfen/miknatis.svg"
+dest_files=["res://.godot/imported/miknatis.svg-7321bc88d7967fab4acebc0d80736e82.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false
