@@ -18,7 +18,7 @@ def test_every_available_source_has_a_valid_output():
         assert out.exists(), s["id"]
         assert ps.check(s, ps.measure(out), CFG) == [], s["id"]
         checked += 1
-    assert checked >= 20
+    assert checked >= 21
 
 
 def test_level_ordering_follows_the_mix_intent():

@@ -138,4 +138,4 @@ func test_shipped_variation_files_exist_for_hit_die_and_reload_spin() -> void:
 	assert_eq(Sfx.variant_count(&"enemy_die"), 2)
 	assert_eq(Sfx.variant_count(&"reload_spin"), 2)
 	assert_eq(Sfx.variant_count(&"explosion"), 1)
-	assert_eq(Sfx.variant_count(&"dry_fire"), 0, "dry_fire kullanıcıdan gelene dek sessiz")
+	assert_eq(Sfx.variant_count(&"dry_fire"), 1)

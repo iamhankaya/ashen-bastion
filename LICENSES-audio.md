@@ -7,6 +7,6 @@ bkz. `audio/muzik/README.txt`. SoundFont lisans açığı (F-ashen-bastion-001) 
 
 ## Ses efektleri (`audio/sfx/` kaynak, `assets/audio/sfx/*.ogg` işlenmiş)
 Kullanıcı tarafından ElevenLabs ücretli planıyla üretilmiş ses efektleri (kullanıcı üretimi; ücretli plan ticari kullanım
-hakkı verir), 2026-10-24, bkz. `audio/sfx/README.txt`. Kaynak 20 WAV (48 kHz stereo); oyunun kullandığı OGG'ler
+hakkı verir), 2026-10-24, bkz. `audio/sfx/README.txt`. Kaynak 21 WAV (48 kHz stereo); oyunun kullandığı OGG'ler
 `tools/audio/process_sfx.py` ile üretilir (mono, 44,1 kHz, kırpılmış, kimliğe göre LUFS, tepe <= -1 dBFS).
-`dry_fire` henüz yok (kullanıcıdan gelecek); gelene dek sessiz kalır.
+`dry_fire` (boş tetik) aynı kaynaktan sonradan eklendi.

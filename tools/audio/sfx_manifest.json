@@ -28,6 +28,6 @@
     {"id": "evolution_5", "target_lufs": -17.0, "max_s": 1.8},
     {"id": "evolution_6", "target_lufs": -17.0, "max_s": 1.8},
     {"id": "explosion", "target_lufs": -26.0, "max_s": 2.2},
-    {"id": "dry_fire", "target_lufs": -26.0, "max_s": 0.3}
+    {"id": "dry_fire", "target_lufs": -26.0, "max_s": 0.15}
   ]
 }
