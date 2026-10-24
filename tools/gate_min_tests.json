@@ -60,6 +60,7 @@
   "test/unit/test_art_loader.gd": 2,
   "test/unit/test_ash_ghost.gd": 9,
   "test/unit/test_audio_director.gd": 13,
+  "test/unit/test_audio_volume.gd": 17,
   "test/unit/test_bomb_pool.gd": 5,
   "test/unit/test_boss_safety.gd": 7,
   "test/unit/test_bounce_debug.gd": 3,

@@ -8,6 +8,7 @@ signal play_requested
 signal scores_requested
 signal characters_requested
 signal achievements_requested
+signal settings_requested
 signal sound_toggled(on: bool)
 signal vibration_toggled(on: bool)
 signal debug_stress_requested
@@ -22,6 +23,9 @@ const SUB_FONT := 26  # alt satır (seçili karakter adı, açılan/toplam)
 const NAME_MAX := 24  # sürüm satırındaki karakter adı (taşarsa "…")
 const DEFAULT_CHARACTER := "Gunslinger"
 const DEFAULT_ACH_TOTAL := 22
+const SETTINGS_W := 250.0
+const SETTINGS_H := 96.0
+const SETTINGS_TOP := 60.0
 const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
 
@@ -32,6 +36,8 @@ var scores_button: Button
 var characters_button: Button
 var achievements_button: Button
 var sound_button: Button
+## v2.0.1: AYARLAR (müzik/efekt kaydırıcıları); sağ üst köşede, düğme sütunu düzenine dahil değil.
+var settings_button: Button
 var vibration_button: Button
 var version_label: Label
 var emblem: Emblem
@@ -207,6 +213,16 @@ func _build() -> void:
 	col.add_child(version_label)
 	add_child(col)
 	_col = col
+	settings_button = UiKit.button("AYARLAR", &"secondary", SETTINGS_H)
+	settings_button.add_theme_font_size_override(&"font_size", 34)
+	settings_button.anchor_left = 1.0
+	settings_button.anchor_right = 1.0
+	settings_button.offset_left = -SETTINGS_W - UiKit.SIDE
+	settings_button.offset_right = -UiKit.SIDE
+	settings_button.offset_top = SETTINGS_TOP
+	settings_button.offset_bottom = SETTINGS_TOP + SETTINGS_H
+	settings_button.pressed.connect(func() -> void: settings_requested.emit())
+	add_child(settings_button)
 	set_settings(_sound_on, _vibration_on)
 	set_character_name(_char_name)
 	set_achievement_count(0, DEFAULT_ACH_TOTAL)

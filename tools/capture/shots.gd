@@ -3,7 +3,7 @@ extends SceneTree
 ##   xvfb-run -a -s "-screen 0 1080x2400x24" godot --path . --rendering-driver opengl3 --resolution 1080x2400 \
 ##     -s res://tools/capture/shots.gd -- <çıktı_dizini> [senaryo,senaryo]
 ## Senaryolar: menu, game, crowd, boss, lord, levelup, pause, win, lose, contrast, ruins, stress,
-##   names (i içeren beceri adları kartta), winc3 / winc0 (kombolu/kombosuz sonuç), ruinwalk (çarpışma daireleri + yürüyüş)
+##   settings_menu / settings_pause (ayarlar ekranı), names (i içeren beceri adları kartta), winc3 / winc0 (kombolu/kombosuz sonuç), ruinwalk (çarpışma daireleri + yürüyüş)
 
 var out_dir := "/tmp/shots/"
 var scenarios: PackedStringArray = ["menu", "game", "crowd"]
@@ -268,6 +268,19 @@ func _run() -> void:
 				c.pause_game()
 				await frames(10)
 				await shot("pause")
+			"settings_menu":
+				await frames(5)
+				c.open_settings()
+				await frames(10)
+				await shot("settings_menu")
+			"settings_pause":
+				await fresh()
+				advance(120)
+				c.pause_game()
+				await frames(5)
+				c.open_settings()
+				await frames(10)
+				await shot("settings_pause")
 			"win", "lose":
 				await fresh()
 				advance(60)

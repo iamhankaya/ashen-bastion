@@ -149,3 +149,12 @@ Bu bölüm v2.0 listesinin tek giriş noktasını tamamlar: yukarıdaki Genel/K/
 - **D-3 Başarım ödülü** — şu an yalnız kayıt; kilit açma (`unlock`) altyapısı var, hiçbir karakterde kullanılmıyor. Kilit kullanılacaksa hangi başarım hangi karakteri açsın?
 - **D-4 Başarım hedef kalibrasyonu ve denge** — bot verisi `docs/dev/v2.0-verification.md`'de; hedef/denge ayarı yapılmadı (v1.1 kararı: "denge şimdilik dursun").
 - **D-5 Açık görsel bulgular** — K-06, K-07 (asset düzeltmesi; kullanıcı/AI görseli gerekebilir), K-08 (v1.1 kökenli) ve Label'da bulunmayan başlık harf aralığı bilerek atlandı.
+
+### S — v2.0.1 ayarlar ekranı (T20261024-78; cihazda görülür)
+- **S-1 Kaydırıcı hissi** — ana menü sağ üst AYARLAR ve duraklatmadaki AYARLAR açılır; MÜZİK/EFEKT kaydırıcısını parmakla sürükle: tutamak parmağa takılıyor, %5 adımla atlıyor, yüzde etiketi akıyor, ses sürüklerken anında değişiyor; sürüklemede ekran/liste kaymıyor; tutamağın dışından (ray üstüne) dokunmak da yerleştiriyor.
+- **S-2 Efekt örneği** — EFEKT kaydırıcısını bırakınca bir atış sesi (`shot_right`) çalıyor; %0'da sessiz, müzik %0'da müzik tamamen kesik.
+- **S-3 Varsayılan karışım** — ilk açılışta müzik %100 / efekt %70: oyunda silah ve vuruş sesleri müziği bastırmıyor mu? Gerekirse varsayılanlar (`Settings.SFX_DEFAULT`) ayarlanır.
+- **S-4 Duraklatma/boss** — müzik %50 iken duraklat → müzik daha da kısılıyor, devam edince %50'ye dönüyor; boss uyarısında geçici kısılma kullanıcı seviyesinin üstüne biniyor (seviyeyi sıfırlamıyor).
+- **S-5 Kalıcılık ve hızlı sessiz** — uygulamayı kapat/aç: yüzdeler korunuyor. Menü/duraklatmadaki SES düğmesi tüm sesi kesip açıyor, kaydırıcı değerlerine dokunmuyor.
+- **S-6 Yerleşim** — ayarlar ekranı ve sağ üstteki AYARLAR düğmesi çentikli/dar cihazda kesilmiyor, başlık/etiketle çakışmıyor; geri tuşu ayarlardan önceki ekrana (menü/duraklatma) döndürüyor.
+

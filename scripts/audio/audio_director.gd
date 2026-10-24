@@ -202,16 +202,23 @@ func _process(delta: float) -> void:
 			_apply_bus_volume()
 
 
+## Duraklatma/duck payı Settings'e bildirilir; kanalın nihai dB'sini (kullanıcı seviyesi + pay) Settings hesaplar.
 func _apply_bus_volume() -> void:
-	var idx := AudioServer.get_bus_index(&"Music")
-	if idx >= 0:
-		AudioServer.set_bus_volume_db(idx, _bus_volume())
+	_push_extra(_bus_volume())
 
 
 func _reset_bus_volume() -> void:
-	var idx := AudioServer.get_bus_index(&"Music")
+	_push_extra(0.0)
+
+
+func _push_extra(db: float) -> void:
+	var st := get_node_or_null(^"/root/Settings") if is_inside_tree() else null
+	if st != null:
+		st.set_music_extra_db(db)
+		return
+	var idx := AudioServer.get_bus_index(&"Music")  # Settings yoksa (yalıtılmış kullanım): eski davranış
 	if idx >= 0:
-		AudioServer.set_bus_volume_db(idx, 0.0)
+		AudioServer.set_bus_volume_db(idx, db)
 
 
 func _on_boss_warning(_kind: StringName) -> void:
