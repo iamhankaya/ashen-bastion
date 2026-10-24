@@ -212,6 +212,8 @@ static func _copy_dir(src: String, dst: String) -> void:
 
 
 static func _remove_recursive(abs_path: String) -> void:
+	if not DirAccess.dir_exists_absolute(abs_path):
+		return
 	for f in DirAccess.get_files_at(abs_path):
 		DirAccess.remove_absolute(abs_path.path_join(f))
 	for d in DirAccess.get_directories_at(abs_path):

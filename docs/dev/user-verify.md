@@ -92,7 +92,13 @@ Her dilim yalnız kendi alt başlığına madde ekler (birleştirme çakışmas�
 41. **Geri tuşu** — (K/B ekranları gelince) Android geri tuşu Karakterler ve Başarımlar ekranından ana menüye döner; menüde çıkar.
 
 ### K — Karakterler
-(Karakter fazı ekler: vitrin ≤ 1,5 ms/kare, çentik düzeni, yer tutucu görsel tonu, 2× yazı boyutu.)
+- **K-1 Karakterler ekranı** — Ana menüden KARAKTERLER: portre nefes alıyor/yana sürükleniyor, kor parçacıkları yükseliyor; kenarlarda boşluk görünmüyor. Bilgi paneli (açıklama, başlangıç becerisi, 6 karo) taşmıyor.
+- **K-2 Seçim** — Karakter kartına dokun (ya da sahnede yatay kaydır): portre 260 ms'de yumuşak değişir. SEÇ'e bas: düğme "✓ SEÇİLİ" olur, kartta ✓ rozeti çıkar, ekrandan çıkılmaz; GERİ ile menüde KARAKTERLER alt satırı ve sürüm etiketi yeni adı yazar; OYNA o karakterle başlar (Barutçu: can 120, başlangıçta dinamit).
+- **K-3 Seviye atlama** — Seviye atlayınca üstte seçili karakterin adı ve altında "SEVİYE N" okunuyor (portre yüzünü örtmüyor); alt gradyan kartlara kadar karanlık.
+- **K-4 Çentik / güvenli alan** — Çentikli/yuvarlak köşeli cihazda başlık, SEÇ ve GERİ kesilmiyor; seviye atlama kartları alt çubuğa binmiyor.
+- **K-5 Yer tutucu görsel tonu** — Barutçu portresi Gunslinger'dan belirgin soluk/sepya tonda (yer tutucu); debug APK'da sağ üstte "YER TUTUCU" etiketi. Gerçek görsel gelince kalkacak.
+- **K-6 Performans** — Karakterler ekranı açıkken akıcılık (hedef ≤ 1,5 ms/kare vitrin); ekran kapanınca (menüye/koşuya) pil/ısı artışı yok (parçacıklar durur).
+- **K-7 2× yazı boyutu** — Sistem yazı boyutu 2× iken kart adları, SEÇ/KİLİTLİ ve GERİ metni taşmıyor.
 
 ### B — Başarımlar
 (Başarım fazı ekler: bildirimin kalabalık üstünde okunurluğu ve y 820'nin başparmakla örtüşmemesi, çentik düzeni.)

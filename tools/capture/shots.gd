@@ -246,6 +246,16 @@ func _run() -> void:
 				c.result_screen.finish_count()
 				await frames(10)
 				await shot(sc)
+			"chars", "chars_b", "chars_lock":
+				await _chars(sc)
+			"levelup_b":
+				root.get_node("Settings").character_id = "barutcu"
+				await fresh()
+				c.sim.debug_add_xp(30)
+				advance(5, Vector2.ZERO, false)
+				await frames(40)
+				await shot(sc)
+				root.get_node("Settings").character_id = ""
 			"levelup":
 				await fresh()
 				c.sim.debug_add_xp(30)
@@ -296,6 +306,27 @@ func _run() -> void:
 				await frames(3)
 				await shot("contrast")
 	quit()
+
+
+## v2.0 K2 öz-kontrolü: vitrin (gunslinger odak / barutcu odak / kilitli simülasyonu). Kayıt dosyasına yazmaz.
+func _chars(sc: String) -> void:
+	await fresh()
+	c.go_menu()
+	await frames(2)
+	c.open_characters()
+	await frames(30)
+	var scr: CharactersScreen = c.v2.characters.screen
+	if sc == "chars_b":
+		scr.set_focus_id(&"barutcu")
+		await frames(40)
+	elif sc == "chars_lock":
+		var d := GameData.load_default()
+		d.get_character(&"barutcu").unlock_achievement = &"ilk_kan"
+		scr.open(d, null, &"gunslinger")
+		scr.set_focus_id(&"barutcu")
+		await frames(40)
+		d.get_character(&"barutcu").unlock_achievement = &""
+	await shot(sc)
 
 
 ## v1.1 D1 görünüm öz-kontrolü: yürüme/vuruş/ölüm/kül/kalabalık gölgesi. Görünüm süresi `_update_views` ile ilerler.
