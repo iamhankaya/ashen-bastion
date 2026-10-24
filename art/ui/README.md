@@ -4,10 +4,10 @@ SVG ikonlar (`icons/`, 96×96) ve çerçeveler (`frames/`, 112×112). Stil kural
 
 | Dosya | Tür |
 |---|---|
-| `seken-mermi`, `yelpaze-atis`, `dinamit`, `son-mermi-patlar` | aktif beceri |
+| `seken-mermi`, `yelpaze-atis`, `son-mermi-patlar` | aktif beceri |
 | `barut-kesesi`, `hizli-doldurma`, `fazladan-mermi` | pasif beceri |
 | `zincirleme-patlama` | evrim (Seken Mermi + Barut Kesesi) |
-| `hud-can`, `hud-xp`, `hud-mermi`, `hud-oldurme`, `hud-sure`, `hud-duraklat` | HUD |
+| `hud-can`, `hud-xp`, `hud-mermi`, `hud-oldurme`, `hud-sure`, `hud-duraklat`, `hud-patlama` | HUD |
 | `frames/cerceve-aktif`, `cerceve-pasif`, `cerceve-evrim` | çerçeve |
 
 Bunlar stil temelidir; son çizimler aynı dosya adlarıyla değiştirilebilir.

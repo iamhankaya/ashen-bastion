@@ -1,6 +1,7 @@
 {
   "id": "sarapnel",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Şarapnel",
   "icon": "placeholder:sarapnel",
   "max_level": 5,

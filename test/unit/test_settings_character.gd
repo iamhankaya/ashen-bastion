@@ -57,31 +57,31 @@ func test_default_character_is_empty_and_store_path_is_default() -> void:
 
 func test_set_character_saves_and_load_restores() -> void:
 	var s := _settings()
-	s.set_character("barutcu")
-	assert_eq(s.character_id, "barutcu")
-	assert_eq(_read()["karakter"], "barutcu")
+	s.set_character("zyfen")
+	assert_eq(s.character_id, "zyfen")
+	assert_eq(_read()["karakter"], "zyfen")
 	var s2 := _settings()
 	s2.load_settings()
-	assert_eq(s2.character_id, "barutcu")
+	assert_eq(s2.character_id, "zyfen")
 
 
 func test_set_character_with_explicit_path_ignores_store_path() -> void:
 	var s: Node = autofree(SettingsScript.new())
-	s.set_character("barutcu", TMP)
-	assert_eq(_read()["karakter"], "barutcu")
+	s.set_character("zyfen", TMP)
+	assert_eq(_read()["karakter"], "zyfen")
 
 
 func test_set_sound_after_set_character_keeps_character() -> void:
 	var s := _settings()
-	s.set_character("barutcu")
+	s.set_character("zyfen")
 	s.set_sound(false)
 	var d := _read()
-	assert_eq(d["karakter"], "barutcu", "set_sound karakteri silmemeli")
+	assert_eq(d["karakter"], "zyfen", "set_sound karakteri silmemeli")
 	assert_eq(d["ses"], false)
 	s.set_vibration(false)
-	assert_eq(_read()["karakter"], "barutcu")
+	assert_eq(_read()["karakter"], "zyfen")
 	s.set_cull_fix(false)
-	assert_eq(_read()["karakter"], "barutcu")
+	assert_eq(_read()["karakter"], "zyfen")
 
 
 func test_old_file_without_character_key_loads_with_empty_character() -> void:
@@ -103,15 +103,15 @@ func test_wrong_typed_character_is_ignored() -> void:
 
 func test_missing_or_corrupt_file_keeps_current_character() -> void:
 	var s := _settings()
-	s.character_id = "barutcu"
+	s.character_id = "zyfen"
 	s.load_settings()  # dosya yok
-	assert_eq(s.character_id, "barutcu")
+	assert_eq(s.character_id, "zyfen")
 	_write("{bozuk json")
 	s.load_settings()
-	assert_eq(s.character_id, "barutcu")
+	assert_eq(s.character_id, "zyfen")
 	_write("[1,2]")
 	s.load_settings()
-	assert_eq(s.character_id, "barutcu")
+	assert_eq(s.character_id, "zyfen")
 
 
 func test_unknown_or_locked_id_is_stored_verbatim_and_fixed_at_resolve() -> void:
@@ -126,7 +126,7 @@ func test_unknown_or_locked_id_is_stored_verbatim_and_fixed_at_resolve() -> void
 
 func test_save_to_injected_path_never_touches_real_settings_file() -> void:
 	var s := _settings()
-	s.set_character("barutcu")
+	s.set_character("zyfen")
 	s.set_sound(true)
 	var now := (
 		FileAccess.get_md5("user://settings.cfg")
@@ -139,12 +139,12 @@ func test_save_to_injected_path_never_touches_real_settings_file() -> void:
 func test_set_character_emits_settings_changed() -> void:
 	var s := _settings()
 	watch_signals(Events)
-	s.set_character("barutcu")
+	s.set_character("zyfen")
 	assert_signal_emitted(Events, "settings_changed")
 
 
 func test_unwritable_path_does_not_crash() -> void:
 	var s: Node = autofree(SettingsScript.new())
-	s.set_character("barutcu", "user://yok_dizin_zz/alt/ayar.cfg")
-	assert_eq(s.character_id, "barutcu", "bellekte kalır")
+	s.set_character("zyfen", "user://yok_dizin_zz/alt/ayar.cfg")
+	assert_eq(s.character_id, "zyfen", "bellekte kalır")
 	assert_false(s.save_settings("user://yok_dizin_zz/alt/ayar.cfg"))

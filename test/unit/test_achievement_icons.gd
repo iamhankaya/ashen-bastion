@@ -21,8 +21,8 @@ func test_unknown_stat_and_null_give_empty() -> void:
 func test_explicit_icon_wins_when_it_exists_else_falls_back() -> void:
 	var d := AchievementDef.new()
 	d.stat = &"total_kills"
-	d.icon = "res://assets/ui/icons/dinamit.svg"
-	assert_eq(AchievementIcons.path_for(d), "res://assets/ui/icons/dinamit.svg")
+	d.icon = "res://assets/ui/icons/hud-patlama.svg"
+	assert_eq(AchievementIcons.path_for(d), "res://assets/ui/icons/hud-patlama.svg")
 	d.icon = "res://assets/ui/icons/yok.svg"
 	assert_eq(AchievementIcons.path_for(d), "res://assets/ui/icons/hud-oldurme.svg")
 

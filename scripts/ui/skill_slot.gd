@@ -12,6 +12,7 @@ var icon: Texture2D = null
 var badge_size: float = 26.0
 
 var _shown_kind: StringName = &"active"
+var _shown_icon_field: String = ""
 
 
 func _init(p_kind: StringName = &"active", p_size: float = 78.0) -> void:
@@ -26,8 +27,9 @@ func _init(p_kind: StringName = &"active", p_size: float = 78.0) -> void:
 ## Boş yuva için skill_id = &"".
 func set_skill(id: StringName, lvl: int, icon_field: String = "", evolved: bool = false) -> void:
 	var k := &"evolution" if evolved else kind
-	if id == skill_id and lvl == level and k == _shown_kind:
+	if id == skill_id and lvl == level and k == _shown_kind and icon_field == _shown_icon_field:
 		return
+	_shown_icon_field = icon_field
 	skill_id = id
 	level = lvl
 	_shown_kind = k

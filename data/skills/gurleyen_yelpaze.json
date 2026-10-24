@@ -1,6 +1,7 @@
 {
   "id": "gurleyen_yelpaze",
   "kind": "evolution",
+  "pool": "gunslinger",
   "name": "Gürleyen Yelpaze",
   "icon": "placeholder:gurleyen_yelpaze",
   "max_level": 1,

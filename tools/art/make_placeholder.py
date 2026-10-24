@@ -5,7 +5,7 @@ gerçek görsel gelince yalnız PNG (ve karakter JSON'undaki `rig` sayıları) d
 
 Kullanım:
   python tools/art/make_placeholder.py <kaynak.png> <hedef.png> [--sepia .55] [--hue -18] [--sat .75] [--val .92]
-  python tools/art/make_placeholder.py --barutcu          # gunslinger görsellerinden zyfen_{body,portrait}.png + barutcu_arm.png (yer tutucu)
+  python tools/art/make_placeholder.py --zyfen            # gunslinger görsellerinden zyfen_{body,portrait}.png (yer tutucu)
 
 Adımlar (sırayla): sepya karışımı -> ton kaydırma (derece) -> doygunluk çarpanı -> parlaklık çarpanı.
 Alfa kanalı aynen korunur; boyut ve mod değişmez. Çıktı kaynağa göre deterministiktir.
@@ -27,12 +27,10 @@ VAL_MULT = 0.92
 SEPIA_MATRIX = np.array(
     [[0.393, 0.769, 0.189], [0.349, 0.686, 0.168], [0.272, 0.534, 0.131]], dtype=np.float32
 )
-# --barutcu: (kaynak, hedef)
-BARUTCU = [
-    ("assets/gfx/char/gunslinger_body.png", "assets/gfx/char/zyfen_body.png"),
-    ("assets/gfx/char/gunslinger_arm.png", "assets/gfx/char/barutcu_arm.png"),
-    ("assets/ui/portre-seviye-atlama.png", "assets/gfx/char/zyfen_portrait.png"),
-]
+# --zyfen: (kaynak, hedef)
+# Emekli (v2.0.2 U2): zyfen_{body,portrait,strip}.png artık gerçek varlık (tools/art/make_zyfen_strip.py); yer tutucu
+# üretimi gerçek dosyaların üstüne yazmasın diye liste boş.
+ZYFEN: list[tuple[str, str]] = []
 
 
 def shift(
@@ -67,20 +65,20 @@ def convert(src: Path, dst: Path, **kw: float) -> None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("paths", nargs="*", help="<kaynak.png> <hedef.png>")
-    ap.add_argument("--barutcu", action="store_true", help="barutcu_{body,arm,portrait}.png üret")
+    ap.add_argument("--zyfen", action="store_true", help="zyfen_{body,portrait}.png üret")
     ap.add_argument("--sepia", type=float, default=SEPIA)
     ap.add_argument("--hue", type=float, default=HUE_DEG)
     ap.add_argument("--sat", type=float, default=SAT_MULT)
     ap.add_argument("--val", type=float, default=VAL_MULT)
     a = ap.parse_args(argv)
     kw = {"sepia": a.sepia, "hue_deg": a.hue, "sat": a.sat, "val": a.val}
-    if a.barutcu:
-        for s, d in BARUTCU:
+    if a.zyfen:
+        for s, d in ZYFEN:
             convert(ROOT / s, ROOT / d, **kw)
             print(f"{s} -> {d}")
         return 0
     if len(a.paths) != 2:
-        ap.error("kaynak ve hedef gerekli (ya da --barutcu)")
+        ap.error("kaynak ve hedef gerekli (ya da --zyfen)")
     convert(Path(a.paths[0]), Path(a.paths[1]), **kw)
     return 0
 

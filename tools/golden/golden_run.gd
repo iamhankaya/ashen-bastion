@@ -1,6 +1,6 @@
 extends SceneTree
 ## Altın hash üretici (gate dışı): godot --headless -s res://tools/golden/golden_run.gd -- --stage <anahtar>
-##   [--characters gunslinger,barutcu] [--seeds 11,23] [--steps 7200] [--zyfen-u3-grants] [--write]
+##   [--characters gunslinger,zyfen] [--seeds 11,23] [--steps 7200] [--zyfen-u3-grants] [--write]
 ## --zyfen-u3-grants: koşuya GoldenKit.ZYFEN_U3_GRANTS (Tufan'lı Zyfen yükü) verilir (aşama `zyfen_u3`).
 ## --write yoksa JSON'u yazdırır; varsa test/fixtures/golden_hashes.json içindeki o aşama anahtarını günceller.
 

@@ -57,14 +57,6 @@ const STATS: PackedStringArray = [
 const ELITE_KINDS: PackedStringArray = ["elit_piyade", "elit_sovalye", "elit_karga"]
 const NORMAL_ENEMY := &"curumus_piyade"
 
-const BARUTCU := {
-	"id": "barutcu",
-	"name": "Barutçu",
-	"max_hp": 120.0,
-	"mag_cap": 5,
-	"starting_skill": "dinamit",
-}
-
 
 static func row(id: String) -> Array:
 	for r in ACHIEVEMENTS:

@@ -7,7 +7,7 @@ extends RefCounted
 
 const U1_ACTIVES: Array[StringName] = [&"cift_tabanca", &"seken_mermi", &"son_mermi_patlar"]
 const U2_ACTIVES: Array[StringName] = [
-	&"yelpaze_atis", &"dinamit", &"doldurma_sacilmasi", &"sarapnel", &"keskin_nisan"
+	&"yelpaze_atis", &"doldurma_sacilmasi", &"sarapnel", &"keskin_nisan"
 ]
 const PASSIVES: Array[StringName] = [
 	&"barut_kesesi",
@@ -59,13 +59,6 @@ const ACTIVE_LEVELS := {
 		"cooldown": [4.0, 3.6, 3.2, 2.8, 2.4],
 		"pellets": [5, 6, 7, 8, 9],
 		"damage": [9, 10, 11, 12, 14],
-	},
-	&"dinamit":
-	{
-		"cooldown": [3.5, 3.2, 2.9, 2.6, 2.2],
-		"count": [1, 1, 2, 2, 3],
-		"damage": [60, 75, 90, 110, 135],
-		"radius": [130, 140, 150, 165, 180],
 	},
 	&"doldurma_sacilmasi":
 	{
