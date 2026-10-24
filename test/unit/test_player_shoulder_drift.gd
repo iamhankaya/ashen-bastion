@@ -5,6 +5,8 @@ extends GutTest
 
 const DT := 1.0 / 60.0
 const MAX_DRIFT := 6.0
+## Ölçüt (varsayım, bkz. rapor): kol pivotunun gövde eğimiyle (rig dönüşü) sim omzundan kayması; bob/squash gövdenin
+## bütün olarak hareketidir ve kayma sayılmaz. Gövde omzu ölçümü ise kolun gövdeye bağlı kaldığını ayrıca sınar.
 const STRIP := "user://test_shoulder_strip.png"
 const CELL := Vector2i(40, 80)
 
@@ -100,6 +102,36 @@ func test_walk_lean_pivots_about_the_hip_not_the_feet() -> void:
 		v._sim.step_count += 1
 		v.update_view(DT)
 	var h := PlayerView.body_size(v._sim.character.rig).y
-	var hip := Vector2(0.0, -0.45 * h)
+	var hip := Vector2(0.0, -PlayerView.HIP_FRAC * h)
 	var moved := v.rig_node.transform * hip - (hip + Vector2(0.0, h * 0.5 - v.anim.bob_px))
 	assert_lt(moved.length(), 0.01, "eğim bel noktasını yerinden oynatmaz (bob hariç)")
+
+
+## Rig dönüşünün kol pivotunu (rig yerelinde q) dönüşsüz konumundan ayırdığı uzaklık: |(R-I)(q-bel)|.
+func test_lean_drift_of_arm_pivot_is_at_most_6px_in_every_tier() -> void:
+	for t in PlayerAnim.BOUNCE_TIERS.size():
+		PlayerAnim.bounce_tier = t
+		for facing in [false, true]:
+			var v := _view()
+			v._sim.player_facing_left = facing
+			var h := PlayerView.body_size(v._sim.character.rig).y
+			var hip := Vector2(0.0, -PlayerView.HIP_FRAC * h)
+			var worst := 0.0
+			for i in 150:
+				v._sim.player_pos += Vector2(-5.0 if facing else 5.0, 0.0)
+				v._sim.step_count += 1
+				v.update_view(DT)
+				if i < 30:
+					continue
+				for g in 2:
+					var q: Vector2 = (v.near_arm if g == 0 else v.far_arm).position - hip
+					worst = maxf(worst, (q.rotated(v.rig_node.rotation) - q).length())
+			assert_lte(worst, MAX_DRIFT, "kademe %d sol=%s: %.2f px" % [t, facing, worst])
+
+
+func test_standing_has_no_lean_drift() -> void:
+	var v := _view()
+	for i in 10:
+		v.update_view(DT)
+	assert_eq(v.rig_node.rotation, 0.0)
+	assert_almost_eq(v.rig_node.position.x, 0.0, 0.001)
