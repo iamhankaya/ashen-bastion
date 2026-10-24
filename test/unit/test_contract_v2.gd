@@ -284,6 +284,22 @@ func test_store_io_int_of_matches_highscores_rules() -> void:
 		)
 
 
+func test_b_bodies_are_real_not_stubs() -> void:
+	# B1/B2 sonrası depo/izleyici/ilerleme gövdeleri iskelet değil: Stub.todo kaydı bırakmaz.
+	Stub.reset()
+	var path := "user://test_ach_contract_never_written.json"
+	var s := AchievementStore.new("user://yok_klasor_ach/x.json")
+	s.unlock(&"a", 1)
+	s.save()
+	s.load_file()
+	var tr := AchievementTracker.new(GameData.new(), s, &"gunslinger")
+	tr.attach(SimBus.new())
+	tr.finish(false, {})
+	AchievementProgress.of(null, s)
+	assert_eq(Stub.calls().size(), 0, "iskelet gövde kalmadı: %s" % [Stub.calls()])
+	assert_false(FileAccess.file_exists(path))
+
+
 func test_achievement_def_from_dict_tolerates_wrong_types() -> void:
 	var a := AchievementDef.from_dict({"id": 5, "name": [], "target": "x", "stat": null, "tier": 1})
 	assert_eq(a.id, &"")
