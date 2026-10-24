@@ -17,6 +17,9 @@ const ESCAPE_W := 300.0
 const ESCAPE_TAP_X := 880.0
 const TAP_W := 150.0
 const TAP_GROUP := &"debug_tap"
+const BOUNCE_X := 570.0
+const BOUNCE_Y := 46.0
+const BOUNCE_W := 400.0
 
 
 static func build_render(parent: Node, on_input: Callable) -> Label:
@@ -25,6 +28,21 @@ static func build_render(parent: Node, on_input: Callable) -> Label:
 
 static func build_escape(parent: Node, on_input: Callable) -> Label:
 	return _build(parent, &"EscapeDebug", [ESCAPE_X, ESCAPE_W, ESCAPE_TAP_X], on_input)
+
+
+## Sekme kademesi etiketi (v1.1.1): ikinci satır; kendisi dokunma alanıdır (TAP_GROUP dışında).
+static func build_bounce(parent: Node, on_input: Callable) -> Label:
+	var label := Label.new()
+	label.name = &"BounceDebug"
+	label.position = Vector2(BOUNCE_X, BOUNCE_Y)
+	label.size = Vector2(BOUNCE_W, H)
+	label.clip_text = true
+	_style(label)
+	label.mouse_filter = Control.MOUSE_FILTER_STOP
+	label.gui_input.connect(on_input)
+	label.visible = false
+	parent.add_child(label)
+	return label
 
 
 static func _build(parent: Node, label_name: StringName, xs: Array, on_input: Callable) -> Label:

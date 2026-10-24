@@ -49,6 +49,7 @@ var enemy_shadows: EnemyShadowLayer
 var ghosts: AshGhostRenderer
 var _pickup_sim: GameSim = null
 var _escape_label: Label = null
+var _bounce_label: Label = null
 
 var audio: AudioDirector
 ## D1: vuruş donması (sim adımlanmaz, _accum artmaz), Lord ölümü yavaş çekimi ve ardışık patlamaları.
@@ -577,8 +578,11 @@ func _v11_bind_pickups(new_sim: GameSim) -> void:
 	_pickup_sim = new_sim
 	pickup_renderer.bind(new_sim)
 	_v11_build_escape_debug()
+	_bounce_label = BounceDebug.ensure(_bounce_label, ui, BounceDebug.on_input)
 	if _escape_label != null and new_sim == null:
 		_escape_label.visible = false
+	if _bounce_label != null and new_sim == null:
+		_bounce_label.visible = false
 	if new_sim != null:
 		new_sim.bus.pickup_collected.connect(_on_pickup_collected)
 		new_sim.bus.bomb_exploded.connect(_on_bomb_exploded)
@@ -630,6 +634,9 @@ func _v11_update_pickups(view_dt: float) -> void:
 	if pickup_renderer != null:
 		pickup_renderer.refresh(view_dt)
 	_v11_update_escape_debug()
+	BounceDebug.sync(
+		_bounce_label, sim != null and screen in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED]
+	)
 
 
 ## F-ashen-bastion-021 (yalnız debug derleme): çıkmaz kaçışı AÇIK/KAPALI etiketi + sayaç; dokunmak bayrağı çevirir

@@ -132,30 +132,44 @@ func _bob_series(a: PlayerAnim, speed: float, secs: float) -> Array[float]:
 	return out
 
 
-func test_a2_procedural_bob_peaks_at_9_px() -> void:
+## v1.1.1 (test itirazı onaylandı, VLAD): bob genliği v1.1'in 9 px'inden %50 azaltıldı; beklenen değer tek ayar yerinden okunur.
+func _tier() -> Dictionary:
+	return PlayerAnim.BOUNCE_TIERS[PlayerAnim.BOUNCE_TIER_DEFAULT]
+
+
+func test_a2_procedural_bob_peaks_at_tier_bob_px() -> void:
 	if V11Slice.require(self, "D1"):
 		return
 	var s := _bob_series(_anim(), FAST, 3.0)
-	assert_almost_eq(s.max(), 9.0, 0.6, "tepe bob 9 px")
+	assert_almost_eq(s.max(), float(_tier()["bob"]), 0.3, "tepe bob = kademe bob'u (4,5 px)")
 
 
-func test_a2_bob_frequency_scales_with_speed_between_half_and_full() -> void:
+func test_a2_bob_phase_follows_distance_travelled_over_stride() -> void:
 	if V11Slice.require(self, "D1"):
 		return
+	# v1.1.1: faz = katedilen yol / rig stride (136 px); düşük hızda bob adım temposundan kopmaz.
+	var stride := float(_rig()["walk"]["stride"])
+	for speed in [30.0, 150.0, FAST, 600.0]:
+		var a := _anim()
+		_run(a, 0.2, Vector2(speed, 0))
+		var total := 0.0
+		var prev := a.walk_phase
+		for i in int(round(1.0 / DT)):
+			a.update(DT, Vector2(speed, 0), false, -1.0)
+			total += fposmod(a.walk_phase - prev, 1.0)
+			prev = a.walk_phase
+		assert_almost_eq(
+			total, speed / stride, 0.03, "%.0f px/sn: çevrim/sn = hız / stride" % speed
+		)
 	var secs := 4.0
-	var base_series := _bob_series(_anim(), FAST, secs)
-	var base := _rate(base_series, 4.5, secs)
-	assert_gt(base, 1.5, "ölçülebilir bob hızı")
+	var thr := 0.5 * float(_tier()["bob"])
+	var base := _rate(_bob_series(_anim(), FAST, secs), thr, secs)
 	assert_true(
-		absf(base - 2.2) < 0.2 or absf(base - 4.4) < 0.4,
-		"300 px/sn: 2,2 Hz (ya da |sin| ile 4,4 tepe/sn): %.2f" % base
+		absf(base - 2.2) < 0.3 or absf(base - 4.4) < 0.5,
+		"300 px/sn: ~2,2 Hz (ya da |sin| ile 4,4 tepe/sn): %.2f" % base
 	)
-	var half := _rate(_bob_series(_anim(), 150.0, secs), 4.5, secs)
-	assert_almost_eq(half / base, 0.5, 0.06, "150 px/sn: frekans yarıya iner")
-	var low := _rate(_bob_series(_anim(), 30.0, secs), 4.5, secs)
-	assert_almost_eq(low / base, 0.5, 0.06, "çok yavaş: alt sınır 0,5")
-	var fast := _rate(_bob_series(_anim(), 600.0, secs), 4.5, secs)
-	assert_almost_eq(fast / base, 1.0, 0.06, "300 üstü: üst sınır 1")
+	var half := _rate(_bob_series(_anim(), 150.0, secs), thr, secs)
+	assert_almost_eq(half / base, 0.5, 0.08, "150 px/sn: frekans yarıya iner")
 
 
 func test_a2_frame_mode_has_no_procedural_bob_or_walk_squash() -> void:
@@ -197,17 +211,20 @@ func _mean_lean(a: PlayerAnim, vx: float, warm: float, secs: float) -> float:
 	return acc[0] / float(acc[1])
 
 
-func test_a3_lean_is_6_degrees_at_full_speed_signed_and_clamped() -> void:
+func test_a3_lean_is_tier_lean_at_full_speed_signed_and_clamped() -> void:
 	if V11Slice.require(self, "D1"):
 		return
+	# v1.1.1 (test itirazı onaylandı, VLAD): eğim tavanı kademeden (4°; eski 6°).
+	var lean := float(_tier()["lean"])
+	assert_lte(lean + float(_tier()["wobble"]), 5.0, "gövde eğimi <= 5 derece")
 	assert_almost_eq(
-		rad_to_deg(_mean_lean(_anim(), FAST, 0.6, 2.0)), 6.0, 0.7, "300 px/sn: 6 derece"
+		rad_to_deg(_mean_lean(_anim(), FAST, 0.6, 2.0)), lean, 0.7, "300 px/sn: kademe eğimi"
 	)
-	assert_almost_eq(rad_to_deg(_mean_lean(_anim(), -FAST, 0.6, 2.0)), -6.0, 0.7, "sola: -6 derece")
+	assert_almost_eq(rad_to_deg(_mean_lean(_anim(), -FAST, 0.6, 2.0)), -lean, 0.7, "sola: işaretli")
 	assert_almost_eq(
-		rad_to_deg(_mean_lean(_anim(), 150.0, 0.6, 2.0)), 3.0, 0.7, "yarı hız: 3 derece"
+		rad_to_deg(_mean_lean(_anim(), 150.0, 0.6, 2.0)), lean * 0.5, 0.7, "yarı hız: yarısı"
 	)
-	assert_almost_eq(rad_to_deg(_mean_lean(_anim(), 700.0, 0.6, 2.0)), 6.0, 0.7, "tavan 6 derece")
+	assert_almost_eq(rad_to_deg(_mean_lean(_anim(), 700.0, 0.6, 2.0)), lean, 0.7, "tavan")
 
 
 func test_a3_lean_reaches_90_percent_by_120_ms() -> void:
@@ -235,11 +252,14 @@ func test_a3_lean_reaches_90_percent_by_120_ms() -> void:
 	)
 
 
-func test_a3_frame_mode_lean_is_3_6_degrees() -> void:
+func test_a3_frame_mode_lean_is_60_percent_of_tier_lean() -> void:
 	if V11Slice.require(self, "D1") or V11Slice.require(self, "D4"):
 		return
 	assert_almost_eq(
-		rad_to_deg(_mean_lean(_anim(6), FAST, 0.6, 2.0)), 3.6, 0.5, "kare modu: %60 = 3,6 derece"
+		rad_to_deg(_mean_lean(_anim(6), FAST, 0.6, 2.0)),
+		0.6 * float(_tier()["lean"]),
+		0.5,
+		"kare modu: kademe eğiminin %60'ı"
 	)
 
 
@@ -375,17 +395,19 @@ func test_a5_rapid_fire_is_capped_at_1_25x_and_restarts_the_timer() -> void:
 # --- A6: doldurma --------------------------------------------------------------------------------------------
 
 
-func test_a6_reload_phase_one_pulls_both_arms_down_to_70_degrees() -> void:
+## v1.1.1 (test itirazı onaylandı, VLAD): doldurma aim'e göreli küçük kaldırma + titreme; hiçbir karede aim'den >30°,
+## kare başına >25° sapmaz (v1.1: 70° iniş, ±10° titreme, +6° aşma kullanıcı kaydında "kollar rastgele sallanıyor" idi).
+func test_a6_reload_phase_one_lifts_both_arms_about_14_degrees() -> void:
 	if V11Slice.require(self, "D1"):
 		return
 	var a := _anim()
 	_run(a, 0.5)
 	_run(a, 0.4, Vector2.ZERO, false, 0.12)
 	for g in [0, 1]:
-		assert_almost_eq(rad_to_deg(absf(a.arm_rot[g])), 70.0, 4.0, "%%12: kol %d 70 derece" % g)
+		assert_almost_eq(rad_to_deg(a.arm_rot[g]), 14.0, 2.0, "%%12: kol %d ~14 derece kalkık" % g)
 
 
-func test_a6_reload_phase_two_trembles_8_hz_plus_minus_10_degrees_body_sy_097() -> void:
+func test_a6_reload_phase_two_trembles_8_hz_plus_minus_4_degrees_body_sy_097() -> void:
 	if V11Slice.require(self, "D1"):
 		return
 	var a := _anim()
@@ -412,7 +434,7 @@ func test_a6_reload_phase_two_trembles_8_hz_plus_minus_10_degrees_body_sy_097() 
 		hi = maxf(hi, vals[i])
 		if i > 0 and (vals[i - 1] - mean) * (vals[i] - mean) < 0.0:
 			crossings += 1
-	assert_almost_eq((hi - lo) * 0.5, 10.0, 2.0, "titreme genliği +-10 derece")
+	assert_almost_eq((hi - lo) * 0.5, 4.0, 1.5, "titreme genliği +-4 derece")
 	var secs := 0.58
 	assert_almost_eq(
 		float(crossings) / 2.0 / secs,
@@ -420,27 +442,53 @@ func test_a6_reload_phase_two_trembles_8_hz_plus_minus_10_degrees_body_sy_097() 
 		1.2,
 		"titreme 8 Hz (%d geçiş / %.2f sn)" % [crossings, secs]
 	)
-	assert_almost_eq(abs(mean), 70.0, 4.0, "titreme 70 derece indirilmiş kol etrafında")
+	assert_almost_eq(mean, 14.0, 2.0, "titreme 14 derece kalkık kol etrafında")
 	assert_almost_eq(sy_acc[0] / float(sy_acc[1]), 0.97, 0.015, "gövde sy 0,97")
 
 
-func test_a6_reload_phase_three_overshoots_about_6_degrees_then_settles() -> void:
+func test_a6_reload_phase_three_overshoots_about_3_degrees_then_settles() -> void:
 	if V11Slice.require(self, "D1"):
 		return
 	var a := _anim()
 	_run(a, 0.5)
 	_run(a, 0.3, Vector2.ZERO, false, 0.4)
-	var down_sign := signf(a.arm_rot[0])
-	assert_ne(down_sign, 0.0)
-	var over := 0.0  # aim'in ötesine geçen en büyük sapma (derece)
+	var lift_sign := signf(a.arm_rot[0])
+	assert_ne(lift_sign, 0.0)
+	var over := 0.0  # aim'in öte yanına geçen en büyük sapma (derece)
 	var p := 0.8
 	while p <= 1.0:
 		a.update(DT * 6.0, Vector2.ZERO, false, p)
-		over = maxf(over, -rad_to_deg(a.arm_rot[0]) * down_sign)
+		over = maxf(over, -rad_to_deg(a.arm_rot[0]) * lift_sign)
 		p += 0.002
 	_run(a, 0.4)
-	assert_almost_eq(over, 6.0, 2.5, "%%80-100: +6 derece aşma")
+	assert_almost_eq(over, 3.0, 1.5, "%%80-100: ~3 derece aşma")
 	assert_lt(rad_to_deg(absf(a.arm_rot[0])), 1.6, "doldurma bitince kol aim'de (nefes payı)")
+
+
+func test_a6_reload_stays_within_30_degrees_and_25_per_frame_at_24fps_with_easing() -> void:
+	if V11Slice.require(self, "D1"):
+		return
+	var a := _anim()
+	_run(a, 0.5)
+	var dt24 := 1.0 / 24.0
+	var worst := 0.0
+	var worst_step := 0.0
+	var prev := [0.0, 0.0]
+	var t_full := -1.0
+	var p := 0.0
+	while p <= 1.0:
+		a.update(dt24, Vector2.ZERO, false, p)
+		for g in 2:
+			var deg := rad_to_deg(a.arm_rot[g])
+			worst = maxf(worst, absf(deg))
+			worst_step = maxf(worst_step, absf(deg - prev[g]))
+			prev[g] = deg
+		if t_full < 0.0 and absf(rad_to_deg(a.arm_rot[0])) >= 0.9 * 14.0:
+			t_full = p
+		p += dt24  # 1 sn doldurma
+	assert_lte(worst, 30.0, "hiçbir karede aim'den >30 derece sapmaz")
+	assert_lte(worst_step, 25.0, "kare başına açı değişimi <= 25 derece")
+	assert_gte(t_full, 0.08, "giriş easing >= 80 ms")
 
 
 # --- A7-A10: hasar, ölüm, seviye, yanıp sönme ------------------------------------------------------------------
@@ -824,7 +872,7 @@ func test_a24_frames_zero_runs_procedural_fallback_without_errors() -> void:
 		-1.0,
 		func(_t: float) -> void: st["bob"] = maxf(st["bob"], absf(a.bob_px))
 	)
-	assert_gt(st["bob"], 5.0, "kare yok: prosedürel bob çalışır")
+	assert_gt(st["bob"], 0.6 * float(_tier()["bob"]), "kare yok: prosedürel bob çalışır")
 	assert_eq(a.frame_b, 0, "kare seçimi kullanılmaz")
 	assert_almost_eq(a.frame_mix, 0.0, 1e-4)
 

@@ -15,15 +15,40 @@ const MAX_SPEED := 300.0
 const BREATH_PERIOD := 2.4
 const BREATH_SY := 0.015
 const BREATH_ARM := 1.5  # derece
-const BOB_PX := 9.0
-const BOB_HZ := 2.2
-const SQUASH_CONTACT := Vector2(1.05, 0.93)
-const SQUASH_AIR := Vector2(0.97, 1.04)
+## Sekme/squash/eğim kademeleri (v1.1.1): TEK ayar yeri. Cihaz geri bildirimiyle burası ayarlanır; debug APK'da etiket
+## kademeyi değiştirir. bob = tepe px, contact = temas squash (sx, sy), air = havada gerilme (sx, sy), lean = tepe eğim °, wobble = adım sallanması °
+## (lean + wobble = gövde eğimi tavanı; YUMUŞAK <= 5°).
+const BOUNCE_TIERS := [
+	{
+		"name": "ESKİ v1.1",
+		"bob": 9.0,
+		"contact": Vector2(1.05, 0.93),
+		"air": Vector2(0.97, 1.04),
+		"lean": 6.0,
+		"wobble": 2.0
+	},
+	{
+		"name": "YUMUŞAK",
+		"bob": 4.5,
+		"contact": Vector2(1.03, 0.96),
+		"air": Vector2(0.985, 1.02),
+		"lean": 4.0,
+		"wobble": 1.0
+	},
+	{
+		"name": "SAKİN",
+		"bob": 2.5,
+		"contact": Vector2(1.015, 0.98),
+		"air": Vector2(0.992, 1.01),
+		"lean": 3.0,
+		"wobble": 0.7
+	},
+]
+const BOUNCE_TIER_DEFAULT := 1
+const BOB_PX := 4.5  # varsayılan kademenin bob'u (üst sınır karşılaştırmaları için)
 const CONTACT_TIME := 0.06
-const LEAN_DEG := 6.0
 const LEAN_FRAME_SCALE := 0.6
 const LEAN_TAU := 0.04  # 120 ms'de %95
-const WOBBLE_DEG := 2.0
 const TURN_MIN := 0.25
 const TURN_HYSTERESIS_PX := 8.0
 const RECOIL_ARM_DEG := 8.0
@@ -33,10 +58,17 @@ const RECOIL_BODY_DEG := 1.2
 const RECOIL_BODY_PX := 2.0
 const RECOIL_CAP := 1.25
 const RECOIL_OVERSHOOT := 0.37
-const RELOAD_ARM_DEG := 70.0
-const RELOAD_SHAKE_DEG := 10.0
+## Doldurma: aim'e GÖRELİ küçük kaldırma + titreme (v1.1.1; hiçbir karede aim'den >30° sapmaz). Giriş %0-12, çıkış %80-100
+## (1 sn doldurmada 120/200 ms easing).
+const RELOAD_ARM_DEG := 14.0
+const RELOAD_SHAKE_DEG := 4.0
 const RELOAD_SHAKE_HZ := 8.0
-const RELOAD_OVERSHOOT_DEG := 6.0
+const RELOAD_OVERSHOOT_DEG := 3.0
+## Kol aim takibi: gösterilen açı sim aim'ine yumuşak yaklaşır (tek karede sıçrama yok); 24 fps'te kare başına <=15°.
+const AIM_TAU := 0.05
+const AIM_MAX_RATE_DEG := 360.0
+## Hedefsiz bu kadar sn sonra kollar bakış yönündeki bekleme pozuna döner.
+const AIM_REST_HOLD := 0.4
 const RELOAD_SY := 0.97
 const HIT_KNOCK_PX := 8.0
 const HIT_SQ := 0.10
@@ -78,6 +110,8 @@ var scarf_amp: float = SCARF_IDLE
 ## Kol dönüşü (rad): geri tepme/doldurma/ölümün aim'e eklenen kısmı; + = namlu yukarı (dikey ayna PlayerView'da).
 var arm_rot := PackedFloat32Array([0.0, 0.0])
 var arm_back := PackedFloat32Array([0.0, 0.0])
+## Gösterilen kol hedef açısı (dünya, rad): `track_aim` ile sim aim'ine yumuşak yaklaşır.
+var aim_cur := PackedFloat32Array([0.0, 0.0])
 var arm_len := PackedFloat32Array([1.0, 1.0])
 ## Hasar itmesi (px) ve yönü (saldırganın tersi, birim vektör).
 var knock_px: float = 0.0
@@ -98,6 +132,11 @@ var aura_mask: int = 0
 ## Bilinmiyorsa (varsayılan çok büyük) her değişim kabul edilir.
 var facing_margin_px: float = 1.0e9
 
+## Seçili sekme kademesi (BOUNCE_TIERS indeksi); debug APK etiketi değiştirir.
+static var bounce_tier: int = BOUNCE_TIER_DEFAULT
+
+var _aim_seen: bool = false
+var _no_target_t := PackedFloat32Array([0.0, 0.0])
 var _frames: int = 0
 var _stride: float = 136.0
 var _t: float = 0.0
@@ -161,6 +200,9 @@ func reset() -> void:
 	arm_rot.fill(0.0)
 	arm_back.fill(0.0)
 	arm_len.fill(1.0)
+	aim_cur.fill(0.0)
+	_aim_seen = false
+	_no_target_t.fill(0.0)
 	knock_px = 0.0
 	knock_dir = Vector2.ZERO
 	body_rot = 0.0
@@ -207,6 +249,43 @@ func update(dt: float, vel: Vector2, facing_left: bool, reload_progress: float) 
 	_update_facing(dt, facing_left)
 	_update_walk(dt, vel)
 	_update_layers(dt, vel, reload_progress)
+
+
+## Kol aim takibi. aims = sim'in dünya aim açıları, has_target[g] = o tabancanın hedefi var mı. Hedefsiz AIM_REST_HOLD sn
+## sonra hedef = bakış yönü (0 / PI). Gösterilen açı üstel yaklaşır, hız AIM_MAX_RATE_DEG ile sınırlı; ilk çağrı yakalar.
+func track_aim(
+	dt: float, aims: PackedFloat32Array, has_target: PackedByteArray, facing_left: bool
+) -> void:
+	var rest := PI if facing_left else 0.0
+	for g in 2:
+		var want := aims[g]
+		if has_target[g] != 0:
+			_no_target_t[g] = 0.0
+		else:
+			_no_target_t[g] += maxf(dt, 0.0)
+			if _no_target_t[g] >= AIM_REST_HOLD:
+				want = rest
+		if not _aim_seen:
+			aim_cur[g] = want
+			continue
+		if dt <= 0.0:
+			continue
+		var diff := _aim_diff(aim_cur[g], want)
+		var step := diff * (1.0 - exp(-dt / AIM_TAU))
+		var cap := deg_to_rad(AIM_MAX_RATE_DEG) * dt
+		aim_cur[g] = wrapf(aim_cur[g] + clampf(step, -cap, cap), -PI, PI)
+	_aim_seen = true
+
+
+## Kol açı farkı: en kısa yol; ~180° dönüşlerde (hedef sağdan sola, yön değiştirme) kol kafanın üstünden değil AŞAĞIDAN
+## (+90°, ekranda aşağı) geçer — silah savurma değil indirip kaldırma gibi görünür.
+static func _aim_diff(from: float, to: float) -> float:
+	var d := angle_difference(from, to)
+	if absf(d) < deg_to_rad(150.0):
+		return d
+	var ccw := wrapf(to - from, 0.0, TAU)
+	var down_in_ccw := wrapf(PI * 0.5 - from, 0.0, TAU) <= ccw
+	return ccw if down_in_ccw else ccw - TAU
 
 
 func on_shot(gun: int) -> void:
@@ -343,7 +422,10 @@ func _update_walk(dt: float, vel: Vector2) -> void:
 			frame_b = frame_a
 			frame_mix = 0.0
 		else:
-			_phase = fposmod(_phase + BOB_HZ * clampf(speed / MAX_SPEED, 0.5, 1.0) * dt, 1.0)
+			# v1.1.1: faz = katedilen yol / stride (kare modundaki gibi); düşük hızda bob adım temposundan kopmaz
+			var dist_p := speed * dt
+			if dist_p <= 60.0:  # ışınlanma yok sayılır
+				_phase = WalkCycle.advance(_phase, dist_p, _stride)
 			frame_a = 0
 			frame_b = 0
 			frame_mix = 0.0
@@ -385,7 +467,8 @@ func _update_layers(dt: float, vel: Vector2, reload_progress: float) -> void:
 
 
 func _update_body(dt: float, vel: Vector2, walking: bool, framed: bool, speed_f: float) -> void:
-	var lean_target := deg_to_rad(LEAN_DEG) * clampf(vel.x / MAX_SPEED, -1.0, 1.0)
+	var tier: Dictionary = BOUNCE_TIERS[clampi(bounce_tier, 0, BOUNCE_TIERS.size() - 1)]
+	var lean_target := deg_to_rad(float(tier["lean"])) * clampf(vel.x / MAX_SPEED, -1.0, 1.0)
 	if framed:
 		lean_target *= LEAN_FRAME_SCALE
 	lean += (lean_target - lean) * (1.0 - exp(-dt / LEAN_TAU))
@@ -395,19 +478,19 @@ func _update_body(dt: float, vel: Vector2, walking: bool, framed: bool, speed_f:
 	sy = 1.0
 	if walking and not framed:
 		var h := pow(absf(sin(TAU * _phase)), 0.8)
-		bob_px = BOB_PX * h
+		bob_px = float(tier["bob"]) * h
 		# temas: |sin| sıfıra inen an; 60 ms squash, havada geriye doğru gerilme
 		if _prev_h > 0.15 and h <= 0.15:
 			_contact_left = CONTACT_TIME
 		_prev_h = h
 		if _contact_left > 0.0:
 			_contact_left = maxf(0.0, _contact_left - dt)
-			sx = SQUASH_CONTACT.x
-			sy = SQUASH_CONTACT.y
+			sx = (tier["contact"] as Vector2).x
+			sy = (tier["contact"] as Vector2).y
 		else:
-			sx = lerpf(1.0, SQUASH_AIR.x, h)
-			sy = lerpf(1.0, SQUASH_AIR.y, h)
-		wobble = deg_to_rad(WOBBLE_DEG) * sin(TAU * _phase) * speed_f
+			sx = lerpf(1.0, (tier["air"] as Vector2).x, h)
+			sy = lerpf(1.0, (tier["air"] as Vector2).y, h)
+		wobble = deg_to_rad(float(tier["wobble"])) * sin(TAU * _phase) * speed_f
 	elif not walking:
 		var b := 0.5 - 0.5 * cos(TAU * _t / BREATH_PERIOD)
 		sy = 1.0 + BREATH_SY * b
@@ -452,22 +535,22 @@ func _apply_reload(p: float) -> void:
 	if p < 0.0:
 		return
 	p = clampf(p, 0.0, 1.0)
-	var down := deg_to_rad(RELOAD_ARM_DEG)
+	var lift := deg_to_rad(RELOAD_ARM_DEG)  # + = namlu yukarı (aim'e göreli)
 	var r := 0.0
 	if p < 0.12:
 		var u := p / 0.12
-		r = -down * u * u  # quad-in
+		r = lift * u * u  # quad-in
 	elif p < 0.8:
-		r = -down
+		r = lift
 		if p < 0.7:
 			# süre ~ ilerleme × 1 sn (doldurma süresi 1 sn): 8 Hz titreme
 			r += deg_to_rad(RELOAD_SHAKE_DEG) * sin(TAU * RELOAD_SHAKE_HZ * (p - 0.12))
 	else:
 		var s := (p - 0.8) / 0.2
-		var over := deg_to_rad(RELOAD_OVERSHOOT_DEG)
+		var over := -deg_to_rad(RELOAD_OVERSHOOT_DEG)  # aim'in diğer yanına küçük aşma
 		if s < 0.6:
 			var e := 1.0 - pow(1.0 - s / 0.6, 3.0)  # cubic-out
-			r = lerpf(-down, over, e)
+			r = lerpf(lift, over, e)
 		else:
 			var e2 := (s - 0.6) / 0.4
 			r = lerpf(over, 0.0, e2 * e2 * (3.0 - 2.0 * e2))
