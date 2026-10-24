@@ -32,6 +32,8 @@ func apply_safe_areas(extra: Variant = null) -> void:
 	for screen in [_hud, _level_up, _pause]:
 		if screen != null and is_instance_valid(screen) and screen.has_method(&"apply_safe_area"):
 			screen.call(&"apply_safe_area", extra)
+	if OS.is_debug_build():
+		DebugLabels.apply_safe_area(_ui_root, extra)
 
 
 func release() -> void:

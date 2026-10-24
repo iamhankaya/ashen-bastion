@@ -17,6 +17,7 @@ const ESCAPE_W := 280.0
 const ESCAPE_TAP_X := 742.0
 const TAP_W := 130.0
 const TAP_GROUP := &"debug_tap"
+const LABEL_GROUP := &"debug_label"
 const BOUNCE_X := 878.0
 const BOUNCE_W := 166.0
 
@@ -34,7 +35,8 @@ static func build_escape(parent: Node, on_input: Callable) -> Label:
 static func build_bounce(parent: Node, on_input: Callable) -> Label:
 	var label := Label.new()
 	label.name = &"BounceDebug"
-	label.position = Vector2(BOUNCE_X, Y)
+	label.position = Vector2(BOUNCE_X, Y + top_extra())
+	label.add_to_group(LABEL_GROUP)
 	label.size = Vector2(BOUNCE_W, H)
 	label.max_lines_visible = 1
 	label.clip_text = true
@@ -54,7 +56,8 @@ static func build_bounce(parent: Node, on_input: Callable) -> Label:
 static func _build(parent: Node, label_name: StringName, xs: Array, on_input: Callable) -> Label:
 	var label := Label.new()
 	label.name = label_name
-	label.position = Vector2(xs[0], Y)
+	label.position = Vector2(xs[0], Y + top_extra())
+	label.add_to_group(LABEL_GROUP)
 	label.size = Vector2(xs[1], H)
 	label.max_lines_visible = 1
 	label.clip_text = true
@@ -64,7 +67,7 @@ static func _build(parent: Node, label_name: StringName, xs: Array, on_input: Ca
 	parent.add_child(label)
 	var tap := Label.new()
 	tap.name = StringName(str(label_name) + "Tap")
-	tap.position = Vector2(xs[2], Y)
+	tap.position = Vector2(xs[2], Y + top_extra())
 	tap.size = Vector2(TAP_W, H)
 	tap.clip_text = true
 	_style(tap)
@@ -75,6 +78,23 @@ static func _build(parent: Node, label_name: StringName, xs: Array, on_input: Ca
 	tap.set_meta(&"source", label)
 	parent.add_child(tap)
 	return label
+
+
+## SD-06: şerit güvenli üst pay (çentik/durum çubuğu) kadar iner; masaüstü/headless'ta 0.
+static func top_extra(extra: Variant = null) -> float:
+	var e: Vector4 = extra if extra is Vector4 else UiKit.current_safe_extra(Vector2(1080.0, 2400.0))
+	return e.y
+
+
+## Güvenli alan değişince (V2Maint.apply_safe_areas) etiket ve dokunma alanlarını yeniden konumlar.
+static func apply_safe_area(root: Node, extra: Variant = null) -> void:
+	if root == null or not root.is_inside_tree():
+		return
+	var y := Y + top_extra(extra)
+	for group in [LABEL_GROUP, TAP_GROUP]:
+		for n: Node in root.get_tree().get_nodes_in_group(group):
+			if root.is_ancestor_of(n):
+				(n as Control).position.y = y
 
 
 static func _style(l: Label) -> void:

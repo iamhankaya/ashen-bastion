@@ -231,3 +231,16 @@ func test_debug_widgets_never_intersect_buttons_or_the_offscreen_arrow() -> void
 	# Ekran dışı ok: dairenin üst kenarı güvenli üst kenardan >= 62 px, üçgen ucu dahil >= 50 px -> y 40'tan aşağıda.
 	var top_clear := OffscreenArrow.CIRCLE_EDGE - OffscreenArrow.TIP
 	assert_gt(top_clear, 40.0, "ok glifi etiket bandının (y<=40) altında kalır")
+
+
+func test_sd06_debug_strip_drops_by_safe_top_extra() -> void:
+	var c := _controller()
+	c.start_run()
+	c._update_views(0.016)
+	DebugLabels.apply_safe_area(c.ui, Vector4(0, 60, 0, 0))
+	assert_almost_eq(c._render_label.position.y, DebugLabels.Y + 60.0, 0.01)
+	for t in _taps(c):
+		assert_almost_eq(t.position.y, DebugLabels.Y + 60.0, 0.01)
+	assert_almost_eq(c._bounce_label.position.y, DebugLabels.Y + 60.0, 0.01)
+	DebugLabels.apply_safe_area(c.ui, Vector4.ZERO)
+	assert_almost_eq(c._render_label.position.y, DebugLabels.Y, 0.01, "çentiksizde eski yer")
