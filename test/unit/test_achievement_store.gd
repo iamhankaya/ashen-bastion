@@ -79,7 +79,9 @@ func test_bad_id_shapes_dropped() -> void:
 
 
 func test_counters_negative_and_wrong_type_dropped_defaults_kept() -> void:
-	var s := _loaded('{"v":1,"totals":{"kills":-3,"runs":"7","wins":2.5,"play_secs":40},"best":{"score":9}}')
+	var s := _loaded(
+		'{"v":1,"totals":{"kills":-3,"runs":"7","wins":2.5,"play_secs":40},"best":{"score":9}}'
+	)
 	assert_eq(s.totals["kills"], 0)
 	assert_eq(s.totals["runs"], 0)
 	assert_eq(s.totals["wins"], 0)
@@ -123,7 +125,9 @@ func test_65th_id_rejected_with_sorted_processing() -> void:
 	var rev := {}
 	for i in range(69, -1, -1):
 		rev["k%02d" % i] = 10 + i
-	assert_eq(AchievementStore.sanitize({"unlocked": rev})["unlocked"].keys(), clean["unlocked"].keys())
+	assert_eq(
+		AchievementStore.sanitize({"unlocked": rev})["unlocked"].keys(), clean["unlocked"].keys()
+	)
 
 
 func test_unlock_refuses_when_full() -> void:

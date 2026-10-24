@@ -294,7 +294,7 @@ func test_menu_buttons_do_not_open_screens_in_contract_phase() -> void:
 	var gc := _ctrl()
 	assert_eq(gc.screen, PauseLogic.Screen.MENU)
 	gc.menu.characters_button.pressed.emit()
-	gc.menu.achievements_button.pressed.emit()
+	# BAŞARIMLAR artık açılır (B4; test_v2_achievements.gd). KARAKTERLER K dilimi dolana dek açılmaz.
 	assert_eq(gc.screen, PauseLogic.Screen.MENU, "boş ekran açılmaz (dilimler doldurana dek)")
 	assert_true(gc.menu.visible)
 

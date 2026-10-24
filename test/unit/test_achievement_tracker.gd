@@ -259,8 +259,7 @@ func test_b2_run_active_slots() -> void:
 func test_b2_run_best_mult() -> void:
 	_assert_one_shot(
 		&"seri_ustasi",
-		func() -> void:
-			_bus.streak_changed.emit(_target(&"seri_ustasi") - 1, 2.0),
+		func() -> void: _bus.streak_changed.emit(_target(&"seri_ustasi") - 1, 2.0),
 		func() -> void: _bus.streak_changed.emit(_target(&"seri_ustasi"), 2.0)
 	)
 	_bus.streak_changed.emit(1, 0.0)
@@ -327,9 +326,7 @@ func test_b2_run_clean_secs_damage_freezes_value() -> void:
 
 func test_b2_run_evolutions() -> void:
 	_assert_one_shot(
-		&"ilk_evrim",
-		func() -> void: pass,
-		func() -> void: _bus.evolution_gained.emit(&"evrim_x")
+		&"ilk_evrim", func() -> void: pass, func() -> void: _bus.evolution_gained.emit(&"evrim_x")
 	)
 
 
@@ -471,7 +468,14 @@ func test_progress_mapping() -> void:
 	assert_eq(_tr.progress(_data.get_achievement(&"bes_dakika")), 120)
 	assert_eq(_tr.progress(_data.get_achievement(&"seviye_10")), 4)
 	assert_eq(_tr.progress(_data.get_achievement(&"skor_100k")), 900)
-	for id in [&"kirim", &"tambur_ustasi", &"alti_silah", &"seri_ustasi", &"ilk_evrim", &"kale_lordu_devrildi"]:
+	for id in [
+		&"kirim",
+		&"tambur_ustasi",
+		&"alti_silah",
+		&"seri_ustasi",
+		&"ilk_evrim",
+		&"kale_lordu_devrildi"
+	]:
 		assert_eq(_tr.progress(_data.get_achievement(id)), -1, String(id))
 
 

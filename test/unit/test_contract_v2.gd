@@ -284,14 +284,6 @@ func test_store_io_int_of_matches_highscores_rules() -> void:
 		)
 
 
-func test_skeleton_bodies_are_stubs_that_the_gate_would_catch() -> void:
-	Stub.reset()
-	var s := AchievementStore.new("user://test_ach_contract_never_written.json")
-	s.save()
-	assert_true(Stub.calls().has(&"AchievementStore.save"), "iskelet gövde Stub.todo çağırır")
-	Stub.reset()
-
-
 func test_achievement_def_from_dict_tolerates_wrong_types() -> void:
 	var a := AchievementDef.from_dict({"id": 5, "name": [], "target": "x", "stat": null, "tier": 1})
 	assert_eq(a.id, &"")
