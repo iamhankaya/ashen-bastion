@@ -134,22 +134,20 @@ func test_two_bombs_emit_two_signals() -> void:
 	assert_eq(_hits.size(), 2)
 
 
-func test_dynamite_explosions_never_emit_bomb_hits() -> void:
-	# Barutçu: başlangıç becerisi dinamit (mermi havuzundan patlar, PickupSystem.blast çağırmaz).
-	var sim := SimKit.make(3, {"data_kind": "real", "character": &"barutcu"})
+func test_zyfen_run_never_emits_bomb_hits() -> void:
+	# v2.0.2 S1: Barutçu/dinamit yerine Zyfen (no-op gövdeler); bomb_hits yalnız Kara Bomba'dan gelir.
+	var sim := SimKit.make(3, {"data_kind": "real", "character": &"zyfen"})
 	sim.bus.bomb_hits.connect(_on_hits)
 	SimKit.godmode(sim)
 	for k in 8:
 		SimKit.add_enemy(sim, &"curumus_piyade", Vector2.from_angle(TAU * k / 8.0) * 220.0)
 	SimKit.run(sim, 900)
-	var dynamite := 0
-	for e in SimKit.events(sim, SimEvents.EXPLOSION):
-		if e["source"] != &"bomb":
-			dynamite += 1
-	assert_gt(dynamite, 0, "test yolu görmeden yeşil olmasın: dinamit patlaması gerçekten oldu")
-	assert_eq(
-		_hits.size(), 0, "dinamit bomb_hits yayınlamaz (ileride blast'a bağlanırsa bu test kırılır)"
+	assert_gt(
+		SimKit.count_events(sim, SimEvents.SHOT),
+		0,
+		"test yolu görmeden yeşil olmasın: Zyfen ateş etti"
 	)
+	assert_eq(_hits.size(), 0, "Kara Bomba dışı hiçbir kaynak bomb_hits yayınlamaz")
 
 
 func test_listener_does_not_change_state_hash_or_event_log() -> void:
@@ -175,18 +173,18 @@ func test_same_seed_twice_same_hash_with_bomb() -> void:
 	assert_eq(a.state_hash(), b.state_hash())
 
 
-func test_barutcu_same_seed_two_runs_same_hash() -> void:
-	var a := SimKit.make(11, {"data_kind": "real", "character": &"barutcu"})
-	var b := SimKit.make(11, {"data_kind": "real", "character": &"barutcu"})
+func test_zyfen_same_seed_two_runs_same_hash() -> void:
+	var a := SimKit.make(11, {"data_kind": "real", "character": &"zyfen"})
+	var b := SimKit.make(11, {"data_kind": "real", "character": &"zyfen"})
 	for k in 5:
 		SimKit.add_enemy(a, &"curumus_piyade", Vector2.from_angle(float(k)) * 200.0)
 		SimKit.add_enemy(b, &"curumus_piyade", Vector2.from_angle(float(k)) * 200.0)
 	SimKit.run(a, 600, Vector2.RIGHT)
 	SimKit.run(b, 600, Vector2.RIGHT)
 	assert_eq(a.state_hash(), b.state_hash())
-	assert_eq(a.character.id, &"barutcu")
-	assert_eq(a.max_hp, 120.0)
-	assert_eq(a.magazine.cap, 5)
+	assert_eq(a.character.id, &"zyfen")
+	assert_eq(a.max_hp, 85.0)
+	assert_eq(a.magazine.cap, 8)
 
 
 func test_gunslinger_hash_unchanged_by_bomb_hits_signal_existence() -> void:

@@ -1,0 +1,53 @@
+{
+  "id": "zyfen",
+  "name": "Zyfen",
+  "max_hp": 85,
+  "move_speed": 310,
+  "mag_cap": 8,
+  "reload_time": 1.3,
+  "pickup_radius": 110,
+  "collision_radius": 22,
+  "starting_skill": "cift_tabanca",
+  "range": 750,
+  "rig": {
+    "body": "res://assets/gfx/char/zyfen_body.png",
+    "armless": true,
+    "display_height": 200,
+    "native_facing": "right",
+    "cast_point": [
+      0.3,
+      -0.12
+    ],
+    "action_while_moving": false,
+    "sway": {
+      "hem_from_y": 0.55,
+      "scarf_rect": [
+        0.05,
+        0.22,
+        0.5,
+        0.7
+      ],
+      "amp": 14,
+      "lag": 0.12
+    },
+    "walk": {
+      "frames": 0,
+      "stride": 150,
+      "strip": "placeholder:zyfen_strip",
+      "cell": [
+        240,
+        320
+      ],
+      "shoulder_dev": []
+    },
+    "cast": {
+      "frames": 6,
+      "fire_frame": 3,
+      "fps": 24,
+      "speed": 3
+    },
+    "gather": {
+      "frames": 4
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "stages": {
-    "v201": {
+    "s1": {
       "barutcu": {
         "11": {
           "elites": 0,
@@ -65,7 +65,73 @@
           "steps": 7543
         }
       }
+    },
+    "v201": {
+      "barutcu": {
+        "11": {
+          "elites": 0.0,
+          "hash": 4142216615.0,
+          "kills": 112.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 7200.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 152249796.0,
+          "kills": 109.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7200.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 2924170550.0,
+          "kills": 107.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 7200.0
+        }
+      },
+      "gunslinger": {
+        "11": {
+          "elites": 0.0,
+          "hash": 3836495480.0,
+          "kills": 134.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 8110.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 469968811.0,
+          "kills": 122.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7479.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 672840567.0,
+          "kills": 118.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 7543.0
+        }
+      }
     }
   },
-  "version": 1
+  "version": 1.0
 }

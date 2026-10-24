@@ -53,6 +53,21 @@ sıra `order` alanıdır, eşitlikte dosya adı sırası (`character_ids`).
 `arm_pivot`, `muzzle` (`[x,y]`, 0..1), `arm_scale` (0,01..5), `sway`: `hem_from_y` 0..1, `scarf_rect` `[x0,y0,x1,y1]` (0..1, x0<x1, y0<y1),
 `amp` 0..100, `lag` 0..1. Omuz/pivot/namlu normalize tahmindir; ekranda ayarlanır.
 
+`rig.armless` (v2.0.2, isteğe bağlı bool; `DataV202Rig`): `true` = tek parça gövde, kol düzeneği yok. `arm, arm_pivot, muzzle, shoulders,
+arm_scale` zorunlu değildir, verilirse yok sayılır. Kolsuz rigde ek alanlar (kollu rigde bunlar `unknown_key`):
+
+| Alan | Tür / aralık | Not |
+|---|---|---|
+| `cast_point` | `[fx, fy]`, ±0,5 | **zorunlu**. Atış (el) noktası: `display_height` kesri, gövde kutusu merkezine göre, +x = bakılan yön, +y aşağı (`PlayerRig.cast_point_world`; aynalamada x işareti tersine). Başlangıç değeri tahmindir, cast karesinde ölçülür |
+| `action_while_moving` | bool, varsayılan `false` | cast/gather kareleri hareket ederken de mi gösterilir (yalnız görünüm; sim/hash'e girmez) |
+| `cast` | `{frames 2..8, fire_frame 0..frames-1, fps 8..60}` | savuruş kareleri; bozuk = `out_of_range`/`missing_field`/`unknown_key` |
+| `gather` | `{frames 2..8}` | rüzgar toplama (doldurma) kareleri |
+| `walk_cast` | `cast` ile aynı şema | yürürken savuruş kareleri (isteğe bağlı üçüncü küme) |
+
+`cast`/`gather`/`walk_cast` varsa `walk.strip` ve `walk.cell` zorunludur (`walk.frames` 0 olabilir: yürüme prosedürel, kümeler yine geçerli).
+Hücre sırası (`RigFrames`): yürüme `0..W-1`, duruş `W`, cast, gather, walk_cast; toplam `W+1+C+G+WC`. Kabul: toplam hücre × hücre genişliği
+≤ 8192 (`out_of_range`); şerit dokusu varsa boyutu `toplam × w` × `h` olmalı (`bad_type`).
+
 `rig.walk` (v1.1, isteğe bağlı; `CharacterDef.walk`): kareli yürüme. Anahtarlar `WALK_KEYS`:
 
 | Alan | Tür / aralık | Not |
@@ -114,13 +129,19 @@ Yeni hata kodları (v2.0): `unknown_stat`, `ach_count`, `tier_missing`, `scope_m
 
 | Anahtar | Tür | Aralık | Uygulama |
 |---|---|---|---|
-| `bullet_dmg_mult`, `fire_rate_mult`, `area_mult`, `explosion_dmg_mult`, `move_speed_mult`, `pickup_mult`, `range_mult` | x | -0,9..5 | etkin = `1 + x`, farklı pasifler toplanır |
+| `bullet_dmg_mult`, `fire_rate_mult`, `area_mult`, `explosion_dmg_mult`, `move_speed_mult`, `pickup_mult`, `range_mult`, `wind_time_mult` (v2.0.2) | x | -0,9..5 | etkin = `1 + x`, farklı pasifler toplanır. `wind_time_mult`: rüzgar bölgesi/toplama süresi; alan için mevcut `area_mult` yeniden kullanılır |
 | `reload_time_mult` | x | -0,9..0 | etkin = `1 + x` (negatif = daha kısa); `Magazine` min 0,35 sn uygular |
 | `mag_add` | tamsayı | 0..20 | şarjöre eklenir |
 | `max_hp_add` | sayı | 0..1000 | |
 | `regen` | sayı | 0..50 | can/sn |
 
   Monotonluk: |toplam| seviyeyle azalmaz (`reload_time_mult` -0,1, -0,2, … geçerli).
+- `pool` (v2.0.2, isteğe bağlı; `DataV202Pool`): `"common"` (varsayılan; her karakter) ya da var olan karakter kimliği (yalnız o karakter görür:
+  `SkillDef.available_to`, `Loadout` süzgeci). Bilinmeyen karakter `unknown_ref`, metin değil `bad_type`. Evrimin havuzu `requires.active`
+  becerisininkiyle aynı olmalı, `starting_skill` havuzu karakterinki ya da `common` olmalı (`requires_ref`).
+- `variants` (v2.0.2, isteğe bağlı, **yalnız `pool: common`**; özel havuzda `unknown_key`): `{"<karakter>": {name, icon, desc}}`, hepsi isteğe bağlı;
+  karakter var olmalı (`unknown_ref`), `name` ≤ 18 karakter, `desc` verilirse uzunluğu `max_level` (`out_of_range`), `icon` görsel yolu (`asset_missing`).
+  Çözüm: `SkillDef.name_for/icon_for/desc_for(character_id)`; variant yoksa ortak değer.
 - Görsel yolu (`icon`, `sprite`, `rig.body/arm`): `placeholder:<ad>` ya da var olan dosya (`res://…` ya da `assets/` altında; `.png/.svg/.webp`).
 
 ## Düşman — `enemies/<id>.json`

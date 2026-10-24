@@ -40,8 +40,10 @@ class _FakeStore:
 
 
 func test_ids_follow_order_field() -> void:
-	# F-030: vitrin sırası `order` alanı (gunslinger 1, barutcu 2), dosya adı sırası değil.
-	assert_eq(CharacterRoster.ids(_real), [&"gunslinger", &"barutcu"] as Array[StringName])
+	# F-030: vitrin sırası `order` alanı (gunslinger 1, barutcu 2, zyfen 2 → eşitlikte dosya adı), dosya adı sırası değil.
+	assert_eq(
+		CharacterRoster.ids(_real), [&"gunslinger", &"barutcu", &"zyfen"] as Array[StringName]
+	)
 
 
 func test_resolve_empty_unknown_or_missing_goes_to_default() -> void:

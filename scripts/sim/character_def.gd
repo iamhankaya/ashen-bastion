@@ -15,6 +15,15 @@ var attack_range: float = 700.0  # JSON anahtarı "range"
 var rig: Dictionary = {}
 ## rig.walk (kareli yürüme): frames 0 ya da yok = prosedürel yedek. Şema: docs/data-schema.md
 var walk: Dictionary = {"frames": 0}
+## v2.0.2 kolsuz rig (hepsi salt okunur, rig'den): `armless` tek parça gövde (kol düzeneği yok); `cast_point` atış
+## noktası (display_height kesri); `cast`/`gather`/`walk_cast` kare kümeleri ({frames, fire_frame, fps}); bayrak yalnız
+## görünümü etkiler. Şema: docs/data-schema.md
+var armless: bool = false
+var cast_point: Vector2 = Vector2(0.30, -0.12)
+var cast: Dictionary = {}
+var gather: Dictionary = {}
+var walk_cast: Dictionary = {}
+var action_while_moving: bool = false
 ## v2.0 (hepsi isteğe bağlı): vitrin metni, portre yolu, kilit başarımı (yok = açık), yer tutucu görsel işareti.
 var blurb: String = ""
 var portrait: String = ""
@@ -44,6 +53,16 @@ static func from_dict(d: Dictionary) -> CharacterDef:
 	var w: Variant = c.rig.get("walk", null)
 	if w is Dictionary:
 		c.walk = w
+	c.armless = PlayerRig.is_armless(c.rig)
+	var cp: Variant = c.rig.get("cast_point", null)
+	if cp is Array and (cp as Array).size() == 2:
+		c.cast_point = Vector2(float(cp[0]), float(cp[1]))
+	for k in ["cast", "gather", "walk_cast"]:
+		var blk: Variant = c.rig.get(k, null)
+		if blk is Dictionary:
+			c.set(k, blk)
+	var awm: Variant = c.rig.get("action_while_moving", false)
+	c.action_while_moving = awm is bool and awm
 	c.blurb = _s(d.get("blurb", ""))
 	c.portrait = _s(d.get("portrait", ""))
 	var u: Variant = d.get("unlock", null)

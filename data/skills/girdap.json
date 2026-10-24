@@ -1,0 +1,49 @@
+{
+  "id": "girdap",
+  "kind": "active",
+  "name": "Girdap",
+  "icon": "res://assets/ui/icons/girdap.svg",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "girdap",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "radius": 90,
+      "damage": 6,
+      "interval": 0.5,
+      "push": 14
+    },
+    {
+      "radius": 100,
+      "damage": 7,
+      "interval": 0.5,
+      "push": 16
+    },
+    {
+      "radius": 110,
+      "damage": 8,
+      "interval": 0.45,
+      "push": 18
+    },
+    {
+      "radius": 120,
+      "damage": 10,
+      "interval": 0.4,
+      "push": 22
+    },
+    {
+      "radius": 135,
+      "damage": 12,
+      "interval": 0.35,
+      "push": 26
+    }
+  ],
+  "desc": [
+    "Çevrende dönen bir girdap yakındaki düşmanları vurup dışarı iter.",
+    "Girdap büyür.",
+    "Girdap büyür, daha sık vurur.",
+    "Girdap büyür, daha sert vurur.",
+    "Girdap en üst seviyede."
+  ]
+}

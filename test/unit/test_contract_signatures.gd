@@ -57,7 +57,8 @@ const METHODS := {
 	},
 	"Loadout":
 	{
-		"_init": ["p_data", O],
+		"_init": ["p_data,p_character_id", O],
+		"card_for": ["skill_id,next_level", O],
 		"level_of": ["skill_id", I],
 		"actives": ["", A],
 		"passives": ["", A],
@@ -410,7 +411,7 @@ func test_constants_and_limits() -> void:
 	assert_eq(GameSim.State.LOST, 3)
 	assert_eq(EnemyPool.CAP, 400)
 	assert_eq(ProjectilePool.CAP, 600)
-	assert_eq(ProjectilePool.HIT_SLOTS, 12)
+	assert_eq(ProjectilePool.HIT_SLOTS, 96)
 	assert_eq(GemPool.CAP, 300)
 	assert_eq(ZonePool.CAP, 64)
 	assert_eq(Loadout.ACTIVE_SLOTS, 6)

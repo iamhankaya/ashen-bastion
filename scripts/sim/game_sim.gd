@@ -35,7 +35,7 @@ const WORK_KEYS: Array[StringName] = [
 	&"explosions",
 ]
 const BULLET_SPEED := 900.0
-const BULLET_RADIUS := 8.0
+const BULLET_RADIUS := ProjectilePool.DEFAULT_RADIUS
 const RETARGET_INTERVAL := 0.1
 const DRY_FIRE_INTERVAL := 0.5
 const GEM_PULL_SPEED := 700.0
@@ -71,6 +71,8 @@ var enemies: EnemyPool = EnemyPool.new()
 var projectiles: ProjectilePool = ProjectilePool.new()
 var gems: GemPool = GemPool.new()
 var zones: ZonePool = ZonePool.new()
+## v2.0.2 rüzgar bölgeleri adımı (_phase_skills sonunda).
+var wind: WindSystem = WindSystem.new()
 var stats: StatBlock = StatBlock.new()
 # v1.1: eklentiler ve skor.
 var pickups: PickupPool = PickupPool.new()
@@ -157,7 +159,7 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	map = MapSim.new(_stream_seed(&"map"), data.ruins)
 	map.ensure(player_pos)
 	spawn_director.skip_to(time)
-	loadout = Loadout.new(data)
+	loadout = Loadout.new(data, character.id if character != null else &"")
 	loadout.bind_api(self)
 	rng_spawn.seed = _stream_seed(&"spawn")
 	rng_choice.seed = _stream_seed(&"choice")
@@ -390,6 +392,7 @@ func state_hash() -> int:
 	h.append(rng_map.state)
 	h.append(rng_combat.state)
 	h.append_array(V11State.hash_items(self))  # v1.1: sona eklenir, mevcut sıra değişmez
+	h.append_array(zones.hash_items())  # v2.0.2: bölge yokken boş (Gunslinger hash'i değişmez)
 	return hash(h)
 
 
@@ -609,18 +612,13 @@ func _fire(g: int, tid: int) -> void:
 	ctx.gun = g
 	ctx.index_in_mag = res["index"]
 	ctx.is_last = res["is_last"]
-	# Kol açısı PlayerRig.solve_aim ile çözülür (namlu hedefe bakar); hedef kolun menzilinden yakınsa omuzdan atılır.
+	# Çıkış noktası PlayerRig.shot_origin'den (kollu: namlu/omuz, kolsuz: cast_point).
 	var target_pos := enemies.pos[EnemyPool.index_of(tid)]
-	var aim := PlayerRig.solve_aim(g, player_pos, target_pos, character.rig)
-	var flip := cos(aim) < 0.0
-	var origin := PlayerRig.muzzle_world(g, player_pos, aim, flip, character.rig)
-	var sh := PlayerRig.shoulder_world(g, player_pos, target_pos.x < player_pos.x, character.rig)
-	if target_pos.distance_to(sh) < origin.distance_to(sh) * 1.3:
-		origin = sh
+	var origin := PlayerRig.shot_origin(g, player_pos, target_pos, character.rig)
 	ctx.dir = (target_pos - origin).normalized()
 	ctx.origin = origin
 	if g == 0:
-		player_facing_left = ctx.dir.x < 0.0
+		player_facing_left = PlayerRig.facing_left(player_pos, target_pos, ctx.dir, character.rig)
 	ctx.damage = gun_damage * stats.bullet_dmg_mult
 	for st in loadout.actives():
 		if st.behavior != null:
@@ -629,23 +627,8 @@ func _fire(g: int, tid: int) -> void:
 		for st in loadout.actives():
 			if st.behavior != null:
 				st.behavior.on_last_bullet(ctx)
-	(
-		projectiles
-		. spawn(
-			ctx.origin,
-			ctx.dir * BULLET_SPEED,
-			ctx.damage,
-			{
-				"pierce": ctx.pierce,
-				"bounces": ctx.bounces,
-				"flags": ctx.flags,
-				"ex_radius": ctx.ex_radius,
-				"ex_dmg": ctx.ex_dmg,
-				"push": ctx.push,
-				"gun": g,
-			}
-		)
-	)
+	var spd := ctx.speed if ctx.speed > 0.0 else BULLET_SPEED
+	projectiles.spawn(ctx.origin, ctx.dir * spd, ctx.damage, _shot_opts(ctx, g))
 	gun_cd[g] += gun_interval / stats.fire_rate_mult
 	if g == 0:
 		# Hedefsiz bekleyişten sonra iki tabanca eşzamanlı hazırsa ikinciyi yarım aralık geriye at.
@@ -667,6 +650,21 @@ func _fire(g: int, tid: int) -> void:
 		bus.last_bullet_fired.emit(ctx.origin)
 
 
+## ShotContext -> ProjectilePool.spawn seçenekleri (0 değerli radius/life havuz varsayılanına düşer).
+func _shot_opts(ctx: ShotContext, g: int) -> Dictionary:
+	return {
+		"pierce": ctx.pierce,
+		"bounces": ctx.bounces,
+		"flags": ctx.flags,
+		"ex_radius": ctx.ex_radius,
+		"ex_dmg": ctx.ex_dmg,
+		"push": ctx.push,
+		"gun": g,
+		"radius": ctx.radius,
+		"life": ctx.life,
+	}
+
+
 ## (5) bağımsız beceriler (tick) ve doldurma süresince on_reload_tick.
 func _phase_skills() -> void:
 	_trace(4)
@@ -676,6 +674,7 @@ func _phase_skills() -> void:
 		st.behavior.tick(STEP)
 		if magazine.reloading:
 			st.behavior.on_reload_tick(STEP)
+	wind.step(self)
 
 
 ## (6) mermi hareketi + çarpışma + hit_ids.
@@ -690,13 +689,13 @@ func _phase_projectiles() -> void:
 		var consumed := false
 		_scratch.clear()
 		if (pr.flags[i] & ProjectilePool.FLAG_LOB) == 0:
-			grid.query_circle(pr.pos[i], BULLET_RADIUS + SMALL_ENEMY_RADIUS, _scratch)
+			grid.query_circle(pr.pos[i], pr.rad[i] + SMALL_ENEMY_RADIUS, _scratch)
 			for id in _scratch:
 				if not enemies.is_alive(id) or pr.has_hit(i, id):
 					continue
 				w_collision_tests += 1
 				var ei := EnemyPool.index_of(id)
-				var reach := BULLET_RADIUS + enemies.radius[ei]
+				var reach := pr.rad[i] + enemies.radius[ei]
 				if enemies.pos[ei].distance_squared_to(pr.pos[i]) <= reach * reach:
 					if _projectile_hit(i, id):
 						consumed = true
@@ -722,7 +721,7 @@ func _projectile_vs(pi: int, ids: PackedInt32Array) -> bool:
 			continue
 		w_collision_tests += 1
 		var ei := EnemyPool.index_of(id)
-		var reach := BULLET_RADIUS + enemies.radius[ei]
+		var reach := pr.rad[pi] + enemies.radius[ei]
 		if enemies.pos[ei].distance_squared_to(pr.pos[pi]) <= reach * reach:
 			if _projectile_hit(pi, id):
 				return true
@@ -867,22 +866,9 @@ func _roll_choices() -> void:
 	else:
 		_choices = []
 		for id in forced:
-			var def := data.get_skill(id)
-			if def == null:
-				continue
-			var c := Choice.new()
-			c.skill_id = id
-			c.title = def.display_name
-			c.icon = def.icon
-			var have := loadout.level_of(id)
-			if def.kind == SkillDef.KIND_EVOLUTION:
-				c.kind = Choice.KIND_EVOLUTION
-			else:
-				c.kind = Choice.KIND_UPGRADE if have > 0 else Choice.KIND_NEW
-			c.from_level = have
-			c.to_level = have + 1
-			c.desc = def.desc[c.to_level - 1] if c.to_level - 1 < def.desc.size() else ""
-			_choices.append(c)
+			var c := loadout.card_for(id, loadout.level_of(id) + 1)
+			if c != null:
+				_choices.append(c)
 	var ids: Array = []
 	for c in _choices:
 		ids.append(c.skill_id)

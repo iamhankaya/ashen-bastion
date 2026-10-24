@@ -129,7 +129,7 @@ func test_barutcu_values_and_assets() -> void:
 	assert_eq(c.walk.get("frames"), 0)
 	for p in [c.rig["body"], c.rig["arm"], c.portrait]:
 		assert_true(FileAccess.file_exists(p), p)
-		assert_true(p.contains("barutcu_"), p)
+		assert_true(p.contains("barutcu_") or p.contains("zyfen_"), p)  # v2.0.2: gövde/portre yer tutucusu zyfen_*
 	assert_eq(g.get_skill(c.starting_skill).kind, SkillDef.KIND_ACTIVE)
 	assert_lte(c.blurb.length(), 120)
 	assert_ne(c.blurb, "")
@@ -149,7 +149,8 @@ func test_gunslinger_gets_portrait_and_blurb_unchanged_stats() -> void:
 func test_character_ids_follow_order_field() -> void:
 	# F-030: `order` (gunslinger 1, barutcu 2); eşitlikte dosya adı sırası.
 	assert_eq(
-		GameData.load_dir(REAL).character_ids, [&"gunslinger", &"barutcu"] as Array[StringName]
+		GameData.load_dir(REAL).character_ids,
+		[&"gunslinger", &"barutcu", &"zyfen"] as Array[StringName]
 	)
 
 

@@ -15,3 +15,7 @@ var ex_radius: float = 0.0
 var ex_dmg: float = 0.0
 var push: float = 0.0
 var tags: PackedStringArray = PackedStringArray()
+## v2.0.2: 0 => varsayılan (yarıçap DEFAULT_RADIUS, hız BULLET_SPEED, ömür havuz varsayılanı 1,2 sn).
+var radius: float = 0.0
+var speed: float = 0.0
+var life: float = 0.0

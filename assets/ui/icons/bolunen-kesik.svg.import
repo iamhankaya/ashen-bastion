@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dkmxxb4bwa6xr"
-path="res://.godot/imported/barutcu_portrait.png-e8391489797f411bf5188e45d3308567.ctex"
+uid="uid://dxqi2b5n1rbu6"
+path="res://.godot/imported/bolunen-kesik.svg-a48398416ffe8021a6d7347595520675.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/gfx/char/barutcu_portrait.png"
-dest_files=["res://.godot/imported/barutcu_portrait.png-e8391489797f411bf5188e45d3308567.ctex"]
+source_file="res://assets/ui/icons/bolunen-kesik.svg"
+dest_files=["res://.godot/imported/bolunen-kesik.svg-a48398416ffe8021a6d7347595520675.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

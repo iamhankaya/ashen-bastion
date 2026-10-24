@@ -1,7 +1,7 @@
 # Beceri kancaları (sözleşme)
 
 Bir beceri `SkillBehavior`'dan türeyen tek bir sınıftır (`scripts/sim/skills/<id>.gd`); `SkillRegistry.BEHAVIORS`
-kimlikten sınıfa eşler (sözleşme 12 satırı önceden ekler, alfabetik). JSON'daki `behavior` buradan çözülür.
+kimlikten sınıfa eşler (sözleşme satırları önceden eklenir, alfabetik; v2.0.2: Zyfen'in 12 davranışı). JSON'daki `behavior` buradan çözülür.
 Davranış doğrudan çizim yapmaz, yalnızca `SkillApi` yüzeyini (= `GameSim` yöntemleri) kullanır.
 
 **Değişmezlik kuralı:** kanca imzası değişmez, yalnızca SONA kanca eklenir. `test_contract_hooks.gd` bu belgedeki
@@ -30,22 +30,36 @@ tabloyu koda karşı doğrular (aşağıdaki tablo makine okunur: bir satır = b
 
 Mermi bayrakları (`ProjectilePool.FLAG_*`): `EXPLODES` (isabette), `EXPLODE_ON_EXPIRE` (dinamit), `EXPLODE_ON_BOUNCE`
 (zincirleme_patlama), `RICOCHET`, `RADIAL` (yalnız görsel), `LOB` (yay atış: düşmana çarpmaz, ömrü bitince patlar), `SHRAPNEL` (öldürdüğü düşman yeniden şarapnel saçmaz). `o` sözlüğü: `pierce, bounces, life (=1.2), flags, ex_radius,
-ex_dmg, push, gun`. Pierce/bounce'ta mermi bir düşmana yalnızca bir kez vurur (mermi başına `hit_ids`, `HIT_SLOTS = 12`).
+ex_dmg, push, gun, radius (=8, `DEFAULT_RADIUS`)`. Pierce/bounce'ta mermi bir düşmana yalnızca bir kez vurur (mermi başına `hit_ids`, `HIT_SLOTS = 96` halka tampon: 96'dan fazla düşmana vuran mermide en eski kayıt ezilir).
+
+v2.0.2 eklemeleri: `FLAG_WIND` (rüzgar kesiği/hilal), `FLAG_SPLIT` (bölünen kesiğin çocuğu, tekrar bölünmez), `PIERCE_ALL = 99`; `ShotContext.radius/speed/life` (0 = varsayılan); `WindUtil.crescent/displace/pulse_circle`; `sim.zones` (`ZonePool`), `sim.wind` (`WindSystem`), `fx.wind_wave/wind_cast`.
 
 ## Beceri → kanca eşlemesi
 
 | Beceri | Kancalar | SkillApi | Bayraklar | Alanlar |
 |---|---|---|---|---|
+| `ay_oragi` | `modify_shot` | `spawn_projectile` | `WIND` | `radius`, `speed` |
+| `bolunen_kesik` | `modify_shot`, `on_hit` | `spawn_projectile` | `WIND`, `SPLIT` | `index_in_mag` |
 | `cift_tabanca` | `modify_shot` | | | |
+| `delen_ruzgar` | `tick` | `pick_highest_hp`, `spawn_projectile` | `WIND` | `radius`, `speed` |
 | `dinamit` | `tick` | `spawn_projectile` | `LOB`, `EXPLODE_ON_EXPIRE` | |
 | `doldurma_sacilmasi` | `on_reload_start` | `spawn_projectile` | `RADIAL` | |
+| `girdap` | `tick` | `damage_enemy` | | |
+| `gogun_mizragi` | `tick` | `pick_highest_hp`, `spawn_projectile` | `WIND` | `radius`, `speed` |
 | `gurleyen_yelpaze` | `tick` | `spawn_projectile` | | `push` |
+| `hava_bicaklari` | `tick` | `spawn_projectile` | `WIND` | `pierce` |
+| `hava_cebi` | `on_kill` | `rng_combat`, `zones` | | |
+| `hortum` | `tick` | `zones`, `rng_combat` | | |
+| `kasirga_patlamasi` | `on_reload_start`, `on_reload_tick`, `on_reload_end` | `damage_enemy`, `fx` | | |
 | `keskin_nisan` | `tick` | `pick_highest_hp`, `hitscan` | | |
 | `kiyamet_mermisi` | `on_last_bullet` | `explode`, `magazine` | `EXPLODES` | `ex_radius`, `ex_dmg` |
 | `mermi_firtinasi` | `on_reload_start`, `on_reload_tick` | `spawn_projectile` | `RADIAL` | |
+| `nefes_dalgasi` | `on_reload_start` | `damage_enemy`, `fx` | | |
+| `ruzgar_kesigi` | `modify_shot` | | `WIND` | `pierce`, `radius` |
 | `sarapnel` | `on_kill` | `spawn_projectile`, `rng_combat` | `SHRAPNEL` | |
 | `seken_mermi` | `modify_shot` | | `RICOCHET` | `bounces` |
 | `son_mermi_patlar` | `on_last_bullet` | | `EXPLODES` | `ex_radius`, `ex_dmg` |
+| `tufan` | `tick` | `zones`, `rng_combat` | | |
 | `yelpaze_atis` | `tick` | `spawn_projectile` | | |
 | `zincirleme_patlama` | `modify_shot` | | `RICOCHET`, `EXPLODE_ON_BOUNCE` | `bounces` |
 

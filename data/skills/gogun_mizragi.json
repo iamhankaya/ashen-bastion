@@ -1,0 +1,28 @@
+{
+  "id": "gogun_mizragi",
+  "kind": "evolution",
+  "name": "Göğün Mızrağı",
+  "icon": "res://assets/ui/icons/gogun-mizragi.svg",
+  "max_level": 1,
+  "tags": [],
+  "behavior": "gogun_mizragi",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "cooldown": 1.8,
+      "count": 4,
+      "damage": 100,
+      "gap": 0.12
+    }
+  ],
+  "desc": [
+    "Art arda dört rüzgar mızrağı, her biri en yüksek canlı düşmana."
+  ],
+  "requires": {
+    "active": "delen_ruzgar",
+    "active_level": 5,
+    "passive": "hizli_parmak",
+    "passive_min_level": 1
+  },
+  "sfx": "evolution_3"
+}

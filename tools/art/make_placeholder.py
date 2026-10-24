@@ -5,7 +5,7 @@ gerçek görsel gelince yalnız PNG (ve karakter JSON'undaki `rig` sayıları) d
 
 Kullanım:
   python tools/art/make_placeholder.py <kaynak.png> <hedef.png> [--sepia .55] [--hue -18] [--sat .75] [--val .92]
-  python tools/art/make_placeholder.py --barutcu          # gunslinger görsellerinden barutcu_{body,arm,portrait}.png
+  python tools/art/make_placeholder.py --barutcu          # gunslinger görsellerinden zyfen_{body,portrait}.png + barutcu_arm.png (yer tutucu)
 
 Adımlar (sırayla): sepya karışımı -> ton kaydırma (derece) -> doygunluk çarpanı -> parlaklık çarpanı.
 Alfa kanalı aynen korunur; boyut ve mod değişmez. Çıktı kaynağa göre deterministiktir.
@@ -29,9 +29,9 @@ SEPIA_MATRIX = np.array(
 )
 # --barutcu: (kaynak, hedef)
 BARUTCU = [
-    ("assets/gfx/char/gunslinger_body.png", "assets/gfx/char/barutcu_body.png"),
+    ("assets/gfx/char/gunslinger_body.png", "assets/gfx/char/zyfen_body.png"),
     ("assets/gfx/char/gunslinger_arm.png", "assets/gfx/char/barutcu_arm.png"),
-    ("assets/ui/portre-seviye-atlama.png", "assets/gfx/char/barutcu_portrait.png"),
+    ("assets/ui/portre-seviye-atlama.png", "assets/gfx/char/zyfen_portrait.png"),
 ]
 
 
