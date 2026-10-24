@@ -424,7 +424,7 @@ func test_m2_elite_rim_constant_is_bronze_amber_family_not_bone() -> void:
 		return
 	var found: Array[Color] = []
 	for scr in [EnemyRenderer, AshGhostRenderer]:
-		var consts: Dictionary = scr.get_script().get_script_constant_map()
+		var consts: Dictionary = scr.get_script_constant_map()
 		for k in consts:
 			if (
 				(String(k).contains("ELITE") or String(k).contains("LORD"))

@@ -20,8 +20,14 @@ jobs:
           key: godot-${{ hashFiles('.godot-version') }}
       - run: bash tools/gate.sh
   selftest:
+    # F-028: senaryo -> grup tablosu tools/ci/selftest_gate.sh içindedir (GROUP[...]=N); matrix.group tablodaki tüm
+    # gruplar (test_selftest_groups.py denetler). Her grup bağımsız iş: en uzun grup ≈ 7 dk (S0: 409 s), timeout 20 dk.
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,7 +38,7 @@ jobs:
         with:
           path: ~/.cache/ashen-bastion
           key: godot-${{ hashFiles('.godot-version') }}
-      - run: bash tools/ci/selftest_gate.sh
+      - run: bash tools/ci/selftest_gate.sh --group ${{ matrix.group }}
   export-debug:
     runs-on: ubuntu-24.04
     timeout-minutes: 30

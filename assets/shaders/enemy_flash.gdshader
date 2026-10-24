@@ -10,6 +10,8 @@ shader_type canvas_item;
 uniform sampler2D atlas_tex : source_color, filter_linear;
 uniform vec4 cell_rect[16];  // hücre başına atlas UV dikdörtgeni (u0, v0, du, dv)
 uniform vec3 rim_color : source_color = vec3(0.74, 0.64, 0.47);
+// Elit/Lord konturu (N6): bronz ailesi; ton sabit (tint beyaza/kırmızıya kaçmaz), elit ayrımı yalnız kalınlıkla (rim_px).
+uniform vec3 rim_elite_color : source_color = vec3(0.824, 0.706, 0.494);
 
 varying float v_flash;
 varying float v_rim_px;
@@ -33,7 +35,7 @@ void fragment() {
 	t.a = smoothstep(0.05, 0.75, t.a);  // yarı saydam tüy/kumaş pikselleri daha dolgun
 	vec3 body = t.rgb * mix(vec3(1.0), v_tint * 1.35, v_elite * 0.6);
 	vec4 c = vec4(body, t.a);
-	vec3 rim = mix(rim_color, clamp(v_tint * 1.25, 0.0, 1.0), v_elite);
+	vec3 rim = mix(rim_color, rim_elite_color, v_elite);
 	// Kontur hücre içinde kalır (hücre kenarına yayılmaz): hücre sınırına yakın örnekler komşu hücreyi okuyabilir,
 	// atlasta hücreler yeterli saydam boşlukla ayrılmıştır.
 	c = apply_rim(atlas_tex, UV, TEXTURE_PIXEL_SIZE, c, rim, v_rim_px);

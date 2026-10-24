@@ -47,16 +47,15 @@ func _exit_tree() -> void:
 		p.stop()
 	if _stinger != null:
 		_stinger.stop()
-	# Ses iş parçacığı durdurulan oynatmaları bir sonraki karışımda bırakır; kapanışta sızıntı raporlanmasın diye kısa bekleme.
-	if not _players.is_empty():
-		OS.delay_msec(150)
+	# Durdurulan oynatmalar ses iş parçacığı bir sonraki karışımda bırakılana dek bellekte kalır: bekleme yok
+	# (F-013: 150 ms uyku ana iş parçacığını bloklardı); düğümler sonraki karede serbest bırakılır.
 	for p in _players:
 		p.stream = null
-		p.free()
+		p.call_deferred(&"free")
 	_players.clear()
 	if _stinger != null:
 		_stinger.stream = null
-		_stinger.free()
+		_stinger.call_deferred(&"free")
 		_stinger = null
 	Sfx.teardown()
 	_reset_bus_volume()

@@ -10,6 +10,8 @@ const GROUP_SPREAD := 36.0
 const BOSS_RESERVE := 24
 
 var waves: Dictionary = {}
+## Test kancası (M10/F-018): false iken Lord için `_make_room` çağrılmaz. Üretimde hep true; durum hash'ine girmez.
+var make_room_enabled: bool = true
 var _rows: Array = []
 var _acc: PackedFloat64Array = PackedFloat64Array()  # rate: birikim; group: kalan bekleme süresi
 var _skip_before: float = 0.0
@@ -126,7 +128,7 @@ func _boss(sim: GameSim, k: int, row: Dictionary, t: float) -> void:
 	var is_lord := def.ai == &"lord"
 	if (_done[k] == 0 or (is_lord and _spawned[k] == 0)) and t >= at:
 		_done[k] = 1
-		if is_lord and sim.enemies.count >= EnemyPool.CAP:
+		if is_lord and make_room_enabled and sim.enemies.count >= EnemyPool.CAP:
 			_make_room(sim)
 		var id := sim.spawn_enemy(type_id, ring_position(sim, TAU * sim.rng_spawn.randf()))
 		if id >= 0:
