@@ -33,7 +33,7 @@
   "variants": {
     "zyfen": {
       "name": "Bilenmiş Rüzgar",
-      "icon": "res://assets/ui/icons/zyfen/agir-kursun.svg",
+      "icon": "res://assets/ui/icons/zyfen/agir-kursun.png",
       "desc": [
         "Kesik hasarı +%10.",
         "Kesik hasarı +%20.",

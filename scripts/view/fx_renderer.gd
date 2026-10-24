@@ -15,6 +15,8 @@ const PUFF_TIME := 0.45
 const SPARK_TIME := 0.28
 const SHAKE_MIN_RADIUS := 150.0
 const MAX_RINGS := 12
+const MAX_HITS := 12
+const HIT_TIME := 0.14
 const MAX_SHELLS := 16
 const MAX_PARTICLES := 96
 const MAX_CHARS := 8
@@ -52,6 +54,16 @@ var _ring_dur := PackedFloat32Array()
 var _ring_left := PackedFloat32Array()
 var _ring_w := PackedFloat32Array()
 var _ring_col := PackedColorArray()
+# Doku halkaları (Zyfen): kimlik boşsa yay çizilir; doluysa ZyfenFx dokusu (başlangıç oranı, açı, dönüş hızı).
+var _ring_tex: Array[StringName] = []
+var _ring_r0 := PackedFloat32Array()
+var _ring_rot := PackedFloat32Array()
+var _ring_spin := PackedFloat32Array()
+# Avuç isabeti (kolsuz karakter): kısa, küçük doku patlaması.
+var _hit_pos := PackedVector2Array()
+var _hit_left := PackedFloat32Array()
+var _hit_rot := PackedFloat32Array()
+var _hit_head := 0
 var _ring_head := 0
 var _shell_pos := PackedVector2Array()
 var _shell_dir := PackedVector2Array()
@@ -91,6 +103,14 @@ func _init() -> void:
 	_ring_left.resize(MAX_RINGS)
 	_ring_w.resize(MAX_RINGS)
 	_ring_col.resize(MAX_RINGS)
+	_ring_tex.resize(MAX_RINGS)
+	_ring_tex.fill(&"")
+	_ring_r0.resize(MAX_RINGS)
+	_ring_rot.resize(MAX_RINGS)
+	_ring_spin.resize(MAX_RINGS)
+	_hit_pos.resize(MAX_HITS)
+	_hit_left.resize(MAX_HITS)
+	_hit_rot.resize(MAX_HITS)
 	_shell_pos.resize(MAX_SHELLS)
 	_shell_dir.resize(MAX_SHELLS)
 	_shell_dist.resize(MAX_SHELLS)
@@ -155,6 +175,7 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 			_sim.fx.wind_wave.disconnect(_on_wind_wave)
 			_sim.fx.wind_cast.disconnect(_on_wind_cast)
 			_sim.bus.shot_fired.disconnect(_on_shot)
+			_sim.bus.enemy_hit.disconnect(_on_hit)
 	_sim = sim
 	_camera = camera
 	_ex_left.fill(0.0)
@@ -162,6 +183,7 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 	_puff_left.fill(0.0)
 	_spark_left.fill(0.0)
 	_ring_left.fill(0.0)
+	_hit_left.fill(0.0)
 	_shell_left.fill(0.0)
 	_part_left.fill(0.0)
 	char_layer.left.fill(0.0)
@@ -179,6 +201,7 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 	sim.fx.wind_wave.connect(_on_wind_wave)
 	sim.fx.wind_cast.connect(_on_wind_cast)
 	sim.bus.shot_fired.connect(_on_shot)
+	sim.bus.enemy_hit.connect(_on_hit)
 
 
 ## Efekt var mı (testler/yeniden çizim).
@@ -224,7 +247,29 @@ func add_ring(pos: Vector2, r_max: float, dur: float, color: Color, width: float
 	_ring_left[_ring_head] = maxf(dur, 0.01)
 	_ring_w[_ring_head] = width
 	_ring_col[_ring_head] = color
+	_ring_tex[_ring_head] = &""
 	_ring_head = (_ring_head + 1) % MAX_RINGS
+
+
+## Doku halkası (aynı tampon ve sayaç): `tex` (ZyfenFx kimliği) pos merkezli, r_max * r0'dan r_max'a büyür, `rot` rad açıyla
+## başlar ve `spin` rad/sn döner, dur sn'de solar.
+func add_tex_ring(
+	pos: Vector2, r_max: float, dur: float, tex: StringName, r0: float, rot: float, spin: float
+) -> void:
+	add_ring(pos, r_max, dur, Color.WHITE, 0.0)
+	var h := (_ring_head + MAX_RINGS - 1) % MAX_RINGS
+	_ring_tex[h] = tex
+	_ring_r0[h] = r0
+	_ring_rot[h] = rot
+	_ring_spin[h] = spin
+
+
+## Avuç isabeti: `pos`ta kısa doku patlaması (yalnız kolsuz karakter).
+func add_palm_hit(pos: Vector2) -> void:
+	_hit_pos[_hit_head] = pos
+	_hit_left[_hit_head] = HIT_TIME
+	_hit_rot[_hit_head] = float(_hit_head) * 2.4
+	_hit_head = (_hit_head + 1) % MAX_HITS
 
 
 ## Boş kovan (16): 350 ms yay; dir yatay yönü verir (yan-geri 30–50 px, 6 px yükselip düşer).
@@ -324,6 +369,10 @@ func _update_v11(dt: float) -> int:
 		if _ring_left[i] > 0.0:
 			_ring_left[i] = maxf(0.0, _ring_left[i] - dt)
 			n += 1
+	for i in MAX_HITS:
+		if _hit_left[i] > 0.0:
+			_hit_left[i] = maxf(0.0, _hit_left[i] - dt)
+			n += 1
 	for i in MAX_SHELLS:
 		if _shell_left[i] > 0.0:
 			_shell_left[i] = maxf(0.0, _shell_left[i] - dt)
@@ -419,7 +468,35 @@ func _draw_v11() -> void:
 		if left <= 0.0:
 			continue
 		var k := 1.0 - left / _ring_dur[i]
-		var r := _ring_r[i] * (1.0 - pow(1.0 - k, 3.0))
+		var ease_out := 1.0 - pow(1.0 - k, 3.0)
+		if _ring_tex[i] != &"":
+			var tex := ZyfenFx.texture(_ring_tex[i])
+			if tex != null:
+				var half := (
+					_ring_r[i] * (_ring_r0[i] + (1.0 - _ring_r0[i]) * ease_out) / ZyfenFx.TEX_FILL
+				)
+				draw_set_transform(
+					_ring_pos[i], _ring_rot[i] + _ring_spin[i] * k * _ring_dur[i], Vector2.ONE
+				)
+				draw_texture_rect(
+					tex,
+					Rect2(
+						(
+							Vector2(-half, -half)
+							* Vector2(1.0, tex.get_height() / float(tex.get_width()))
+						),
+						(
+							Vector2(half, half)
+							* 2.0
+							* Vector2(1.0, tex.get_height() / float(tex.get_width()))
+						)
+					),
+					false,
+					Color(1, 1, 1, (1.0 - k) * (1.0 - k * 0.5))
+				)
+				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			continue
+		var r := _ring_r[i] * ease_out
 		var col := _ring_col[i]
 		col.a *= (1.0 - k)
 		draw_arc(
@@ -432,6 +509,22 @@ func _draw_v11() -> void:
 			maxf(_ring_w[i] * (1.0 - 0.6 * k), 1.0),
 			true
 		)
+	var palm := ZyfenFx.texture(ZyfenFx.AVUC)
+	if palm != null:
+		for i in MAX_HITS:
+			var left := _hit_left[i]
+			if left <= 0.0:
+				continue
+			var k := 1.0 - left / HIT_TIME
+			var half := (10.0 + 14.0 * k) / ZyfenFx.TEX_FILL
+			draw_set_transform(_hit_pos[i], _hit_rot[i], Vector2.ONE)
+			draw_texture_rect(
+				palm,
+				Rect2(Vector2(-half, -half), Vector2(half, half) * 2.0),
+				false,
+				Color(1, 1, 1, 1.0 - k)
+			)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	for i in MAX_SHELLS:
 		var left := _shell_left[i]
 		if left <= 0.0:
@@ -500,16 +593,39 @@ func _on_beam(a: Vector2, b: Vector2) -> void:
 
 ## Nefes Dalgası / Kasırga Patlaması: genişleyen halka (big: ekran boyu, kalın, kısa sarsıntı).
 func _on_wind_wave(origin: Vector2, radius: float, big: bool) -> void:
-	add_ring(origin, radius, 0.6 if big else 0.4, Color(0.7, 0.9, 0.95, 0.9), 10.0 if big else 6.0)
+	var tex := ZyfenFx.KASIRGA if big else ZyfenFx.DALGA
+	if ZyfenFx.texture(tex) != null:
+		add_tex_ring(origin, radius, 0.7 if big else 0.5, tex, 0.1, 0.0, 0.6 if big else 0.4)
+	else:
+		add_ring(
+			origin, radius, 0.6 if big else 0.4, Color(0.7, 0.9, 0.95, 0.9), 10.0 if big else 6.0
+		)
 	if big and _camera != null:
 		_camera.shake(8.0)
 
 
 ## Avuçtaki savuruş: kolsuz karakterde (Zyfen) her atışta cast noktasında küçük, kısa halka (`fx.wind_cast` ile aynı efekt).
-func _on_shot(_gun: int, origin: Vector2, _dir: Vector2) -> void:
+func _on_shot(_gun: int, origin: Vector2, dir: Vector2) -> void:
 	if _sim != null and PlayerRig.is_armless(_sim.character.rig):
-		_on_wind_cast(origin)
+		_cast_palm(origin, dir.angle())
+
+
+func _on_hit(pos: Vector2) -> void:
+	if (
+		_sim != null
+		and PlayerRig.is_armless(_sim.character.rig)
+		and ZyfenFx.texture(ZyfenFx.AVUC) != null
+	):
+		add_palm_hit(pos)
 
 
 func _on_wind_cast(origin: Vector2) -> void:
-	add_ring(origin, 28.0, 0.18, Color(0.75, 0.92, 1.0, 0.8), 3.0)
+	_cast_palm(origin, 0.0)
+
+
+## Avuç doku halkası (fx_avuc: küçülmeden büyüyüp söner); doku yoksa eski yay halkası.
+func _cast_palm(origin: Vector2, ang: float) -> void:
+	if ZyfenFx.texture(ZyfenFx.AVUC) != null:
+		add_tex_ring(origin, 34.0, 0.2, ZyfenFx.AVUC, 0.5, ang, 0.0)
+	else:
+		add_ring(origin, 28.0, 0.18, Color(0.75, 0.92, 1.0, 0.8), 3.0)

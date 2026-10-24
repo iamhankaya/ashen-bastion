@@ -299,14 +299,16 @@ static func hud_icon(icon_name: String) -> Texture2D:
 	return texture(ICON_DIR + icon_name + ".svg")
 
 
-## Beceri ikonu: tanımdaki `icon` gerçek yol ise o; değilse assets/ui/icons/<id tireli>.svg; yoksa null
+## Beceri ikonu: tanımdaki `icon` gerçek yol ise o; değilse assets/ui/icons/<id tireli>.png (yoksa .svg); yoksa null
 ## (çağıran yer tutucu şekil çizer).
 static func skill_icon(skill_id: StringName, icon_field: String = "") -> Texture2D:
 	if icon_field.begins_with("res://"):
 		var t := texture(icon_field)
 		if t != null:
 			return t
-	return texture(ICON_DIR + String(skill_id).replace("_", "-") + ".svg")
+	var base := ICON_DIR + String(skill_id).replace("_", "-")
+	var png := texture(base + ".png")
+	return png if png != null else texture(base + ".svg")
 
 
 ## Çerçeve: &"active" kare, &"passive" daire, &"evolution" sekizgen.

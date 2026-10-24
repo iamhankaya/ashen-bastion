@@ -2,7 +2,7 @@
   "id": "furtina_gozu",
   "kind": "passive",
   "name": "Fırtına Gözü",
-  "icon": "res://assets/ui/icons/furtina-gozu.svg",
+  "icon": "res://assets/ui/icons/furtina-gozu.png",
   "max_level": 5,
   "tags": [],
   "pool": "zyfen",

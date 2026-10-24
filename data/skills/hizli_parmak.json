@@ -33,7 +33,7 @@
   "variants": {
     "zyfen": {
       "name": "Çevik Eller",
-      "icon": "res://assets/ui/icons/zyfen/hizli-parmak.svg",
+      "icon": "res://assets/ui/icons/zyfen/hizli-parmak.png",
       "desc": [
         "Saldırı hızı +%8.",
         "Saldırı hızı +%16.",

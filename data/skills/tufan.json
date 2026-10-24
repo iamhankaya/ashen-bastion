@@ -2,7 +2,7 @@
   "id": "tufan",
   "kind": "evolution",
   "name": "Tufan",
-  "icon": "res://assets/ui/icons/tufan.svg",
+  "icon": "res://assets/ui/icons/tufan.png",
   "max_level": 1,
   "tags": [],
   "behavior": "tufan",

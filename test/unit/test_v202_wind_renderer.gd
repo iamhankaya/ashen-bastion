@@ -11,12 +11,12 @@ func _fx_with_sim(sim: GameSim) -> FxRenderer:
 	return fx
 
 
-func test_fx_renderer_owns_a_wind_renderer_child_sharing_the_additive_material() -> void:
+func test_fx_renderer_owns_a_wind_renderer_child_with_the_zone_blend_of_zyfen_fx() -> void:
 	var fx := FxRenderer.new()
 	add_child_autofree(fx)
 	assert_not_null(fx.wind_renderer)
 	assert_eq(fx.wind_renderer.get_parent(), fx)
-	assert_true(fx.wind_renderer.use_parent_material)
+	assert_eq(fx.wind_renderer.use_parent_material, ZyfenFx.ZONES_ADDITIVE)
 
 
 func test_draws_at_most_max_drawn_zones_even_with_a_full_pool() -> void:

@@ -2,7 +2,7 @@
   "id": "nefes_dalgasi",
   "kind": "active",
   "name": "Nefes Dalgası",
-  "icon": "res://assets/ui/icons/nefes-dalgasi.svg",
+  "icon": "res://assets/ui/icons/nefes-dalgasi.png",
   "max_level": 5,
   "tags": [
     "rhythm"
