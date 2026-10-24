@@ -80,7 +80,44 @@ class Clip:
         self.over = [i.shape[0] for i in self.imgs if i.shape[0] > CELL_H]
 
 
-def build(src: Path, walk_cast: list[str] | None, stride: float) -> tuple[np.ndarray, np.ndarray, dict]:
+def _contacts(im: np.ndarray, band: int = 8) -> list[float]:
+    """Karenin alt `band` pikselinde yere değen ayak parçalarının merkez x'leri (görüntü yerel, px)."""
+    cols = (im[-band:, :, 3] > 127).any(axis=0)
+    return [(a + b - 1) / 2.0 for a, b in ms._runs(np.nonzero(cols)[0])]
+
+
+def align_feet(imgs: list[np.ndarray], base_x: list[int], step_px: float, reach: int = 24, rounds: int = 6) -> list[int]:
+    """Yürüme karelerini basan ayağa göre kaydırır: gövde sabit hücrede, dünya zeminde ayak sabit => basan ayak her karede
+    `step_px` (strip px) geriye gider. Her kareye ±`reach` px kaydırma; hedef: ardışık çiftlerin (döngü dahil) en iyi ayak
+    eşleşmesi hatası toplamı + küçük gövde-kayma cezası. Eş. koordinat inişi, deterministik."""
+    n = len(imgs)
+    cont = [_contacts(im) for im in imgs]
+    shift = [0] * n
+
+    def pair_err(f: int, sf: int, sg: int) -> float:
+        g = (f + 1) % n
+        return min(
+            (abs((base_x[g] + sg + b) - (base_x[f] + sf + a) + step_px) for a in cont[f] for b in cont[g]),
+            default=1e6,
+        )
+
+    for _ in range(rounds):
+        changed = False
+        for f in range(n):
+            best, best_s = None, shift[f]
+            for s in range(-reach, reach + 1):
+                cost = min(pair_err(f, s, shift[(f + 1) % n]), 12.0) + min(pair_err((f - 1) % n, shift[(f - 1) % n], s), 12.0)
+                cost += 0.02 * abs(s)
+                if best is None or cost < best - 1e-9:
+                    best, best_s = cost, s
+            if best_s != shift[f]:
+                shift[f], changed = best_s, True
+        if not changed:
+            break
+    return shift
+
+
+def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "feet") -> tuple[np.ndarray, np.ndarray, dict]:
     walk_files = sorted(glob.glob(str(src / "frames/walk/*.png")))
     cast_files = sorted(glob.glob(str(src / "frames/cast/*.png")))
     gather_files = sorted(glob.glob(str(src / "frames/gather/*.png")))
@@ -104,6 +141,19 @@ def build(src: Path, walk_cast: list[str] | None, stride: float) -> tuple[np.nda
         else:
             seq += [(k, im, clips[k].anchor) for im in clips[k].imgs]
     ax = [_anchor_x(im, mode) for _, im, mode in seq]
+    n_w = len(clips["walk"].imgs)
+    shift = [0] * len(seq)
+    manifest_pre = None
+    if align == "feet":
+        ims_w = [seq[i][1] for i in range(n_w)]
+        cw0 = int(math.ceil(max(im.shape[1] for _, im, _ in seq) * 1.3))  # yalnız taban x hesabı için geçici genişlik
+        base_x = [int(round(cw0 / 2.0 - ax[i])) for i in range(n_w)]
+        step_px = stride / n_w / (DISPLAY_HEIGHT / CELL_H)
+        # önce/sonra tablosu için torso hizalı ölçüm
+        manifest_pre = _slide(ims_w, base_x, [0] * n_w, cw0, stride)
+        sh = align_feet(ims_w, base_x, step_px)
+        shift[:n_w] = sh
+        ax = [a - s for a, s in zip(ax, shift)]
     left = max(a for a in ax)
     right = max(im.shape[1] - a for (_, im, _), a in zip(seq, ax))
     # hücre genişliği: en geniş alfa kutusu + 2·PAD (merkezde ortalı), tek sayı yuvarlanır
@@ -125,6 +175,9 @@ def build(src: Path, walk_cast: list[str] | None, stride: float) -> tuple[np.nda
     wpp = DISPLAY_HEIGHT / CELL_H
     fs = ms.foot_slide(res, stride, wpp, SLIDE_TOL_PX)
     manifest = {
+        "align": align,
+        "foot_shift_px": shift[:n_w],
+        "foot_slide_torso": manifest_pre,
         "cells": len(seq),
         "cell": [cw, CELL_H],
         "strip_width": int(strip.shape[1]),
@@ -140,6 +193,18 @@ def build(src: Path, walk_cast: list[str] | None, stride: float) -> tuple[np.nda
     if "walk_cast" in clips:
         manifest["walk_cast"] = {"frames": len(clips["walk_cast"].imgs), "scale": round(clips["walk_cast"].scale, 5)}
     return strip, body, manifest
+
+
+def _slide(imgs: list[np.ndarray], base_x: list[int], shift: list[int], cw: int, stride: float) -> dict:
+    w = max(base_x[i] + shift[i] + imgs[i].shape[1] for i in range(len(imgs))) + 40
+    cw = max(cw, w + 40)
+    st = np.zeros((CELL_H, cw * len(imgs), 4), np.uint8)
+    for i, im in enumerate(imgs):
+        x = max(base_x[i] + shift[i], 0)
+        st[CELL_H - im.shape[0]:, i * cw + x:i * cw + x + im.shape[1]] = im
+    r = ms.StripResult(st, {"cell": [cw, CELL_H], "frames": len(imgs)}, 1.0, [])
+    f = ms.foot_slide(r, stride, DISPLAY_HEIGHT / CELL_H, SLIDE_TOL_PX)
+    return {"ok_pairs": f["ok_pairs"], "total_pairs": f["total_pairs"], "pair_err_px": f["pair_err_px"]}
 
 
 def gate(manifest: dict) -> dict:
@@ -189,12 +254,13 @@ def main(argv=None) -> int:
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--quality", required=True, help="kalite kapısı sonucu (quality.json)")
     ap.add_argument("--walk-cast", help="isteğe bağlı walk_cast kareleri (glob)")
-    ap.add_argument("--stride", type=float, default=150.0, help="yürüme çevrimi uzunluğu (dünya px; zyfen.json walk.stride)")
+    ap.add_argument("--stride", type=float, default=130.0, help="yürüme çevrimi uzunluğu (dünya px; zyfen.json walk.stride). 150 ile ayak çapası 5/8, 130 ile 8/8 (videonun gerçek adım uzunluğu)")
+    ap.add_argument("--align", choices=["feet", "torso"], default="feet", help="yürüme hizası: basan ayak çapası (varsayılan) ya da üst gövde ağırlık merkezi")
     ap.add_argument("--preview", action="store_true")
     ap.add_argument("--preview-dir", default=str(Path(__file__).resolve().parent / "_preview"))
     args = ap.parse_args(argv)
     wc = sorted(glob.glob(args.walk_cast)) if args.walk_cast else None
-    strip, body, manifest = build(Path(args.src), wc, args.stride)
+    strip, body, manifest = build(Path(args.src), wc, args.stride, args.align)
     q = gate(manifest)
     for p, data in ((args.manifest, manifest), (args.quality, q)):
         Path(p).parent.mkdir(parents=True, exist_ok=True)
@@ -210,6 +276,10 @@ def main(argv=None) -> int:
         write_preview(strip, manifest["cell"][0], labels, pv)
         print("önizleme:", pv)
     fs = manifest["foot_slide"]
+    pre = manifest.get("foot_slide_torso")
+    if pre:
+        print("foot_slide önce (torso): %d/%d %s | sonra (ayak çapası, kaydırma %s): %d/%d %s" % (
+            pre["ok_pairs"], pre["total_pairs"], pre["pair_err_px"], manifest["foot_shift_px"], fs["ok_pairs"], fs["total_pairs"], fs["pair_err_px"]))
     print("hücre=%s toplam=%d genişlik=%d  ayak kayması %d/%d çift ≤%.0f px  boy sapması ≤%.2f%%  → %s" % (
         manifest["cell"], manifest["cells"], manifest["strip_width"], fs["ok_pairs"], fs["total_pairs"],
         SLIDE_TOL_PX, q["worst_height_dev_pct"], "GEÇTİ" if q["pass"] else "KALDI"))
