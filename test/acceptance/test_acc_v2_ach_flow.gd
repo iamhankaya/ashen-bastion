@@ -8,6 +8,7 @@ const NORMAL := ExpectedTablesV2.NORMAL_ENEMY
 var _store_path: String = ""
 var _character_id: String = ""
 var _ach_path: String = ""
+var _ctrl: GameController = null
 
 
 class CountingStore:
@@ -29,6 +30,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	_free_controller()
 	var st := get_node("/root/Settings")
 	st.store_path = _store_path
 	st.character_id = _character_id
@@ -37,6 +39,15 @@ func after_each() -> void:
 
 func after_all() -> void:
 	SimKit.remove_tmp()
+
+
+## Denetleyici AchKit.cleanup()'tan ÖNCE serbest bırakılır: _exit_tree -> release -> flush dosyayı yeniden yazardı (USER_LEAK).
+func _free_controller() -> void:
+	if _ctrl != null and is_instance_valid(_ctrl):
+		if _ctrl.get_parent() != null:
+			_ctrl.get_parent().remove_child(_ctrl)
+		_ctrl.free()
+	_ctrl = null
 
 
 func _gate() -> bool:
@@ -49,7 +60,8 @@ func _controller(extra: Dictionary = {}) -> GameController:
 	var o := {"data": AchKit.data(), "achievements_path": _ach_path, "clock": AchKit.clock()}
 	o.merge(extra, true)
 	c.v2_opts = o
-	add_child_autofree(c)
+	add_child(c)
+	_ctrl = c
 	c.highscores = Highscores.new(AchKit.tmp_path("hs"))
 	return c
 
@@ -141,12 +153,13 @@ func test_b5_restart_flushes_previous_tracker_without_loss() -> void:
 	var c := _controller()
 	c.start_run()
 	c.sim.bus.enemy_killed.emit(NORMAL, Vector2.ZERO)
+	var old_sim := c.sim
 	c.start_run()  # YENİDEN BAŞLAT / Tekrar Oyna
 	assert_true(_reload().is_unlocked(&"ilk_kan"), "önceki koşunun açılışı kaybolmaz")
+	old_sim.bus.enemy_killed.emit(NORMAL, Vector2.ZERO)
+	assert_eq(_stored_kills(c), 1, "eski sim'in olayları artık sayılmaz (tracker ayrıldı)")
 	c.sim.bus.enemy_killed.emit(NORMAL, Vector2.ZERO)
-	assert_eq(
-		int(_stored_kills(c)), 1, "yeni tracker yalnız kendi olaylarını sayar (eski bağ kopuk)"
-	)
+	assert_eq(_stored_kills(c), 2, "yeni tracker kendi olaylarını sayar")
 
 
 func _stored_kills(c: GameController) -> int:

@@ -9,6 +9,7 @@ const REAL := "res://data"
 
 var _store_path: String = ""
 var _character_id: String = ""
+var _ctrl: GameController = null
 
 
 func before_each() -> void:
@@ -19,6 +20,11 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	if _ctrl != null and is_instance_valid(_ctrl):  # cleanup'tan önce: _exit_tree flush dosya yazar
+		if _ctrl.get_parent() != null:
+			_ctrl.get_parent().remove_child(_ctrl)
+		_ctrl.free()
+	_ctrl = null
 	var st := _settings()
 	st.store_path = _store_path
 	st.character_id = _character_id
@@ -223,7 +229,8 @@ func _controller() -> GameController:
 		"achievements_path": AchKit.tmp_path("ctrl"),
 		"clock": AchKit.clock(),
 	}
-	add_child_autofree(c)
+	add_child(c)
+	_ctrl = c
 	c.highscores = Highscores.new(AchKit.tmp_path("hs"))
 	return c
 
