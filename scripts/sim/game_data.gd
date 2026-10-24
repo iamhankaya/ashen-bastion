@@ -98,7 +98,6 @@ const SKILL_KEYS: PackedStringArray = [
 	"requires",
 	"sfx",
 ]
-const SFX_DIR := "res://assets/audio/sfx/"
 const REQUIRES_KEYS: PackedStringArray = ["active", "active_level", "passive", "passive_min_level"]
 const ENEMY_KEYS: PackedStringArray = [
 	"id",
@@ -194,8 +193,6 @@ const ERROR_CODES: PackedStringArray = [
 	"scope_mismatch",
 	"atlas_cells",
 	"unknown_ref",
-	# v2.0.1
-	"sfx_invalid",
 ]
 
 var root_dir: String = ""
@@ -568,7 +565,6 @@ func _validate_skill(out: PackedStringArray, file: String, d: Dictionary, reg: D
 	_validate_behavior(out, file, d, kind, reg)
 	if kind != "evolution" and d.has("requires"):
 		_err(out, "requires_unexpected", file, "'requires' yalnız evrimde olur")
-	_validate_sfx(out, file, d, kind)
 	if kind == "evolution":
 		if not d.has("requires"):
 			_err(out, "missing_field", file, "evrimde 'requires' zorunlu")
@@ -583,18 +579,6 @@ func _validate_skill(out: PackedStringArray, file: String, d: Dictionary, reg: D
 		else:
 			_validate_active_levels(out, file, d["levels"])
 	_validate_desc(out, file, d, max_ok)
-
-
-## İsteğe bağlı `sfx` (yalnız evrimde): assets/audio/sfx/<sfx>.ogg var olmalı.
-func _validate_sfx(out: PackedStringArray, file: String, d: Dictionary, kind: String) -> void:
-	if not d.has("sfx"):
-		return
-	if kind != "evolution":
-		_err(out, "sfx_invalid", file, "'sfx' yalnız evrimde olur")
-	elif not (d["sfx"] is String) or (d["sfx"] as String).is_empty():
-		_err(out, "sfx_invalid", file, "'sfx' boş olmayan metin olmalı")
-	elif not ResourceLoader.exists(SFX_DIR + (d["sfx"] as String) + ".ogg"):
-		_err(out, "sfx_invalid", file, "'sfx' = '%s' için SFX dosyası yok" % d["sfx"])
 
 
 func _validate_tags(out: PackedStringArray, file: String, d: Dictionary) -> void:

@@ -78,7 +78,6 @@ func bind(bus: SimBus, game_data: GameData = null) -> void:
 	bus.enemy_killed.connect(_on_killed)
 	bus.gem_collected.connect(_on_gem)
 	bus.player_damaged.connect(_on_damaged)
-	bus.enemy_hit.connect(_on_hit)
 	bus.explosion.connect(_on_explosion)
 	bus.evolution_gained.connect(_on_evolution)
 	bus.boss_warning.connect(_on_boss_warning)
@@ -96,7 +95,6 @@ func _unbind() -> void:
 		[sim_bus.enemy_killed, _on_killed],
 		[sim_bus.gem_collected, _on_gem],
 		[sim_bus.player_damaged, _on_damaged],
-		[sim_bus.enemy_hit, _on_hit],
 		[sim_bus.explosion, _on_explosion],
 		[sim_bus.evolution_gained, _on_evolution],
 		[sim_bus.boss_warning, _on_boss_warning],
@@ -257,10 +255,6 @@ func _on_gem(_v: int) -> void:
 
 func _on_damaged(_a: float, _h: float) -> void:
 	_play(&"player_hurt")
-
-
-func _on_hit(_pos: Vector2) -> void:
-	_play(&"hit")
 
 
 ## Seviye atlama kartları gösterilirken çağrılır (kartlar sim.pending_choices()): evrim kartı varsa belirgin ses.

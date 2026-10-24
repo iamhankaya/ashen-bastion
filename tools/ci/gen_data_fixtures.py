@@ -151,8 +151,6 @@ BAD = {
         "skills/cift_tabanca.json", lambda d: d.update(behavior="yok_boyle_bir"))},
     "requires_unexpected": {"skills/seken_mermi.json": mut(
         "skills/seken_mermi.json", lambda d: d.update(requires={"active": "cift_tabanca"}))},
-    "sfx_invalid": {"skills/zincirleme_patlama.json": mut(
-        "skills/zincirleme_patlama.json", lambda d: d.update(sfx="yok_boyle_ses"))},
     "requires_ref": {"skills/zincirleme_patlama.json": mut(
         "skills/zincirleme_patlama.json", lambda d: d["requires"].update(active="olmayan"))},
     "requires_kind": {"skills/zincirleme_patlama.json": mut(

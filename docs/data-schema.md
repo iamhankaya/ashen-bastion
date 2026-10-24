@@ -103,7 +103,7 @@ Yeni hata kodları (v2.0): `unknown_stat`, `ach_count`, `tier_missing`, `scope_m
 - `requires`: yalnız evrimde (zorunlu). `active` = `kind:active` beceri, `active_level` = o becerinin `max_level`'ı,
   `passive` = `kind:passive` beceri, `passive_min_level` 1..pasifin `max_level`'ı. Her aktifin en çok bir evrimi olur.
 - `sfx` (isteğe bağlı, **yalnız evrimde**): evrim kazanılınca çalan ses kimliği; `assets/audio/sfx/<sfx>.ogg` var olmalı
-  (hata kodu `sfx_invalid`: evrim dışında, boş/metin değil ya da dosya yok). Alan yoksa `evolution_1` çalar.
+  (hatalar: evrim dışında `unknown_key`, boş/metin değil `bad_type`, dosya yok `asset_missing`). Alan yoksa `evolution_1` çalar.
   Dört evrime `evolution_1…4` atanmıştır; `evolution_5`, `evolution_6` yeni karakter evrimleri için yedektir.
 - `tags`: metin dizisi. `rhythm` = şarjör ritmiyle etkileşir. **İçerik tamamlandı (slice 2)** modunda `rhythm` etiketli
   **aktif** sayısı ≥ 2 (`rhythm_count`).

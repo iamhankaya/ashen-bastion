@@ -39,6 +39,22 @@ func test_shipped_evolutions_have_distinct_existing_sfx() -> void:
 		used[sk.sfx] = true
 
 
+func test_sfx_field_validation_codes() -> void:
+	var ok := PackedStringArray()
+	DataV2.validate_skill_sfx(ok, "e.json", {"kind": "evolution", "sfx": "evolution_3"})
+	DataV2.validate_skill_sfx(ok, "e.json", {"kind": "evolution"})
+	assert_eq(ok, PackedStringArray(), "geçerli ve alansız evrim")
+	var bad := PackedStringArray()
+	DataV2.validate_skill_sfx(bad, "a.json", {"kind": "active", "sfx": "evolution_1"})
+	DataV2.validate_skill_sfx(bad, "b.json", {"kind": "evolution", "sfx": ""})
+	DataV2.validate_skill_sfx(bad, "c.json", {"kind": "evolution", "sfx": 3})
+	DataV2.validate_skill_sfx(bad, "d.json", {"kind": "evolution", "sfx": "yok_boyle_ses"})
+	assert_eq(bad.size(), 4)
+	assert_true(_has_code(bad, "unknown_key"))
+	assert_true(_has_code(bad, "bad_type"))
+	assert_true(_has_code(bad, "asset_missing"))
+
+
 func test_bad_fixtures_report_their_code() -> void:
 	var dirs := DirAccess.get_directories_at(FIX)
 	dirs.sort()
