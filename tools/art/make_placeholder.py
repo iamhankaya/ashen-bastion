@@ -28,10 +28,9 @@ SEPIA_MATRIX = np.array(
     [[0.393, 0.769, 0.189], [0.349, 0.686, 0.168], [0.272, 0.534, 0.131]], dtype=np.float32
 )
 # --zyfen: (kaynak, hedef)
-ZYFEN = [
-    ("assets/gfx/char/gunslinger_body.png", "assets/gfx/char/zyfen_body.png"),
-    ("assets/ui/portre-seviye-atlama.png", "assets/gfx/char/zyfen_portrait.png"),
-]
+# Emekli (v2.0.2 U2): zyfen_{body,portrait,strip}.png artık gerçek varlık (tools/art/make_zyfen_strip.py); yer tutucu
+# üretimi gerçek dosyaların üstüne yazmasın diye liste boş.
+ZYFEN: list[tuple[str, str]] = []
 
 
 def shift(

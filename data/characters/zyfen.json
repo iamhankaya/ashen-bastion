@@ -15,8 +15,8 @@
     "display_height": 200,
     "native_facing": "right",
     "cast_point": [
-      0.3,
-      -0.12
+      0.375,
+      -0.305
     ],
     "action_while_moving": false,
     "sway": {
@@ -31,19 +31,27 @@
       "lag": 0.12
     },
     "walk": {
-      "frames": 0,
-      "stride": 150,
-      "strip": "res://assets/gfx/char/zyfen_body_walk.png",
+      "frames": 8,
+      "stride": 130,
+      "strip": "res://assets/gfx/char/zyfen_strip.png",
       "cell": [
-        177,
+        300,
         320
       ],
       "shoulder_dev": []
+    },
+    "cast": {
+      "frames": 6,
+      "fire_frame": 3,
+      "fps": 24
+    },
+    "gather": {
+      "frames": 4
     }
   },
   "portrait": "res://assets/gfx/char/zyfen_portrait.png",
   "blurb": "Rüzgarın büyücüsü; kesikler savurur, fırtına toplar.",
-  "placeholder": true,
+  "placeholder": false,
   "display_upper": "ZYFEN",
   "order": 2
 }

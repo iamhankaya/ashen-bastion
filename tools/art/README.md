@@ -43,3 +43,14 @@ ayak çizgisi alt kenarda, yatay hiza gövde üst yarısının ağırlık merkez
 (indeks N), düşman şeridi yalnız N hücre. Manifest: `frames, cell, scale, display_scale_hint, shoulder_dev (oyuncu), quality{foot_dev_px_1536,
 height_dev_pct, width_dev_pct, foot_slide}`. `foot_slide` basan ayağın kare başına `stride/N` geriye gidip gitmediğini ölçer (kapı: ≥N−2 çift ≤3 px).
 Kalite kapısı sonuçları ve komutlar: `docs/dev/v1.1-d4/README.md`. Testler: `tests/test_make_strip.py` (sentetik 7 hücreli sayfa).
+
+
+## Zyfen şeridi (v2.0.2 U2)
+
+`python3 tools/art/make_zyfen_strip.py --src art/source/zyfen --out assets/gfx/char/zyfen_strip.png --body-out assets/gfx/char/zyfen_body.png --manifest art/source/zyfen/strip_manifest.json --quality art/source/zyfen/quality.json [--stride 130] [--align feet|torso] [--walk-cast '<glob>'] [--preview]`
+
+19 hücre (8 yürüme, 1 duruş, 6 cast, 4 gather; `--walk-cast` ile + N). Hücre genişliği tüm klip alfa kutularından hesaplanır
+(320 px boy). Yürüme kareleri varsayılan olarak basan ayağa göre hizalanır (`--align feet`; kare başına ≤24 px kaydırma); kapı
+`foot_slide` ≥ N-2 çift ≤3 px, klip boy sapması ≤%6, toplam genişlik ≤8192. Kapı kırmızıysa çıkış kodu 1 ve `quality.json`
+`pass: false` (sessiz yedek yok; `test_make_zyfen_strip.py` depodaki çıktıyı denetler). `stride`, `zyfen.json` `walk.stride` ile aynı olmalıdır.
+Yöntem kb notu: kareler video kareleridir; üretici araç yan görünümde bacak sırasını değiştiremediği için video yöntemi kullanıldı.
