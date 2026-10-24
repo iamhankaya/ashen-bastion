@@ -26,6 +26,7 @@ func build_world(refs: Dictionary) -> void:
 		_data = GameData.load_default()
 	store = AchievementStore.new(str(opts.get("achievements_path", AchievementStore.DEFAULT_PATH)))
 	store.load_file()
+	refs["store"] = store  # V2Characters kilit denetimi için paylaşılan sözlükten tembel okur
 	_menu = refs.get("menu", null)
 	_result = refs.get("result_screen", null)
 	_set_screen = refs.get("set_screen", Callable())

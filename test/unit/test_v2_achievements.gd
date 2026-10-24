@@ -257,3 +257,16 @@ func test_release_flushes_and_is_safe() -> void:
 	gc.v2.release()
 	assert_true(_saved()["unlocked"].has("ilk_kan"))
 	gc.v2.update_views(0.1)  # release sonrası no-op
+
+
+func test_build_world_publishes_store_in_shared_refs() -> void:
+	var refs := {}
+	var a := V2Achievements.new({"achievements_path": PATH, "data": GameData.load_default()})
+	a.build_world(refs)
+	assert_same(refs.get("store", null), a.store)
+	a.release()
+
+
+func test_characters_slice_reads_the_same_store_through_refs() -> void:
+	var gc := _ctrl()
+	assert_same(gc.v2.characters._store(), gc.v2.achievements.store)
