@@ -1,6 +1,7 @@
 extends SceneTree
 ## Altın hash üretici (gate dışı): godot --headless -s res://tools/golden/golden_run.gd -- --stage <anahtar>
-##   [--characters gunslinger,barutcu] [--seeds 11,23] [--steps 7200] [--write]
+##   [--characters gunslinger,barutcu] [--seeds 11,23] [--steps 7200] [--zyfen-u3-grants] [--write]
+## --zyfen-u3-grants: koşuya GoldenKit.ZYFEN_U3_GRANTS (Tufan'lı Zyfen yükü) verilir (aşama `zyfen_u3`).
 ## --write yoksa JSON'u yazdırır; varsa test/fixtures/golden_hashes.json içindeki o aşama anahtarını günceller.
 
 const DEFAULT_CHARS := "gunslinger"
@@ -25,7 +26,10 @@ func _init() -> void:
 	for c in chars:
 		var per_seed := {}
 		for s in seed_list:
-			per_seed[str(s)] = GoldenKit.run(s, StringName(c), steps)
+			var grants: Dictionary = (
+				GoldenKit.ZYFEN_U3_GRANTS if args.has("zyfen-u3-grants") else {}
+			)
+			per_seed[str(s)] = GoldenKit.run(s, StringName(c), steps, grants)
 			print("golden %s %s seed=%d -> %s" % [stage, c, s, per_seed[str(s)]])
 		out[c] = per_seed
 	if args.has("write"):

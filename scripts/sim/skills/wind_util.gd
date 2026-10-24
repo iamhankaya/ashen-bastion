@@ -7,6 +7,42 @@ const CRESCENT_RADIUS := 14.0
 ## displace: delta en çok bu kadar alt adıma bölünür (ince engeli atlamaz, harabe içine gömülmez).
 const DISPLACE_STEPS := 4
 const DISPLACE_STEP_LEN := 64.0
+## Delen Rüzgar / Göğün Mızrağı kesiği: menzil, yarıçap, hız.
+const SPEAR_RANGE := 850.0
+const SPEAR_RADIUS := 10.0
+const SPEAR_SPEED := 1400.0
+
+
+## Oyuncu becerilerinin (şarjör dışı) mermi çıkış noktası: kolsuzda cast noktası (hedef yönüne göre aynalı), değilse
+## oyuncudan namlu payı kadar önde.
+static func skill_origin(api: GameSim, dir: Vector2) -> Vector2:
+	var rig := api.character.rig
+	if PlayerRig.is_armless(rig):
+		return PlayerRig.cast_point_world(api.player_pos, dir.x < 0.0, rig)
+	return api.player_pos + dir * SkillUtil.MUZZLE_OFFSET
+
+
+## `radius` px içinde canlı bir düşman var mı (oyuncu merkezli; bölge becerilerinin "hedef var" denetimi).
+static func enemies_near(api: GameSim, radius: float) -> bool:
+	var ids := PackedInt32Array()
+	api.grid.query_circle(api.player_pos, radius, ids)
+	for id in ids:
+		if api.enemies.is_alive(id):
+			return true
+	return false
+
+
+## Menzildeki en yüksek canlı düşmana delen kesik (mermi hasarı: zırh uygulanır). Hedef yoksa false.
+static func spear(api: GameSim, dmg: float) -> bool:
+	var target := api.pick_highest_hp(api.player_pos, SPEAR_RANGE)
+	if target < 0:
+		return false
+	var tpos := api.enemies.pos[EnemyPool.index_of(target)]
+	var origin := skill_origin(api, tpos - api.player_pos)
+	crescent(
+		api, origin, tpos - origin, dmg, SPEAR_RANGE, {"radius": SPEAR_RADIUS, "speed": SPEAR_SPEED}
+	)
+	return true
 
 
 ## `dir` yönünde delen kesik (hilal) doğurur; döner: mermi indeksi (-1 = havuz dolu). `origin` olduğu gibi kullanılır.
