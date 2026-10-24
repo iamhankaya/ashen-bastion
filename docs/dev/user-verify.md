@@ -184,3 +184,11 @@ Bulut yalnız headless/xvfb koştu (sentetik dokunma olayları); aşağıdakiler
 **Kullanıcı kararları (W):**
 - **D-6 Denge** — W-8…W-11 sonuçlarına göre ayar sizde; bot A/B yaklaşık göstergedir (strong botu evrim almaz, F-019'daki gerçek güçlü yapıyı tam temsil etmez).
 - **D-7 `free` Sfx kimliği** — T71 raporu: kodda `free` adlı bir ses kimliği yok. Ses istemi verilecekse ad doğrulanmalı ya da yeni kimlik eklenmeli.
+
+### S — v2.0.1 ayarlar ekranı (T20261024-78; cihazda görülür)
+- **S-1 Kaydırıcı hissi** — ana menü sağ üst AYARLAR ve duraklatmadaki AYARLAR açılır; MÜZİK/EFEKT kaydırıcısını parmakla sürükle: tutamak parmağa takılıyor, %5 adımla atlıyor, yüzde etiketi akıyor, ses sürüklerken anında değişiyor; sürüklemede ekran/liste kaymıyor; tutamağın dışından (ray üstüne) dokunmak da yerleştiriyor.
+- **S-2 Efekt örneği** — EFEKT kaydırıcısını bırakınca bir atış sesi (`shot_right`) çalıyor; %0'da sessiz, müzik %0'da müzik tamamen kesik.
+- **S-3 Varsayılan karışım** — ilk açılışta müzik %100 / efekt %70: oyunda silah ve vuruş sesleri müziği bastırmıyor mu? Gerekirse varsayılanlar (`Settings.SFX_DEFAULT`) ayarlanır.
+- **S-4 Duraklatma/boss** — müzik %50 iken duraklat → müzik daha da kısılıyor, devam edince %50'ye dönüyor; boss uyarısında geçici kısılma kullanıcı seviyesinin üstüne biniyor (seviyeyi sıfırlamıyor).
+- **S-5 Kalıcılık ve hızlı sessiz** — uygulamayı kapat/aç: yüzdeler korunuyor. Menü/duraklatmadaki SES düğmesi tüm sesi kesip açıyor, kaydırıcı değerlerine dokunmuyor.
+- **S-6 Yerleşim** — ayarlar ekranı ve sağ üstteki AYARLAR düğmesi çentikli/dar cihazda kesilmiyor, başlık/etiketle çakışmıyor; geri tuşu ayarlardan önceki ekrana (menü/duraklatma) döndürüyor.

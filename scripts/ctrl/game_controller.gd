@@ -36,6 +36,7 @@ var hud: Hud
 var joystick: JoystickView
 var level_up: LevelUpScreen
 var pause_screen: PauseScreen
+var settings_screen: SettingsScreen
 var result_screen: ResultScreen
 var menu: MainMenu
 ## v2.0 cephesi (karakter/başarım/bakım dilimleri); testler `v2_opts`'u add_child'dan ÖNCE doldurur.
@@ -156,6 +157,7 @@ func _build_ui() -> void:
 	pause_screen.menu_confirmed.connect(go_menu)
 	pause_screen.sound_toggled.connect(_on_sound)
 	pause_screen.vibration_toggled.connect(_on_vibration)
+	pause_screen.settings_requested.connect(open_settings)
 	result_screen = ResultScreen.new()
 	result_screen.name = "Result"
 	ui.add_child(result_screen)
@@ -167,6 +169,8 @@ func _build_ui() -> void:
 	menu.play_requested.connect(start_run)
 	menu.sound_toggled.connect(_on_sound)
 	menu.vibration_toggled.connect(_on_vibration)
+	menu.settings_requested.connect(open_settings)
+	_build_settings_screen()
 	menu.debug_stress_requested.connect(start_stress)
 	_build_render_debug()
 
@@ -865,6 +869,19 @@ func _notification(what: int) -> void:
 		pause_game()
 
 
+## v2.0.1: ayarlar ekranı menü ve duraklatma üstünde bir katmandır (ekran durumu değişmez); geri onu kapatır.
+func _build_settings_screen() -> void:
+	settings_screen = SettingsScreen.new()
+	settings_screen.name = "Settings"
+	ui.add_child(settings_screen)
+	settings_screen.vibration_toggled.connect(_on_vibration)
+
+
+func open_settings() -> void:
+	if screen == PauseLogic.Screen.MENU or screen == PauseLogic.Screen.PAUSED:
+		settings_screen.open()
+
+
 func _current_screen() -> int:
 	if screen == PauseLogic.Screen.PAUSED and pause_screen.is_confirm_open():
 		return PauseLogic.Screen.CONFIRM
@@ -872,6 +889,9 @@ func _current_screen() -> int:
 
 
 func _on_back() -> void:
+	if settings_screen.visible:
+		settings_screen.close()
+		return
 	match PauseLogic.back_action(_current_screen()):
 		PauseLogic.Back.PAUSE:
 			pause_game()
