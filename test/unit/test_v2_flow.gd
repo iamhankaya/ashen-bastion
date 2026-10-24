@@ -2,6 +2,8 @@ extends GutTest
 ## V2Flow (S3 cephesi): kancaları üç dilim sınıfına sırayla dağıtır; open_* yalnız MENU'de; release sonrası no-op;
 ## selected_character() çözümleme ve enjeksiyon. Controller entegrasyonu: v1.1 davranışı korunur.
 
+const ACH_PATH := "user://test_ach_v2flow_unit.json"
+
 var _log: Array[String] = []
 var _chars_before: String = ""
 
@@ -114,6 +116,9 @@ func before_each() -> void:
 
 func after_each() -> void:
 	_settings().character_id = _chars_before
+	for suffix in ["", ".tmp", ".bad"]:
+		if FileAccess.file_exists(ACH_PATH + suffix):
+			DirAccess.remove_absolute(ACH_PATH + suffix)
 
 
 func _settings() -> Node:
@@ -263,6 +268,8 @@ func test_selected_character_does_not_mutate_default_data_cache() -> void:
 
 func _ctrl(opts: Dictionary = {}) -> GameController:
 	var gc := GameController.new()
+	if not opts.has("achievements_path"):
+		opts["achievements_path"] = ACH_PATH  # koşu sonu/duraklatma kaydı gerçek user:// dosyasına yazmasın
 	gc.v2_opts = opts
 	add_child_autofree(gc)
 	return gc
