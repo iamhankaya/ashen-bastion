@@ -12,6 +12,8 @@ Girdiler: `mid_run.gd` çıktısı (satır başına bir JSON) içeren .jsonl dos
 
 Metrikler (politika başına): survival = ölüm anı, 20 dk'ya ulaşan sansürlü (20 dk sayılır), MEDYAN; hp_mid = 10-20 dk
 can oranı ortalaması, ölen koşular 0 sayılır (ortalama); reach10 = 10 dk'ya ulaşan oran (yalnız raporlanır).
+Karar dışı yardımcı ölçütler (v2.0.2 400 tohum): kills5 = 5. dk'daki öldürme sayısı (5 dk'ya ulaşmayan koşu hariç, ortalama),
+hp_early = 0-5 dk can oranı ortalaması (ortalama). Üçü (reach10 dahil) karara girmez; yalnız A-B gürültü tabanı ve GA raporlanır.
 Ölçüt: yeni istatistiğin %95 GA'sı tabanın ±%5 bandıyla çelişmiyor (kesişiyor). Gürültü tabanı (A ile B arasındaki göreli fark)
 ±%2,5'i aşıyorsa o metrik için sonuç "ölçülemedi" (tohum artırılır). Karar yalnız kapı politikaları (strong, kite) için;
 greedy/idle bilgi amaçlıdır. Rapor sapmayı ayrıştırır: (v201 → nodyn) = dinamit kaybı, (nodyn → yeni) = havuz süzgeci/diğer.
@@ -65,17 +67,31 @@ def reach10(r: dict) -> float:
     return 1.0 if r["time"] >= MID_START else 0.0
 
 
+def kills5(r: dict) -> float | None:
+    """5. dk'daki öldürme; 5 dk'ya ulaşamayan koşuda mid_run.gd -1 yazar => eksik (None)."""
+    return float(r["kills5"]) if r.get("kills5", -1) >= 0 else None
+
+
+def hp_early(r: dict) -> float | None:
+    """0-5 dk can oranı ortalaması; örnek yoksa (-1) eksik (None)."""
+    return float(r["hp_early"]) if r.get("hp_early", -1.0) >= 0 else None
+
+
 METRICS = {
     "survival": (survival, np.median),
     "hp_mid": (hp_mid, np.mean),
     "reach10": (reach10, np.mean),
+    "kills5": (kills5, np.mean),
+    "hp_early": (hp_early, np.mean),
 }
 GATE_METRICS = ("survival", "hp_mid")
+AUX_METRICS = ("reach10", "kills5", "hp_early")  # karar dışı
 
 
 def values(rows: list[dict], policy: str, metric: str) -> dict[int, float]:
     fn = METRICS[metric][0]
-    return {int(r["seed"]): fn(r) for r in rows if r["policy"] == policy}
+    out = {int(r["seed"]): fn(r) for r in rows if r["policy"] == policy}
+    return {k: v for k, v in out.items() if v is not None}
 
 
 def boot_ci(x: np.ndarray, stat, rng: np.random.Generator, n: int) -> tuple[float, float]:
@@ -140,6 +156,11 @@ def compare(base_rows, new_rows, noise_rows=None, nodyn_rows=None, gate_policies
                     z = np.array(list(vz.values()))
                     nz = abs(float(stat(z)) / entry["base"] - 1.0) if entry["base"] else float("nan")
                     entry["noise"] = {"n": len(z), "value": float(stat(z)), "rel": nz, "over_limit": bool(nz > noise_limit)}
+                    nd = dict(zip(("diff", "lo", "hi"), rel_diff_ci(a, z, stat, rng, boot, False)))
+                    entry["noise"]["ci"] = nd
+                    half = (nd["hi"] - nd["lo"]) / 2
+                    # ±band, A-B gürültü GA'sı bandın yarı genişliğinden dar ise çözülebilir (nan => çözülemez)
+                    entry["noise"]["band_resolvable"] = bool(half <= band) if not np.isnan(half) else False
             if nodyn_rows is not None:
                 vd = values(nodyn_rows, pol, m)
                 if vd:
@@ -190,7 +211,8 @@ def render(res: dict, base_name: str, new_name: str) -> str:
             pairs = f"{_pct(pa_['diff'])} ({_pct(pa_['lo'])}…{_pct(pa_['hi'])})" if pa_ else "–"
             up = e["unpaired"]
             noise = e.get("noise")
-            nz = f"{_pct(noise['rel'])}{' ⚠' if noise['over_limit'] else ''} (n={noise['n']})" if noise else "–"
+            nz = (f"{_pct(noise['rel'])} (GA {_pct(noise['ci']['lo'])}…{_pct(noise['ci']['hi'])}){' ⚠' if noise['over_limit'] else ''} "
+                  f"(n={noise['n']})") if noise else "–"
             tag = e.get("verdict", "bilgi" if not pr["gate"] else "bilgi (metrik)")
             o.append(
                 f"| {pol}{'' if pr['gate'] else ' (bilgi)'} | {m} | {e['base']:.3f} | {e['new']:.3f} | "
