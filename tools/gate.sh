@@ -52,6 +52,7 @@ scan_log .gate/validate.log
 
 step "4b. Dilim işareti sözdizimi (tools/v2_slices.txt)"
 python3 tools/ci/check_slices.py tools/v2_slices.txt || fail "tools/v2_slices.txt (geçersiz simge / dosya yok)"
+python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt || fail "tools/v202_slices.txt (geçersiz simge / dosya yok)"
 
 step "5. Python testleri"
 PYDIRS=""
@@ -80,6 +81,7 @@ step "7. Sahte yeşil korumaları"
 python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
 python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 60 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
 python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
+python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v202_slices.txt)"
 
 if [ -f test/acceptance/test_acc_perf_counters.gd ]; then
   step "8. İş sayacı kontrolü (6. adımda GUT içinde koştu)"

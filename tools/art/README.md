@@ -43,3 +43,17 @@ ayak çizgisi alt kenarda, yatay hiza gövde üst yarısının ağırlık merkez
 (indeks N), düşman şeridi yalnız N hücre. Manifest: `frames, cell, scale, display_scale_hint, shoulder_dev (oyuncu), quality{foot_dev_px_1536,
 height_dev_pct, width_dev_pct, foot_slide}`. `foot_slide` basan ayağın kare başına `stride/N` geriye gidip gitmediğini ölçer (kapı: ≥N−2 çift ≤3 px).
 Kalite kapısı sonuçları ve komutlar: `docs/dev/v1.1-d4/README.md`. Testler: `tests/test_make_strip.py` (sentetik 7 hücreli sayfa).
+
+## Zyfen şeridi (`make_zyfen_strip.py`, v2.0.2 S2)
+Kolsuz, tek parça tam gövde kareleri (RGBA PNG; yeşil zeminliyse `--chroma`): yürüme, duruş, cast, gather, isteğe bağlı walk_cast -> tek şerit + `zyfen_body.png` (aynı ölçek) + manifest + kalite raporu. `make_strip.py` değişmez.
+```
+python tools/art/make_zyfen_strip.py --stand <png> --walk '<glob>' --cast '<glob>' --gather '<glob>' [--walk-cast '<glob>'] \
+    --strip assets/gfx/char/zyfen_strip.png --body assets/gfx/char/zyfen_body.png --manifest <json> --quality art/source/zyfen/quality.json \
+    [--palm-px X,Y --fire-frame 3] [--preview]
+python3 -m pytest -q -p no:cacheprovider tools/art/tests/test_make_zyfen_strip.py
+```
+- Hücre sırası `RigFrames` ile aynı: yürüme `0..W-1`, duruş `W`, cast, gather, walk_cast. `--walk` boşsa `walk.frames: 0` (prosedürel yürüme).
+- **Hücre genişliği girdiden hesaplanır** (tüm karelerin hizalı alfa kutularının en geniş yarı genişliği x2 + 2·PAD, çift sayı); yükseklik 320. Klip başına ölçek (ortanca kare boyu = 300 px), duruş aynı boya; `body_scale` manifestte.
+- Kalite kapısı (`quality.pass`, çıkış kodu 1): yürüme `foot_slide` >= N-2 çift <= 3 px, klip yükseklik sapması <= %6, toplam genişlik <= 8192; walk_cast için de foot_slide. Kapı kalırsa sessiz yedek yok: `docs/design/v2.0.2/walk-waiver.md` yalnız kullanıcı onayıyla (plan U2).
+- `--palm-px` cast karesindeki avuç pikselini `cast_point` uzayına çevirir (`palm`: gövde kutusu merkezine göre, `display_height` kesri); K fazı manifest `palm` ile `zyfen.json` `cast_point` karşılaştırır.
+- Önizleme `tools/art/_preview/` (commit'lenmez; ayak çizgisi kırmızı, merkez turkuaz).
