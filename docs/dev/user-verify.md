@@ -149,3 +149,38 @@ Bu bölüm v2.0 listesinin tek giriş noktasını tamamlar: yukarıdaki Genel/K/
 - **D-3 Başarım ödülü** — şu an yalnız kayıt; kilit açma (`unlock`) altyapısı var, hiçbir karakterde kullanılmıyor. Kilit kullanılacaksa hangi başarım hangi karakteri açsın?
 - **D-4 Başarım hedef kalibrasyonu ve denge** — bot verisi `docs/dev/v2.0-verification.md`'de; hedef/denge ayarı yapılmadı (v1.1 kararı: "denge şimdilik dursun").
 - **D-5 Açık görsel bulgular** — K-06, K-07 (asset düzeltmesi; kullanıcı/AI görseli gerekebilir), K-08 (v1.1 kökenli) ve Label'da bulunmayan başlık harf aralığı bilerek atlandı.
+
+### W — v2.0.1 doğrulama (T20261024-74; kaydırma, omuz, denge, müzik, SFX)
+Bulut yalnız headless/xvfb koştu (sentetik dokunma olayları); aşağıdakiler **gerçek parmak ve kulakla** cihazda görülür. Bulut kanıtı: `docs/dev/v2.0.1-verification.md`.
+
+**Liste kaydırma (F-ashen-bastion-037):**
+- **W-1 Başarımlar kaydırma** — Başarımlar ekranında listeyi parmakla yukarı/aşağı sürükle: liste parmakla birlikte kayıyor mu (satırın üstünden başlayan sürükleme dahil)? Üstteki yapışkan grup başlığı (KOLAY/ORTA…) tepede kalıyor mu? Bilinen sınır: bırakınca süzülme (kinetik kaydırma) yok, dokunmada eşik yok (ilk piksel kaydırır) — "çok hassas" gelirse bildir.
+- **W-2 Kaydırırken yanlış dokunuş** — kaydırmak için satıra basıp sürüklerken GERİ ya da başka bir şey tetikleniyor mu? GERİ düğmesine tek dokunuş hâlâ çalışıyor mu?
+- **W-3 Karakter şeridi** — Karakterler ekranında kart şeridi yatay sürüklenince kayıyor mu? (Bugün tek gerçek karakter + yer tutucu var; şerit taşmıyorsa kayacak bir şey olmayabilir — bu bir hata değil; ikinci karakter eklenince yeniden bak.)
+- **W-4 Çift hız yok** — masaüstünde (fare) sürüklemede liste çift hızlı kaymıyor (emülasyon olayı atlanır); telefonda ayrıca bir şey yok.
+
+**Omuz kayması (yürürken ~17 px → ≤6 px):**
+- **W-5 Yürürken kol** — oyuncuyu tam hızda yürüt (her yöne, özellikle sağ/sol dönüşlerde): sol kol/omuz gövdeden kopuk "kayıyor" mu, omuz-kol birleşimi görünür bir basamak yapıyor mu? Eski sürümle (v2.0) kıyas: sağ alttaki "sekme: …" etiketiyle ESKİ v1.1 / YUMUŞAK / SAKİN kademelerini dene; üçünde de ≤6 px hedeflenir (ölçüm: bel pivotu `HIP_FRAC` 0,65).
+- **W-6 Ölüm devrilmesi ve duruş** — ölürken devrilme ayaktan dönüyor (bilerek) ve duruşta gövde/kol hiç oynamıyor.
+- **W-7 Nişan/doldurma sırasında kol** — kol artık sim omzuna kenetli değil; nişan yönü değişince ve doldururken kol gövdeye bağlı kalıyor mu, takılma yok mu?
+
+**Zorluk hissi (denge A/B; hedef: orta/geç oyun biraz zor, erken oyun aynı):**
+- **W-8 İlk 5 dakika** — v2.0 ile aynı rahatlıkta mı? (Bot: 5. dk can ve öldürme farkı ≤%6.) Daha zor geliyorsa bildir.
+- **W-9 8–20. dakika** — güçlü bir yapıyla (evrimli) 10–20. dk can barı eskisinden belirgin düşüyor mu (bot: strong kalan can ≈%63, eskiden ≈%70)? Piyade halkaları (8/12/16. dk: 65/70/75 adet) ve kalabalık "biraz daha zor" mu, "haksız zor" mu? Karar: şimdiki ayar kalsın mı, hangi yönde oynansın (`difficulty.gd`, `data/waves.json`)?
+- **W-10 Kite/koşma oyunu** — sürekli kaçıp ateş eden oyunda hayatta kalma süresi ≈%15–18 kısaldı (bot medyan 599 → 492 sn); 8. dk halkası (65 piyade) ilk ciddi duvar. Adil mi?
+- **W-11 Perf** — canlı tavanı 400 değişmedi ama orta oyunda doğuş oranı arttı: geç oyunda kare hızı düşüyor mu? (Perf yeniden ölçülmedi.)
+
+**Müzik (yeni Suno parçaları):**
+- **W-12 Döngü tekrarı** — menü, savaş-1, savaş-2, Kale Lordu parçalarını döngüde en az 2 tur dinle: döngü noktasında tık/sessizlik/ses sıçraması yok mu, başa dönüş doğal mı (`start_s`/`end_s` — `audio_manifest.json`)? Kısa parçalarda (savaş-2 ≈58 sn, Kale Lordu ≈61 sn) tekrar sıkıcı mı?
+- **W-13 Geçişler** — menü → savaş → boss uyarı → Kale Lordu → kazandın/kaybettin geçişleri; ses seviyeleri parçalar arasında dengeli mi (hepsi ≈ −18 LUFS ölçüldü)?
+
+**SFX karışımı:**
+- **W-14 Atış ve isabet seviyesi** — atış sesi ile düşmana isabet (`hit_1/2`) sesi birbirini örtmüyor; isabet sesi seri atışta rahatsız edici değil, varyasyon (2 isabet/2 ölüm) tekrar hissi vermiyor.
+- **W-15 XP tizliği** — XP toplama sesi çok sık geldiği için kalabalıkta tiz/rahatsız edici mi (−28 LUFS, en kısık)? Kulaklıkla da dene.
+- **W-16 Evrim ve level_up farkı** — normal seviye atlama ile evrim seviyesi (`level_up_evolution`) ve evrim anı (6 farklı `evolution_n`) ayırt ediliyor; evrim belirgin biçimde daha "büyük".
+- **W-17 dry_fire** — şarjör boşken tetik: boş tık sesi var, spam'de rahatsız etmiyor; doldurma (`reload_spin`/`reload_click`) sesleri tutarlı.
+- **W-18 Genel karışım** — kalabalıkta (80+ düşman) ölüm/isabet/patlama sesleri üst üste binince ses kırpılması (cızırtı) ya da müziğin ezilmesi yok.
+
+**Kullanıcı kararları (W):**
+- **D-6 Denge** — W-8…W-11 sonuçlarına göre ayar sizde; bot A/B yaklaşık göstergedir (strong botu evrim almaz, F-019'daki gerçek güçlü yapıyı tam temsil etmez).
+- **D-7 `free` Sfx kimliği** — T71 raporu: kodda `free` adlı bir ses kimliği yok. Ses istemi verilecekse ad doğrulanmalı ya da yeni kimlik eklenmeli.

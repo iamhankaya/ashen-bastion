@@ -8,3 +8,4 @@ __pycache__/
 .pytest_cache/
 audio/muzik/*.import
 tools/art/_preview/
+.mid/
