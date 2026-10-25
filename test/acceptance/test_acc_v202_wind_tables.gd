@@ -10,7 +10,11 @@ const EVOS := ["ay_oragi", "kasirga_patlamasi", "gogun_mizragi", "tufan"]
 
 ## Hortum/Tufan JSON düğmeleri: değerleri test_acc_v202_wind_knobs.gd z1'de (BASE_START) sınanır; plan sayısal tablosunda
 ## yoktur. Bu yüzden yalnız bu iki beceride "tabloda olmayan anahtar" denetiminden muaftır (başka beceride hâlâ yakalanır).
-const KNOB_KEYS := ["speed", "target_mode", "retarget_every", "max_dist", "boss_mult"]
+## T20261025-79: `min_spawn_dist`/`keep_out` (doğuş ve yaklaşmama uzaklığı) da düğmedir; değerleri
+## test_acc_v202_wind_keepout.gd'de sınanır.
+const KNOB_KEYS := [
+	"speed", "target_mode", "retarget_every", "max_dist", "boss_mult", "min_spawn_dist", "keep_out"
+]
 const KNOB_SKILLS := ["hortum", "tufan"]
 
 var _data: GameData

@@ -292,11 +292,12 @@ func test_z4_hortum_spawns_count_zones_with_life_tick_and_spawn_distance() -> vo
 			assert_almost_eq(sim.zones.life[i], float(want["life"]), 0.05, "ömür")
 			assert_almost_eq(sim.zones.radius[i], float(want["radius"]), 0.5, "yarıçap")
 			assert_almost_eq(sim.zones.tick_every[i], 0.4, STEP + 0.001, "tik 0,4 sn")
-			assert_almost_eq(
+			# T20261025-79: doğuş oyuncudan en az min_spawn_dist (≈300 px; ilk adım hareketi payı 2 px). Ayrıntı:
+			# test_acc_v202_wind_keepout.gd.
+			assert_gte(
 				sim.zones.pos[i].distance_to(sim.player_pos),
-				250.0,
-				60.0,
-				"oyuncudan ~250 px doğar (ilk adım hareketi dahil)"
+				300.0 - 2.0,
+				"oyuncudan >= min_spawn_dist (300) doğar"
 			)
 
 
@@ -758,11 +759,12 @@ func test_e5b_tufan_pulls_does_not_fling_at_the_end_and_deals_double_tick() -> v
 	var zi := _first_zone(sim, 800)
 	assert_eq(sim.zones.count, 3, "3 dev hortum")
 	var gen := sim.zones.gen[zi]
-	# Ölçüm temizliği: yalnız bu dev hortum etkili olsun (diğerleri durur ve küçültülür).
+	# Ölçüm temizliği: yalnız bu dev hortum etkili olsun (diğerleri durur ve uzağa alınır). T20261025-79: üç dev hortum
+	# artık aynı uzak kümede doğabilir (çakışır) ve `radius` küçültmek etkisizdir; bu yüzden konum uzağa taşınır.
 	for j in sim.zones.count:
 		sim.zones.speed[j] = 0.0
 		if sim.zones.gen[j] != gen:
-			sim.zones.radius[j] = 1.0
+			sim.zones.pos[j] = Vector2(1.0e6, 1.0e6)
 	var c := sim.zones.pos[zi]
 	var id := AccV202.dummy(sim, c + Vector2(100, 0))
 	var from := sim.step_count

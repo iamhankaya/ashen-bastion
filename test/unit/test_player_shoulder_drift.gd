@@ -13,6 +13,7 @@ const CELL := Vector2i(40, 80)
 var _tier_backup: int = PlayerAnim.bounce_tier
 var _rig_ref: Dictionary
 var _walk_backup: Variant = null
+var _backed_up := false
 
 
 func after_each() -> void:
@@ -20,6 +21,7 @@ func after_each() -> void:
 	if _rig_ref.size() > 0:  # GameData önbelleği paylaşımlıdır: geri al
 		_rig_ref["walk"] = _walk_backup
 		_rig_ref = {}
+		_backed_up = false
 	if FileAccess.file_exists(STRIP):
 		DirAccess.remove_absolute(STRIP)
 	ArtLoader._cache.clear()
@@ -32,7 +34,9 @@ func _view(frames: int = 0) -> PlayerView:
 		img.fill(Color(0.3, 0.4, 0.3, 1.0))
 		img.save_png(STRIP)
 		_rig_ref = sim.character.rig
-		_walk_backup = _rig_ref.get("walk", null)
+		if not _backed_up:  # bir testte birden çok _view(n): yalnız ilk (özgün) değer yedeklenir
+			_walk_backup = _rig_ref.get("walk", null)
+			_backed_up = true
 		_rig_ref["walk"] = {
 			"frames": frames,
 			"stride": 136,

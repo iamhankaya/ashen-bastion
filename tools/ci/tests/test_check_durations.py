@@ -31,13 +31,13 @@ def test_fast_tests_pass_silently(tmp_path):
 
 
 def test_single_test_over_limit_fails(tmp_path):
-    r = run(junit(tmp_path, [1.0, 60.5]))
+    r = run(junit(tmp_path, [1.0, 75.5]))
     assert r.returncode == 1
     assert "GATE_SLOW" in r.stderr and "test_1" in r.stderr
 
 
 def test_exactly_at_limit_passes(tmp_path):
-    assert run(junit(tmp_path, [60.0])).returncode == 0
+    assert run(junit(tmp_path, [75.0])).returncode == 0
 
 
 def test_over_warn_is_info_not_failure(tmp_path):

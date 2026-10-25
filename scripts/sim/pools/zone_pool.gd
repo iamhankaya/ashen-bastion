@@ -30,6 +30,8 @@ var retarget_left: PackedFloat32Array = PackedFloat32Array()
 var speed: PackedFloat32Array = PackedFloat32Array()
 var max_dist: PackedFloat32Array = PackedFloat32Array()
 var boss_mult: PackedFloat32Array = PackedFloat32Array()
+## Oyuncuya en fazla yaklaşma mesafesi (px, kullanıcı kararı 2026-10-25): hedef seçimi ve hareket bu daireye girmez; 0 = sınırsız.
+var keep_out: PackedFloat32Array = PackedFloat32Array()
 ## Yeniden hedefleme aralığı (sn); 0 = türe göre WindSystem.DEFAULT_RETARGET.
 var retarget_every: PackedFloat32Array = PackedFloat32Array()
 
@@ -54,10 +56,11 @@ func _init() -> void:
 	speed.resize(CAP)
 	max_dist.resize(CAP)
 	boss_mult.resize(CAP)
+	keep_out.resize(CAP)
 	retarget_every.resize(CAP)
 
 
-## o: radius, life, tick_every, dmg, pull, push, fling, retarget (sn, ilk bekleme), retarget_every (sn), speed, max_dist, boss_mult (=1), vel:Vector2,
+## o: radius, life, tick_every, dmg, pull, push, fling, retarget (sn, ilk bekleme), retarget_every (sn), speed, max_dist, boss_mult (=1), keep_out, vel:Vector2,
 ## target:Vector2 (hepsi isteğe bağlı, yok = 0). İlk tik `tick_every` sonra. Dönen değer bölge indeksidir (çıkarma olana kadar geçerli).
 ## -1 = dolu ya da rezerv (KIND_POCKET count >= CAP - RESERVE iken). Sessiz değildir: çağıran
 ## `WindSystem.spawn_zone` `sim.fx.zone_dropped` sayacını artırır.
@@ -85,6 +88,7 @@ func spawn(k: int, p: Vector2, o: Dictionary = {}) -> int:
 	speed[i] = float(o.get("speed", 0.0))
 	max_dist[i] = float(o.get("max_dist", 0.0))
 	boss_mult[i] = float(o.get("boss_mult", 1.0))
+	keep_out[i] = float(o.get("keep_out", 0.0))
 	retarget_every[i] = float(o.get("retarget_every", 0.0))
 	return i
 
@@ -112,6 +116,7 @@ func remove(i: int) -> void:
 		speed[i] = speed[last]
 		max_dist[i] = max_dist[last]
 		boss_mult[i] = boss_mult[last]
+		keep_out[i] = keep_out[last]
 		retarget_every[i] = retarget_every[last]
 	count = last
 

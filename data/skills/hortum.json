@@ -21,6 +21,8 @@
       "target_mode": "cluster",
       "retarget_every": 1.0,
       "max_dist": 600,
+      "min_spawn_dist": 300,
+      "keep_out": 250,
       "boss_mult": 1.0
     },
     {
@@ -36,6 +38,8 @@
       "target_mode": "cluster",
       "retarget_every": 1.0,
       "max_dist": 600,
+      "min_spawn_dist": 300,
+      "keep_out": 250,
       "boss_mult": 1.0
     },
     {
@@ -51,6 +55,8 @@
       "target_mode": "cluster",
       "retarget_every": 1.0,
       "max_dist": 600,
+      "min_spawn_dist": 300,
+      "keep_out": 250,
       "boss_mult": 1.0
     },
     {
@@ -66,6 +72,8 @@
       "target_mode": "cluster",
       "retarget_every": 1.0,
       "max_dist": 600,
+      "min_spawn_dist": 300,
+      "keep_out": 250,
       "boss_mult": 1.0
     },
     {
@@ -81,6 +89,8 @@
       "target_mode": "cluster",
       "retarget_every": 1.0,
       "max_dist": 600,
+      "min_spawn_dist": 300,
+      "keep_out": 250,
       "boss_mult": 1.0
     }
   ],

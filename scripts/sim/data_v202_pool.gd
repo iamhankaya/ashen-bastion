@@ -31,6 +31,7 @@ static func _pool_of(d: Dictionary) -> String:
 static func _validate_skill(
 	g: GameData, out: PackedStringArray, file: String, d: Dictionary, pools: Dictionary
 ) -> void:
+	_validate_wind_levels(out, file, d)
 	var pool_ok := true
 	if d.has("pool"):
 		var p: Variant = d["pool"]
@@ -54,6 +55,30 @@ static func _validate_skill(
 					% [_pool_of(d), act, pools[act]]
 				)
 			)
+
+
+## Hortum/Tufan (kullanıcı kararı 2026-10-25): `min_spawn_dist` ve `keep_out` 0..2000 px, `min_spawn_dist >= keep_out`.
+static func _validate_wind_levels(out: PackedStringArray, file: String, d: Dictionary) -> void:
+	if not (d.get("levels") is Array):
+		return
+	for i in (d["levels"] as Array).size():
+		var row: Variant = d["levels"][i]
+		if not (row is Dictionary):
+			continue
+		for k in ["min_spawn_dist", "keep_out"]:
+			if (
+				row.has(k)
+				and (not (row[k] is float or row[k] is int) or row[k] < 0 or row[k] > 2000)
+			):
+				GameData._err(out, "out_of_range", file, "levels[%d].%s 0..2000 olmalı" % [i, k])
+				return
+		if (
+			row.has("min_spawn_dist")
+			and row.has("keep_out")
+			and float(row["min_spawn_dist"]) < float(row["keep_out"])
+		):
+			GameData._err(out, "out_of_range", file, "levels[%d].min_spawn_dist < keep_out" % i)
+			return
 
 
 static func _validate_variants(

@@ -302,33 +302,33 @@
       "zyfen": {
         "11": {
           "elites": 0,
-          "hash": 1664926827,
+          "hash": 2525077236,
           "kills": 140,
           "level_ups": 4,
           "pickups": 1,
-          "rng_combat": "-162907317583607978",
+          "rng_combat": "1459649969612456486",
           "state": 0,
-          "steps": 8269
+          "steps": 8280
         },
         "23": {
           "elites": 0,
-          "hash": 2979234593,
-          "kills": 257,
+          "hash": 3203541488,
+          "kills": 372,
           "level_ups": 4,
           "pickups": 0,
-          "rng_combat": "-3548342213351265787",
+          "rng_combat": "-6156009592058404567",
           "state": 0,
-          "steps": 13035
+          "steps": 16766
         },
         "37": {
           "elites": 0,
-          "hash": 3805131158,
-          "kills": 318,
+          "hash": 1515438261,
+          "kills": 332,
           "level_ups": 4,
           "pickups": 0,
-          "rng_combat": "7003564084310007773",
+          "rng_combat": "704381363495311777",
           "state": 0,
-          "steps": 14850
+          "steps": 15459
         }
       }
     }

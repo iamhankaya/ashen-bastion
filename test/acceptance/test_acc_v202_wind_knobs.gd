@@ -101,21 +101,23 @@ func test_z3_json_retarget_every_changes_the_number_of_draws() -> void:
 	)
 
 
-func test_z4_json_max_dist_pulls_the_twister_back_to_the_player() -> void:
+## T20261025-79: "max_dist aşılırsa oyuncuya dön" kuralı kalktı; küçük max_dist hortumu oyuncuya geri ÇEKMEZ
+## (bölge uzak kümede doğar ve kendi alanında kalır; ayrıntı: test_acc_v202_wind_keepout.gd).
+func test_z4_json_max_dist_no_longer_pulls_the_twister_back_to_the_player() -> void:
 	if V202Slice.require(self, "Z"):
 		return
 	var sim := _sim("hortum", {"max_dist": 120.0, "speed": 400.0})
 	AccV202.dummy(sim, Vector2(500, 0))
 	SimKit.run_until(sim, func() -> bool: return sim.zones.count > 0, 700)
-	var farthest := 0.0
+	var nearest := 1.0e9
 	for _k in 120:
 		sim.step(Vector2.ZERO)
 		if sim.zones.count > 0:
-			farthest = maxf(farthest, sim.zones.pos[0].distance_to(sim.player_pos))
-	assert_lt(
-		farthest,
-		250.0 + 120.0 + 80.0,
-		"max_dist 120: hortum oyuncudan çok uzaklaşmaz (%.0f)" % farthest
+			nearest = minf(nearest, sim.zones.pos[0].distance_to(sim.player_pos))
+	assert_gte(
+		nearest,
+		250.0 - 0.5,
+		"max_dist 120 hortumu oyuncuya geri çekmez; keep_out içine girmez (%.0f)" % nearest
 	)
 
 

@@ -2429,6 +2429,7 @@
   "test/acceptance/test_acc_v202_wind_elite.gd",
   "test/acceptance/test_acc_v202_wind_evolution.gd",
   "test/acceptance/test_acc_v202_wind_feel.gd",
+  "test/acceptance/test_acc_v202_wind_keepout.gd",
   "test/acceptance/test_acc_v202_wind_knobs.gd",
   "test/acceptance/test_acc_v202_wind_perf.gd",
   "test/acceptance/test_acc_v202_wind_pickups.gd",

@@ -34,7 +34,7 @@ Yedek sürüm `4.6.3-stable` kullanılmadı: 4.7.2 indirilebildi ve çalıştı.
 11 senaryo `GROUP[...]=N` tablosuyla 6 gruba bölünmüştür (F-028): `selftest_gate.sh --group N` yalnız o grubu, `--list` tabloyu yazar;
 `ci.yml` `selftest` işi `matrix.group` ile her grubu ayrı iş olarak koşar (`fail-fast: false`, `timeout-minutes: 20`). Tam-gate senaryoları
 (≈340 s) ayrı gruplardadır; en uzun grup ≈ 409 s (S0 ölçümü). Yeni senaryo = `scenario_<ad>()` + `GROUP[<ad>]=N` (tablo ↔ işlev uyumsuzluğunda çıkış 2;
-`tools/ci/tests/test_selftest_gate_groups.py` matrisi de denetler). Gate süre denetimi: tek test > 60 sn → gate hatası (`tools/ci/check_durations.py`;
+`tools/ci/tests/test_selftest_gate_groups.py` matrisi de denetler). Gate süre denetimi: tek test > 75 sn → gate hatası (`tools/ci/check_durations.py`;
 bilinçli istisna `test/long/`), toplam test süresi > 720 sn → `GATE_WARN` (durdurmaz); `test` işi 15 dk sınırının %80'ine (12 dk) yaklaşırsa bölme işi açılır.
 
 ## Debug keystore

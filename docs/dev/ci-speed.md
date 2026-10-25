@@ -31,7 +31,7 @@ selftest ×6, export-debug, release-prova      değişmedi
   ağırlık alır, yani **yeni test otomatik bir parçaya düşer**. Her dosya tam bir parçada olur (`tools/ci/tests/test_shard.py`).
 - **Kapsam kanıtı (verify işi)**: parça sayısı beklenenle eşit olmalı; `shard.py check-merge --require-all` her test dosyasının
   bir parçada koştuğunu (eksik/yinelenen/bilinmeyen dosya = kırmızı) denetler; birleşik JUnit üzerinde adım 7 (asgari test sayısı
-  `tools/gate_min_tests.json`, tek test ≤ 60 sn, dilim/pending denetimleri) **aynen** koşar. Parçası düşen ya da hiç koşmayan
+  `tools/gate_min_tests.json`, tek test ≤ 75 sn, dilim/pending denetimleri) **aynen** koşar. Parçası düşen ya da hiç koşmayan
   bir iş `test` işini kırmızı yapar.
 - `test` işi adını korur: dal koruması bu bağlamı bekliyor olabilir.
 - Parça sayısını değiştirmek: `ci.yml` (`matrix.shard`, `/N`, `GATE_SHARD_COUNT`) ve `tools/ci/tests/test_shard.py::SHARD_COUNT`
@@ -150,3 +150,7 @@ Duvar saati ≈ %70 düşer; toplam iş süresi ≈ %24 artar (4× içe aktarma)
   tek yeniden denemeyle korunur (`godot_import.sh`). Benzetimde 5 içe aktarmadan 1'i çöktü ve yeniden denemeyle geçti.
   Çöküş editör açılışında olduğundan `.godot` önbelleği riski azaltmaz.
 - Bağımlılıklar yalnız doğrudan sabitlendi (`requirements-ci.txt`); gdtoolkit'in geçişli bağımlılıkları (lark, vb.) sabit değil.
+
+## Tek-test süre sınırı 60 -> 75 sn (F-ashen-bastion-048)
+
+`tools/ci/check_durations.py --limit` varsayılanı, `tools/gate.sh` hata mesajları ve `docs/dev/setup.md` 75 sn oldu. Bu **geçici**dir (kullanıcı kararı 2026-10-25); kalıcı çözüm testi hızlandırmaktır.
