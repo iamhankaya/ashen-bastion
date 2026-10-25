@@ -24,7 +24,10 @@ func test_p1_hud_and_pause_use_the_zyfen_icon_of_a_common_passive() -> void:
 	var z := SimKit.make(1, {"character": &"zyfen", "data_kind": "real"})
 	z.debug_grant(&"agir_kursun", 1)
 	var st := z.loadout.state_of(&"agir_kursun")
-	assert_eq(Hud._icon_of(st), "res://assets/ui/icons/zyfen/agir-kursun.svg", "Zyfen ikonu")
+	var icon: String = Hud._icon_of(st)
+	assert_eq(icon.get_base_dir(), "res://assets/ui/icons/zyfen", "Zyfen ikon klasörü")
+	assert_eq(icon.get_file().get_basename(), "agir-kursun", "Zyfen ikon adı (uzantıdan bağımsız)")
+	assert_true(ResourceLoader.exists(icon), "Zyfen ikon dosyası var")
 	var g := SimKit.make(1, {"character": &"gunslinger", "data_kind": "real"})
 	g.debug_grant(&"agir_kursun", 1)
 	assert_eq(
