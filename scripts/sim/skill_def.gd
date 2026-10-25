@@ -58,6 +58,11 @@ static func from_dict(d: Dictionary) -> SkillDef:
 	return s
 
 
+## Seviye bloklarında metin değer alan anahtarlar (v2.0.2 `target_mode: "cluster"`); diğerleri sayıdır.
+static func is_text_level_key(key: String, value: Variant) -> bool:
+	return key == "target_mode" and value is String
+
+
 ## Seviye (1..max_level) verisi; aralık dışıysa boş sözlük.
 func level_data(level: int) -> Dictionary:
 	if level < 1 or level > levels.size():
