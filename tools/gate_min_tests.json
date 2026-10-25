@@ -26,6 +26,7 @@
   "test/acceptance/test_acc_v11_tables.gd": 9,
   "test/acceptance/test_acc_v11_ui.gd": 33,
   "test/acceptance/test_acc_v11_ui_logic.gd": 5,
+  "test/acceptance/test_acc_v202_wind_keepout.gd": 13,
   "test/acceptance/test_acc_v2_ach_determinism.gd": 6,
   "test/acceptance/test_acc_v2_ach_flow.gd": 14,
   "test/acceptance/test_acc_v2_ach_screen.gd": 18,
