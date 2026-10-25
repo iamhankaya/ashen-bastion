@@ -451,7 +451,9 @@ func _show_result() -> void:
 		stats = {"time": sim.time, "level": sim.level, "kills": sim.kills, "evolutions": []}
 		stats.merge(V11State.end_stats(sim))
 		_run_won = sim.state == GameSim.State.WON
-	var combos := UiKit.combo_rows(stats.get("evolutions", []), sim.data)
+	var combos := UiKit.combo_rows(
+		stats.get("evolutions", []), sim.data, sim.character.id if sim.character != null else &""
+	)
 	var sub := ""
 	if _run_won:
 		sub = WON_SUB

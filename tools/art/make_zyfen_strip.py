@@ -4,7 +4,7 @@
 Kullanım:
   python tools/art/make_zyfen_strip.py --src art/source/zyfen --out assets/gfx/char/zyfen_strip.png \
          --body-out assets/gfx/char/zyfen_body.png --manifest art/source/zyfen/strip_manifest.json \
-         --quality art/source/zyfen/quality.json [--walk-cast 'glob'] [--stride 150] [--preview]
+         --quality art/source/zyfen/quality.json [--walk-cast 'glob'] [--stride 150] [--palm-px 444,132] [--preview]
 
 Girdi: `<src>/frames/{walk,cast,gather}/*.png` (RGBA, alfa zaten silinmiş), `<src>/zyfen_idle.png` (duruş), isteğe bağlı
 `--walk-cast <glob>` (yürürken savuruş seti). Hücre sırası (RigFrames ile aynı): yürüme 0..W-1, duruş W, cast, gather,
@@ -12,7 +12,8 @@ walk_cast. Her klip kendi ortanca alfa boyuna göre 320 px yüksekliğe normaliz
 genişliği HESAPLANIR: tüm klip alfa kutularının en genişi + 2·PAD. Yatay hiza: yürüme/duruş gövde üst yarısının, cast/gather
 ayakların (planlı) ağırlık merkezi. `zyfen_body.png` (duruş) aynı piksel ölçeğinde (320 px boy) ayrıca yazılır.
 Kalite kapısı (plan U2/2): foot_slide (yürüme, çift başına ≤3 px, ≥ N-2 çift), klip yükseklik sapması ≤ %6,
-toplam hücre × genişlik ≤ 8192. Kapı kırmızıysa çıkış kodu 1 ve `quality.json` `pass: false`; sessiz yedek yoktur.
+toplam hücre × genişlik ≤ 8192.
+Manifest `palm` (--palm-px verilirse): atış karesindeki avuç, `cast_point` ile AYNI uzayda (dönüşüm: palm_to_cast_point). Kapı kırmızıysa çıkış kodu 1 ve `quality.json` `pass: false`; sessiz yedek yoktur.
 """
 from __future__ import annotations
 
@@ -41,12 +42,17 @@ def _load_rgba(p: str | Path) -> np.ndarray:
     return np.asarray(Image.open(p).convert("RGBA"))
 
 
-def _trim(img: np.ndarray) -> np.ndarray:
-    a = img[..., 3]
-    ys, xs = np.nonzero(a > 127)
+def _box(img: np.ndarray) -> tuple[int, int, int, int]:
+    """Opak (alfa > 127) piksellerin kutusu: x0, y0, x1, y1 (son dahil)."""
+    ys, xs = np.nonzero(img[..., 3] > 127)
     if len(ys) == 0:
         raise ValueError("kare boş: opak piksel yok")
-    return img[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    return int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())
+
+
+def _trim(img: np.ndarray) -> np.ndarray:
+    x0, y0, x1, y1 = _box(img)
+    return img[y0:y1 + 1, x0:x1 + 1]
 
 
 def _scaled(img: np.ndarray, scale: float) -> np.ndarray:
@@ -71,7 +77,9 @@ def _anchor_x(img: np.ndarray, mode: str) -> float:
 class Clip:
     def __init__(self, name: str, files: list[str], anchor: str):
         self.name, self.anchor = name, anchor
-        self.raw = [_trim(_load_rgba(f)) for f in files]
+        full = [_load_rgba(f) for f in files]
+        self.boxes = [_box(f) for f in full]  # kaynak görseldeki alfa kutusu (palm dönüşümü için)
+        self.raw = [_trim(f) for f in full]
         heights = np.array([r.shape[0] for r in self.raw], dtype=np.float64)
         self.scale = CELL_H / float(heights.max())  # en uzun kare 320 px; ortancadan sapma height_dev_pct
         self.imgs = [_scaled(r, self.scale) for r in self.raw]
@@ -117,7 +125,23 @@ def align_feet(imgs: list[np.ndarray], base_x: list[int], step_px: float, reach:
     return shift
 
 
-def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "feet") -> tuple[np.ndarray, np.ndarray, dict]:
+def palm_to_cast_point(palm_px: tuple[float, float], box: tuple[int, int, int, int], scale: float, cell_x: float,
+                       img_h: int, cell_w: int, native_facing: str = "right") -> list[float]:
+    """Kaynak görseldeki avuç pikselini `cast_point` uzayına çevirir (docs/data-schema.md `cast_point`).
+
+    Hücre pikseli = (palm - alfa kutusu başı) x klip ölçeği + karenin hücredeki konumu (x = cell_x, kare alt kenara oturur:
+    üst = CELL_H - img_h). Oyun hücreyi duruş gövdesiyle AYNI dünya ölçeğiyle (320 hücre px = display_height) ve hücre
+    merkezi = oyuncu gövde merkezi olacak biçimde çizer; bu yüzden kesir = (hücre px - hücre merkezi) / CELL_H.
+    +x = native_facing yönü (sola bakan kaynakta x işareti çevrilir), +y aşağı."""
+    px = cell_x + (palm_px[0] - box[0]) * scale
+    py = (CELL_H - img_h) + (palm_px[1] - box[1]) * scale
+    fx = (px - cell_w / 2.0) / CELL_H
+    fy = (py - CELL_H / 2.0) / CELL_H
+    return [round(fx * (-1.0 if native_facing == "left" else 1.0), 4), round(fy, 4)]
+
+
+def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "feet", palm_px: tuple[float, float] | None = None,
+          fire_frame: int = 3, native_facing: str = "right") -> tuple[np.ndarray, np.ndarray, dict]:
     walk_files = sorted(glob.glob(str(src / "frames/walk/*.png")))
     cast_files = sorted(glob.glob(str(src / "frames/cast/*.png")))
     gather_files = sorted(glob.glob(str(src / "frames/gather/*.png")))
@@ -161,9 +185,11 @@ def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "f
     cw = int(math.ceil(max(widest, 2 * max(left, right)))) + 2 * PAD
     cw += cw % 2
     strip = np.zeros((CELL_H, cw * len(seq), 4), np.uint8)
+    xs_place: list[int] = []
     for i, ((name, im, _), a) in enumerate(zip(seq, ax)):
         x = int(round(cw / 2.0 - a))
         x = min(max(x, 0), cw - im.shape[1])
+        xs_place.append(x)
         h = min(im.shape[0], CELL_H)
         strip[CELL_H - h:, i * cw + x:i * cw + x + im.shape[1]] = im[-h:]
     # duruş gövdesi: tek hücre genişliği değil, kendi alfa kutusu (PlayerView stand_px/k dünya ölçeği)
@@ -192,6 +218,13 @@ def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "f
     }
     if "walk_cast" in clips:
         manifest["walk_cast"] = {"frames": len(clips["walk_cast"].imgs), "scale": round(clips["walk_cast"].scale, 5)}
+    if palm_px is not None:
+        c = clips["cast"]
+        if not 0 <= fire_frame < len(c.imgs):
+            raise SystemExit("fire_frame %d cast kare sayısı %d dışında" % (fire_frame, len(c.imgs)))
+        idx = n_walk + 1 + fire_frame  # yürüme, duruş, cast...
+        point = palm_to_cast_point(palm_px, c.boxes[fire_frame], c.scale, xs_place[idx], c.imgs[fire_frame].shape[0], cw, native_facing)
+        manifest["palm"] = {"fire_frame": fire_frame, "point": point}
     return strip, body, manifest
 
 
@@ -256,11 +289,15 @@ def main(argv=None) -> int:
     ap.add_argument("--walk-cast", help="isteğe bağlı walk_cast kareleri (glob)")
     ap.add_argument("--stride", type=float, default=130.0, help="yürüme çevrimi uzunluğu (dünya px; zyfen.json walk.stride). 150 ile ayak çapası 5/8, 130 ile 8/8 (videonun gerçek adım uzunluğu)")
     ap.add_argument("--align", choices=["feet", "torso"], default="feet", help="yürüme hizası: basan ayak çapası (varsayılan) ya da üst gövde ağırlık merkezi")
+    ap.add_argument("--palm-px", help="X,Y: cast karesinin (fire_frame) KAYNAK görselindeki avuç pikseli; manifest `palm` (cast_point uzayı) yazılır")
+    ap.add_argument("--fire-frame", type=int, default=3, help="atış karesi indeksi (zyfen.json cast.fire_frame)")
+    ap.add_argument("--native-facing", choices=["right", "left"], default="right")
     ap.add_argument("--preview", action="store_true")
     ap.add_argument("--preview-dir", default=str(Path(__file__).resolve().parent / "_preview"))
     args = ap.parse_args(argv)
     wc = sorted(glob.glob(args.walk_cast)) if args.walk_cast else None
-    strip, body, manifest = build(Path(args.src), wc, args.stride, args.align)
+    palm = tuple(float(v) for v in args.palm_px.split(",")) if args.palm_px else None
+    strip, body, manifest = build(Path(args.src), wc, args.stride, args.align, palm, args.fire_frame, args.native_facing)
     q = gate(manifest)
     for p, data in ((args.manifest, manifest), (args.quality, q)):
         Path(p).parent.mkdir(parents=True, exist_ok=True)

@@ -654,7 +654,7 @@ func _validate_levels_shape(
 		var keys: Array = (row as Dictionary).keys()
 		keys.sort()
 		for k in keys:
-			if not _is_num(row[k]):
+			if not (_is_num(row[k]) or SkillDef.is_text_level_key(k, row[k])):
 				_err(out, "bad_type", file, "levels[%d].%s sayı olmalı" % [i, k])
 				return false
 		if i == 0:

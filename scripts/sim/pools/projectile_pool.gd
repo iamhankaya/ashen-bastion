@@ -12,11 +12,11 @@ const DEFAULT_RADIUS := 8.0
 
 # flags (bit maskesi)
 const FLAG_EXPLODES := 1  # isabette
-const FLAG_EXPLODE_ON_EXPIRE := 2  # dinamit
+const FLAG_EXPLODE_ON_EXPIRE := 2  # ömrü bitince patlar
 const FLAG_EXPLODE_ON_BOUNCE := 4  # zincirleme_patlama
 const FLAG_RICOCHET := 8
 const FLAG_RADIAL := 16  # yalnız görsel
-const FLAG_LOB := 32  # yay atış (dinamit): düşmana çarpmaz, ömrü bitince patlar
+const FLAG_LOB := 32  # yay atış: düşmana çarpmaz, ömrü bitince patlar
 const FLAG_SHRAPNEL := 64  # şarapnel parçası: öldürdüğü düşman yeniden şarapnel saçmaz
 const FLAG_WIND := 128  # rüzgar kesiği (hilal): yalnız görsel/etiket
 const FLAG_SPLIT := 256  # bölünen kesiğin çocuğu: tekrar bölünmez
