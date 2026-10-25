@@ -101,6 +101,7 @@ func test_elite_takes_boss_mult_damage_but_is_never_moved() -> void:
 	assert_almost_eq(WindKit.TOUGH_HP - WindKit.hp_of(sim, id), 15.0, 0.001)
 
 
+## Mekanizma testi: veri `fling > 0` verirse sistem savurur. Hortum/Tufan verisi savurmaz (fling 0; bkz. veri testleri).
 func test_life_end_flings_outward_and_deals_double_tick() -> void:
 	var sim := WindKit.make()
 	var id := WindKit.dummy(sim, Vector2(360, 0))
@@ -108,6 +109,16 @@ func test_life_end_flings_outward_and_deals_double_tick() -> void:
 	WindKit.zone_steps(sim, 8)
 	assert_eq(sim.zones.count, 0)
 	assert_almost_eq(WindKit.pos_of(sim, id).x, 360.0 + 220.0, 1.0, "merkezden dışarı fling px")
+	assert_almost_eq(WindKit.TOUGH_HP - WindKit.hp_of(sim, id), 20.0, 0.001, "2x tik hasarı")
+
+
+func test_life_end_without_fling_keeps_position_and_deals_double_tick() -> void:
+	var sim := WindKit.make()
+	var id := WindKit.dummy(sim, Vector2(360, 0))
+	_twister(sim, Vector2(300, 0), {"fling": 0.0, "life": 0.1, "target": Vector2(300, 0)})
+	WindKit.zone_steps(sim, 8)
+	assert_eq(sim.zones.count, 0)
+	assert_almost_eq(WindKit.pos_of(sim, id).x, 360.0, 2.0, "savurma yok: konum korunur")
 	assert_almost_eq(WindKit.TOUGH_HP - WindKit.hp_of(sim, id), 20.0, 0.001, "2x tik hasarı")
 
 

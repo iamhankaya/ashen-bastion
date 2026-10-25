@@ -140,3 +140,13 @@ func test_tufan_life_scales_with_storm_eye() -> void:
 	WindKit.skill_steps(sim, 1)
 	assert_almost_eq(sim.zones.life[0], 12.0, 0.05, "8 sn x 1,5")
 	assert_almost_eq(sim.zones.radius[0], 190.0 * 1.6, 0.001)
+
+
+func test_hortum_and_tufan_data_never_fling() -> void:
+	for pair in [[&"hortum", 1], [&"hortum", 5], [&"tufan", 1]]:
+		var sim := WindKit.make(pair[0], pair[1])
+		WindKit.dummy(sim, Vector2(300, 0))
+		WindKit.skill_steps(sim, 1)
+		assert_gt(sim.zones.count, 0, "%s sv%d bölge doğdu" % [pair[0], pair[1]])
+		for i in sim.zones.count:
+			assert_eq(sim.zones.fling[i], 0.0, "%s sv%d fling 0" % [pair[0], pair[1]])
