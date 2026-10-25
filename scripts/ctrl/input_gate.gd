@@ -24,6 +24,9 @@ var current: Vector2 = Vector2.ZERO
 
 var _fade_left: float = 0.0
 var _lock_left: float = 0.0
+## Kilit sırasında değen parmak (T82): kilit bitince joystick'i bu parmak sürer, kaldırması gerekmez.
+var _pending: int = NO_FINGER
+var _pending_pos: Vector2 = Vector2.ZERO
 
 
 ## Ham ofsetten hareket vektörü: yarıçapla normalize, ölü bölge altı sıfır, üstü 0..1'e yeniden ölçeklenir.
@@ -47,26 +50,37 @@ static func clamp_offset(offset: Vector2, max_radius: float = MAX_RADIUS) -> Vec
 ## InputEventScreenTouch karşılığı.
 func touch(index: int, pressed: bool, pos: Vector2) -> void:
 	if pressed:
-		if finger != NO_FINGER or is_locked():
-			return  # ikinci parmak ya da kilit: yok sayılır
+		if finger != NO_FINGER:
+			return  # ikinci parmak: yok sayılır
+		if is_locked():
+			_hold_pending(index, pos)
+			return
 		_begin(index, pos)
 	elif index == finger:
 		_release()
+	elif index == _pending:
+		_pending = NO_FINGER
 
 
 ## InputEventScreenDrag karşılığı.
 func drag(index: int, pos: Vector2) -> void:
 	if index == finger:
 		current = pos
-	elif finger == NO_FINGER and not is_locked():
+	elif finger == NO_FINGER:
 		# Kilit sırasında basılı kalan parmak, kilit bitince kaldırmadan sürmeye başlayabilir.
-		_begin(index, pos)
+		if is_locked():
+			_hold_pending(index, pos)
+		else:
+			_begin(index, pos)
 
 
 ## Zaman ilerlet (saniye): sönme ve kilit sayaçları.
 func tick(dt: float) -> void:
 	if _lock_left > 0.0:
 		_lock_left = maxf(0.0, _lock_left - dt)
+		if _lock_left == 0.0 and _pending != NO_FINGER and finger == NO_FINGER:
+			_begin(_pending, _pending_pos)  # vektör sıfır başlar (origin = current)
+			_pending = NO_FINGER
 	if finger == NO_FINGER and _fade_left > 0.0:
 		_fade_left = maxf(0.0, _fade_left - dt)
 
@@ -74,6 +88,7 @@ func tick(dt: float) -> void:
 ## Devam/seviye atlama sonrası girdi kilidi; basılı parmak bırakılmış sayılır.
 func lock(duration: float = LOCK_TIME) -> void:
 	_lock_left = maxf(_lock_left, duration)
+	_pending = NO_FINGER
 	if finger != NO_FINGER:
 		finger = NO_FINGER
 		_fade_left = 0.0
@@ -86,6 +101,7 @@ func reset() -> void:
 	current = Vector2.ZERO
 	_fade_left = 0.0
 	_lock_left = 0.0
+	_pending = NO_FINGER
 
 
 func is_locked() -> bool:
@@ -115,6 +131,12 @@ func visibility() -> float:
 	if FADE_TIME <= 0.0:
 		return 0.0
 	return clampf(_fade_left / FADE_TIME, 0.0, 1.0)
+
+
+func _hold_pending(index: int, pos: Vector2) -> void:
+	if _pending == NO_FINGER or _pending == index:
+		_pending = index
+		_pending_pos = pos
 
 
 func _begin(index: int, pos: Vector2) -> void:
