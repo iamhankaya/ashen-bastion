@@ -582,16 +582,20 @@ func test_e1_ay_oragi_every_second_shot_is_a_giant_unsplit_pierce_all_crescent_w
 	var doubles := 0
 	var hit := 0
 	var crescent_hits := 0
+	# Temel kesik hasarı (12, Ağır Kurşun sv1 +%10); hilal vuruşu bunun açıkça üstünde olmalı (denge ayarına bağlı sabit eşik yok).
+	var base_cut := 12.0 * 1.1
+	var crescent_dmg := base_cut * 2.0  # damage_mult 2,0
+	var crescent_min := base_cut * 1.5
 	for id in ids:
 		var big := 0
 		for e in AccV202.damages(sim, &"bullet", id):
-			if float(e["amount"]) > 30.0:
+			if float(e["amount"]) > crescent_min:
 				big += 1
 				assert_almost_eq(
 					float(e["amount"]),
-					12.0 * 3.5 * 1.1,
-					12.0 * 3.5 * 1.1 * 0.011 + 0.2,
-					"hasar x3,5 (Ağır Kurşun sv1 +%10)"
+					crescent_dmg,
+					crescent_dmg * 0.011 + 0.2,
+					"hasar x2,0 (Ağır Kurşun sv1 +%10)"
 				)
 		doubles += 1 if big > 1 else 0
 		crescent_hits += big

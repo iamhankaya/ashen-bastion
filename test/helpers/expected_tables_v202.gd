@@ -176,13 +176,13 @@ const SKILLS := {
 	{
 		"kind": "evolution",
 		"levels":
-		[{"every_n": 2, "damage_mult": 3.5, "radius": 40.0, "speed": 1300.0, "range": 1100.0}],
+		[{"every_n": 2, "damage_mult": 2.0, "radius": 40.0, "speed": 1300.0, "range": 1100.0}],
 		"requires": {"active": "bolunen_kesik", "passive": "agir_kursun"},
 	},
 	"kasirga_patlamasi":
 	{
 		"kind": "evolution",
-		"levels": [{"damage": 40.0, "radius": 900.0, "push": 260.0, "count": 2, "interval": 0.5}],
+		"levels": [{"damage": 36.0, "radius": 900.0, "push": 260.0, "count": 2, "interval": 0.5}],
 		"requires": {"active": "nefes_dalgasi", "passive": "hizli_doldurma"},
 	},
 	"gogun_mizragi":
@@ -200,7 +200,7 @@ const SKILLS := {
 				"cooldown": 9.0,
 				"count": 3,
 				"radius": 190.0,
-				"damage": 16.0,
+				"damage": 20.0,
 				"interval": 0.35,
 				"pull": 260.0,
 				"life": 8.0,
