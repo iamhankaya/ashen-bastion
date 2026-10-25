@@ -2,7 +2,7 @@
   "id": "bolunen_kesik",
   "kind": "active",
   "name": "Bölünen Kesik",
-  "icon": "res://assets/ui/icons/bolunen-kesik.svg",
+  "icon": "res://assets/ui/icons/bolunen-kesik.png",
   "max_level": 5,
   "tags": [
     "rhythm"

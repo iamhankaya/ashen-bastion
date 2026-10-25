@@ -2,7 +2,7 @@
   "id": "hava_cebi",
   "kind": "active",
   "name": "Hava Cebi",
-  "icon": "res://assets/ui/icons/hava-cebi.svg",
+  "icon": "res://assets/ui/icons/hava-cebi.png",
   "max_level": 5,
   "tags": [],
   "behavior": "hava_cebi",

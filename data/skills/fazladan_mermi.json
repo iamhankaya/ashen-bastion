@@ -2,7 +2,7 @@
   "id": "fazladan_mermi",
   "kind": "passive",
   "name": "Fazladan Mermi",
-  "icon": "placeholder:fazladan_mermi",
+  "icon": "res://assets/ui/icons/fazladan-mermi.png",
   "max_level": 5,
   "tags": [
     "rhythm"
@@ -35,7 +35,7 @@
   "variants": {
     "zyfen": {
       "name": "Derin Nefes",
-      "icon": "res://assets/ui/icons/zyfen/fazladan-mermi.svg",
+      "icon": "res://assets/ui/icons/zyfen/fazladan-mermi.png",
       "desc": [
         "Rüzgar toplamadan önce +1 kesik.",
         "Rüzgar toplamadan önce +2 kesik.",

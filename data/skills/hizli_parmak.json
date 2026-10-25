@@ -2,7 +2,7 @@
   "id": "hizli_parmak",
   "kind": "passive",
   "name": "Hızlı Parmak",
-  "icon": "placeholder:hizli_parmak",
+  "icon": "res://assets/ui/icons/hizli-parmak.png",
   "max_level": 5,
   "tags": [],
   "levels": [
@@ -33,7 +33,7 @@
   "variants": {
     "zyfen": {
       "name": "Çevik Eller",
-      "icon": "res://assets/ui/icons/zyfen/hizli-parmak.svg",
+      "icon": "res://assets/ui/icons/zyfen/hizli-parmak.png",
       "desc": [
         "Saldırı hızı +%8.",
         "Saldırı hızı +%16.",

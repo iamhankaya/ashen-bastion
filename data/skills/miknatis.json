@@ -2,7 +2,7 @@
   "id": "miknatis",
   "kind": "passive",
   "name": "Mıknatıs",
-  "icon": "placeholder:miknatis",
+  "icon": "res://assets/ui/icons/miknatis.png",
   "max_level": 5,
   "tags": [],
   "levels": [
@@ -33,7 +33,7 @@
   "variants": {
     "zyfen": {
       "name": "Çeken Esinti",
-      "icon": "res://assets/ui/icons/zyfen/miknatis.svg",
+      "icon": "res://assets/ui/icons/zyfen/miknatis.png",
       "desc": [
         "Toplama alanı +%25.",
         "Toplama alanı +%50.",

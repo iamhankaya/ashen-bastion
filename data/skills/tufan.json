@@ -2,7 +2,7 @@
   "id": "tufan",
   "kind": "evolution",
   "name": "Tufan",
-  "icon": "res://assets/ui/icons/tufan.svg",
+  "icon": "res://assets/ui/icons/tufan.png",
   "max_level": 1,
   "tags": [],
   "behavior": "tufan",
@@ -17,7 +17,12 @@
       "pull": 260,
       "life": 8.0,
       "push": 220,
-      "fling": 260
+      "fling": 260,
+      "speed": 110,
+      "target_mode": "cluster",
+      "retarget_every": 1.5,
+      "max_dist": 700,
+      "boss_mult": 1.0
     }
   ],
   "desc": [

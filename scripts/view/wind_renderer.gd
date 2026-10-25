@@ -1,14 +1,15 @@
 class_name WindRenderer
 extends Node2D
 ## Rüzgar bölgeleri ve Girdap halkası (yalnız görsel; sim'i okur, hiçbir sim durumunu değiştirmez). FxRenderer'ın çocuğudur
-## ve onun ek (additive) malzemesini kullanır. Yer tutucu kod çizimi: dönen yay demetleri + yumuşak leke; gerçek doku
-## sonradan aynı sınıfa bağlanır. Ekran içi çizim sayısı MAX_DRAWN ile sınırlıdır (300 düşman + 3 hortum perf bütçesi).
+## ve harmanlama malzemesini ondan alır (ZyfenFx dokuları: fx_hortum/fx_tufan/fx_hava_cebi, Girdap için fx_girdap; bölge
+## başına tek çizim, döndürme/soldurma kodla). Ekran içi çizim sayısı MAX_DRAWN ile sınırlıdır (300 düşman + 3 hortum perf bütçesi).
 
 const MAX_DRAWN := 24
-const COLOR_TWISTER := Color(0.66, 0.88, 0.92)
-const COLOR_GIANT := Color(0.78, 0.9, 1.0)
-const COLOR_POCKET := Color(0.7, 0.8, 0.95)
-const COLOR_RING := Color(0.7, 0.9, 0.95)
+## Dönüş hızları (rad/sn); bölge dokuları yavaş döner.
+const TWISTER_SPIN := 1.6
+const GIANT_SPIN := 1.1
+const POCKET_SPIN := -0.8
+const GIRDAP_SPIN := 1.3
 const FADE_TIME := 0.4
 
 var _sim: GameSim = null
@@ -18,7 +19,7 @@ var drawn_count: int = 0
 
 
 func _init() -> void:
-	use_parent_material = true
+	use_parent_material = ZyfenFx.ZONES_ADDITIVE
 
 
 func bind(sim: GameSim, camera: CameraRig = null) -> void:
@@ -59,7 +60,6 @@ func _draw() -> void:
 	drawn_count = 0
 	if _sim == null:
 		return
-	var soft := PlaceholderArt.soft_circle(64)
 	var view := _view_rect()
 	var z := _sim.zones
 	var t := _sim.time
@@ -73,74 +73,29 @@ func _draw() -> void:
 		var fade := clampf(z.life[i] / FADE_TIME, 0.0, 1.0)
 		match z.kind[i]:
 			ZonePool.KIND_POCKET:
-				_draw_pocket(z.pos[i], r, fade, t, soft)
+				_draw_tex(ZyfenFx.HAVA_CEBI, z.pos[i], r, _spin(t, i, POCKET_SPIN), 0.7 * fade)
 			ZonePool.KIND_GIANT:
-				_draw_swirl(z.pos[i], r, fade, t, COLOR_GIANT, 5, soft)
+				_draw_tex(ZyfenFx.TUFAN, z.pos[i], r, _spin(t, i, GIANT_SPIN), 0.6 * fade)
 			_:
-				_draw_swirl(z.pos[i], r, fade, t, COLOR_TWISTER, 3, soft)
+				_draw_tex(ZyfenFx.HORTUM, z.pos[i], r, _spin(t, i, TWISTER_SPIN), 0.7 * fade)
 	var gr := _girdap_radius()
 	if gr > 0.0:
-		_draw_ring(_sim.player_pos, gr, t)
+		_draw_tex(ZyfenFx.GIRDAP, _sim.player_pos, gr, _spin(t, 0, GIRDAP_SPIN), 0.55)
 
 
-## Dönen yay demeti: iç içe `arms` yay, dışa doğru incelen; alt tabanda yumuşak leke.
-func _draw_swirl(
-	p: Vector2, r: float, fade: float, t: float, col: Color, arms: int, soft: Texture2D
-) -> void:
+## Bölge dokusu yavaş döner; başlangıç açısı bölge dizinine göre kayar (aynı anda birden çok bölge aynı fazda olmasın).
+static func _spin(t: float, idx: int, speed: float) -> float:
+	return t * speed + float(idx) * 1.7
+
+
+## Merkez `p`, görünür yarıçap `r` (doku içeriği TEX_FILL kadarını kaplar), `rot` rad, `alpha` saydamlık.
+func _draw_tex(id: StringName, p: Vector2, r: float, rot: float, alpha: float) -> void:
+	var tex := ZyfenFx.texture(id)
+	if tex == null:
+		return
+	var half := r / ZyfenFx.TEX_FILL
+	draw_set_transform(p, rot, Vector2.ONE)
 	draw_texture_rect(
-		soft,
-		Rect2(p - Vector2(r, r), Vector2(r, r) * 2.0),
-		false,
-		Color(col.r, col.g, col.b, 0.16 * fade)
+		tex, Rect2(Vector2(-half, -half), Vector2(half, half) * 2.0), false, Color(1, 1, 1, alpha)
 	)
-	for k in arms:
-		var f := float(k + 1) / float(arms)
-		var a0 := t * (2.2 + 0.5 * f) + TAU * float(k) / float(arms)
-		draw_arc(
-			p,
-			r * f,
-			a0,
-			a0 + PI * 0.9,
-			20,
-			Color(col.r, col.g, col.b, 0.75 * fade),
-			3.0 + 2.0 * (1.0 - f),
-			true
-		)
-	draw_circle(p, r * 0.08, Color(1.0, 1.0, 1.0, 0.5 * fade))
-
-
-## Hava Cebi: içe doğru büzülen halka + soluk leke.
-func _draw_pocket(p: Vector2, r: float, fade: float, t: float, soft: Texture2D) -> void:
-	var pulse := 0.75 + 0.25 * sin(t * 9.0)
-	draw_texture_rect(
-		soft,
-		Rect2(p - Vector2(r, r), Vector2(r, r) * 2.0),
-		false,
-		Color(COLOR_POCKET.r, COLOR_POCKET.g, COLOR_POCKET.b, 0.2 * fade)
-	)
-	draw_arc(
-		p,
-		r * pulse,
-		0.0,
-		TAU,
-		28,
-		Color(COLOR_POCKET.r, COLOR_POCKET.g, COLOR_POCKET.b, 0.7 * fade),
-		2.5,
-		true
-	)
-
-
-## Girdap: oyuncuyu saran, dönen kesik halka.
-func _draw_ring(p: Vector2, r: float, t: float) -> void:
-	for k in 4:
-		var a0 := t * 3.0 + TAU * float(k) / 4.0
-		draw_arc(
-			p,
-			r,
-			a0,
-			a0 + PI * 0.35,
-			12,
-			Color(COLOR_RING.r, COLOR_RING.g, COLOR_RING.b, 0.55),
-			3.0,
-			true
-		)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

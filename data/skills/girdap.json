@@ -2,7 +2,7 @@
   "id": "girdap",
   "kind": "active",
   "name": "Girdap",
-  "icon": "res://assets/ui/icons/girdap.svg",
+  "icon": "res://assets/ui/icons/girdap.png",
   "max_level": 5,
   "tags": [],
   "behavior": "girdap",

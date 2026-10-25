@@ -2,7 +2,7 @@
   "id": "agir_kursun",
   "kind": "passive",
   "name": "Ağır Kurşun",
-  "icon": "placeholder:agir_kursun",
+  "icon": "res://assets/ui/icons/agir-kursun.png",
   "max_level": 5,
   "tags": [],
   "levels": [
@@ -33,7 +33,7 @@
   "variants": {
     "zyfen": {
       "name": "Bilenmiş Rüzgar",
-      "icon": "res://assets/ui/icons/zyfen/agir-kursun.svg",
+      "icon": "res://assets/ui/icons/zyfen/agir-kursun.png",
       "desc": [
         "Kesik hasarı +%10.",
         "Kesik hasarı +%20.",

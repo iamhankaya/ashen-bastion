@@ -2,7 +2,7 @@
   "id": "kasirga_patlamasi",
   "kind": "evolution",
   "name": "Kasırga Patlaması",
-  "icon": "res://assets/ui/icons/kasirga-patlamasi.svg",
+  "icon": "res://assets/ui/icons/kasirga-patlamasi.png",
   "max_level": 1,
   "tags": [],
   "behavior": "kasirga_patlamasi",

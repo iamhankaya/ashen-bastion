@@ -2,7 +2,7 @@
   "id": "saglam_yelek",
   "kind": "passive",
   "name": "Sağlam Yelek",
-  "icon": "placeholder:saglam_yelek",
+  "icon": "res://assets/ui/icons/saglam-yelek.png",
   "max_level": 5,
   "tags": [],
   "levels": [
@@ -38,7 +38,7 @@
   "variants": {
     "zyfen": {
       "name": "Yas Paltosu",
-      "icon": "res://assets/ui/icons/zyfen/saglam-yelek.svg",
+      "icon": "res://assets/ui/icons/zyfen/saglam-yelek.png",
       "desc": [
         "Azami can +15, saniyede +0,25 can.",
         "Azami can +30, saniyede +0,5 can.",
