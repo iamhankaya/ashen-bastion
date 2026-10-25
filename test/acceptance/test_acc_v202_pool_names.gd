@@ -37,7 +37,11 @@ func test_p2_common_passive_icons_are_zyfen_specific_files_that_exist() -> void:
 		var d := _def(id)
 		var z := d.icon_for(&"zyfen")
 		assert_true(z.begins_with(ICON_DIR), "%s Zyfen ikon yolu %s" % [id, z])
-		assert_true(z.ends_with("%s.svg" % id.replace("_", "-")), "%s ikon dosya adı" % id)
+		assert_eq(
+			z.get_file().get_basename(),
+			id.replace("_", "-"),
+			"%s ikon dosya adı (uzantıdan bağımsız)" % id
+		)
 		assert_true(ResourceLoader.exists(z), "%s Zyfen ikonu yüklenebilir" % id)
 		assert_eq(d.icon_for(&"gunslinger"), d.icon, "%s Gunslinger ikonu değişmedi" % id)
 		assert_ne(z, d.icon_for(&"gunslinger"), "%s iki karakterin ikonu farklı" % id)

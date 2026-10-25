@@ -8,6 +8,11 @@ const BASIC := ["ruzgar_kesigi", "hava_bicaklari", "delen_ruzgar", "bolunen_kesi
 const ZONES := ["girdap", "hortum", "hava_cebi", "nefes_dalgasi", "furtina_gozu"]
 const EVOS := ["ay_oragi", "kasirga_patlamasi", "gogun_mizragi", "tufan"]
 
+## Hortum/Tufan JSON düğmeleri: değerleri test_acc_v202_wind_knobs.gd z1'de (BASE_START) sınanır; plan sayısal tablosunda
+## yoktur. Bu yüzden yalnız bu iki beceride "tabloda olmayan anahtar" denetiminden muaftır (başka beceride hâlâ yakalanır).
+const KNOB_KEYS := ["speed", "target_mode", "retarget_every", "max_dist", "boss_mult"]
+const KNOB_SKILLS := ["hortum", "tufan"]
+
 var _data: GameData
 
 
@@ -35,6 +40,8 @@ func _check_skill(id: String) -> void:
 					float(got[key]), float(w[key]), 0.0001, "%s sv%d %s" % [id, k + 1, key]
 				)
 		for key in got:  # tabloda olmayan sayısal anahtar eklenmemiş olmalı (sessiz denge değişimi)
+			if id in KNOB_SKILLS and key in KNOB_KEYS:
+				continue
 			assert_true(w.has(key), "%s sv%d: tabloda olmayan '%s'" % [id, k + 1, key])
 	if want.has("requires"):
 		var rq: Dictionary = want["requires"]
