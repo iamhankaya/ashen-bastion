@@ -2,7 +2,7 @@
   "id": "hizli_parmak",
   "kind": "passive",
   "name": "Hızlı Parmak",
-  "icon": "placeholder:hizli_parmak",
+  "icon": "res://assets/ui/icons/hizli-parmak.png",
   "max_level": 5,
   "tags": [],
   "levels": [

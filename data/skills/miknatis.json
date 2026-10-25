@@ -2,7 +2,7 @@
   "id": "miknatis",
   "kind": "passive",
   "name": "Mıknatıs",
-  "icon": "placeholder:miknatis",
+  "icon": "res://assets/ui/icons/miknatis.png",
   "max_level": 5,
   "tags": [],
   "levels": [

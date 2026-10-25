@@ -2,7 +2,7 @@
   "id": "agir_kursun",
   "kind": "passive",
   "name": "Ağır Kurşun",
-  "icon": "placeholder:agir_kursun",
+  "icon": "res://assets/ui/icons/agir-kursun.png",
   "max_level": 5,
   "tags": [],
   "levels": [

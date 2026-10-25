@@ -64,10 +64,8 @@ func test_every_zyfen_skill_icon_is_a_png_that_exists() -> void:
 			"%s: zyfen varyantı" % id
 		)
 		assert_true(ResourceLoader.exists(p), "%s: %s var" % [id, p])
-		assert_false(
-			g.get_skill(id).icon_for(&"gunslinger").ends_with(".png"),
-			"%s: Gunslinger ikonu değişmedi" % id
-		)
+		# A2b: Gunslinger kendi boyalı ikonunu kullanır; Zyfen varyantı ondan ayrı dosyadır.
+		assert_ne(g.get_skill(id).icon_for(&"gunslinger"), p, "%s: Zyfen varyantı ayrı dosya" % id)
 
 
 func test_icons_are_square_canvas_with_content_centered_in_80_percent() -> void:
