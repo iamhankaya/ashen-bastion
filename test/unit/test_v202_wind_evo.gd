@@ -114,7 +114,7 @@ func test_tufan_three_giants_with_table_values() -> void:
 		assert_almost_eq(sim.zones.dmg[i], 20.0, 0.001)
 		assert_almost_eq(sim.zones.tick_every[i], 0.35, 0.001)
 		assert_almost_eq(sim.zones.pull[i], 260.0, 0.001)
-		assert_almost_eq(sim.zones.fling[i], 260.0, 0.001)
+		assert_almost_eq(sim.zones.fling[i], 0.0, 0.001)
 		assert_eq(sim.zones.speed[i], 110.0)
 		assert_eq(sim.zones.max_dist[i], 700.0)
 

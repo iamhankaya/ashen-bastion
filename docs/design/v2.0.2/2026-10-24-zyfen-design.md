@@ -84,7 +84,7 @@ Kilit: **baştan açık** (VLAD kararı; kullanıcı soruyu yanıtlamadı, Barut
 Aktifler:
 1. **Hava Bıçakları** — yakın düşmanlara yelpaze biçiminde 3–5 küçük kesik.
 2. **Girdap** — etrafında dönen hava halkası; yaklaşanları keser ve geri iter.
-3. **Hortum** — yavaş ilerleyen küçük hortum; düşmanları içine çeker, savurur.
+3. **Hortum** — yavaş ilerleyen küçük hortum; düşmanları içine çeker (ömür sonunda savurmaz; kullanıcı kararı 2026-10-25).
 4. **Delen Rüzgar** — en dayanıklı düşmana her şeyi delen ince uzun hava mızrağı.
 5. **Bölünen Kesik** — kesik ilk çarptığı düşmanda ikiye ayrılır.
 6. **Hava Cebi** — ölen düşman bazen yerinde kısa ömürlü girdap bırakır.

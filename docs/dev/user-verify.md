@@ -238,7 +238,7 @@ Bulutta telefon yoktur; aşağıdakiler yalnız cihazda (Redmi Note 13 Pro) doğ
 Zyfen ile oyna; becerileri debug kartlarıyla ya da normal seviye atlamayla topla.
 
 #### Rüzgar bölgeleri ve görünüm
-1. **Hortum:** düşman kümesine doğru süzülen dönen yay demeti; düşmanları merkeze çekiyor, ömrü bitince savuruyor. Hortum
+1. **Hortum:** düşman kümesine doğru süzülen dönen yay demeti; düşmanları merkeze çekiyor, ömrü bitince savurmuyor (düşman olduğu yerde kalır, 2× bitiş hasarı alır). Hortum
    çizimi okunur mu, düşman/oyuncu sprite'larını örtüp oyunu zorlaştırıyor mu (yer tutucu çizim, ek karışım)?
 2. **Tufan** (Hortum sv5 + Fırtına Gözü): üç dev hortum aynı anda; ekranı sürüyor mu, kalabalıkta kare süresi tutuyor mu?
 3. **Hava Cebi:** düşman ölünce yerinde küçük çekim halkası; art arda ölümlerde sahne karışıyor mu, zincir (cepten cep) yok mu?

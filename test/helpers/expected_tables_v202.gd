@@ -68,7 +68,7 @@ const SKILLS := {
 				"life": 3.0,
 				"pull": 70.0,
 				"push": 120.0,
-				"fling": 220.0
+				"fling": 0.0
 			},
 			{
 				"cooldown": 5.6,
@@ -78,7 +78,7 @@ const SKILLS := {
 				"life": 3.2,
 				"pull": 80.0,
 				"push": 130.0,
-				"fling": 220.0
+				"fling": 0.0
 			},
 			{
 				"cooldown": 5.2,
@@ -88,7 +88,7 @@ const SKILLS := {
 				"life": 3.5,
 				"pull": 90.0,
 				"push": 140.0,
-				"fling": 220.0
+				"fling": 0.0
 			},
 			{
 				"cooldown": 4.8,
@@ -98,7 +98,7 @@ const SKILLS := {
 				"life": 3.8,
 				"pull": 100.0,
 				"push": 150.0,
-				"fling": 220.0
+				"fling": 0.0
 			},
 			{
 				"cooldown": 4.4,
@@ -108,7 +108,7 @@ const SKILLS := {
 				"life": 4.2,
 				"pull": 115.0,
 				"push": 170.0,
-				"fling": 220.0
+				"fling": 0.0
 			},
 		],
 	},
@@ -205,7 +205,7 @@ const SKILLS := {
 				"pull": 260.0,
 				"life": 8.0,
 				"push": 220.0,
-				"fling": 260.0
+				"fling": 0.0
 			}
 		],
 		"requires": {"active": "hortum", "passive": "furtina_gozu"},
