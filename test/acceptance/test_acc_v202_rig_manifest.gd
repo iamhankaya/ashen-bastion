@@ -48,7 +48,13 @@ func test_r2_manifest_records_the_palm_point() -> void:
 		"manifest `palm` (cast karesindeki avuç noktası) kaydetmeli — cast_point ile karşılaştırılır"
 	)
 	if m.has("palm"):
-		assert_true(m["palm"] is Array and (m["palm"] as Array).size() == 2, "palm [x, y]")
+		var pt: Variant = m["palm"].get("point", null) if m["palm"] is Dictionary else m["palm"]
+		assert_true(pt is Array and (pt as Array).size() == 2, "palm [x, y]")
+		if pt is Array and (pt as Array).size() == 2:
+			var cp: Array = _rig["cast_point"]
+			# Dönüşüm docs/data-schema.md "Manifest palm ↔ cast_point"; tolerans 0,03 (≈ 6 dünya px).
+			assert_lte(absf(float(pt[0]) - float(cp[0])), 0.03, "|palm.x − cast_point.x|")
+			assert_lte(absf(float(pt[1]) - float(cp[1])), 0.03, "|palm.y − cast_point.y|")
 
 
 func test_r7_cast_point_is_in_range_in_front_and_not_below_the_waist() -> void:

@@ -17,7 +17,12 @@
       "pull": 260,
       "life": 8.0,
       "push": 220,
-      "fling": 260
+      "fling": 260,
+      "speed": 110,
+      "target_mode": "cluster",
+      "retarget_every": 1.5,
+      "max_dist": 700,
+      "boss_mult": 1.0
     }
   ],
   "desc": [

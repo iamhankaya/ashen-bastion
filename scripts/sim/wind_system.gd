@@ -56,8 +56,8 @@ static func spawn_zone(sim: GameSim, kind: int, p: Vector2, o: Dictionary = {}) 
 
 
 ## Hortum/Tufan ortak doğurma: `count` bölge, oyuncudan SPAWN_DIST uzakta eşit açılı. `lv` becerinin seviye sözlüğü
-## (radius, life, damage, interval, pull, fling, count; isteğe bağlı speed, max_dist, boss_mult; yeniden hedefleme aralığı
-## türe göre sabit: DEFAULT_RETARGET). `push` Hortum/Tufan için kullanılmaz (sözleşme: tik hasar + çekme, bitişte fling).
+## (radius, life, damage, interval, pull, fling, count; isteğe bağlı speed, max_dist, boss_mult, retarget_every;
+## yoksa türe göre yedek: DEFAULT_SPEED/DEFAULT_MAX_DIST/DEFAULT_RETARGET). `push` Hortum/Tufan için kullanılmaz (sözleşme: tik hasar + çekme, bitişte fling).
 ## Rastgelelik: çağrı başına tam 1 `rng_combat.randf()`. Alan x `area_mult`, ömür x `wind_time_mult`, hasar x
 ## `bullet_dmg_mult` doğuş anında sabitlenir.
 static func cast_twisters(sim: GameSim, kind: int, lv: Dictionary) -> void:
@@ -80,6 +80,7 @@ static func cast_twisters(sim: GameSim, kind: int, lv: Dictionary) -> void:
 				"speed": float(lv.get("speed", DEFAULT_SPEED[kind])),
 				"max_dist": float(lv.get("max_dist", DEFAULT_MAX_DIST[kind])),
 				"boss_mult": float(lv.get("boss_mult", 1.0)),
+				"retarget_every": float(lv.get("retarget_every", DEFAULT_RETARGET[kind])),
 				"target": p,
 			}
 		)
@@ -149,7 +150,9 @@ func _move(sim: GameSim, i: int, dt: float) -> void:
 	var z := sim.zones
 	z.retarget_left[i] -= dt
 	if z.retarget_left[i] <= 0.0:
-		z.retarget_left[i] += DEFAULT_RETARGET[z.kind[i]]
+		z.retarget_left[i] += (
+			z.retarget_every[i] if z.retarget_every[i] > 0.0 else DEFAULT_RETARGET[z.kind[i]]
+		)
 		z.target[i] = _pick_target(sim)
 	if z.pos[i].distance_to(sim.player_pos) > z.max_dist[i]:
 		z.target[i] = sim.player_pos

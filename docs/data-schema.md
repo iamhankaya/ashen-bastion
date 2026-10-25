@@ -69,6 +69,13 @@ arm_scale` zorunlu değildir, verilirse yok sayılır. Kolsuz rigde ek alanlar (
 Hücre sırası (`RigFrames`): yürüme `0..W-1`, duruş `W`, cast, gather, walk_cast; toplam `W+1+C+G+WC`. Kabul: toplam hücre × hücre genişliği
 ≤ 8192 (`out_of_range`); şerit dokusu varsa boyutu `toplam × w` × `h` olmalı (`bad_type`).
 
+**Manifest `palm` ↔ `cast_point` (v2.0.2):** `strip_manifest.json` `palm: {fire_frame, point:[fx, fy]}` atış karesindeki (`cast.fire_frame`) avucun
+`cast_point` ile AYNI uzaydaki karşılığıdır. `--palm-px X,Y` kaynak kare görselindeki (kırpılmamış) avuç pikselidir; dönüşüm
+(`make_zyfen_strip.palm_to_cast_point`): hücre px = (palm − karenin alfa kutusu başı) × klip ölçeği + karenin hücredeki yeri (x = hücre içi
+konum, kare alt kenara oturur: üst = 320 − kare boyu); `fx = (hücre_x − hücre_genişliği/2) / 320`, `fy = (hücre_y − 160) / 320`
+(hücre 320 px = `display_height`, hücre merkezi = gövde merkezi; `native_facing: left` ise `fx` işareti çevrilir). Gate testi
+`|palm − cast_point| ≤ 0,03` (≈ 6 dünya px) bekler; `cast_point` değeri değişirse `--palm-px` yeniden ölçülür.
+
 Şerit, gövde görseli, manifest ve kalite raporu `tools/art/make_zyfen_strip.py` ile üretilir (hücre genişliği girdiden hesaplanır, `walk.cell`
 buraya yazılır; kapı: `foot_slide`, klip yükseklik sapması, toplam genişlik;
 bkz. `tools/art/README.md`). Çıktı kalite raporu `art/source/zyfen/quality.json` yürüme kalite kapısı testinin girdisidir.

@@ -372,8 +372,11 @@ static func fill(c: Control) -> void:
 	c.offset_bottom = 0
 
 
-## Evrim kombo satırları: [{id, name, pair, icon}] (sonuç ekranı).
-static func combo_rows(evolutions: Array, data: GameData) -> Array[Dictionary]:
+## Evrim kombo satırları: [{id, name, pair, icon}] (sonuç ekranı). `character_id` doluysa adlar ve ikon karaktere göre
+## çözülür (`name_for`/`icon_for`); boşsa varsayılan adlar.
+static func combo_rows(
+	evolutions: Array, data: GameData, character_id: StringName = &""
+) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for e in evolutions:
 		var id := StringName(str(e))
@@ -382,21 +385,25 @@ static func combo_rows(evolutions: Array, data: GameData) -> Array[Dictionary]:
 		var icon := ""
 		var def: SkillDef = data.get_skill(id) if data != null else null
 		if def != null:
-			title = def.display_name
-			icon = def.icon
-			var a := _skill_name(data, StringName(str(def.requires.get("active", ""))))
-			var p := _skill_name(data, StringName(str(def.requires.get("passive", ""))))
+			title = def.name_for(character_id)
+			icon = def.icon_for(character_id)
+			var a := _skill_name(
+				data, StringName(str(def.requires.get("active", ""))), character_id
+			)
+			var p := _skill_name(
+				data, StringName(str(def.requires.get("passive", ""))), character_id
+			)
 			if a != "" and p != "":
 				pair = "%s + %s" % [a, p]
 		out.append({"id": id, "name": title, "pair": pair, "icon": icon})
 	return out
 
 
-static func _skill_name(data: GameData, id: StringName) -> String:
+static func _skill_name(data: GameData, id: StringName, character_id: StringName = &"") -> String:
 	if id == &"":
 		return ""
 	var d: SkillDef = data.get_skill(id)
-	return d.display_name if d != null else String(id)
+	return d.name_for(character_id) if d != null else String(id)
 
 
 ## Ortası parlak bronz ayırıcı çizgi.
