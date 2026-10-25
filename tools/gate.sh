@@ -14,6 +14,11 @@
 #   Değişen dosyalara göre test seçer (tools/ci/test_map.py); eşlemede yeri olmayan/paylaşılan dosya => tam gate.
 #   Başarı "GATE OK" DEĞİL "GATE_FAST OK (KISMİ)" yazar; CI'da (CI/GITHUB_ACTIONS) çalışmaz.
 set -uo pipefail
+# stdin'den çalıştırma (bash -s < gate.sh, curl | bash) $0'ı "bash" yapar; o zaman cd "$(dirname "$0")/.." üst dizine çıkıp orada
+# `rm -rf .gate` yapardı (prova: tools/ci/tests/test_ci_workflow.py). Dosya olarak çalıştırılmak zorundadır.
+if [ "$(basename -- "$0")" != "gate.sh" ] || [ ! -f "$0" ]; then
+  echo "gate.sh dosya olarak çalıştırılmalı (bash tools/gate.sh); stdin'den (bash -s) çalıştırılamaz: \$0='$0'" >&2; exit 2
+fi
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
 

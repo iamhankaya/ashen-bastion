@@ -88,3 +88,14 @@ def test_dependencies_pinned_and_cached():
     assert "pip install -r tools/ci/requirements-ci.txt" in CI
     assert "cache: pip" in CI
     assert "restore-keys" not in code_lines(CI)  # .godot önbelleği yalnız tam eşleşen anahtarla
+
+
+def test_gate_refuses_stdin_execution_and_leaves_parent_untouched(tmp_path):
+    # `bash -s < gate.sh` iken $0='bash': eski betik üst dizine çıkıp orada `.gate` oluşturur/siler (F-044 provası)
+    repo = tmp_path / "parent" / "repo"
+    (repo / "tools").mkdir(parents=True)
+    (repo / "tools" / "gate.sh").write_text(GATE, encoding="utf-8")
+    with open(repo / "tools" / "gate.sh", "rb") as fh:
+        r = subprocess.run(["bash", "-s"], stdin=fh, cwd=repo, capture_output=True, text=True, env={"PATH": "/usr/bin:/bin"})
+    assert r.returncode == 2 and "bash -s" in r.stderr
+    assert not (tmp_path / "parent" / ".gate").exists() and not (repo / ".gate").exists()
