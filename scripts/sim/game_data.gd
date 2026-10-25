@@ -626,6 +626,10 @@ static func _derives_from_behavior(script: Variant) -> bool:
 	return false
 
 
+## Seviye bloklarında metin değer alan anahtarlar (v2.0.2 `target_mode: "cluster"`); diğerleri sayıdır.
+const STRING_LEVEL_KEYS := ["target_mode"]
+
+
 ## levels dizisi var mı, uzunluğu max_level mi, elemanlar sözlük mü, anahtar kümeleri aynı mı.
 func _validate_levels_shape(
 	out: PackedStringArray, file: String, d: Dictionary, max_ok: bool
@@ -654,7 +658,11 @@ func _validate_levels_shape(
 		var keys: Array = (row as Dictionary).keys()
 		keys.sort()
 		for k in keys:
-			if not _is_num(row[k]):
+			if STRING_LEVEL_KEYS.has(k):
+				if not (row[k] is String):
+					_err(out, "bad_type", file, "levels[%d].%s metin olmalı" % [i, k])
+					return false
+			elif not _is_num(row[k]):
 				_err(out, "bad_type", file, "levels[%d].%s sayı olmalı" % [i, k])
 				return false
 		if i == 0:

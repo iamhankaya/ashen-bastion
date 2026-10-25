@@ -138,7 +138,7 @@ Yeni hata kodları (v2.0): `unknown_stat`, `ach_count`, `tier_missing`, `scope_m
   seferlik, Girdap 4 sn'de bir; `Sfx.MIN_GAP_MS` aynı sesin en kısa tekrar aralığını sınırlar.
 - `tags`: metin dizisi. `rhythm` = şarjör ritmiyle etkileşir. **İçerik tamamlandı (slice 2)** modunda `rhythm` etiketli
   **aktif** sayısı ≥ 2 (`rhythm_count`).
-- `levels[i]` sayısal değerlerden oluşan nesnedir; **tüm seviyelerde aynı anahtar kümesi** (`levels_keys`).
+- `levels[i]` sayısal değerlerden oluşan nesnedir; **tüm seviyelerde aynı anahtar kümesi** (`levels_keys`). İstisna: `target_mode` (Hortum/Tufan, `"cluster"`) metindir; hız/hedefleme düğmeleri `speed`, `retarget_every` (sn; yoksa türe göre yedek), `max_dist`, `boss_mult` sayıdır.
 - **Aktif seviye monotonluğu** (anahtar adına göre): azalmayan `damage, count, radius, pellets, chance, bounces, ex_damage, ex_radius, damage_mult, pierce, push`; artmayan
   `cooldown, interval, every_n`. Diğer anahtarlar serbest sayı.
 - **Pasif `levels[i]` o seviyedeki TOPLAM değerdir** (seviye 3 = 3 seviyenin toplamı). Anahtarlar sabit küme (bilinmeyen = `passive_key`):
