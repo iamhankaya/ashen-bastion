@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import fnmatch
 import json
+import os
 import re
 import subprocess
 import sys
@@ -85,10 +86,16 @@ class Tree:
 
     def files(self) -> list[str]:
         if self.rev is None:
-            out = subprocess.run(
-                ["git", "ls-files", "-co", "--exclude-standard"], cwd=self.root, capture_output=True, text=True, check=True
-            ).stdout.splitlines()
-            return sorted(p for p in out if (self.root / p).is_file())
+            r = subprocess.run(["git", "ls-files", "-co", "--exclude-standard"], cwd=self.root, capture_output=True, text=True)
+            if r.returncode == 0:
+                return sorted(p for p in r.stdout.splitlines() if (self.root / p).is_file())
+            # git deposu değil (selftest kopyaları `git ls-files` çıktısından tar ile kurulur, .git yoktur): dosya sistemi
+            skip = {".git", ".godot", ".gate", "build", "__pycache__", ".pytest_cache", ".mid", ".mid_dps", ".baseline", "_preview"}
+            found = []
+            for dp, dns, fns in os.walk(self.root):
+                dns[:] = [d for d in dns if d not in skip]
+                found += [(Path(dp) / f).relative_to(self.root).as_posix() for f in fns]
+            return sorted(found)
         out = subprocess.run(
             ["git", "ls-tree", "-r", self.rev], cwd=self.root, capture_output=True, text=True, check=True
         ).stdout.splitlines()
