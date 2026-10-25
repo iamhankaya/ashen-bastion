@@ -1,0 +1,12 @@
+ZYFEN — 32 katmanlı efekt parçası
+
+Tüm efektler şeffaf RGBA PNG biçimindedir. Dosya adları kaynak istemlerle aynıdır.
+01_mermiler: 12 parça
+02_alanlar_ve_hortumlar: 17 parça
+03_atis_ve_isabet: 3 parça
+
+Mermiler sağa dönüktür. Halkalar tepeden; hortumlar dik görünümde hazırlanmıştır.
+Akış dokusu dışındaki parçalarda her kenarda en az %8 şeffaf boşluk bulunur.
+Animasyon kareleri değildir: kaynak belgede tarif edildiği gibi oyun koduyla ayrı katmanlar olarak canlandırılır.
+Beceri ikonları sağlanmadığı için stil, yazılı tarif esas alınarak üretildi.
+Hortum akış dokusunun oyundaki tekrar ve kaydırma testi entegrasyon sırasında yapılmalıdır.

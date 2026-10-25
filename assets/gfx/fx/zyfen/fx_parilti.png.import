@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bsrruewhjqh60"
-path="res://.godot/imported/fx_tufan.png-2612774219734b70403602a1b787f7f0.ctex"
+uid="uid://cv5r0cu2ul4l4"
+path="res://.godot/imported/fx_parilti.png-2b7e8922d15745976022f48be6542d18.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/gfx/fx/zyfen/fx_tufan.png"
-dest_files=["res://.godot/imported/fx_tufan.png-2612774219734b70403602a1b787f7f0.ctex"]
+source_file="res://assets/gfx/fx/zyfen/fx_parilti.png"
+dest_files=["res://.godot/imported/fx_parilti.png-2b7e8922d15745976022f48be6542d18.ctex"]
 
 [params]
 
