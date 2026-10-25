@@ -12,7 +12,7 @@
   "levels": [
     {
       "every_n": 2,
-      "damage_mult": 3.5,
+      "damage_mult": 2.0,
       "radius": 40,
       "speed": 1300,
       "range": 1100

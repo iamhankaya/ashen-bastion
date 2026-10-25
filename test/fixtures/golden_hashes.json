@@ -312,23 +312,23 @@
         },
         "23": {
           "elites": 0,
-          "hash": 965924558,
+          "hash": 2979234593,
           "kills": 257,
           "level_ups": 4,
           "pickups": 0,
-          "rng_combat": "-5821708951444449001",
+          "rng_combat": "-3548342213351265787",
           "state": 0,
-          "steps": 12892
+          "steps": 13035
         },
         "37": {
           "elites": 0,
-          "hash": 4195637948,
-          "kills": 287,
+          "hash": 3805131158,
+          "kills": 318,
           "level_ups": 4,
           "pickups": 0,
-          "rng_combat": "4284514165074809037",
+          "rng_combat": "7003564084310007773",
           "state": 0,
-          "steps": 13944
+          "steps": 14850
         }
       }
     }

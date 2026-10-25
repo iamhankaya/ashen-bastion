@@ -12,7 +12,7 @@
       "cooldown": 9.0,
       "count": 3,
       "radius": 190,
-      "damage": 16,
+      "damage": 20,
       "interval": 0.35,
       "pull": 260,
       "life": 8.0,

@@ -9,7 +9,7 @@
   "pool": "zyfen",
   "levels": [
     {
-      "damage": 40,
+      "damage": 36,
       "radius": 900,
       "push": 260,
       "count": 2,
