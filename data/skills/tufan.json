@@ -17,7 +17,7 @@
       "pull": 260,
       "life": 8.0,
       "push": 220,
-      "fling": 260,
+      "fling": 0,
       "speed": 110,
       "target_mode": "cluster",
       "retarget_every": 1.5,

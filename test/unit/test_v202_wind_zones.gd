@@ -72,7 +72,7 @@ func test_hortum_spawns_count_twisters_with_level_values() -> void:
 		assert_almost_eq(sim.zones.life[i], 3.8, 0.05)
 		assert_almost_eq(sim.zones.dmg[i], 14.0, 0.001)
 		assert_almost_eq(sim.zones.pull[i], 100.0, 0.001)
-		assert_almost_eq(sim.zones.fling[i], 220.0, 0.001)
+		assert_almost_eq(sim.zones.fling[i], 0.0, 0.001)
 		assert_almost_eq(sim.zones.tick_every[i], 0.4, 0.001)
 		assert_eq(sim.zones.speed[i], 90.0)
 	assert_almost_eq(

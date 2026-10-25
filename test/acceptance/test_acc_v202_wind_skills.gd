@@ -300,7 +300,7 @@ func test_z4_hortum_spawns_count_zones_with_life_tick_and_spawn_distance() -> vo
 			)
 
 
-func test_z5_hortum_pulls_to_center_ticks_every_0_4s_and_flings_with_double_tick_at_the_end(
+func test_z5_hortum_pulls_to_center_ticks_every_0_4s_and_does_not_fling_at_the_end_with_double_tick(
 ) -> void:
 	if V202Slice.require(self, "Z"):
 		return
@@ -318,9 +318,13 @@ func test_z5_hortum_pulls_to_center_ticks_every_0_4s_and_flings_with_double_tick
 	assert_almost_eq(d0 - d1, 70.0 * 0.2, 3.0, "çekme: merkeze pull px/sn (sv1: 70)")
 	var from := sim.step_count
 	var last_pos := AccV202.pos_of(sim, id)
+	var prev_move := 0.0
+	var last_move := 0.0
 	while sim.zones.index_of_gen(gen) >= 0 and sim.step_count < from + 400:
 		last_pos = AccV202.pos_of(sim, id)
 		sim.step(Vector2.ZERO)
+		prev_move = last_move
+		last_move = AccV202.pos_of(sim, id).distance_to(last_pos)
 	var ev := AccV202.damages(sim, &"dot", id)
 	assert_gte(ev.size(), 5, "tikler")
 	assert_almost_eq(float(ev[ev.size() - 1]["amount"]), 16.0, 0.01, "son darbe 2 x tik (2 x 8)")
@@ -330,9 +334,12 @@ func test_z5_hortum_pulls_to_center_ticks_every_0_4s_and_flings_with_double_tick
 		assert_between(
 			int(ev[k]["step"]) - int(ev[k - 1]["step"]), 23, 25, "tik aralığı 0,4 sn = 24 adım"
 		)
-	assert_gt(
-		AccV202.pos_of(sim, id).distance_to(last_pos), 150.0, "ömür sonunda tek savurma (fling 220)"
+	# T20261025-68: bitişte savurma YOK. Kukla hareketsiz (hız 0): bitiş adımındaki yer değiştirme bir
+	# önceki adımınkine (çekme adımı) en fazla +-2 px sözleşme toleransıyla eşit; ~220 px sıçrama yok.
+	assert_lt(
+		last_move, prev_move + 2.0, "ömür sonunda savurma yok (adım hareketi çekme adımını aşmaz)"
 	)
+	assert_lt(AccV202.pos_of(sim, id).distance_to(last_pos), 20.0, "~220 px ışınlanma yok")
 
 
 func test_z6_hortum_draws_exactly_one_randf_per_retarget() -> void:
@@ -740,6 +747,44 @@ func test_e5_tufan_spawns_three_giant_twisters_radius_190_life_8() -> void:
 	assert_almost_eq(
 		stormy.zones.life[0], 8.0 * 1.5, 8.0 * 1.5 * 0.005 + STEP, "Fırtına Gözü: ömür x1,50"
 	)
+
+
+func test_e5b_tufan_pulls_does_not_fling_at_the_end_and_deals_double_tick() -> void:
+	if V202Slice.require(self, "E"):
+		return
+	var sim := AccV202.zyfen({})
+	sim.debug_grant(&"tufan")
+	AccV202.dummy(sim, Vector2(400, 0))
+	var zi := _first_zone(sim, 800)
+	assert_eq(sim.zones.count, 3, "3 dev hortum")
+	var gen := sim.zones.gen[zi]
+	# Ölçüm temizliği: yalnız bu dev hortum etkili olsun (diğerleri durur ve küçültülür).
+	for j in sim.zones.count:
+		sim.zones.speed[j] = 0.0
+		if sim.zones.gen[j] != gen:
+			sim.zones.radius[j] = 1.0
+	var c := sim.zones.pos[zi]
+	var id := AccV202.dummy(sim, c + Vector2(100, 0))
+	var from := sim.step_count
+	var last_pos := AccV202.pos_of(sim, id)
+	var prev_move := 0.0
+	var last_move := 0.0
+	var d_start := last_pos.distance_to(c)
+	while sim.zones.index_of_gen(gen) >= 0 and sim.step_count < from + 700:
+		last_pos = AccV202.pos_of(sim, id)
+		sim.step(Vector2.ZERO)
+		prev_move = last_move
+		last_move = AccV202.pos_of(sim, id).distance_to(last_pos)
+	assert_lt(AccV202.pos_of(sim, id).distance_to(c), d_start, "ömür boyunca merkeze çekildi")
+	var ev := AccV202.damages(sim, &"dot", id)
+	assert_gte(ev.size(), 5, "tikler")
+	assert_almost_eq(float(ev[ev.size() - 1]["amount"]), 40.0, 0.01, "son darbe 2 x tik (2 x 20)")
+	for k in range(0, ev.size() - 1):
+		assert_almost_eq(float(ev[k]["amount"]), 20.0, 0.01, "tik hasarı 20")
+	assert_lt(
+		last_move, prev_move + 2.0, "ömür sonunda savurma yok (adım hareketi çekme adımını aşmaz)"
+	)
+	assert_lt(AccV202.pos_of(sim, id).distance_to(last_pos), 20.0, "~260 px ışınlanma yok")
 
 
 func test_z14_breath_wave_fires_on_the_exact_step_the_natural_reload_starts() -> void:
