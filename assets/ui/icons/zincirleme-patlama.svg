@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" fill="none" stroke-linejoin="round" stroke-linecap="round" role="img" aria-label="Zincirleme Patlama"><title>Zincirleme Patlama</title>
-<path d="M26 66 L48 40 L72 62" stroke="#D2B47E" stroke-width="4" stroke-dasharray="2 8"/>
-<g fill="#E8A24A" stroke="#2B0E14" stroke-width="3">
-<path d="M24 54 L29 62 L38 60 L34 68 L40 76 L30 74 L24 82 L21 73 L12 72 L19 66 L14 58 L22 61 Z"/>
-<path d="M48 18 L53 28 L63 26 L58 35 L65 43 L54 41 L48 50 L44 40 L34 40 L41 33 L36 24 L45 28 Z"/>
-<path d="M72 50 L77 58 L86 56 L82 64 L88 72 L78 70 L72 78 L69 69 L60 68 L67 62 L62 54 L70 57 Z"/>
-</g>
-<g fill="#EFE7D6"><circle cx="24" cy="68" r="4"/><circle cx="48" cy="34" r="4"/><circle cx="72" cy="64" r="4"/></g>
-</svg>

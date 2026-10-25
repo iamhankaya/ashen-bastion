@@ -38,8 +38,12 @@ static func path_for(def: AchievementDef) -> String:
 	var base: String = FAMILY.get(String(def.stat), "")
 	if base == "":
 		return ""
-	var p := DIR + base + ".svg"
-	return p if ResourceLoader.exists(p) else ""
+	# A2b: Gunslinger ikonları boyalı PNG; hud-* ikonları SVG kalır.
+	for ext in [".png", ".svg"]:
+		var p: String = DIR + base + ext
+		if ResourceLoader.exists(p):
+			return p
+	return ""
 
 
 ## Kademe rengi (DESIGN §5.1.1): kolay/orta/zor/çok zor.

@@ -3,7 +3,7 @@
   "kind": "active",
   "pool": "gunslinger",
   "name": "Yelpaze Atış",
-  "icon": "placeholder:yelpaze_atis",
+  "icon": "res://assets/ui/icons/yelpaze-atis.png",
   "max_level": 5,
   "tags": [],
   "behavior": "yelpaze_atis",

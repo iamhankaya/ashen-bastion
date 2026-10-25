@@ -3,7 +3,7 @@
   "kind": "evolution",
   "pool": "gunslinger",
   "name": "Kıyamet Mermisi",
-  "icon": "placeholder:kiyamet_mermisi",
+  "icon": "res://assets/ui/icons/kiyamet-mermisi.png",
   "max_level": 1,
   "tags": [
     "rhythm"

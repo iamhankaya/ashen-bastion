@@ -2,7 +2,7 @@
   "id": "saglam_yelek",
   "kind": "passive",
   "name": "Sağlam Yelek",
-  "icon": "placeholder:saglam_yelek",
+  "icon": "res://assets/ui/icons/saglam-yelek.png",
   "max_level": 5,
   "tags": [],
   "levels": [

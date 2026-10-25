@@ -3,7 +3,7 @@
   "kind": "evolution",
   "pool": "gunslinger",
   "name": "Gürleyen Yelpaze",
-  "icon": "placeholder:gurleyen_yelpaze",
+  "icon": "res://assets/ui/icons/gurleyen-yelpaze.png",
   "max_level": 1,
   "tags": [],
   "behavior": "gurleyen_yelpaze",
