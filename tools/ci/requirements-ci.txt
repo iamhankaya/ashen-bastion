@@ -1,0 +1,9 @@
+# CI Python bağımlılıkları (F-044: sürümler sabit; pip önbelleğinin anahtarı bu dosyadır). Yerel gate de aynısını kullanabilir:
+#   pip install -r tools/ci/requirements-ci.txt
+gdtoolkit==4.5.0
+pytest==9.1.1
+pillow==12.3.0
+numpy==2.5.3
+scipy==1.18.1
+soundfile==0.14.0
+pyloudnorm==0.2.0
