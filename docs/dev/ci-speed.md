@@ -107,8 +107,46 @@ GUT'ta en yavaş 10 test (sn): `test_ver_v11_invariants::test_p20_late_game_crow
 En ağır dosyalar (toplam sn): `test_ver_v11_invariants` 105; `test_pickup_director` 57; `test_ver_f020_regression` 46; `test_acc_v11_pickups` 45.
 En ağır dosya (105 sn) parça tabanını belirler.
 
-Sonra (dört GUT parçası, ağırlık toplamı parça başına ≈ 168 sn; ölçümler bölüm 6 tablosunda).
+Sonra (CI benzetimi: her iş temiz kopyada, soğuk `.godot` ile ve yalnız başına; `tools/gate.sh` parçaları, aynı makine):
+
+| İş | sn | Ayrıntı |
+|---|---|---|
+| static | 170 | içe aktarma 50, lint 44, veri 1, Python testleri 75 (259 test) |
+| gut 1/4 | 209 | içe aktarma 47 + GUT 162 |
+| gut 2/4 | 274 | içe aktarma 104 (**F-042 SIGABRT, bir yeniden deneme**) + GUT 170 |
+| gut 3/4 | 236 | içe aktarma 52 + GUT 184 |
+| gut 4/4 | 218 | içe aktarma 48 + GUT 170 |
+| test (verify) | ~2 | birleştirme + adım 7 |
+| **Duvar saati** (işler paralel) | **≈ 240–280** | en yavaş iş + verify (önce ≈ 895) |
+| **Toplam iş süresi** | ≈ 1110 | her GUT işi kendi içe aktarmasını yapar (önce ≈ 895) |
+
+Duvar saati ≈ %70 düşer; toplam iş süresi ≈ %24 artar (4× içe aktarma). `.godot` önbelleği isabet ettiğinde içe aktarma ≈ 11 sn'dir
+(ölçüm: önbellekli 11 sn, soğuk 49 sn; tüm dosyaların mtime'ı yeni iken). CI makinesinde ölçülmedi (bölüm 7).
+
+**Kapsam aynı:** birleşik JUnit = tam gate JUnit'i ile aynı test seti: 212 dosya, 2150 test (144 pending, önce de 144);
+`(classname, ad)` kümeleri birebir eşit. Python testleri 231 -> 259 (bu işin 28 yeni testi).
 
 ## 5. Doğrulama kayıtları
 
-Bölüm 6 ve rapor: parça koşuları, kasıtlı-kırma sınaması, geriye dönük sınama, prova matrisi.
+- **Kasıtlı-kırma (mutasyon) sınaması** (`tools/ci/prova_test_map.py`): 6 eşlenmiş betiğin (hud, music_plan, highscores,
+  walk_cycle, hit_stop, showcase_motion) her işlevi `push_error` ile bozuldu; TAM suite 4 parçada koşuldu: 212 dosyanın **46'sı
+  kırmızı, 46'sı da** eşlemenin seçtiği 57 dosyanın içinde (**kaçan 0**, fazla seçim 11).
+- **Geriye dönük sınama** (`tools/ci/backtest_map.py`; her commit için eşleme o commit'in ağacından): son 120 tekil commit:
+  71 FULL, 49 kısmi seçim, **ihlal 0** (değişen her test ve değişen kaynağa doğrudan başvuran her test seçimde). Son 24 first-parent
+  (PR merge) commit: 21 FULL, 3 kısmi, ihlal 0 (büyük PR'lar `data/`/`scripts/sim` değiştirdiği için tam gate'e düşer).
+- **Hızlı mod uçtan uca:** `scripts/ui/toast_queue.gd` değişikliği: 26 test dosyası / 302 test, toplam 84 sn
+  (`GATE_FAST OK (KISMİ ...)`); yalnız `docs/dev/setup.md`: GUT yok, 11 sn; `data/skills/tufan.json` ya da `tools/gate.sh`
+  değişikliği: "TAM GATE koşuluyor" (tam gate'e düştü); `CI=true` ile çıkış 2.
+- **Selftest:** 11 senaryo / 6 grup OK (aşağıdaki not).
+- **Prova matrisi** (umask 077, `bash -s`, yetkisiz kullanıcı, eksik/yinelenen parça, ikinci koşu): raporda.
+
+## 6. Bilinen sınırlar
+
+- **60 sn tek-test sınırı (`check_durations.py`) bu makinede aşılıyor.** `test_p20_late_game_crowd_invariants...` burada 66–74 sn
+  (T25-56 raporundaki makinede 56 sn); sınır değişmedi (duvar saati eşiği, kapsam azaltmaz). Bu makinede tam `gate.sh` yalnız bu
+  sınır yüzünden kırmızıdır; sınır 100'e çıkarılınca (geçici yerel yama, commit'lenmedi) aynı commit'in tam gate'i ve 11 selftest
+  senaryosu GATE OK / OK verdi. Eşik, testin kendisi hızlandırılana (kabul testi: tester alanı) kadar sınıra yakındır.
+- **F-042 içe aktarma çöküşü:** parçalı CI beş (static + 4 gut) Godot içe aktarması yapar; her biri çöküş imzasına karşı
+  tek yeniden denemeyle korunur (`godot_import.sh`). Benzetimde 5 içe aktarmadan 1'i çöktü ve yeniden denemeyle geçti.
+  Çöküş editör açılışında olduğundan `.godot` önbelleği riski azaltmaz.
+- Bağımlılıklar yalnız doğrudan sabitlendi (`requirements-ci.txt`); gdtoolkit'in geçişli bağımlılıkları (lark, vb.) sabit değil.
