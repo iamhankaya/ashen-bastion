@@ -37,7 +37,11 @@ export GODOT_BIN
 echo "Godot: $GODOT_BIN"
 
 step "2. İçe aktarma"
-"$GODOT_BIN" --headless --import > .gate/import.log 2>&1 || fail "--import başarısız (bkz. .gate/import.log)"
+# Önceden var olan .godot önbelleği bozuksa --import çıkış 0 verip yalnız ERROR: satırı yazar (prova: tools/ci/prova_import_cache.sh).
+HAD_CACHE=0; [ -d .godot ] && HAD_CACHE=1
+# F-042: aralıklı SIGABRT çöküşüne karşı en çok 1 bilinen-imzalı yeniden deneme (tools/ci/godot_import.sh; sessiz değil).
+bash tools/ci/godot_import.sh .gate/import.log || fail "--import başarısız (bkz. .gate/import.log, .gate/import_retry.txt)"
+[ $HAD_CACHE -eq 1 ] && echo "not: .godot önbelleği önceden vardı; içe aktarma günlüğü hata verirse önce 'rm -rf .godot' dene" >&2
 scan_log .gate/import.log
 
 step "3. Lint"
@@ -112,5 +116,6 @@ fi
 end_step
 echo "=== Adım süreleri"
 cat .gate/times.log
+[ -f .gate/import_retry.txt ] && { echo "=== İçe aktarma yeniden denemesi (F-042)"; cat .gate/import_retry.txt; }
 python3 tools/ci/check_budget.py .gate/times.log || true
 echo "GATE OK"
