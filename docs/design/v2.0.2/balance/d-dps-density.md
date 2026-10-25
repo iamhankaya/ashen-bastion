@@ -23,11 +23,11 @@
 | zyfen | aktif sv5: hava_cebi | 115.2 | 249.6 | 537.6 |
 | zyfen | aktif sv5: hortum | 868.3 | 3486.8 | 8355.6 |
 | zyfen | aktif sv5: nefes_dalgasi | 223.2 | 789.6 | 2698.2 |
-| zyfen | evrim: ay_oragi (bolunen_kesik sv5 + pasif) | 430.4 | 1102.4 | 2225.6 |
-| zyfen | oran ay_oragi ÷ aktif sv5 | 3.24 | 3.12 | 4.39 |
+| zyfen | evrim: ay_oragi (bolunen_kesik sv5 + pasif) | 270.4 | 686.4 | 1393.6 |
+| zyfen | oran ay_oragi ÷ aktif sv5 | 2.04 | 1.94 | 2.75 |
 | zyfen | evrim: gogun_mizragi (delen_ruzgar sv5 + pasif) | 725.2 | 1399.6 | 3552.6 |
 | zyfen | oran gogun_mizragi ÷ aktif sv5 | 1.94 | 1.80 | 1.93 |
-| zyfen | evrim: kasirga_patlamasi (nefes_dalgasi sv5 + pasif) | 437.0 | 1851.4 | 6944.2 |
-| zyfen | oran kasirga_patlamasi ÷ aktif sv5 | 1.96 | 2.34 | 2.57 |
-| zyfen | evrim: tufan (hortum sv5 + pasif) | 1428.2 | 5574.8 | 12359.2 |
-| zyfen | oran tufan ÷ aktif sv5 | 1.64 | 1.60 | 1.48 |
+| zyfen | evrim: kasirga_patlamasi (nefes_dalgasi sv5 + pasif) | 405.0 | 1691.4 | 6304.2 |
+| zyfen | oran kasirga_patlamasi ÷ aktif sv5 | 1.81 | 2.14 | 2.34 |
+| zyfen | evrim: tufan (hortum sv5 + pasif) | 1749.4 | 6889.0 | 15308.6 |
+| zyfen | oran tufan ÷ aktif sv5 | 2.01 | 1.98 | 1.83 |

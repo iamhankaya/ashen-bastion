@@ -20,15 +20,34 @@ func _initialize() -> void:
 		_row(lines, table, cid, "base", "temel", {}, secs)
 		for sk in data.skills_of_kind(SkillDef.KIND_ACTIVE):
 			if sk.available_to(cid) and sk.id != start:
-				_row(lines, table, cid, "active:%s" % sk.id, "aktif sv5: %s" % sk.id, {sk.id: sk.max_level}, secs)
+				_row(
+					lines,
+					table,
+					cid,
+					"active:%s" % sk.id,
+					"aktif sv5: %s" % sk.id,
+					{sk.id: sk.max_level},
+					secs
+				)
 		for sk in data.skills_of_kind(SkillDef.KIND_EVOLUTION):
 			if not sk.available_to(cid):
 				continue
 			var req: Dictionary = sk.requires
 			var act := StringName(req["active"])
-			var setup := {act: int(req["active_level"]), StringName(req["passive"]): int(req["passive_min_level"])}
+			var setup := {
+				act: int(req["active_level"]),
+				StringName(req["passive"]): int(req["passive_min_level"])
+			}
 			setup[sk.id] = 1
-			_row(lines, table, cid, "evo:%s" % sk.id, "evrim: %s (%s sv5 + pasif)" % [sk.id, act], setup, secs)
+			_row(
+				lines,
+				table,
+				cid,
+				"evo:%s" % sk.id,
+				"evrim: %s (%s sv5 + pasif)" % [sk.id, act],
+				setup,
+				secs
+			)
 			var ratio: PackedStringArray = []
 			for i in DENSITIES.size():
 				var a: float = table["%s|active:%s" % [cid, act]][i]

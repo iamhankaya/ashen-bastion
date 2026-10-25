@@ -25,7 +25,9 @@ func test_zyfen_band_report() -> void:
 			continue
 		var req: Dictionary = sk.requires
 		var act := StringName(req["active"])
-		var evo_setup := {act: int(req["active_level"]), StringName(req["passive"]): int(req["passive_min_level"])}
+		var evo_setup := {
+			act: int(req["active_level"]), StringName(req["passive"]): int(req["passive_min_level"])
+		}
 		evo_setup[sk.id] = 1
 		var ratios := []
 		for n in DENSITIES:

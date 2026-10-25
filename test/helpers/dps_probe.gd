@@ -63,7 +63,9 @@ static func _layout(center: Vector2, layout: StringName, n: int) -> Array[Vector
 				out.append(center + Vector2(160.0 + 40.0 * k, 0.0))
 			&"crowd":
 				# Ayçiçeği dağılımı: oyuncu çevresinde merkeze doğru sıklaşan kalabalık (10/50/200 yoğunluk tablosu).
-				out.append(center + Vector2.from_angle(2.39996 * k) * (70.0 + 17.0 * sqrt(float(k))))
+				out.append(
+					center + Vector2.from_angle(2.39996 * k) * (70.0 + 17.0 * sqrt(float(k)))
+				)
 			&"cluster":
 				out.append(center + Vector2(260.0, 0.0) + Vector2(36.0 * (k % 4), 36.0 * (k / 4)))
 			_:

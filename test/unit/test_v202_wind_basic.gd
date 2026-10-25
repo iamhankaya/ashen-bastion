@@ -224,7 +224,7 @@ func test_ay_oragi_makes_every_second_shot_a_giant_unsplittable_crescent() -> vo
 	even.pierce = ProjectilePool.PIERCE_ALL
 	even.flags = ProjectilePool.FLAG_WIND | ProjectilePool.FLAG_SPLITTER
 	b.modify_shot(even)
-	assert_almost_eq(even.damage, 35.0, 0.001)
+	assert_almost_eq(even.damage, 20.0, 0.001)
 	assert_eq([even.radius, even.speed], [40.0, 1300.0])
 	assert_almost_eq(even.life, 1100.0 / 1300.0, 0.0001)
 	assert_eq(even.pierce, ProjectilePool.PIERCE_ALL)

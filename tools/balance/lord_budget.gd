@@ -16,11 +16,13 @@ func _initialize() -> void:
 	var lord_hp: float = GameData.load_default().get_enemy(LORD).hp
 	var cases := {
 		"hortum sv5": {&"hortum": 5},
-		"tufan (hortum sv5 + furtina_gozu + tufan)": {&"hortum": 5, &"furtina_gozu": 1, &"tufan": 1},
+		"tufan (hortum sv5 + furtina_gozu + tufan)":
+		{&"hortum": 5, &"furtina_gozu": 1, &"tufan": 1},
 		"hortum sv1": {&"hortum": 1},
 	}
 	var lines: PackedStringArray = [
-		"| durum | beceri farkı (hasar/dk) | Lord HP %% / dk (HP %d) |" % int(lord_hp), "|---|---|---|"
+		"| durum | beceri farkı (hasar/dk) | Lord HP %% / dk (HP %d) |" % int(lord_hp),
+		"|---|---|---|"
 	]
 	for label in cases:
 		var diffs: Array[float] = []
