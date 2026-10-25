@@ -1,0 +1,418 @@
+[
+  {
+    "file": "01_mermiler/kesik.png",
+    "width": 1536,
+    "height": 768,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      190,
+      198,
+      1379,
+      664
+    ]
+  },
+  {
+    "file": "01_mermiler/kesik_iz.png",
+    "width": 2048,
+    "height": 512,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      433,
+      103,
+      1636,
+      449
+    ]
+  },
+  {
+    "file": "01_mermiler/ay_oragi.png",
+    "width": 1536,
+    "height": 768,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      224,
+      83,
+      1341,
+      671
+    ]
+  },
+  {
+    "file": "01_mermiler/ay_oragi_iz.png",
+    "width": 2048,
+    "height": 512,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      526,
+      59,
+      1534,
+      418
+    ]
+  },
+  {
+    "file": "01_mermiler/parilti.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      65,
+      59,
+      187,
+      199
+    ]
+  },
+  {
+    "file": "01_mermiler/kesik_parca.png",
+    "width": 1536,
+    "height": 768,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      394,
+      117,
+      1246,
+      576
+    ]
+  },
+  {
+    "file": "01_mermiler/kesik_kirilma.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      217,
+      138,
+      888,
+      841
+    ]
+  },
+  {
+    "file": "01_mermiler/hava_bicagi.png",
+    "width": 1536,
+    "height": 768,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      246,
+      80,
+      1319,
+      579
+    ]
+  },
+  {
+    "file": "01_mermiler/mizrak.png",
+    "width": 2048,
+    "height": 512,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      423,
+      121,
+      1624,
+      373
+    ]
+  },
+  {
+    "file": "01_mermiler/mizrak_uc.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      160,
+      269,
+      864,
+      739
+    ]
+  },
+  {
+    "file": "01_mermiler/gok_mizragi.png",
+    "width": 2048,
+    "height": 512,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      413,
+      51,
+      1629,
+      449
+    ]
+  },
+  {
+    "file": "01_mermiler/gok_isik.png",
+    "width": 768,
+    "height": 1536,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      211,
+      154,
+      523,
+      1382
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/hortum_govde.png",
+    "width": 768,
+    "height": 1536,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      104,
+      323,
+      680,
+      1268
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/hortum_akis.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      0,
+      0,
+      1024,
+      1024
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/hortum_taban.png",
+    "width": 1536,
+    "height": 768,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      169,
+      189,
+      1362,
+      642
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/tas_1.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      74,
+      58,
+      171,
+      167
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/tas_2.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      36,
+      86,
+      228,
+      176
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/tas_3.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      110,
+      76,
+      160,
+      183
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/tas_4.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      81,
+      81,
+      178,
+      179
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/tufan_govde.png",
+    "width": 768,
+    "height": 1536,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      77,
+      196,
+      691,
+      1319
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/tufan_taban.png",
+    "width": 1536,
+    "height": 768,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      160,
+      142,
+      1379,
+      687
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/simsek_1.png",
+    "width": 768,
+    "height": 1536,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      198,
+      184,
+      637,
+      1357
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/simsek_2.png",
+    "width": 768,
+    "height": 1536,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      90,
+      171,
+      691,
+      1350
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/girdap.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      128,
+      123,
+      892,
+      921
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/girdap_ic.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      165,
+      102,
+      921,
+      921
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/hava_cebi.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      151,
+      122,
+      882,
+      887
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/hava_cebi_patlama.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      176,
+      149,
+      898,
+      861
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/dalga.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      131,
+      126,
+      914,
+      913
+    ]
+  },
+  {
+    "file": "02_alanlar_ve_hortumlar/kasirga.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      156,
+      140,
+      890,
+      868
+    ]
+  },
+  {
+    "file": "03_atis_ve_isabet/avuc.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      240,
+      186,
+      835,
+      751
+    ]
+  },
+  {
+    "file": "03_atis_ve_isabet/isabet.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      308,
+      240,
+      783,
+      740
+    ]
+  },
+  {
+    "file": "03_atis_ve_isabet/isabet_buyuk.png",
+    "width": 1024,
+    "height": 1024,
+    "mode": "RGBA",
+    "alpha": true,
+    "content_bounds": [
+      126,
+      111,
+      910,
+      920
+    ]
+  }
+]

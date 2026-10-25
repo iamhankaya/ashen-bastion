@@ -17,6 +17,13 @@ const SHAKE_MIN_RADIUS := 150.0
 const MAX_RINGS := 12
 const MAX_HITS := 12
 const HIT_TIME := 0.14
+const HIT_TIME_BIG := 0.24
+## Büyük isabet (Ay Orağı, mızrak) için mermi arama menzili (px) ve en çok izlenen büyük mermi.
+const BIG_HIT_REACH := 120.0
+const MAX_BIG := 16
+## Kasırga patlamasında dışarı savrulan taş sayısı, dalganın ikinci (soluk) halkasının gecikme oranı.
+const BLAST_STONES := 8
+const WAVE_ECHO := 0.5
 const MAX_SHELLS := 16
 const MAX_PARTICLES := 96
 const MAX_CHARS := 8
@@ -59,11 +66,17 @@ var _ring_tex: Array[StringName] = []
 var _ring_r0 := PackedFloat32Array()
 var _ring_rot := PackedFloat32Array()
 var _ring_spin := PackedFloat32Array()
+## Doku halkasının ikinci, daha soluk halkasının gecikmesi (süre oranı; 0 = yok).
+var _ring_echo := PackedFloat32Array()
 # Avuç isabeti (kolsuz karakter): kısa, küçük doku patlaması.
 var _hit_pos := PackedVector2Array()
 var _hit_left := PackedFloat32Array()
 var _hit_rot := PackedFloat32Array()
+var _hit_big := PackedByteArray()
 var _hit_head := 0
+# Önceki karedeki büyük rüzgar mermileri (Ay Orağı, mızrak): isabetin büyük patlama mı normal mi olduğunu seçer.
+var _big_pos := PackedVector2Array()
+var _big_n := 0
 var _ring_head := 0
 var _shell_pos := PackedVector2Array()
 var _shell_dir := PackedVector2Array()
@@ -108,9 +121,12 @@ func _init() -> void:
 	_ring_r0.resize(MAX_RINGS)
 	_ring_rot.resize(MAX_RINGS)
 	_ring_spin.resize(MAX_RINGS)
+	_ring_echo.resize(MAX_RINGS)
 	_hit_pos.resize(MAX_HITS)
 	_hit_left.resize(MAX_HITS)
 	_hit_rot.resize(MAX_HITS)
+	_hit_big.resize(MAX_HITS)
+	_big_pos.resize(MAX_BIG)
 	_shell_pos.resize(MAX_SHELLS)
 	_shell_dir.resize(MAX_SHELLS)
 	_shell_dist.resize(MAX_SHELLS)
@@ -184,6 +200,7 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 	_spark_left.fill(0.0)
 	_ring_left.fill(0.0)
 	_hit_left.fill(0.0)
+	_big_n = 0
 	_shell_left.fill(0.0)
 	_part_left.fill(0.0)
 	char_layer.left.fill(0.0)
@@ -248,13 +265,22 @@ func add_ring(pos: Vector2, r_max: float, dur: float, color: Color, width: float
 	_ring_w[_ring_head] = width
 	_ring_col[_ring_head] = color
 	_ring_tex[_ring_head] = &""
+	_ring_echo[_ring_head] = 0.0
 	_ring_head = (_ring_head + 1) % MAX_RINGS
 
 
 ## Doku halkası (aynı tampon ve sayaç): `tex` (ZyfenFx kimliği) pos merkezli, r_max * r0'dan r_max'a büyür, `rot` rad açıyla
-## başlar ve `spin` rad/sn döner, dur sn'de solar.
+## başlar ve `spin` rad/sn döner, dur sn'de solar. `r0 > 1` ise halka küçülerek toplanır (avuç). `echo > 0` ise ana halkanın
+## ardından (süre oranı kadar gecikmeli) ikinci, daha soluk ve ters dönen bir halka gelir (Nefes Dalgası).
 func add_tex_ring(
-	pos: Vector2, r_max: float, dur: float, tex: StringName, r0: float, rot: float, spin: float
+	pos: Vector2,
+	r_max: float,
+	dur: float,
+	tex: StringName,
+	r0: float,
+	rot: float,
+	spin: float,
+	echo: float = 0.0
 ) -> void:
 	add_ring(pos, r_max, dur, Color.WHITE, 0.0)
 	var h := (_ring_head + MAX_RINGS - 1) % MAX_RINGS
@@ -262,13 +288,15 @@ func add_tex_ring(
 	_ring_r0[h] = r0
 	_ring_rot[h] = rot
 	_ring_spin[h] = spin
+	_ring_echo[h] = echo
 
 
-## Avuç isabeti: `pos`ta kısa doku patlaması (yalnız kolsuz karakter).
-func add_palm_hit(pos: Vector2) -> void:
+## İsabet: `pos`ta kısa doku patlaması (yalnız kolsuz karakter). `big`: Ay Orağı / mızrak vuruşu (`isabet_buyuk`).
+func add_palm_hit(pos: Vector2, big: bool = false) -> void:
 	_hit_pos[_hit_head] = pos
-	_hit_left[_hit_head] = HIT_TIME
+	_hit_left[_hit_head] = HIT_TIME_BIG if big else HIT_TIME
 	_hit_rot[_hit_head] = float(_hit_head) * 2.4
+	_hit_big[_hit_head] = 1 if big else 0
 	_hit_head = (_hit_head + 1) % MAX_HITS
 
 
@@ -356,10 +384,35 @@ func update_fx(dt: float) -> void:
 			_spark_left[i] = maxf(0.0, _spark_left[i] - dt)
 			n += 1
 	n += _update_v11(dt)
+	_track_big_projectiles()
 	wind_renderer.refresh()
 	if n > 0 or _active > 0:
 		queue_redraw()
 	_active = n
+
+
+## Büyük rüzgar mermilerinin (Ay Orağı, mızrak) konumları: isabet bunlardan birine yakınsa `isabet_buyuk` çizilir.
+func _track_big_projectiles() -> void:
+	_big_n = 0
+	if _sim == null or not PlayerRig.is_armless(_sim.character.rig):
+		return
+	var pool := _sim.projectiles
+	for i in mini(pool.count, ProjectilePool.CAP):
+		if (
+			(pool.flags[i] & ProjectilePool.FLAG_WIND) != 0
+			and (pool.rad[i] >= ZyfenFx.GIANT_RADIUS or pool.vel[i].length() >= ZyfenFx.SPEAR_SPEED)
+		):
+			_big_pos[_big_n] = pool.pos[i]
+			_big_n += 1
+			if _big_n >= MAX_BIG:
+				return
+
+
+func _is_big_hit(pos: Vector2) -> bool:
+	for k in _big_n:
+		if _big_pos[k].distance_squared_to(pos) < BIG_HIT_REACH * BIG_HIT_REACH:
+			return true
+	return false
 
 
 ## v1.1 tamponları: süreleri azalt, parçacıkları hareket ettir. Döner: etkin öğe sayısı.
@@ -470,31 +523,7 @@ func _draw_v11() -> void:
 		var k := 1.0 - left / _ring_dur[i]
 		var ease_out := 1.0 - pow(1.0 - k, 3.0)
 		if _ring_tex[i] != &"":
-			var tex := ZyfenFx.texture(_ring_tex[i])
-			if tex != null:
-				var half := (
-					_ring_r[i] * (_ring_r0[i] + (1.0 - _ring_r0[i]) * ease_out) / ZyfenFx.TEX_FILL
-				)
-				draw_set_transform(
-					_ring_pos[i], _ring_rot[i] + _ring_spin[i] * k * _ring_dur[i], Vector2.ONE
-				)
-				draw_texture_rect(
-					tex,
-					Rect2(
-						(
-							Vector2(-half, -half)
-							* Vector2(1.0, tex.get_height() / float(tex.get_width()))
-						),
-						(
-							Vector2(half, half)
-							* 2.0
-							* Vector2(1.0, tex.get_height() / float(tex.get_width()))
-						)
-					),
-					false,
-					Color(1, 1, 1, (1.0 - k) * (1.0 - k * 0.5))
-				)
-				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			_draw_tex_ring(i, k)
 			continue
 		var r := _ring_r[i] * ease_out
 		var col := _ring_col[i]
@@ -509,22 +538,9 @@ func _draw_v11() -> void:
 			maxf(_ring_w[i] * (1.0 - 0.6 * k), 1.0),
 			true
 		)
-	var palm := ZyfenFx.texture(ZyfenFx.AVUC)
-	if palm != null:
-		for i in MAX_HITS:
-			var left := _hit_left[i]
-			if left <= 0.0:
-				continue
-			var k := 1.0 - left / HIT_TIME
-			var half := (10.0 + 14.0 * k) / ZyfenFx.TEX_FILL
-			draw_set_transform(_hit_pos[i], _hit_rot[i], Vector2.ONE)
-			draw_texture_rect(
-				palm,
-				Rect2(Vector2(-half, -half), Vector2(half, half) * 2.0),
-				false,
-				Color(1, 1, 1, 1.0 - k)
-			)
-			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	for i in MAX_HITS:
+		if _hit_left[i] > 0.0:
+			_draw_hit(i)
 	for i in MAX_SHELLS:
 		var left := _shell_left[i]
 		if left <= 0.0:
@@ -564,6 +580,92 @@ func _draw_v11() -> void:
 				)
 
 
+## İsabet patlaması: normal `isabet`, büyük `isabet_buyuk`; hızla büyür, solar.
+func _draw_hit(i: int) -> void:
+	var big := _hit_big[i] != 0
+	var tex := ZyfenFx.texture(ZyfenFx.ISABET_BUYUK if big else ZyfenFx.ISABET)
+	if tex == null:
+		return
+	var k := 1.0 - _hit_left[i] / (HIT_TIME_BIG if big else HIT_TIME)
+	var w := (96.0 + 70.0 * k) if big else (50.0 + 40.0 * k)
+	draw_set_transform(_hit_pos[i], _hit_rot[i], Vector2.ONE)
+	draw_texture_rect(
+		tex, Rect2(Vector2(-w, -w) * 0.5, Vector2(w, w)), false, Color(1, 1, 1, 1.0 - k)
+	)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## Doku halkası `i` (ilerleme `k` 0..1): ana halka büyür ve döner; `echo` varsa ikinci soluk halka geriden gelir; Kasırga'da
+## çekirdek parlar ve taşlar dışarı savrulur.
+func _draw_tex_ring(i: int, k: float) -> void:
+	var tex := ZyfenFx.texture(_ring_tex[i])
+	if tex == null:
+		return
+	var echo := _ring_echo[i]
+	var span := 1.0 + echo
+	var km := minf(k * span, 1.0)
+	var aspect := float(tex.get_height()) / float(tex.get_width())
+	var rot := _ring_rot[i] + _ring_spin[i] * k * _ring_dur[i]
+	var r0 := _ring_r0[i]
+	if km < 1.0 or echo <= 0.0:
+		var ease_m := 1.0 - pow(1.0 - km, 3.0)
+		var half := _ring_r[i] * (r0 + (1.0 - r0) * ease_m) / ZyfenFx.TEX_FILL
+		draw_set_transform(_ring_pos[i], rot, Vector2.ONE)
+		draw_texture_rect(
+			tex,
+			Rect2(Vector2(-half, -half * aspect), Vector2(half, half * aspect) * 2.0),
+			false,
+			Color(1, 1, 1, (1.0 - km) * (1.0 - km * 0.5))
+		)
+	var ke := k * span - echo
+	if echo > 0.0 and ke > 0.0:
+		var ease_e := 1.0 - pow(1.0 - ke, 3.0)
+		var half_e := _ring_r[i] * 0.86 * (r0 + (1.0 - r0) * ease_e) / ZyfenFx.TEX_FILL
+		draw_set_transform(_ring_pos[i], -rot * 0.7, Vector2.ONE)
+		draw_texture_rect(
+			tex,
+			Rect2(Vector2(-half_e, -half_e * aspect), Vector2(half_e, half_e * aspect) * 2.0),
+			false,
+			Color(1, 1, 1, 0.5 * (1.0 - ke))
+		)
+	if _ring_tex[i] == ZyfenFx.KASIRGA:
+		_draw_blast_extras(i, km)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## Kasırga Patlaması: merkezde kısa parlayan çekirdek, dışarı savrulan taşlar (hortum taşları).
+func _draw_blast_extras(i: int, km: float) -> void:
+	var soft := PlaceholderArt.soft_circle(64)
+	var flash := (1.0 - km) * (1.0 - km)
+	var cr := 70.0 + 190.0 * km
+	draw_set_transform(_ring_pos[i], 0.0, Vector2.ONE)
+	draw_texture_rect(
+		soft,
+		Rect2(Vector2(-cr, -cr), Vector2(cr, cr) * 2.0),
+		false,
+		Color(0.55, 0.95, 1.0, 0.9 * flash)
+	)
+	var ease_s := 1.0 - pow(1.0 - km, 2.5)
+	for j in BLAST_STONES:
+		var tex := ZyfenFx.texture(ZyfenFx.STONES[j % ZyfenFx.STONES.size()])
+		if tex == null:
+			continue
+		var ang := float(j) * TAU / float(BLAST_STONES) + 0.35 * sin(float(j) * 5.1) + _ring_rot[i]
+		var dist := _ring_r[i] * ease_s * (0.5 + 0.45 * fposmod(float(j) * 0.618, 1.0))
+		var sz := 30.0 + 18.0 * float(j % 3)
+		draw_set_transform(
+			_ring_pos[i] + Vector2.from_angle(ang) * dist,
+			km * (6.0 + float(j)) * (1.0 if j % 2 == 0 else -1.0),
+			Vector2.ONE
+		)
+		draw_texture_rect(
+			tex,
+			Rect2(Vector2(-sz, -sz) * 0.5, Vector2(sz, sz)),
+			false,
+			Color(1, 1, 1, 1.0 - km * km)
+		)
+
+
 func _on_bomb_exploded(pos: Vector2, radius: float) -> void:
 	add_char(pos, radius)
 	add_ring(pos, radius, 0.45, Color(0.878, 0.345, 0.31, 0.9), 6.0)
@@ -595,7 +697,12 @@ func _on_beam(a: Vector2, b: Vector2) -> void:
 func _on_wind_wave(origin: Vector2, radius: float, big: bool) -> void:
 	var tex := ZyfenFx.KASIRGA if big else ZyfenFx.DALGA
 	if ZyfenFx.texture(tex) != null:
-		add_tex_ring(origin, radius, 0.7 if big else 0.5, tex, 0.1, 0.0, 0.6 if big else 0.4)
+		if big:
+			# Kasırga: hızla büyür, uzun sürmez; çekirdek parlar ve taşlar savrulur (_draw_tex_ring).
+			add_tex_ring(origin, radius, 0.7, tex, 0.05, 0.0, 1.4)
+		else:
+			# Nefes Dalgası: büyürken döner, ardından ikinci soluk halka gelir.
+			add_tex_ring(origin, radius, 0.5 * (1.0 + WAVE_ECHO), tex, 0.1, 0.0, 2.2, WAVE_ECHO)
 	else:
 		add_ring(
 			origin, radius, 0.6 if big else 0.4, Color(0.7, 0.9, 0.95, 0.9), 10.0 if big else 6.0
@@ -616,16 +723,17 @@ func _on_hit(pos: Vector2) -> void:
 		and PlayerRig.is_armless(_sim.character.rig)
 		and ZyfenFx.texture(ZyfenFx.AVUC) != null
 	):
-		add_palm_hit(pos)
+		add_palm_hit(pos, _is_big_hit(pos))
 
 
 func _on_wind_cast(origin: Vector2) -> void:
 	_cast_palm(origin, 0.0)
 
 
-## Avuç doku halkası (fx_avuc: küçülmeden büyüyüp söner); doku yoksa eski yay halkası.
+## Avuç doku halkası (fx_avuc: elde toplanıp söner); doku yoksa eski yay halkası.
 func _cast_palm(origin: Vector2, ang: float) -> void:
 	if ZyfenFx.texture(ZyfenFx.AVUC) != null:
-		add_tex_ring(origin, 34.0, 0.2, ZyfenFx.AVUC, 0.5, ang, 0.0)
+		# Avuçta toplanır: büyükten küçüğe daralır, dönerek söner.
+		add_tex_ring(origin, 30.0, 0.26, ZyfenFx.AVUC, 1.9, ang, -16.0)
 	else:
 		add_ring(origin, 28.0, 0.18, Color(0.75, 0.92, 1.0, 0.8), 3.0)

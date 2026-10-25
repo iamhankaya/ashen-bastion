@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqhgbl72h2b7q"
-path="res://.godot/imported/fx_hortum.png-e05d116efb37f5f28d1ea0b8f7a8c07d.ctex"
+uid="uid://cu65qcck28ef"
+path="res://.godot/imported/gok_mizragi.png-5dac5b303d0534eee393cbd78ec5c037.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/gfx/fx/zyfen/fx_hortum.png"
-dest_files=["res://.godot/imported/fx_hortum.png-e05d116efb37f5f28d1ea0b8f7a8c07d.ctex"]
+source_file="res://art/source/zyfen/fx_v2/01_mermiler/gok_mizragi.png"
+dest_files=["res://.godot/imported/gok_mizragi.png-5dac5b303d0534eee393cbd78ec5c037.ctex"]
 
 [params]
 

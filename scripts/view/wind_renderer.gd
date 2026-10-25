@@ -1,43 +1,171 @@
 class_name WindRenderer
 extends Node2D
 ## Rüzgar bölgeleri ve Girdap halkası (yalnız görsel; sim'i okur, hiçbir sim durumunu değiştirmez). FxRenderer'ın çocuğudur
-## ve harmanlama malzemesini ondan alır (ZyfenFx dokuları: fx_hortum/fx_tufan/fx_hava_cebi, Girdap için fx_girdap; bölge
-## başına tek çizim, döndürme/soldurma kodla). Ekran içi çizim sayısı MAX_DRAWN ile sınırlıdır (300 düşman + 3 hortum perf bütçesi).
+## ve harmanlama malzemesini ondan alır. v2 (katmanlı, ZyfenFx dokuları): her bölge ayrı parçalardan kurulur ve parçalar
+## kodla canlandırılır. Üç çizim geçişi (düğüm sırası = çizim sırası): ARKA (bu düğüm: taban halkası, arkadaki taşlar,
+## gövde), AKIŞ (çocuk: `hortum_akis` gövde alfasına maskeli, yukarı kayan doku; gölgelendirici), ÖN (çocuk: öndeki
+## taşlar, şimşek). Girdap oyuncunun çevresinde arka geçişte, bölgelerin altında. Ekran içi bölge sayısı MAX_DRAWN, toplam
+## çizim çağrısı MAX_DRAW_CALLS ile sınırlıdır (300 düşman + 3 hortum perf bütçesi); kalabalıkta taş/şimşek sayısı düşürülür.
 
 const MAX_DRAWN := 24
-## Dönüş hızları (rad/sn); bölge dokuları yavaş döner.
-const TWISTER_SPIN := 1.6
-const GIANT_SPIN := 1.1
+## Üç geçişte toplam doku çizimi tavanı (kalite kademesi bunu garanti eder; test_v202_wind_renderer ölçer).
+const MAX_DRAW_CALLS := 110
+## Dönüş hızları (rad/sn); taban halkaları ve halkalar yavaş döner.
+const TWISTER_SPIN := 1.3
+const GIANT_SPIN := 0.8
 const POCKET_SPIN := -0.8
 const GIRDAP_SPIN := 1.3
-const FADE_TIME := 0.4
+## Doğuşta tabandan büyüme ve sönüşte incelme süresi (sn).
+const GROW_TIME := 0.55
+const FADE_TIME := 0.5
+## Hava Cebi bitişinde patlama süresi (sn): küre sönerken `hava_cebi_patlama` genişler.
+const BURST_TIME := 0.3
+## Gövde tuval genişliği / bölge yarıçapı (Hortum, Tufan); yükseklik doku oranından (1:2). Taban tuval genişliği / yarıçap.
+const TWISTER_BODY := 1.25
+const GIANT_BODY := 1.6
+const BASE_WIDTH := 2.4
+## Gövde dokusunda görünür içeriğin alt ucu (tuval yüksekliği oranı): zemin noktası bunun hizasındadır.
+const BODY_FOOT := 0.87
+## Gövde içi görünür yükseklik (zemin noktasından tepeye, tuval yüksekliği oranı) ve gövde alt/üst çıplak genişlik oranı.
+const BODY_SPAN := 0.69
+const BODY_HALF := 0.41
+## Gövde sallanması: tepe yatay kayma (gövde yüksekliği oranı) ve hızı.
+const SWAY_AMOUNT := 0.05
+const SWAY_SPEED := 1.7
+## Bölge alfası (harmanlama alfa; additive ekranı beyaza boğdu).
+const ALPHA_TWISTER := 0.85
+const ALPHA_GIANT := 0.9
+const ALPHA_POCKET := 0.85
+const ALPHA_GIRDAP := 0.8
+## Akış katmanı alfası ve hız çarpanı (Tufan daha ağır döner).
+const FLOW_ALPHA_TWISTER := 0.55
+const FLOW_ALPHA_GIANT := 0.5
+const FLOW_SPEED_TWISTER := 1.0
+const FLOW_SPEED_GIANT := 0.7
+## Akış dokusunun gövde üstündeki döşeme boyutu (px, dünya).
+const FLOW_TILE_PX := 130.0
+## Yörünge: (hız rad/sn, yükseklik oranı, boyut px) taş başına; Tufan'da daha çok ve daha geniş (ikinci halka).
+const TWISTER_STONES := [
+	Vector3(2.6, 0.30, 24.0),
+	Vector3(3.3, 0.58, 20.0),
+	Vector3(2.1, 0.45, 22.0),
+	Vector3(3.8, 0.72, 17.0),
+]
+const GIANT_STONES := [
+	Vector3(1.9, 0.28, 34.0),
+	Vector3(2.5, 0.55, 28.0),
+	Vector3(1.6, 0.42, 32.0),
+	Vector3(2.9, 0.70, 24.0),
+	Vector3(-2.2, 0.22, 30.0),
+	Vector3(-1.5, 0.48, 36.0),
+	Vector3(-2.7, 0.64, 26.0),
+	Vector3(-1.8, 0.80, 22.0),
+]
+## Taş çizim boyutu çarpanı (tas_* dokuları koyu; telefonda okunur olsun).
+const STONE_SCALE := 1.9
+## Yörünge elipsinin yükseklik/genişlik oranı (3/4 bakış) ve gövdeden dışa pay (gövde genişliği oranı).
+const ORBIT_SQUASH := 0.3
+const ORBIT_GAP := 0.14
+## Şimşek: çakma aralığı, görünür süre, çakma olasılığı.
+const BOLT_PERIOD := 0.55
+const BOLT_TIME := 0.16
+const BOLT_CHANCE := 0.6
+## Kalabalık kademesi: ekranda bu kadar bölgeden sonra taş yarıya, daha çoğunda taşsız/şimşeksiz (çizim çağrısı bütçesi).
+const CROWD_HALF := 6
+const CROWD_NONE := 12
+const PASS_BACK := 0
+const PASS_FLOW := 1
+const PASS_FRONT := 2
 
 var _sim: GameSim = null
 var _camera: CameraRig = null
 ## Son çizimde çizilen bölge sayısı (testler ve perf ölçümü için).
 var drawn_count: int = 0
+## Son çizimde her geçişin doku çizim sayısı (ARKA, AKIŞ, ÖN) ve toplamı.
+var calls: PackedInt32Array = PackedInt32Array([0, 0, 0])
+## Bölge kimliği (ZonePool.gen) -> ilk görüldüğü sim zamanı (doğuşta büyüme için; yalnız görünüm).
+var _birth: Dictionary = {}
+var _flow_layer: Layer = null
+var _front_layer: Layer = null
+
+
+## Akış ve ön geçiş düğümü: çizimi sahibine (WindRenderer) devreder.
+class Layer:
+	extends Node2D
+	var owner_renderer: WindRenderer
+	var pass_id: int = 0
+
+	func _draw() -> void:
+		owner_renderer._draw_pass(self, pass_id)
 
 
 func _init() -> void:
 	use_parent_material = ZyfenFx.ZONES_ADDITIVE
+	_flow_layer = _make_layer(PASS_FLOW, "Flow")
+	_front_layer = _make_layer(PASS_FRONT, "Front")
+	var shader := ZyfenFx.shader("wind_flow")
+	if shader != null:
+		var sm := ShaderMaterial.new()
+		sm.shader = shader
+		sm.set_shader_parameter("flow", ZyfenFx.texture(ZyfenFx.HORTUM_AKIS))
+		_flow_layer.material = sm
+		_flow_layer.use_parent_material = false
+
+
+func _make_layer(pass_id: int, layer_name: String) -> Layer:
+	var l := Layer.new()
+	l.name = layer_name
+	l.owner_renderer = self
+	l.pass_id = pass_id
+	l.use_parent_material = ZyfenFx.ZONES_ADDITIVE
+	add_child(l)
+	return l
 
 
 func bind(sim: GameSim, camera: CameraRig = null) -> void:
 	_sim = sim
 	_camera = camera
 	drawn_count = 0
+	calls.fill(0)
+	_birth.clear()
+	_redraw_all()
+
+
+func _redraw_all() -> void:
 	queue_redraw()
+	_flow_layer.queue_redraw()
+	_front_layer.queue_redraw()
+
+
+## Toplam doku çizim sayısı (üç geçiş).
+func draw_calls() -> int:
+	return calls[PASS_BACK] + calls[PASS_FLOW] + calls[PASS_FRONT]
 
 
 ## Her kare (FxRenderer.update_fx çağırır): bölge ya da Girdap varsa yeniden çiz, yoksa bir kez temizle.
 func refresh() -> void:
 	if _sim == null:
-		if drawn_count > 0:
+		if drawn_count > 0 or draw_calls() > 0:
 			drawn_count = 0
-			queue_redraw()
+			calls.fill(0)
+			_redraw_all()
 		return
-	if _sim.zones.count > 0 or _girdap_radius() > 0.0 or drawn_count > 0:
-		queue_redraw()
+	_note_births()
+	if _sim.zones.count > 0 or _girdap_radius() > 0.0 or draw_calls() > 0:
+		_redraw_all()
+
+
+## Yeni bölge kimliklerinin doğuş zamanını kaydeder; ölenleri atar.
+func _note_births() -> void:
+	var z := _sim.zones
+	for i in z.count:
+		if not _birth.has(z.gen[i]):
+			_birth[z.gen[i]] = _sim.time
+	if _birth.size() > z.count + 16:
+		var live := {}
+		for i in z.count:
+			live[z.gen[i]] = _birth[z.gen[i]]
+		_birth = live
 
 
 ## Etkin Girdap yarıçapı (yoksa 0).
@@ -56,46 +184,293 @@ func _view_rect() -> Rect2:
 	return Rect2(_camera.get_screen_center_position() - size * 0.5, size)
 
 
-func _draw() -> void:
-	drawn_count = 0
-	if _sim == null:
-		return
+## Ekranda görünen bölgelerin indeksleri (en çok MAX_DRAWN). Gövde yukarı uzar: kenar payı yüksekliğe göre.
+func _visible_zones() -> PackedInt32Array:
+	var out := PackedInt32Array()
 	var view := _view_rect()
 	var z := _sim.zones
-	var t := _sim.time
 	for i in z.count:
-		if drawn_count >= MAX_DRAWN:
+		if out.size() >= MAX_DRAWN:
 			break
 		var r := z.radius[i]
-		if not view.grow(r).has_point(z.pos[i]):
-			continue
-		drawn_count += 1
-		var fade := clampf(z.life[i] / FADE_TIME, 0.0, 1.0)
+		var reach := (
+			r * (GIANT_BODY * 2.0 if z.kind[i] == ZonePool.KIND_GIANT else TWISTER_BODY * 2.0)
+		)
+		if z.kind[i] == ZonePool.KIND_POCKET:
+			reach = r
+		if view.grow(reach).has_point(z.pos[i]):
+			out.append(i)
+	return out
+
+
+func _draw() -> void:
+	_draw_pass(self, PASS_BACK)
+
+
+## Üç geçişten biri: `ci` çizilen düğüm. Hepsi sim durumunun ve sim zamanının saf fonksiyonudur.
+func _draw_pass(ci: CanvasItem, pass_id: int) -> void:
+	calls[pass_id] = 0
+	if pass_id == PASS_BACK:
+		drawn_count = 0
+	if _sim == null:
+		return
+	_note_births()
+	var vis := _visible_zones()
+	var quality := 2
+	if vis.size() > CROWD_NONE:
+		quality = 0
+	elif vis.size() > CROWD_HALF:
+		quality = 1
+	var t := _sim.time
+	var z := _sim.zones
+	var n := 0
+	if pass_id == PASS_BACK:
+		drawn_count = vis.size()
+		var gr := _girdap_radius()
+		if gr > 0.0:
+			n += _draw_girdap(ci, gr, t)
+	for i in vis:
 		match z.kind[i]:
 			ZonePool.KIND_POCKET:
-				_draw_tex(ZyfenFx.HAVA_CEBI, z.pos[i], r, _spin(t, i, POCKET_SPIN), 0.7 * fade)
+				if pass_id == PASS_BACK:
+					n += _draw_pocket(ci, i, t)
 			ZonePool.KIND_GIANT:
-				_draw_tex(ZyfenFx.TUFAN, z.pos[i], r, _spin(t, i, GIANT_SPIN), 0.6 * fade)
+				n += _draw_funnel(ci, pass_id, i, t, true, quality)
 			_:
-				_draw_tex(ZyfenFx.HORTUM, z.pos[i], r, _spin(t, i, TWISTER_SPIN), 0.7 * fade)
-	var gr := _girdap_radius()
-	if gr > 0.0:
-		_draw_tex(ZyfenFx.GIRDAP, _sim.player_pos, gr, _spin(t, 0, GIRDAP_SPIN), 0.55)
+				n += _draw_funnel(ci, pass_id, i, t, false, quality)
+	calls[pass_id] = n
+	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## Bölge dokusu yavaş döner; başlangıç açısı bölge dizinine göre kayar (aynı anda birden çok bölge aynı fazda olmasın).
-static func _spin(t: float, idx: int, speed: float) -> float:
-	return t * speed + float(idx) * 1.7
+## Doğuş büyümesi (0..1, yumuşak) ve sönüş çarpanı (1 -> 0).
+func _grow_fade(i: int, t: float) -> Vector2:
+	var z := _sim.zones
+	var age := t - float(_birth.get(z.gen[i], t - GROW_TIME))
+	var g := smoothstep(0.0, 1.0, clampf(age / GROW_TIME, 0.0, 1.0))
+	var f := clampf(z.life[i] / FADE_TIME, 0.0, 1.0)
+	return Vector2(g, smoothstep(0.0, 1.0, f))
 
 
-## Merkez `p`, görünür yarıçap `r` (doku içeriği TEX_FILL kadarını kaplar), `rot` rad, `alpha` saydamlık.
-func _draw_tex(id: StringName, p: Vector2, r: float, rot: float, alpha: float) -> void:
+## Hortum/Tufan: ARKA = taban + arkadaki taşlar + gövde, AKIŞ = maskeli akış, ÖN = öndeki taşlar + şimşek.
+func _draw_funnel(ci: CanvasItem, pass_id: int, i: int, t: float, giant: bool, quality: int) -> int:
+	var z := _sim.zones
+	var r := z.radius[i]
+	var p := z.pos[i]
+	var gf := _grow_fade(i, t)
+	var g := gf.x
+	var f := gf.y
+	var body_id := ZyfenFx.TUFAN_GOVDE if giant else ZyfenFx.HORTUM_GOVDE
+	var body_tex := ZyfenFx.texture(body_id)
+	if body_tex == null:
+		return 0
+	var phase := float(z.gen[i]) * 1.7
+	var wb := r * (GIANT_BODY if giant else TWISTER_BODY)
+	var hb := wb * float(body_tex.get_height()) / float(body_tex.get_width())
+	var dims := Vector2(wb, hb)
+	# Doğuşta tabandan büyür (önce yükseklik), sönüşte incelir ve alçalır.
+	var sx := (0.35 + 0.65 * g) * (0.3 + 0.7 * f)
+	var sy := g * (0.6 + 0.4 * f)
+	var sway := SWAY_AMOUNT * sin(t * SWAY_SPEED + phase) * (0.6 if giant else 1.0)
+	var body_xf := Transform2D(Vector2(sx, 0.0), Vector2(-sway, sy), p)
+	var alpha := (ALPHA_GIANT if giant else ALPHA_TWISTER) * f
+	var n := 0
+	var stones: Array = GIANT_STONES if giant else TWISTER_STONES
+	var n_stones := stones.size() if quality == 2 else (stones.size() >> 1 if quality == 1 else 0)
+	match pass_id:
+		PASS_BACK:
+			n += _draw_base(ci, p, r, t, phase, giant, g, f)
+			n += _draw_stones(ci, p, dims, stones, n_stones, Vector2(t, phase), gf, giant, false)
+			ci.draw_set_transform_matrix(body_xf)
+			ci.draw_texture_rect(
+				body_tex,
+				Rect2(Vector2(-wb * 0.5, -BODY_FOOT * hb), Vector2(wb, hb)),
+				false,
+				Color(1, 1, 1, alpha)
+			)
+			n += 1
+		PASS_FLOW:
+			if _flow_layer.material != null:
+				var tile := clampf(wb / FLOW_TILE_PX, 0.5, 7.9) / 8.0
+				var spd := (FLOW_SPEED_GIANT if giant else FLOW_SPEED_TWISTER) * 0.5
+				var fa := (FLOW_ALPHA_GIANT if giant else FLOW_ALPHA_TWISTER) * f * g
+				ci.draw_set_transform_matrix(body_xf)
+				ci.draw_texture_rect(
+					body_tex,
+					Rect2(Vector2(-wb * 0.5, -BODY_FOOT * hb), Vector2(wb, hb)),
+					false,
+					Color(fposmod(phase * 0.37, 1.0), tile, spd, fa)
+				)
+				n += 1
+		PASS_FRONT:
+			n += _draw_stones(ci, p, dims, stones, n_stones, Vector2(t, phase), gf, giant, true)
+			if giant and quality == 2:
+				n += _draw_bolts(ci, body_xf, wb, hb, t, z.gen[i], f * g)
+	return n
+
+
+## Taban halkası: yassı halka daireye açılıp döndürülür, sonra yeniden yassılaştırılır (perspektif içinde dönme).
+func _draw_base(
+	ci: CanvasItem, p: Vector2, r: float, t: float, phase: float, giant: bool, g: float, f: float
+) -> int:
+	var tex := ZyfenFx.texture(ZyfenFx.TUFAN_TABAN if giant else ZyfenFx.HORTUM_TABAN)
+	if tex == null:
+		return 0
+	var w := r * BASE_WIDTH * (0.3 + 0.7 * g) * (0.7 + 0.3 * f)
+	var h := w * float(tex.get_height()) / float(tex.get_width())
+	var spin := t * (GIANT_SPIN if giant else TWISTER_SPIN) + phase
+	var squash := h / w
+	var xf := Transform2D(0.0, Vector2(1.0, squash), 0.0, p) * Transform2D(spin, Vector2.ZERO)
+	ci.draw_set_transform_matrix(xf)
+	ci.draw_texture_rect(
+		tex, Rect2(Vector2(-w * 0.5, -w * 0.5), Vector2(w, w)), false, Color(1, 1, 1, 0.9 * f)
+	)
+	return 1
+
+
+## Yörüngedeki taşlar: `front` = elipsin ön yarısı (gövdenin önünde), değilse arka yarı (gövdenin arkasında).
+func _draw_stones(
+	ci: CanvasItem,
+	p: Vector2,
+	dims: Vector2,
+	stones: Array,
+	count: int,
+	tp: Vector2,
+	gf: Vector2,
+	giant: bool,
+	front: bool
+) -> int:
+	var wb := dims.x
+	var hb := dims.y
+	var t := tp.x
+	var phase := tp.y
+	var g := gf.x
+	var f := gf.y
+	var n := 0
+	for j in count:
+		var s: Vector3 = stones[j]
+		var th := t * s.x + phase * 0.9 + float(j) * 2.1
+		var sn := sin(th)
+		if (sn > 0.0) != front:
+			continue
+		var tex := ZyfenFx.texture(ZyfenFx.STONES[j % ZyfenFx.STONES.size()])
+		if tex == null:
+			continue
+		var hf := s.y
+		var half_w := wb * BODY_HALF * (0.18 + 0.82 * hf)
+		var rx := (half_w + wb * ORBIT_GAP) * g
+		var up := hf * BODY_SPAN * hb * g
+		var pos := p + Vector2(cos(th) * rx, sn * rx * ORBIT_SQUASH - up)
+		var size := s.z * STONE_SCALE * (0.55 + 0.45 * hf) * (1.3 if giant else 1.0) * g
+		var a := f * (0.5 + 0.5 * absf(sn) if front else 0.75)
+		ci.draw_set_transform(pos, t * (2.5 + float(j)) * signf(s.x), Vector2.ONE)
+		ci.draw_texture_rect(
+			tex, Rect2(Vector2(-size, -size) * 0.5, Vector2(size, size)), false, Color(1, 1, 1, a)
+		)
+		n += 1
+	return n
+
+
+## Tufan bulut tepesinde rastgele çakan şimşek (sim zamanı ve bölge kimliğinden deterministik).
+func _draw_bolts(
+	ci: CanvasItem, body_xf: Transform2D, wb: float, hb: float, t: float, gen: int, a: float
+) -> int:
+	var shifted := t + float(gen) * 0.31
+	var slot := int(floor(shifted / BOLT_PERIOD))
+	var ph := shifted - float(slot) * BOLT_PERIOD
+	if ph >= BOLT_TIME or _hash01(slot * 7 + gen * 13) > BOLT_CHANCE:
+		return 0
+	var which := ZyfenFx.SIMSEK_1 if _hash01(slot * 11 + gen * 5 + 1) < 0.5 else ZyfenFx.SIMSEK_2
+	var tex := ZyfenFx.texture(which)
+	if tex == null:
+		return 0
+	var flicker := 1.0 - ph / BOLT_TIME
+	flicker *= 0.55 + 0.45 * absf(sin(ph * 90.0))
+	var w := wb * 0.34
+	var h := w * float(tex.get_height()) / float(tex.get_width())
+	var dx := (_hash01(slot * 3 + gen * 17 + 2) - 0.5) * wb * 0.45
+	var mirror := -1.0 if _hash01(slot * 5 + gen + 3) < 0.5 else 1.0
+	# Bulut gövdenin üst üçte birinde: gövde yerelinde (dx, tepe + 0.3 hb) civarı.
+	var cy := (0.34 - BODY_FOOT) * hb
+	ci.draw_set_transform_matrix(
+		body_xf * Transform2D(0.0, Vector2(mirror, 1.0), 0.0, Vector2(dx, cy))
+	)
+	ci.draw_texture_rect(
+		tex, Rect2(Vector2(-w * 0.5, -h * 0.5), Vector2(w, h)), false, Color(1, 1, 1, a * flicker)
+	)
+	return 1
+
+
+## Hava Cebi: küre (şişip söner) + içinde ters dönen iç girdap; bitişte patlama.
+func _draw_pocket(ci: CanvasItem, i: int, t: float) -> int:
+	var z := _sim.zones
+	var r := z.radius[i]
+	var p := z.pos[i]
+	var phase := float(z.gen[i]) * 1.7
+	var gf := _grow_fade(i, t)
+	var life := z.life[i]
+	var n := 0
+	if life > BURST_TIME:
+		var pulse := 1.0 + 0.05 * sin(t * 2.6 + phase)
+		var a := ALPHA_POCKET * smoothstep(0.0, 1.0, gf.x)
+		n += _tex_at(
+			ci,
+			ZyfenFx.HAVA_CEBI,
+			p,
+			r * 2.0 / ZyfenFx.TEX_FILL * pulse,
+			t * POCKET_SPIN * 0.3 + phase,
+			a
+		)
+		n += _tex_at(
+			ci, ZyfenFx.GIRDAP_IC, p, r * 1.5 * pulse, -t * POCKET_SPIN * 1.4 + phase, 0.7 * a
+		)
+	else:
+		var k := 1.0 - life / BURST_TIME
+		var a2 := ALPHA_POCKET * (1.0 - k)
+		n += _tex_at(
+			ci,
+			ZyfenFx.HAVA_CEBI_PATLAMA,
+			p,
+			r * 2.0 / ZyfenFx.TEX_FILL * (0.85 + 0.6 * k),
+			phase + k,
+			a2
+		)
+		n += _tex_at(
+			ci,
+			ZyfenFx.HAVA_CEBI,
+			p,
+			r * 2.0 / ZyfenFx.TEX_FILL * (1.0 + 0.1 * k),
+			phase,
+			a2 * 0.5 * (1.0 - k)
+		)
+	return n
+
+
+## Girdap: dış kanatlı halka bir yöne, iç spiral ters yöne döner; halka hafifçe nabız atar.
+func _draw_girdap(ci: CanvasItem, gr: float, t: float) -> int:
+	var pulse := 1.0 + 0.05 * sin(t * 3.2)
+	var a := ALPHA_GIRDAP * (0.9 + 0.1 * sin(t * 3.2))
+	var p := _sim.player_pos
+	var n := _tex_at(ci, ZyfenFx.GIRDAP, p, gr * 2.0 / ZyfenFx.TEX_FILL * pulse, t * GIRDAP_SPIN, a)
+	n += _tex_at(ci, ZyfenFx.GIRDAP_IC, p, gr * 1.55 * pulse, -t * GIRDAP_SPIN * 1.6, a * 0.9)
+	return n
+
+
+## Merkez `p`, tuval genişliği `w` (yükseklik doku oranından), `rot` rad, `alpha`.
+func _tex_at(ci: CanvasItem, id: StringName, p: Vector2, w: float, rot: float, alpha: float) -> int:
 	var tex := ZyfenFx.texture(id)
 	if tex == null:
-		return
-	var half := r / ZyfenFx.TEX_FILL
-	draw_set_transform(p, rot, Vector2.ONE)
-	draw_texture_rect(
-		tex, Rect2(Vector2(-half, -half), Vector2(half, half) * 2.0), false, Color(1, 1, 1, alpha)
+		return 0
+	var h := w * float(tex.get_height()) / float(tex.get_width())
+	ci.draw_set_transform(p, rot, Vector2.ONE)
+	ci.draw_texture_rect(
+		tex, Rect2(Vector2(-w, -h) * 0.5, Vector2(w, h)), false, Color(1, 1, 1, alpha)
 	)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	return 1
+
+
+## Tamsayıdan 0..1 sahte rastgele (görünüm; sim RNG'sine dokunmaz).
+static func _hash01(n: int) -> float:
+	var x := (n * 73856093) ^ 19349663
+	x = ((x >> 13) ^ x) & 0x7fffffff
+	x = (x * 1103515245 + 12345) & 0x7fffffff
+	return float(x) / 2147483647.0
