@@ -31,7 +31,7 @@ func test_kasirga_two_big_waves_second_after_half_second() -> void:
 	_start_reload(sim)  # doldurma 1,3 sn
 	assert_eq(waves.size(), 1)
 	assert_eq(waves[0], [sim.player_pos, 900.0, true])
-	assert_almost_eq(WindKit.TOUGH_HP - WindKit.hp_of(sim, id), 40.0, 0.001)
+	assert_almost_eq(WindKit.TOUGH_HP - WindKit.hp_of(sim, id), 36.0, 0.001)
 	_tick_reload(sim, 29)
 	assert_eq(waves.size(), 1)
 	_tick_reload(sim, 2)
@@ -111,7 +111,7 @@ func test_tufan_three_giants_with_table_values() -> void:
 		assert_eq(sim.zones.kind[i], ZonePool.KIND_GIANT)
 		assert_almost_eq(sim.zones.radius[i], 190.0, 0.001)
 		assert_almost_eq(sim.zones.life[i], 8.0, 0.05)
-		assert_almost_eq(sim.zones.dmg[i], 16.0, 0.001)
+		assert_almost_eq(sim.zones.dmg[i], 20.0, 0.001)
 		assert_almost_eq(sim.zones.tick_every[i], 0.35, 0.001)
 		assert_almost_eq(sim.zones.pull[i], 260.0, 0.001)
 		assert_almost_eq(sim.zones.fling[i], 260.0, 0.001)
