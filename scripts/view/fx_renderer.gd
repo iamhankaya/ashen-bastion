@@ -590,7 +590,10 @@ func _draw_hit(i: int) -> void:
 	var w := (96.0 + 70.0 * k) if big else (50.0 + 40.0 * k)
 	draw_set_transform(_hit_pos[i], _hit_rot[i], Vector2.ONE)
 	draw_texture_rect(
-		tex, Rect2(Vector2(-w, -w) * 0.5, Vector2(w, w)), false, Color(1, 1, 1, 1.0 - k)
+		tex,
+		Rect2(Vector2(-w, -w) * 0.5, Vector2(w, w)),
+		false,
+		ZyfenFx.grade(Color(1, 1, 1, 1.0 - k))
 	)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -615,7 +618,7 @@ func _draw_tex_ring(i: int, k: float) -> void:
 			tex,
 			Rect2(Vector2(-half, -half * aspect), Vector2(half, half * aspect) * 2.0),
 			false,
-			Color(1, 1, 1, (1.0 - km) * (1.0 - km * 0.5))
+			ZyfenFx.grade(Color(1, 1, 1, (1.0 - km) * (1.0 - km * 0.5)))
 		)
 	var ke := k * span - echo
 	if echo > 0.0 and ke > 0.0:
@@ -626,7 +629,7 @@ func _draw_tex_ring(i: int, k: float) -> void:
 			tex,
 			Rect2(Vector2(-half_e, -half_e * aspect), Vector2(half_e, half_e * aspect) * 2.0),
 			false,
-			Color(1, 1, 1, 0.5 * (1.0 - ke))
+			ZyfenFx.grade(Color(1, 1, 1, 0.5 * (1.0 - ke)))
 		)
 	if _ring_tex[i] == ZyfenFx.KASIRGA:
 		_draw_blast_extras(i, km)
@@ -643,7 +646,7 @@ func _draw_blast_extras(i: int, km: float) -> void:
 		soft,
 		Rect2(Vector2(-cr, -cr), Vector2(cr, cr) * 2.0),
 		false,
-		Color(0.55, 0.95, 1.0, 0.9 * flash)
+		ZyfenFx.grade(Color(0.55, 0.95, 1.0, 0.9 * flash))
 	)
 	var ease_s := 1.0 - pow(1.0 - km, 2.5)
 	for j in BLAST_STONES:
@@ -662,7 +665,7 @@ func _draw_blast_extras(i: int, km: float) -> void:
 			tex,
 			Rect2(Vector2(-sz, -sz) * 0.5, Vector2(sz, sz)),
 			false,
-			Color(1, 1, 1, 1.0 - km * km)
+			ZyfenFx.grade(Color(1, 1, 1, 1.0 - km * km))
 		)
 
 

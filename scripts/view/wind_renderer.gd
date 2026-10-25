@@ -11,10 +11,10 @@ const MAX_DRAWN := 24
 ## Üç geçişte toplam doku çizimi tavanı (kalite kademesi bunu garanti eder; test_v202_wind_renderer ölçer).
 const MAX_DRAW_CALLS := 110
 ## Dönüş hızları (rad/sn); taban halkaları ve halkalar yavaş döner.
-const TWISTER_SPIN := 1.3
-const GIANT_SPIN := 0.8
+const TWISTER_SPIN := 0.55
+const GIANT_SPIN := 0.35
 const POCKET_SPIN := -0.8
-const GIRDAP_SPIN := 1.3
+const GIRDAP_SPIN := 0.7
 ## Doğuşta tabandan büyüme ve sönüşte incelme süresi (sn).
 const GROW_TIME := 0.55
 const FADE_TIME := 0.5
@@ -33,15 +33,37 @@ const BODY_HALF := 0.41
 const SWAY_AMOUNT := 0.05
 const SWAY_SPEED := 1.7
 ## Bölge alfası (harmanlama alfa; additive ekranı beyaza boğdu).
-const ALPHA_TWISTER := 0.85
-const ALPHA_GIANT := 0.9
+const ALPHA_TWISTER := 0.66
+const ALPHA_GIANT := 0.7
 const ALPHA_POCKET := 0.85
-const ALPHA_GIRDAP := 0.8
+## Girdap: dış halka çok soluk, iç spiral neredeyse görünmez (oyuncu ve düşmanların üstünü kapatmasın).
+const ALPHA_GIRDAP := 0.55
+const GIRDAP_INNER := 0.6
+const GIRDAP_TINT := Color(0.925, 0.89, 0.84)
+## Gövde merkez saydamlığı (kenar şeritleri tam görünür).
+const BODY_CENTER_ALPHA := 0.7
+## Taban alfası ve rengi: soluk, zemin tozu/kül tonunda.
+const ALPHA_BASE := 0.65
+const BASE_TINT := Color(0.87, 0.81, 0.75)
+## Üst üste binen hortumlar: üstte kalan her ek hortumun alfa çarpanı (OVERLAP_MIN altına inmez), binme eşiği (yarıçap
+## toplamı oranı) ve ekrandaki toplam hortum sayısına göre genel soluklaşma (CROWD_FADE her ek hortum için, CROWD_MIN tabanı).
+const OVERLAP_FADE := 0.55
+const OVERLAP_MIN := 0.2
+const OVERLAP_REACH := 0.7
+const CROWD_FADE := 0.04
+const CROWD_MIN := 0.55
+## Çizim boyutu tavanı: gövde görünür yüksekliği ekran yüksekliğinin bu oranını aşmaz (yalnız çizim; sim yarıçapı değişmez).
+const MAX_BODY_SCREEN := 0.35
+## Gövde ölçek nabzı (yatay): dönüyormuş hissi.
+const PULSE_AMOUNT := 0.035
+const PULSE_SPEED := 5.3
 ## Akış katmanı alfası ve hız çarpanı (Tufan daha ağır döner).
-const FLOW_ALPHA_TWISTER := 0.55
-const FLOW_ALPHA_GIANT := 0.5
-const FLOW_SPEED_TWISTER := 1.0
-const FLOW_SPEED_GIANT := 0.7
+const FLOW_ALPHA_TWISTER := 0.5
+const FLOW_ALPHA_GIANT := 0.46
+## Akış dönüş hızı (devir/sn, gövde çevresinde) ve hafif yukarı kayma (doku/sn). Açısal hız sabit: huni genişliği hızı belirler.
+const FLOW_SPIN_TWISTER := 0.45
+const FLOW_SPIN_GIANT := 0.3
+const FLOW_UP := 0.1
 ## Akış dokusunun gövde üstündeki döşeme boyutu (px, dünya).
 const FLOW_TILE_PX := 130.0
 ## Yörünge: (hız rad/sn, yükseklik oranı, boyut px) taş başına; Tufan'da daha çok ve daha geniş (ikinci halka).
@@ -73,18 +95,25 @@ const BOLT_CHANCE := 0.6
 ## Kalabalık kademesi: ekranda bu kadar bölgeden sonra taş yarıya, daha çoğunda taşsız/şimşeksiz (çizim çağrısı bütçesi).
 const CROWD_HALF := 6
 const CROWD_NONE := 12
+## Arka katmanlar FxRenderer'ın (z 5) bu kadar altına, ön katman FRONT_Z kadar üstüne çizilir.
+const BACK_Z := 10
+const FRONT_Z := 5
 const PASS_BACK := 0
 const PASS_FLOW := 1
 const PASS_FRONT := 2
+const PASS_BODY := 3
 
 var _sim: GameSim = null
 var _camera: CameraRig = null
 ## Son çizimde çizilen bölge sayısı (testler ve perf ölçümü için).
 var drawn_count: int = 0
 ## Son çizimde her geçişin doku çizim sayısı (ARKA, AKIŞ, ÖN) ve toplamı.
-var calls: PackedInt32Array = PackedInt32Array([0, 0, 0])
+var calls: PackedInt32Array = PackedInt32Array([0, 0, 0, 0])
 ## Bölge kimliği (ZonePool.gen) -> ilk görüldüğü sim zamanı (doğuşta büyüme için; yalnız görünüm).
 var _birth: Dictionary = {}
+## Bölge indeksi -> üst üste binme/kalabalık alfa çarpanı (her çizim geçişinde yeniden hesaplanır).
+var _fade: PackedFloat32Array = PackedFloat32Array()
+var _body_layer: Layer = null
 var _flow_layer: Layer = null
 var _front_layer: Layer = null
 
@@ -101,13 +130,26 @@ class Layer:
 
 func _init() -> void:
 	use_parent_material = ZyfenFx.ZONES_ADDITIVE
+	# Çizim sırası: gövde ve akış düşman/kürelerin ARKASINDA (z -5), yalnız ön taşlar/şimşek önünde (z 10).
+	z_index = -BACK_Z
+	_body_layer = _make_layer(PASS_BODY, "Body")
 	_flow_layer = _make_layer(PASS_FLOW, "Flow")
 	_front_layer = _make_layer(PASS_FRONT, "Front")
+	_front_layer.z_index = BACK_Z + FRONT_Z
+	var body_shader := ZyfenFx.shader("wind_body")
+	if body_shader != null:
+		var bm := ShaderMaterial.new()
+		bm.shader = body_shader
+		bm.set_shader_parameter("center_alpha", BODY_CENTER_ALPHA)
+		bm.set_shader_parameter("grade_sat", ZyfenFx.GRADE_SAT)
+		_body_layer.material = bm
+		_body_layer.use_parent_material = false
 	var shader := ZyfenFx.shader("wind_flow")
 	if shader != null:
 		var sm := ShaderMaterial.new()
 		sm.shader = shader
 		sm.set_shader_parameter("flow", ZyfenFx.texture(ZyfenFx.HORTUM_AKIS))
+		ZyfenFx.apply_grade(sm)
 		_flow_layer.material = sm
 		_flow_layer.use_parent_material = false
 
@@ -133,13 +175,14 @@ func bind(sim: GameSim, camera: CameraRig = null) -> void:
 
 func _redraw_all() -> void:
 	queue_redraw()
+	_body_layer.queue_redraw()
 	_flow_layer.queue_redraw()
 	_front_layer.queue_redraw()
 
 
 ## Toplam doku çizim sayısı (üç geçiş).
 func draw_calls() -> int:
-	return calls[PASS_BACK] + calls[PASS_FLOW] + calls[PASS_FRONT]
+	return calls[PASS_BACK] + calls[PASS_BODY] + calls[PASS_FLOW] + calls[PASS_FRONT]
 
 
 ## Her kare (FxRenderer.update_fx çağırır): bölge ya da Girdap varsa yeniden çiz, yoksa bir kez temizle.
@@ -224,6 +267,7 @@ func _draw_pass(ci: CanvasItem, pass_id: int) -> void:
 	var t := _sim.time
 	var z := _sim.zones
 	var n := 0
+	_compute_fade(vis)
 	if pass_id == PASS_BACK:
 		drawn_count = vis.size()
 		var gr := _girdap_radius()
@@ -240,6 +284,37 @@ func _draw_pass(ci: CanvasItem, pass_id: int) -> void:
 				n += _draw_funnel(ci, pass_id, i, t, false, quality)
 	calls[pass_id] = n
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## Hortum/Tufan bölgelerinin alfa çarpanı: aynı noktada üst üste binen her ek hortum soluk çizilir (OVERLAP_FADE^k), ekrandaki
+## hortum sayısı arttıkça hepsi biraz daha solar. Yalnız çizim; sim'e dokunulmaz.
+func _compute_fade(vis: PackedInt32Array) -> void:
+	var z := _sim.zones
+	_fade.resize(maxi(z.count, 1))
+	var funnels := PackedInt32Array()
+	for i in vis:
+		if z.kind[i] != ZonePool.KIND_POCKET:
+			funnels.append(i)
+	var crowd := maxf(CROWD_MIN, 1.0 - CROWD_FADE * float(maxi(funnels.size() - 1, 0)))
+	for a in funnels.size():
+		var i := funnels[a]
+		var k := 0
+		for b in a:
+			var j := funnels[b]
+			var reach := (z.radius[i] + z.radius[j]) * OVERLAP_REACH
+			if z.pos[i].distance_squared_to(z.pos[j]) < reach * reach:
+				k += 1
+		_fade[i] = maxf(OVERLAP_MIN, pow(OVERLAP_FADE, float(k))) * crowd
+
+
+## Gövdenin çizim boyutu çarpanı: görünür yükseklik ekran yüksekliğinin MAX_BODY_SCREEN oranını aşmaz (<= 1).
+func _size_cap(hb: float) -> float:
+	if _camera == null:
+		return 1.0
+	var visible_h := hb * BODY_SPAN
+	if visible_h <= 0.0:
+		return 1.0
+	return minf(1.0, MAX_BODY_SCREEN * _camera.view_size().y / visible_h)
 
 
 ## Doğuş büyümesi (0..1, yumuşak) ve sönüş çarpanı (1 -> 0).
@@ -264,47 +339,69 @@ func _draw_funnel(ci: CanvasItem, pass_id: int, i: int, t: float, giant: bool, q
 	if body_tex == null:
 		return 0
 	var phase := float(z.gen[i]) * 1.7
-	var wb := r * (GIANT_BODY if giant else TWISTER_BODY)
-	var hb := wb * float(body_tex.get_height()) / float(body_tex.get_width())
+	var wb0 := r * (GIANT_BODY if giant else TWISTER_BODY)
+	var hb0 := wb0 * float(body_tex.get_height()) / float(body_tex.get_width())
+	var cap := _size_cap(hb0)
+	var wb := wb0 * cap
+	var hb := hb0 * cap
 	var dims := Vector2(wb, hb)
-	# Doğuşta tabandan büyür (önce yükseklik), sönüşte incelir ve alçalır.
-	var sx := (0.35 + 0.65 * g) * (0.3 + 0.7 * f)
+	# Doğuşta tabandan büyür (önce yükseklik), sönüşte incelir ve alçalır; yatay nabız dönüyormuş hissi verir.
+	var pulse := 1.0 + PULSE_AMOUNT * sin(t * PULSE_SPEED + phase)
+	var sx := (0.35 + 0.65 * g) * (0.3 + 0.7 * f) * pulse
 	var sy := g * (0.6 + 0.4 * f)
 	var sway := SWAY_AMOUNT * sin(t * SWAY_SPEED + phase) * (0.6 if giant else 1.0)
 	var body_xf := Transform2D(Vector2(sx, 0.0), Vector2(-sway, sy), p)
-	var alpha := (ALPHA_GIANT if giant else ALPHA_TWISTER) * f
+	var fade := _fade[i] if i < _fade.size() else 1.0
+	var alpha := (ALPHA_GIANT if giant else ALPHA_TWISTER) * f * fade
 	var n := 0
 	var stones: Array = GIANT_STONES if giant else TWISTER_STONES
 	var n_stones := stones.size() if quality == 2 else (stones.size() >> 1 if quality == 1 else 0)
+	var rect := Rect2(Vector2(-wb * 0.5, -BODY_FOOT * hb), Vector2(wb, hb))
 	match pass_id:
 		PASS_BACK:
-			n += _draw_base(ci, p, r, t, phase, giant, g, f)
-			n += _draw_stones(ci, p, dims, stones, n_stones, Vector2(t, phase), gf, giant, false)
-			ci.draw_set_transform_matrix(body_xf)
-			ci.draw_texture_rect(
-				body_tex,
-				Rect2(Vector2(-wb * 0.5, -BODY_FOOT * hb), Vector2(wb, hb)),
+			n += _draw_base(ci, p, r * cap, t, phase, giant, g, f * fade)
+			n += _draw_stones(
+				ci,
+				p,
+				dims,
+				stones,
+				n_stones,
+				Vector2(t, phase),
+				gf,
+				giant,
 				false,
-				Color(1, 1, 1, alpha)
+				Vector2(fade, cap)
 			)
+		PASS_BODY:
+			ci.draw_set_transform_matrix(body_xf)
+			var gm := ZyfenFx.grade(Color(1, 1, 1, alpha))
+			ci.draw_texture_rect(body_tex, rect, false, gm)
 			n += 1
 		PASS_FLOW:
 			if _flow_layer.material != null:
-				var tile := clampf(wb / FLOW_TILE_PX, 0.5, 7.9) / 8.0
-				var spd := (FLOW_SPEED_GIANT if giant else FLOW_SPEED_TWISTER) * 0.5
-				var fa := (FLOW_ALPHA_GIANT if giant else FLOW_ALPHA_TWISTER) * f * g
+				var tile_n := clampf(wb0 / FLOW_TILE_PX, 0.5, 7.9)
+				var rate := (FLOW_SPIN_GIANT if giant else FLOW_SPIN_TWISTER) * tile_n * 3.2
+				var sx_ph := fposmod(fposmod(phase * 0.37, 1.0) + t * rate, 1.0)
+				var sy_ph := fposmod(t * FLOW_UP, 1.0)
+				var fa := (FLOW_ALPHA_GIANT if giant else FLOW_ALPHA_TWISTER) * f * g * fade
 				ci.draw_set_transform_matrix(body_xf)
-				ci.draw_texture_rect(
-					body_tex,
-					Rect2(Vector2(-wb * 0.5, -BODY_FOOT * hb), Vector2(wb, hb)),
-					false,
-					Color(fposmod(phase * 0.37, 1.0), tile, spd, fa)
-				)
+				ci.draw_texture_rect(body_tex, rect, false, Color(sx_ph, tile_n / 8.0, sy_ph, fa))
 				n += 1
 		PASS_FRONT:
-			n += _draw_stones(ci, p, dims, stones, n_stones, Vector2(t, phase), gf, giant, true)
+			n += _draw_stones(
+				ci,
+				p,
+				dims,
+				stones,
+				n_stones,
+				Vector2(t, phase),
+				gf,
+				giant,
+				true,
+				Vector2(fade, cap)
+			)
 			if giant and quality == 2:
-				n += _draw_bolts(ci, body_xf, wb, hb, t, z.gen[i], f * g)
+				n += _draw_bolts(ci, body_xf, wb, hb, t, z.gen[i], f * g * fade)
 	return n
 
 
@@ -321,9 +418,8 @@ func _draw_base(
 	var squash := h / w
 	var xf := Transform2D(0.0, Vector2(1.0, squash), 0.0, p) * Transform2D(spin, Vector2.ZERO)
 	ci.draw_set_transform_matrix(xf)
-	ci.draw_texture_rect(
-		tex, Rect2(Vector2(-w * 0.5, -w * 0.5), Vector2(w, w)), false, Color(1, 1, 1, 0.9 * f)
-	)
+	var c := ZyfenFx.grade(Color(BASE_TINT.r, BASE_TINT.g, BASE_TINT.b, ALPHA_BASE * f))
+	ci.draw_texture_rect(tex, Rect2(Vector2(-w * 0.5, -w * 0.5), Vector2(w, w)), false, c)
 	return 1
 
 
@@ -337,7 +433,8 @@ func _draw_stones(
 	tp: Vector2,
 	gf: Vector2,
 	giant: bool,
-	front: bool
+	front: bool,
+	fade: Vector2
 ) -> int:
 	var wb := dims.x
 	var hb := dims.y
@@ -360,11 +457,14 @@ func _draw_stones(
 		var rx := (half_w + wb * ORBIT_GAP) * g
 		var up := hf * BODY_SPAN * hb * g
 		var pos := p + Vector2(cos(th) * rx, sn * rx * ORBIT_SQUASH - up)
-		var size := s.z * STONE_SCALE * (0.55 + 0.45 * hf) * (1.3 if giant else 1.0) * g
-		var a := f * (0.5 + 0.5 * absf(sn) if front else 0.75)
+		var size := s.z * STONE_SCALE * (0.55 + 0.45 * hf) * (1.3 if giant else 1.0) * g * fade.y
+		var a := f * fade.x * (0.5 + 0.5 * absf(sn) if front else 0.75)
 		ci.draw_set_transform(pos, t * (2.5 + float(j)) * signf(s.x), Vector2.ONE)
 		ci.draw_texture_rect(
-			tex, Rect2(Vector2(-size, -size) * 0.5, Vector2(size, size)), false, Color(1, 1, 1, a)
+			tex,
+			Rect2(Vector2(-size, -size) * 0.5, Vector2(size, size)),
+			false,
+			ZyfenFx.grade(Color(1, 1, 1, a))
 		)
 		n += 1
 	return n
@@ -395,7 +495,10 @@ func _draw_bolts(
 		body_xf * Transform2D(0.0, Vector2(mirror, 1.0), 0.0, Vector2(dx, cy))
 	)
 	ci.draw_texture_rect(
-		tex, Rect2(Vector2(-w * 0.5, -h * 0.5), Vector2(w, h)), false, Color(1, 1, 1, a * flicker)
+		tex,
+		Rect2(Vector2(-w * 0.5, -h * 0.5), Vector2(w, h)),
+		false,
+		ZyfenFx.grade(Color(1, 1, 1, a * flicker))
 	)
 	return 1
 
@@ -450,20 +553,41 @@ func _draw_girdap(ci: CanvasItem, gr: float, t: float) -> int:
 	var pulse := 1.0 + 0.05 * sin(t * 3.2)
 	var a := ALPHA_GIRDAP * (0.9 + 0.1 * sin(t * 3.2))
 	var p := _sim.player_pos
-	var n := _tex_at(ci, ZyfenFx.GIRDAP, p, gr * 2.0 / ZyfenFx.TEX_FILL * pulse, t * GIRDAP_SPIN, a)
-	n += _tex_at(ci, ZyfenFx.GIRDAP_IC, p, gr * 1.55 * pulse, -t * GIRDAP_SPIN * 1.6, a * 0.9)
+	var n := _tex_at(
+		ci, ZyfenFx.GIRDAP, p, gr * 2.0 / ZyfenFx.TEX_FILL * pulse, t * GIRDAP_SPIN, a, GIRDAP_TINT
+	)
+	n += _tex_at(
+		ci,
+		ZyfenFx.GIRDAP_IC,
+		p,
+		gr * 1.55 * pulse,
+		-t * GIRDAP_SPIN * 1.3,
+		a * GIRDAP_INNER,
+		GIRDAP_TINT
+	)
 	return n
 
 
 ## Merkez `p`, tuval genişliği `w` (yükseklik doku oranından), `rot` rad, `alpha`.
-func _tex_at(ci: CanvasItem, id: StringName, p: Vector2, w: float, rot: float, alpha: float) -> int:
+func _tex_at(
+	ci: CanvasItem,
+	id: StringName,
+	p: Vector2,
+	w: float,
+	rot: float,
+	alpha: float,
+	tint: Color = Color.WHITE
+) -> int:
 	var tex := ZyfenFx.texture(id)
 	if tex == null:
 		return 0
 	var h := w * float(tex.get_height()) / float(tex.get_width())
 	ci.draw_set_transform(p, rot, Vector2.ONE)
 	ci.draw_texture_rect(
-		tex, Rect2(Vector2(-w, -h) * 0.5, Vector2(w, h)), false, Color(1, 1, 1, alpha)
+		tex,
+		Rect2(Vector2(-w, -h) * 0.5, Vector2(w, h)),
+		false,
+		ZyfenFx.grade(Color(tint.r, tint.g, tint.b, alpha))
 	)
 	return 1
 

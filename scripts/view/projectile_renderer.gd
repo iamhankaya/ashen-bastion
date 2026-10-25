@@ -136,6 +136,7 @@ func _layer_material(kind: StringName) -> Material:
 		if shader != null:
 			var sm := ShaderMaterial.new()
 			sm.shader = shader
+			ZyfenFx.apply_grade(sm)
 			return sm
 	var mat := CanvasItemMaterial.new()
 	if ZyfenFx.ADDITIVE_PROJECTILES.has(kind):
@@ -344,7 +345,7 @@ func _push(id: StringName, p: Vector2, ang: float, sx: float, sy: float, c: Colo
 	var n: int = layer["n"]
 	if n >= _cap:
 		return
-	_put_xf(layer["buf"], n, p, ang, sx, sy, c)
+	_put_xf(layer["buf"], n, p, ang, sx, sy, ZyfenFx.grade(c))
 	layer["n"] = n + 1
 
 

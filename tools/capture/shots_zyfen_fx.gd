@@ -29,6 +29,10 @@ var scenarios: PackedStringArray = [
 	"storm",
 	"crowd",
 ]
+## T58 ince ayar senaryoları (docs/design/v2.0.2/fx-v2b/): varsayılan listeye girmez, adıyla istenir.
+const TUNING := [
+	"ayar_kalabalik", "ayar_binme", "ayar_tufan", "ayar_girdap", "ayar_taban", "ayar_donus"
+]
 var c: Node
 var waves: int = 0
 var zoom_base: Vector2 = Vector2.ONE
@@ -421,6 +425,66 @@ func _run() -> void:
 				await shot("fx_storm")
 				tick(40)
 				await shot("fx_storm_b")
+			"ayar_kalabalik":
+				await fresh({"tufan": 1, "hortum": 5, "girdap": 5})
+				print("tufan ", wait_zone(ZonePool.KIND_GIANT))
+				print("hortum ", wait_zone(ZonePool.KIND_TWISTER))
+				# Düşmanlar bölgelerde ölmesin diye kalabalık bölgeler kurulduktan sonra doldurulur.
+				c.sim.debug_fill(&"curumus_piyade", 300, 420.0)
+				tick(40)
+				print("kalabalik düşman ", c.sim.enemies.count, " bölge ", c.sim.zones.count)
+				await shot("ayar_kalabalik")
+			"ayar_binme":
+				await fresh({"hortum": 5})
+				ring(20, 260.0, 0.0)
+				var base_pos: Vector2 = c.sim.player_pos + Vector2(0, -260)
+				for k in 3:
+					WindSystem.spawn_zone(
+						c.sim,
+						ZonePool.KIND_TWISTER,
+						base_pos + Vector2(26.0 * k, 14.0 * k),
+						{"radius": 130.0, "life": 30.0}
+					)
+				for i in c.sim.zones.count:
+					c.sim.zones.speed[i] = 0.0
+				tick(90)
+				await shot("ayar_binme")
+				await close_up("ayar_binme_yakin", base_pos + Vector2(0, -120), 1.3)
+			"ayar_tufan":
+				await fresh({"tufan": 1})
+				ring(30, 300.0, 0.0)
+				WindSystem.spawn_zone(
+					c.sim,
+					ZonePool.KIND_GIANT,
+					c.sim.player_pos + Vector2(0, -300),
+					{"radius": 420.0, "life": 30.0}
+				)
+				for i in c.sim.zones.count:
+					c.sim.zones.speed[i] = 0.0
+				tick(90)
+				await shot("ayar_tufan_buyuk")
+			"ayar_girdap":
+				await fresh({"girdap": 5})
+				ring(16, 200.0, 0.0)
+				tick(90)
+				await shot("ayar_girdap")
+				await close_up("ayar_girdap_yakin", c.sim.player_pos, 1.6)
+			"ayar_taban":
+				await fresh({"hortum": 5})
+				ring(16, 260.0, 0.0)
+				print("hortum ", wait_zone(ZonePool.KIND_TWISTER))
+				tick(70)
+				await close_up("ayar_taban_yakin", zone_pos(ZonePool.KIND_TWISTER), 3.0)
+			"ayar_donus":
+				await fresh({"hortum": 5})
+				ring(16, 260.0, 0.0)
+				print("hortum ", wait_zone(ZonePool.KIND_TWISTER))
+				tick(70)
+				for k in 3:
+					await close_up(
+						"ayar_donus_%d" % k, zone_pos(ZonePool.KIND_TWISTER) + Vector2(0, -120), 1.8
+					)
+					tick(8)
 			"crowd":
 				await fresh({"tufan": 1, "hortum": 5, "girdap": 5})
 				c.sim.debug_fill(&"curumus_piyade", 300, 420.0)
