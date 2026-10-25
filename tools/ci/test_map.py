@@ -186,8 +186,10 @@ def build(root: Path = ROOT, rev: str | None = None) -> dict:
     for f in files:
         if f.endswith(".uid") or is_full(f):
             continue
-        if f.startswith(MAPPED_GD) or f.startswith("docs/") or f.startswith("tools/"):
+        if f.startswith(MAPPED_GD):
             mapped[f] = sorted(rev.get(f, ()))
+        elif rev.get(f) and (f.startswith("docs/") or f.startswith("tools/")):
+            mapped[f] = sorted(rev[f])  # belge/araç dosyası yalnız bir test ona başvuruyorsa listelenir (yeni belge eşlemeyi bozmaz)
     return {
         "version": 1,
         "note": "Üretilir: python3 tools/ci/test_map.py generate. Hızlı mod yalnız geliştirici geri bildirimidir; PR CI/merge/son kapı tam suite.",

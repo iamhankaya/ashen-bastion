@@ -71,7 +71,7 @@ def test_parts_cover_full_gate_steps():
         assert needle in GATE
     assert 'if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then\n  step "3. Lint"' in GATE
     assert '[ "$PART" != "static" ] && [ "$PART" != "verify" ]' in GATE  # adım 6 yalnız all/gut
-    assert 'if [ "$PART" = "all" ] || [ "$PART" = "verify" ]; then\n  step "7.' in GATE
+    assert 'if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then\n  step "7.' in GATE
 
 
 def test_gate_ok_only_on_full_gate():

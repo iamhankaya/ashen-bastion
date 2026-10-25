@@ -197,7 +197,7 @@ if [ "$PART" = "verify" ]; then
   python3 tools/ci/shard.py merge .gate/junit.xml "${SHARD_FILES[@]}" || fail "JUnit birleştirilemedi"
 fi
 
-if [ "$PART" = "all" ] || [ "$PART" = "verify" ]; then
+if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then
   step "7. Sahte yeşil korumaları"
   [ -f .gate/junit.xml ] || fail "JUnit çıktısı yok"
   python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
