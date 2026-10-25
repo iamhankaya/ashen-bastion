@@ -272,3 +272,33 @@ func test_hava_cebi_chain_with_a_full_pool_never_exceeds_cap_or_loses_giants() -
 	assert_eq(sim.kills, 11, "cep tiki öldürdü")
 	assert_eq(sim.fx.zone_dropped, 10, "zincir denemesi yok")
 	assert_eq(sim.zones.count, ZonePool.CAP)
+
+
+func test_tufan_giants_spawn_at_least_min_sep_apart_even_in_one_cluster() -> void:
+	for seed_value in [1, 2, 3, 4, 5]:
+		var sim := WindKit.make(&"tufan", 1, seed_value)
+		for k in 5:  # tek uzak küme: üç dev hortum aynı noktada doğamaz
+			WindKit.dummy(
+				sim, sim.player_pos + Vector2(480, 0) + Vector2.from_angle(TAU * k / 5.0) * 15.0
+			)
+		WindKit.rebuild(sim)
+		var ref := RandomNumberGenerator.new()
+		ref.seed = sim.rng_combat.seed
+		ref.state = sim.rng_combat.state
+		ref.randf()
+		WindSystem.cast_twisters(
+			sim, ZonePool.KIND_GIANT, {"count": 3, "radius": 190.0, "life": 8.0}
+		)
+		assert_eq(sim.rng_combat.state, ref.state, "çağrı başına tek randf")
+		assert_eq(sim.zones.count, 3)
+		var sep := 190.0 * WindSystem.DEFAULT_SEP_RATIO
+		for i in 3:
+			assert_gte(
+				sim.zones.pos[i].distance_to(sim.player_pos), 299.99, "min_spawn_dist korunur"
+			)
+			for j in range(i + 1, 3):
+				assert_gte(
+					sim.zones.pos[i].distance_to(sim.zones.pos[j]),
+					sep - 0.01,
+					"tohum %d: bölgeler arası >= min_sep" % seed_value
+				)

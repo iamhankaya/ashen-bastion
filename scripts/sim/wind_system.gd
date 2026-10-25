@@ -28,6 +28,9 @@ extends RefCounted
 ## Yedek değerler (JSON `min_spawn_dist` / `keep_out` yoksa).
 const DEFAULT_MIN_SPAWN := 300.0
 const DEFAULT_KEEP_OUT := 250.0
+## Doğuşta bölgeler arası en az mesafe (x `area_mult`), JSON `min_sep` yoksa taban yarıçapın bu oranı (Tufan 190 -> 133):
+## merkezler ayrı hortum olarak okunsun, yine de aynı kümenin yarıçapı içinde kalsın (tam yarıçap kümeden taşırırdı).
+const DEFAULT_SEP_RATIO := 0.7
 ## Doğuş için uzak küme arama yarıçapı (görünür alanın gevşek sınırı).
 const SPAWN_VIEW := 700.0
 const RETARGET_RANGE := 600.0
@@ -78,6 +81,9 @@ static func cast_twisters(sim: GameSim, kind: int, lv: Dictionary) -> void:
 			and sim.enemies.pos[EnemyPool.index_of(id)].distance_to(sim.player_pos) >= min_d
 		):
 			far.append(id)
+	var base_radius := float(lv.get("radius", 150.0))
+	var sep := float(lv.get("min_sep", base_radius * DEFAULT_SEP_RATIO)) * sim.stats.area_mult
+	var placed := PackedVector2Array()
 	for k in n:
 		var p: Vector2
 		if far.is_empty():
@@ -85,6 +91,8 @@ static func cast_twisters(sim: GameSim, kind: int, lv: Dictionary) -> void:
 		else:
 			var pick := (int(r * far.size()) + int(float(k * far.size()) / float(n))) % far.size()
 			p = sim.enemies.pos[EnemyPool.index_of(far[pick])]
+		p = _spread(p, placed, sep, sim.player_pos, min_d, r * TAU + TAU * float(k) / float(n))
+		placed.append(p)
 		spawn_zone(
 			sim,
 			kind,
@@ -105,6 +113,46 @@ static func cast_twisters(sim: GameSim, kind: int, lv: Dictionary) -> void:
 				"target": p,
 			}
 		)
+
+
+## Doğuşta aynı çağrıdaki bölgeler arası en az `sep` px: çakışan bölge ötekinden uzaklaştırılır, oyuncuya `min_d`'den
+## yakınsa halkaya itilir; olmazsa `min_d` halkasında açısal kaydırılır. Rastgelelik yok (`ang` yalnız sıfır uzaklık yönü).
+static func _spread(
+	p: Vector2, placed: PackedVector2Array, sep: float, center: Vector2, min_d: float, ang: float
+) -> Vector2:
+	for _pass in 3:
+		for q in placed:
+			if p.distance_to(q) < sep:
+				var away := p - q
+				p = (
+					q
+					+ (
+						(away.normalized() if away.length() > 0.001 else Vector2.from_angle(ang))
+						* sep
+					)
+				)
+		var off := p - center
+		if off.length() < min_d:
+			p = (
+				center
+				+ (off.normalized() if off.length() > 0.001 else Vector2.from_angle(ang)) * min_d
+			)
+		if _clear(p, placed, sep):
+			return p
+	var base := (p - center).angle()
+	for step in range(1, 13):
+		for sign in [1.0, -1.0]:
+			var c := center + Vector2.from_angle(base + sign * TAU * float(step) / 24.0) * min_d
+			if _clear(c, placed, sep):
+				return c
+	return p
+
+
+static func _clear(p: Vector2, placed: PackedVector2Array, sep: float) -> bool:
+	for q in placed:
+		if p.distance_to(q) < sep - 0.001:
+			return false
+	return true
 
 
 func _step_zone(sim: GameSim, i: int) -> void:
