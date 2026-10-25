@@ -21,7 +21,10 @@ def job_timeout(job: str) -> int:
 
 
 def test_ci_yml_timeouts_match_budget_file():
-    assert job_timeout("test") == BUDGET["gate_job_minutes"]
+    # F-044: tam gate parçalandı; gate_job_minutes tek süreçli tam gate'in bütçesi (yerel gate, selftest) olarak kalır
+    assert job_timeout("static") == BUDGET["static_job_minutes"]
+    assert job_timeout("gut") == BUDGET["gut_shard_job_minutes"]
+    assert job_timeout("test") == BUDGET["verify_job_minutes"]
     assert job_timeout("selftest") == BUDGET["selftest_job_minutes"]
 
 

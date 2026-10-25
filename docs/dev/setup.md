@@ -1,6 +1,6 @@
 # Geliştirme ortamı kurulumu (C0 doğrulamasının kaydı)
 
-Kart gate komutu: `bash tools/gate.sh` (çıkış 0 yeşil, 1 kırmızı, 3 ağ yok).
+Kart gate komutu: `bash tools/gate.sh` (çıkış 0 yeşil, 1 kırmızı, 2 kullanım hatası, 3 ağ yok). CI aynı kapsamı üç parçalı işle (static, gut×4, test) koşar; yalnız yerel hızlı geri bildirim için `bash tools/gate.sh --changed` vardır (`GATE OK` yazmaz; PR CI'ı/merge/son kapı her zaman tam suite): bkz. `docs/dev/ci-speed.md`.
 İsteğe bağlı bayraklar: `GATE_EXPORT=1`, `GATE_NIGHTLY=1`, `GATE_RENDER=1`.
 
 ## Sabitlenen sürümler (2026-10-23'te doğrulandı)

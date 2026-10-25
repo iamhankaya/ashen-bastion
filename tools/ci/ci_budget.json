@@ -1,6 +1,9 @@
 {
   "gate_job_minutes": 15,
   "selftest_job_minutes": 20,
+  "static_job_minutes": 10,
+  "gut_shard_job_minutes": 10,
+  "verify_job_minutes": 5,
   "warn_percent": 80,
-  "note": "ci.yml iş sınırları (test_ci_budget.py bu değerleri ci.yml ile karşılaştırır). Gate toplamı sınırın %80'ine yaklaşınca (check_budget.py uyarısı) VLAD'a bölme ya da sınır artırma işi bildirilir; yeni uzun test <= 20 sn, aşanlar test/long'a."
+  "note": "gate_job_minutes = TAM gate'in tek süreçte (yerel gate.sh, selftest senaryoları) bütçesi; ci.yml'de gate üç parçaya bölünmüştür (F-044): static/gut(matrix)/test işleri kendi sınırlarını taşır, test_ci_budget.py bu değerleri ci.yml ile karşılaştırır. Bir iş sınırının %80'ine yaklaşınca (check_budget.py uyarısı) VLAD'a bölme ya da sınır artırma işi bildirilir; yeni uzun test <= 20 sn, aşanlar test/long'a."
 }
