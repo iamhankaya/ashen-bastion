@@ -33,18 +33,18 @@ const BODY_HALF := 0.41
 const SWAY_AMOUNT := 0.05
 const SWAY_SPEED := 1.7
 ## Bölge alfası (harmanlama alfa; additive ekranı beyaza boğdu).
-const ALPHA_TWISTER := 0.48
-const ALPHA_GIANT := 0.5
+const ALPHA_TWISTER := 0.66
+const ALPHA_GIANT := 0.7
 const ALPHA_POCKET := 0.85
 ## Girdap: dış halka çok soluk, iç spiral neredeyse görünmez (oyuncu ve düşmanların üstünü kapatmasın).
-const ALPHA_GIRDAP := 0.3
-const GIRDAP_INNER := 0.35
-const GIRDAP_TINT := Color(0.85, 0.78, 0.68)
+const ALPHA_GIRDAP := 0.55
+const GIRDAP_INNER := 0.6
+const GIRDAP_TINT := Color(0.925, 0.89, 0.84)
 ## Gövde merkez saydamlığı (kenar şeritleri tam görünür).
-const BODY_CENTER_ALPHA := 0.45
+const BODY_CENTER_ALPHA := 0.7
 ## Taban alfası ve rengi: soluk, zemin tozu/kül tonunda.
-const ALPHA_BASE := 0.45
-const BASE_TINT := Color(0.74, 0.62, 0.5)
+const ALPHA_BASE := 0.65
+const BASE_TINT := Color(0.87, 0.81, 0.75)
 ## Üst üste binen hortumlar: üstte kalan her ek hortumun alfa çarpanı (OVERLAP_MIN altına inmez), binme eşiği (yarıçap
 ## toplamı oranı) ve ekrandaki toplam hortum sayısına göre genel soluklaşma (CROWD_FADE her ek hortum için, CROWD_MIN tabanı).
 const OVERLAP_FADE := 0.55
@@ -58,8 +58,8 @@ const MAX_BODY_SCREEN := 0.35
 const PULSE_AMOUNT := 0.035
 const PULSE_SPEED := 5.3
 ## Akış katmanı alfası ve hız çarpanı (Tufan daha ağır döner).
-const FLOW_ALPHA_TWISTER := 0.45
-const FLOW_ALPHA_GIANT := 0.42
+const FLOW_ALPHA_TWISTER := 0.5
+const FLOW_ALPHA_GIANT := 0.46
 ## Akış dönüş hızı (devir/sn, gövde çevresinde) ve hafif yukarı kayma (doku/sn). Açısal hız sabit: huni genişliği hızı belirler.
 const FLOW_SPIN_TWISTER := 0.45
 const FLOW_SPIN_GIANT := 0.3

@@ -135,9 +135,9 @@ const ZONES_ADDITIVE := false
 ## Çizilen her Zyfen dokusunun rengi `grade()` ile (gölgelendiricilerde `apply_grade()` ile) çarpılır.
 ## GRADE_BRIGHT parlaklık çarpanı, GRADE_SAT doygunluk (1 = değişmez; yalnız gölgelendirici katmanlarında),
 ## GRADE_TINT beyazı sıcak kül tonuna çeker (modulate çarpanı; mavi/beyaz parçalar sıcak griye kayar).
-const GRADE_BRIGHT := 0.86
-const GRADE_SAT := 0.8
-const GRADE_TINT := Color(1.0, 0.91, 0.78)
+const GRADE_BRIGHT := 0.93
+const GRADE_SAT := 0.9
+const GRADE_TINT := Color(1.0, 0.955, 0.89)
 
 static var _cache: Dictionary = {}
 static var _shaders: Dictionary = {}
