@@ -212,7 +212,7 @@ elif [ $FAST -eq 1 ] && [ -n "$GUT_CONFIG" ]; then
   python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 60 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
 fi
 
-if [ "$PART" = "all" ] && [ -f test/acceptance/test_acc_perf_counters.gd ]; then
+if [ "$PART" = "all" ] && [ $FAST -eq 0 ] && [ -f test/acceptance/test_acc_perf_counters.gd ]; then
   step "8. İş sayacı kontrolü (6. adımda GUT içinde koştu)"
 fi
 
