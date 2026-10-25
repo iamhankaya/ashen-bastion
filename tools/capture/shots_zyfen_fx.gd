@@ -31,7 +31,13 @@ var scenarios: PackedStringArray = [
 ]
 ## T58 ince ayar senaryoları (docs/design/v2.0.2/fx-v2b/): varsayılan listeye girmez, adıyla istenir.
 const TUNING := [
-	"ayar_kalabalik", "ayar_binme", "ayar_tufan", "ayar_girdap", "ayar_taban", "ayar_donus"
+	"ayar_kalabalik",
+	"ayar_binme",
+	"ayar_tufan",
+	"ayar_girdap",
+	"ayar_taban",
+	"ayar_donus",
+	"ayar_cebi"
 ]
 var c: Node
 var waves: int = 0
@@ -425,6 +431,20 @@ func _run() -> void:
 				await shot("fx_storm")
 				tick(40)
 				await shot("fx_storm_b")
+			"ayar_cebi":
+				# T81: Hava Cebi harita / açık / koyu düz zemin üzerinde (zemin yalnız çekim için değiştirilir).
+				for mode in ["harita", "acik", "koyu"]:
+					await fresh({"hava_cebi": 5})
+					ring(24, 220.0, 20.0)
+					wait_zone(ZonePool.KIND_POCKET)
+					tick(30)
+					if mode != "harita":
+						c.ground.visible = false
+						RenderingServer.set_default_clear_color(
+							Color(0.82, 0.78, 0.7) if mode == "acik" else Color(0.1, 0.09, 0.09)
+						)
+					await shot("cebi_%s" % mode)
+					await close_up("cebi_%s_yakin" % mode, zone_pos(ZonePool.KIND_POCKET), 2.0)
 			"ayar_kalabalik":
 				await fresh({"tufan": 1, "hortum": 5, "girdap": 5})
 				print("tufan ", wait_zone(ZonePool.KIND_GIANT))
