@@ -131,6 +131,14 @@ const ADDITIVE_PROJECTILES := {
 ## Bölge dokuları (Hortum/Tufan/Hava Cebi/Girdap) FxRenderer'ın additive malzemesini kullanır mı; değilse alfa karışımı.
 const ZONES_ADDITIVE := false
 
+## Harita uyumu (cihazda ince ayar için TEK yer): Zyfen efektleri koyu kahve/kızıl haritaya göre fazla parlaktı.
+## Çizilen her Zyfen dokusunun rengi `grade()` ile (gölgelendiricilerde `apply_grade()` ile) çarpılır.
+## GRADE_BRIGHT parlaklık çarpanı, GRADE_SAT doygunluk (1 = değişmez; yalnız gölgelendirici katmanlarında),
+## GRADE_TINT beyazı sıcak kül tonuna çeker (modulate çarpanı; mavi/beyaz parçalar sıcak griye kayar).
+const GRADE_BRIGHT := 0.86
+const GRADE_SAT := 0.8
+const GRADE_TINT := Color(1.0, 0.91, 0.78)
+
 static var _cache: Dictionary = {}
 static var _shaders: Dictionary = {}
 
@@ -146,6 +154,20 @@ static func texture(id: StringName) -> Texture2D:
 			t = r
 	_cache[id] = t
 	return t
+
+
+## Harita uyumu: rengin rgb'sini kül tonuyla ve parlaklıkla çarpar, alfayı korur.
+static func grade(c: Color) -> Color:
+	var k := GRADE_BRIGHT
+	return Color(c.r * GRADE_TINT.r * k, c.g * GRADE_TINT.g * k, c.b * GRADE_TINT.b * k, c.a)
+
+
+## Gölgelendirici malzemesine harita uyumu uniform'larını yazar (gölgelendirici `grade_*` uniform'larını tanımlamalı).
+static func apply_grade(sm: ShaderMaterial) -> void:
+	sm.set_shader_parameter(
+		"grade_mul", Vector3(GRADE_TINT.r, GRADE_TINT.g, GRADE_TINT.b) * GRADE_BRIGHT
+	)
+	sm.set_shader_parameter("grade_sat", GRADE_SAT)
 
 
 ## Önbellekli gölgelendirici (assets/shaders/<ad>.gdshader); yoksa null (çizim düz dokuya düşer).

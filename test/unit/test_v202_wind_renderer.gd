@@ -151,3 +151,49 @@ func test_pocket_bursts_at_the_end_and_zone_state_is_never_written() -> void:
 	await wait_process_frames(2)
 	assert_eq(fx.wind_renderer.calls[WindRenderer.PASS_BACK], 2, "küre + patlama (2 doku)")
 	assert_eq(sim.state_hash(), h)
+
+
+func test_body_and_flow_draw_behind_enemies_and_only_front_layer_is_in_front() -> void:
+	var fx := FxRenderer.new()
+	add_child_autofree(fx)
+	var w := fx.wind_renderer
+	# Etkin z = FxRenderer 5 + bağıl; düşman/küre katmanları z 0.
+	assert_lt(fx.z_index + w.z_index, 0, "gövde/akış/taban düşmanların arkasında")
+	assert_gt(fx.z_index + w.z_index + w.get_node("Front").z_index, 0, "taş ve şimşek önde")
+
+
+func test_overlapping_twisters_are_drawn_progressively_paler() -> void:
+	var sim := WindKit.make()
+	for k in 3:
+		WindSystem.spawn_zone(
+			sim, ZonePool.KIND_TWISTER, Vector2(10 + k, 10), {"radius": 100.0, "life": 9.0}
+		)
+	var fx := _fx_with_sim(sim)
+	fx.update_fx(0.016)
+	await wait_process_frames(2)
+	var w := fx.wind_renderer
+	assert_gt(w._fade[0], w._fade[1], "ikinci hortum birincisinden soluk")
+	assert_gt(w._fade[1], w._fade[2], "üçüncü daha soluk")
+	assert_gte(w._fade[2], WindRenderer.OVERLAP_MIN * WindRenderer.CROWD_MIN)
+
+
+func test_body_draw_size_is_capped_by_screen_height_without_touching_sim_radius() -> void:
+	var sim := WindKit.make()
+	WindSystem.spawn_zone(sim, ZonePool.KIND_GIANT, Vector2(10, 10), {"radius": 900.0, "life": 9.0})
+	var fx := _fx_with_sim(sim)
+	var w := fx.wind_renderer
+	var tex := ZyfenFx.texture(ZyfenFx.TUFAN_GOVDE)
+	var wb := 900.0 * WindRenderer.GIANT_BODY
+	var hb := wb * float(tex.get_height()) / float(tex.get_width())
+	var cap := w._size_cap(hb)
+	var view_h := fx._camera.view_size().y
+	assert_lt(cap, 1.0)
+	assert_lte(hb * cap * WindRenderer.BODY_SPAN, view_h * WindRenderer.MAX_BODY_SCREEN + 0.01)
+	assert_eq(sim.zones.radius[0], 900.0, "sim yarıçapı değişmez")
+
+
+func test_zyfen_map_grade_darkens_and_warms_whites() -> void:
+	var g := ZyfenFx.grade(Color(1, 1, 1, 0.5))
+	assert_lt(g.r, 1.0)
+	assert_gt(g.r, g.b, "beyaz sıcak kül tonuna kayar")
+	assert_eq(g.a, 0.5, "alfa korunur")
