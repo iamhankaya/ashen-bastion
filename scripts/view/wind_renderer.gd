@@ -35,7 +35,10 @@ const SWAY_SPEED := 1.7
 ## Bölge alfası (harmanlama alfa; additive ekranı beyaza boğdu).
 const ALPHA_TWISTER := 0.66
 const ALPHA_GIANT := 0.7
-const ALPHA_POCKET := 0.85
+const ALPHA_POCKET := 0.68
+## Hava Cebi küresi ve iç girdabı: iç girdap alfa oranı ile harita paletine yakın sıcak ton (T81, fx-v2d).
+const POCKET_INNER := 0.8
+const POCKET_TINT := Color(0.93, 0.89, 0.84)
 ## Girdap: dış halka çok soluk, iç spiral neredeyse görünmez (oyuncu ve düşmanların üstünü kapatmasın).
 const ALPHA_GIRDAP := 0.55
 const GIRDAP_INNER := 0.6
@@ -521,10 +524,17 @@ func _draw_pocket(ci: CanvasItem, i: int, t: float) -> int:
 			p,
 			r * 2.0 / ZyfenFx.TEX_FILL * pulse,
 			t * POCKET_SPIN * 0.3 + phase,
-			a
+			a,
+			POCKET_TINT
 		)
 		n += _tex_at(
-			ci, ZyfenFx.GIRDAP_IC, p, r * 1.5 * pulse, -t * POCKET_SPIN * 1.4 + phase, 0.7 * a
+			ci,
+			ZyfenFx.GIRDAP_IC,
+			p,
+			r * 1.5 * pulse,
+			-t * POCKET_SPIN * 1.4 + phase,
+			0.7 * POCKET_INNER * a,
+			POCKET_TINT
 		)
 	else:
 		var k := 1.0 - life / BURST_TIME
@@ -535,7 +545,8 @@ func _draw_pocket(ci: CanvasItem, i: int, t: float) -> int:
 			p,
 			r * 2.0 / ZyfenFx.TEX_FILL * (0.85 + 0.6 * k),
 			phase + k,
-			a2
+			a2,
+			POCKET_TINT
 		)
 		n += _tex_at(
 			ci,
@@ -543,7 +554,8 @@ func _draw_pocket(ci: CanvasItem, i: int, t: float) -> int:
 			p,
 			r * 2.0 / ZyfenFx.TEX_FILL * (1.0 + 0.1 * k),
 			phase,
-			a2 * 0.5 * (1.0 - k)
+			a2 * 0.5 * (1.0 - k),
+			POCKET_TINT
 		)
 	return n
 
