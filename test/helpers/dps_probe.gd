@@ -3,7 +3,7 @@ extends RefCounted
 ## Ham DPS ölçer (v2.0.2 S2; D fazı ve denge tabloları için). Oyuncunun çevresine N hareketsiz "kukla" düşman koyar
 ## (can çok büyük, zırhsız; her adımdan önce sabit konuma geri taşınır), belirli süre koşar, kuklalardan düşen toplam canı
 ## süreye böler. Ölçüm sim'in gerçek yolunu kullanır (hedefleme, atış, davranışlar, hasar); yalnız oyuncu ölümsüzdür.
-## Düzenler: &"ring" (R px yarıçaplı halka), &"line" (tek eksen üzerinde sıralı; delme ölçümü), &"cluster" (sıkı küme).
+## Düzenler: &"ring" (R px yarıçaplı halka), &"line" (tek eksen üzerinde sıralı; delme ölçümü), &"cluster" (sıkı küme), &"crowd" (kalabalık).
 ## Sonuç: {"dps", "total", "seconds", "dummies", "per_dummy", "shots"}. Tek seferlik ölçüm, rastgelelik tohumla sabit.
 
 const DUMMY_TYPE := &"curumus_piyade"
@@ -61,6 +61,9 @@ static func _layout(center: Vector2, layout: StringName, n: int) -> Array[Vector
 		match layout:
 			&"line":
 				out.append(center + Vector2(160.0 + 40.0 * k, 0.0))
+			&"crowd":
+				# Ayçiçeği dağılımı: oyuncu çevresinde merkeze doğru sıklaşan kalabalık (10/50/200 yoğunluk tablosu).
+				out.append(center + Vector2.from_angle(2.39996 * k) * (70.0 + 17.0 * sqrt(float(k))))
 			&"cluster":
 				out.append(center + Vector2(260.0, 0.0) + Vector2(36.0 * (k % 4), 36.0 * (k / 4)))
 			_:

@@ -192,3 +192,133 @@ Bulut yalnız headless/xvfb koştu (sentetik dokunma olayları); aşağıdakiler
 - **S-4 Duraklatma/boss** — müzik %50 iken duraklat → müzik daha da kısılıyor, devam edince %50'ye dönüyor; boss uyarısında geçici kısılma kullanıcı seviyesinin üstüne biniyor (seviyeyi sıfırlamıyor).
 - **S-5 Kalıcılık ve hızlı sessiz** — uygulamayı kapat/aç: yüzdeler korunuyor. Menü/duraklatmadaki SES düğmesi tüm sesi kesip açıyor, kaydırıcı değerlerine dokunmuyor.
 - **S-6 Yerleşim** — ayarlar ekranı ve sağ üstteki AYARLAR düğmesi çentikli/dar cihazda kesilmiyor, başlık/etiketle çakışmıyor; geri tuşu ayarlardan önceki ekrana (menü/duraklatma) döndürüyor.
+
+## L. v2.0.2 Zyfen (parça listeleri birleştirildi: S2, U2, U3, A2a, A2b, A4)
+
+Aynı kural: bulutta telefon yok; yalnız cihazda doğrulanır. Zyfen ile oyna; becerileri debug kartlarıyla ya da normal seviye atlamayla topla.
+
+### v2.0.2 S2 — kullanıcı kontrolü
+
+S2 (araçlar, baseline, belgeler) cihazda görülecek bir değişiklik içermez; gate dışı ölçüm araçları ve belgelerdir.
+Kullanıcıdan beklenen yoktur. Sonraki fazlar için hatırlatma:
+
+- **Yürüme kalite kapısı** (`tools/art/make_zyfen_strip.py`, U2/A2): kapı kalırsa sessiz yedek yoktur; yalnız kullanıcı açık onay
+  verirse `docs/design/v2.0.2/walk-waiver.md` eklenir (VLAD kullanıcıya sorar).
+- **Zyfen sesleri** (`docs/design/v2.0.2/s2-notes.md` §AudioDirector): atış/doldurma sesi karakter bazlı olacaksa A4'te kullanıcı ses varlıkları
+  gelince bağlanır.
+
+### U2 — Zyfen kolsuz rig + Rüzgar Kesiği: cihazda doğrulanacaklar
+
+Bulut yalnız xvfb (masaüstü render, yazılım GL) koştu; aşağıdakiler gerçek cihazda/parmakla görülür. Ekran görüntüsü araçı:
+`tools/capture/shots_zyfen.gd` (senaryolar: chars, idle, walk, cast, gather, flip).
+
+1. **Karakter seç → Zyfen.** Seçim ekranında Zyfen portresi (gri saçlı büyücü, rüzgar girdabı) ve "ZYFEN" adı görünür; Rüzgar
+   Kesiği başlangıç becerisi, CAN 85 / HIZ 310 / ŞARJÖR 8 / DOLDURMA 1,3 SN / MENZİL 750. Seçip oyuna gir.
+2. **Duruş ve yürüme.** Durunca duruş karesi (kırmızı astarlı palto). Yürürken 8 karelik adım döngüsü; ayaklar zeminde kayıyor mu?
+   Bilinen sınır: yürüme kareleri videodan çıktı, ayak çapası hizası ölçümü 8/8 çift ≤3 px (200 px boyda), gözle hâlâ hafif
+   kayma görülebilir; görürsen kaç adımda, hangi yönde yaz.
+3. **Atış (dururken).** Düşman menzildeyken Zyfen sağ elini uzatır (cast kareleri), avuçta soğuk mavi parıltı, avuçtan hilal
+   biçimli açık mavi bir rüzgar kesiği çıkar ve **düşmanların içinden geçer** (kalabalıkta her düşman kesikten bir kez hasar alır).
+   Kesiğin elden çıktığı nokta avucun hizasında mı (omuz/kafa/göğüs değil)?
+4. **Atış (yürürken).** Varsayılan: yürürken el savurma kareleri **gösterilmez** (yürüme sürer); kesik yine avuç noktasından
+   çıkar ve avuçta parıltı görünür. Bu seçim (`action_while_moving=false`) oynarken "elleri savurma hissi" yeterli mi?
+   Değilse: `data/characters/zyfen.json` `rig.action_while_moving: true` ile dene (cast kareleri yürürken de oynar, ayaklar o sırada
+   kayar) ya da kullanıcıdan `walk_cast` kareleri iste.
+5. **Rüzgar toplama.** Şarjör bitince (8 atış) dururken eller birleşir, 4 karelik toplama oynar (1,3 sn), halka dolar, yeni atış.
+   Yürürken doldurma sürüyorsa gövde yürümeye devam eder (toplama kareleri yalnız dururken).
+6. **Sola bakış.** Hedef solda iken tüm kareler aynalanır, kesik soldaki avuçtan çıkar.
+7. **Kovan düşmez.** Zyfen atarken boş kovan efekti çıkmamalı (Gunslinger'da çıkar).
+8. **Gunslinger değişmedi.** Kollar, namlu alevi, kovan, yürüme/omuz aynı (ArmRig refaktörü davranışı değiştirmemeli).
+9. **Kare tutarlılığı (sanat).** Cast/toplama kareleri paltonun kırmızı astarını göstermiyor, duruş/yürüme kareleri gösteriyor: kare
+   değişirken (yürü→dur→savur) palto rengi "sıçrıyor" mu? Rahatsız ediciyse A2'de kareler yeniden üretilir.
+
+### U3 — Rüzgar seti: cihazda doğrulanır (v2.0.2)
+
+Bulutta telefon yoktur; aşağıdakiler yalnız cihazda (Redmi Note 13 Pro) doğrulanabilir.
+Zyfen ile oyna; becerileri debug kartlarıyla ya da normal seviye atlamayla topla.
+
+#### Rüzgar bölgeleri ve görünüm
+1. **Hortum:** düşman kümesine doğru süzülen dönen yay demeti; düşmanları merkeze çekiyor, ömrü bitince savuruyor. Hortum
+   çizimi okunur mu, düşman/oyuncu sprite'larını örtüp oyunu zorlaştırıyor mu (yer tutucu çizim, ek karışım)?
+2. **Tufan** (Hortum sv5 + Fırtına Gözü): üç dev hortum aynı anda; ekranı sürüyor mu, kalabalıkta kare süresi tutuyor mu?
+3. **Hava Cebi:** düşman ölünce yerinde küçük çekim halkası; art arda ölümlerde sahne karışıyor mu, zincir (cepten cep) yok mu?
+4. **Girdap:** oyuncuyu saran dönen kesik halka; yarıçap Fırtına Gözü ile büyüyor, darbede düşmanlar dışarı itiliyor.
+5. **Nefes Dalgası / Kasırga Patlaması:** doldurma başında halka yayılır; Kasırga'da ekran boyu iki halka ve kısa sarsıntı.
+   Kasırga düşmanları ekran kenarında öldürür: XP taşları uzakta kalıyor mu, toplamak için koşmak gerekiyor mu (denge notu)?
+
+#### Performans (debug APK stres)
+6. Menü sürüm etiketine 3 dokunuş (debug) → Tufan + Hortum + Girdap verilmiş Zyfen, ~300 düşman: ortalama/p95 kare süresi,
+   draw call. Hedef p95 ≤ 16,7 ms. Bölge hasarı/çekmesi kalabalıkta en yoğun iş; tutmazsa `WindSystem` çekme sıklığı
+   (şimdi her adım) 2-3 adıma bir toplu uygulanabilir (`docs/dev/perf.md` yedek merdiveni).
+
+#### Davranış
+7. Elit/Lord rüzgardan itilmez/çekilmez ama hasar alır (Hortum/Tufan Lord'a dakikada çok hasar veriyor mu → `boss_mult`).
+8. Çekilen düşman harabenin içine gömülüp takılmıyor (kule/bayrak direği çevresinde Hortum çalıştır).
+9. Bölünen Kesik / Ay Orağı: her 2-3. kesik bölünüyor/dev hilal; hilal görünümü (rengi/ölçeği U2 çizimindedir).
+
+### A2a — Zyfen ikonları ve rüzgar efekt dokuları: cihazda doğrulanır (v2.0.2)
+
+Bulutta telefon yoktur; aşağıdakiler yalnız cihazda (Redmi Note 13 Pro) doğrulanabilir.
+Zyfen ile oyna.
+
+#### İkonlar
+1. **Seviye atlama kartı:** 13 rüzgar becerisi ve 7 pasif varyantı (Bilenmiş Rüzgar, Rüzgar Adımı, Derin Nefes, Çabuk
+   Toplayış, Çevik Eller, Çeken Esinti, Yas Paltosu) boyalı ikonla görünüyor; renk çarpanı yok, çerçeve içinde kırpılma yok.
+2. **Karakter ekranı, duraklat ekranı, HUD yuvaları, sonuç ekranı:** aynı ikonlar net (küçük HUD yuvasında da ayırt edilir).
+3. **Ortak pasifler Gunslinger'da** eski ikonuyla görünüyor (yalnız Zyfen varyantı değişti).
+
+#### Efektler (koyu sahnede okunurluk)
+4. **Rüzgar Kesiği mermisi:** hilal mermi yönüne dönük, düşmanın üstünde okunuyor; bölünen kesik çocukları, Hava Bıçakları ve
+   Delen Rüzgar mızrağı birbirinden ayırt ediliyor. Ay Orağı dev hilal; Göğün Mızrağı (evrim) mızraklarının dokusu farklı.
+5. **Tufan + Hortum + Girdap:** bölgeler yavaş dönüyor; oyuncu ve düşman sprite'ları altında kaybolmuyor (bölge dokusu
+   alfa karışımlı, saydamlık 0,55–0,7). Çok kalabalıkta da okunur mu?
+6. **Hava Cebi** kabarcığı, **Nefes Dalgası** ince halkası, **Kasırga Patlaması** ekran boyu halka: büyüyüp sönüyor.
+7. **Avuç:** her atışta avuçta kısa parıltı (Zyfen'in cast noktasında), isabette düşman üstünde küçük patlama; sürekli atışta
+   gözü yormuyor, Gunslinger'da yok.
+
+#### Performans ve boyut
+8. Menü sürüm etiketine 3 dokunuş (debug) → Tufan + Hortum + Girdap + ~300 düşman: p95 kare süresi ≤ 16,7 ms.
+9. APK boyutu: ikon + efekt dokuları ≈ 1,5 MB (kaynaklar `art/` export dışı).
+
+### A2b — Gunslinger beceri ikonları: cihazda doğrulanır (v2.0.2)
+
+Bulutta telefon yoktur; aşağıdakiler yalnız cihazda (Redmi Note 13 Pro) doğrulanabilir.
+Gunslinger ile oyna, sonra bir kez Zyfen ile bak.
+
+1. **Seviye atlama kartı:** 7 aktif (Çift Tabanca, Yelpaze Atış, Keskin Nişan, Seken Mermi, Son Mermi Patlar, Doldurma
+   Saçılması, Şarapnel), Barut Kesesi + 7 ortak pasif (Ağır Kurşun, Çevik Çizme, Fazladan Mermi, Hızlı Doldurma, Hızlı
+   Parmak, Mıknatıs, Sağlam Yelek) ve 4 evrim (Gürleyen Yelpaze, Kıyamet Mermisi, Mermi Fırtınası, Zincirleme Patlama) boyalı
+   ikonla görünüyor; renk çarpanı yok, çerçeve içinde kırpılma yok.
+2. **HUD ve duraklat ekranı yuvaları:** küçük yuvada (aktif kare / pasif daire / evrim sekizgen) ikonlar birbirinden ayırt
+   ediliyor; seviye rozeti ikonu kapatmıyor.
+3. **Zyfen ile** aynı ortak pasifler (Yas Paltosu, Bilenmiş Rüzgar…) eski Zyfen ikonuyla görünüyor; Gunslinger ikonu onlara
+   sızmamış.
+4. **APK boyutu:** 19 PNG ≈ 1,45 MB eklenir (SVG'ler ≈ 13 KB çıkar); kaynaklar `art/` export dışı.
+
+### A4 — Zyfen sesleri: cihazda dinlenir (v2.0.2)
+
+Bulutta ses çıkışı ve telefon yoktur; aşağıdakiler yalnız cihazda (Redmi Note 13 Pro, kulaklık ve hoparlör) doğrulanır.
+Zyfen ile oyna; Gunslinger ile karşılaştır.
+
+#### Temel sesler
+1. **Savuruş varyasyonu:** art arda atışta üç savuruş sesi (`zyfen_cast_1..3`) sırayla değil karışık gelir, aynısı üst
+   üste iki kez çalmaz. Gunslinger'ın silah, şarjör ve kovan sesi Zyfen'de HİÇ duyulmamalı.
+2. **İsabet:** kesik düşmana değince kısa rüzgar vuruşu (2 varyasyon); kalabalıkta (delen kesik 10+ düşman) vuruşlar
+   tek gürültüye dönüşmüyor, ses kesilip tıkırdamıyor.
+3. **Rüzgar toplama:** doldurma başlayınca toplama sesi, bitince kısa "tamam" sesi. Doldurma süresiyle uyumlu mu?
+   Boş tetikte (doldurma sırasında ateş) ses yok.
+4. **Gunslinger kontrolü:** v2.0.1 ile aynı sesler (sağ/sol atış, doldurma dönüşü ve tık, isabet, boş tetik).
+
+#### Beceri sesleri
+5. Hava Bıçakları (3 varyasyon), Delen Rüzgar, Nefes Dalgası, Hava Cebi: her ateşlenmede bir ses; cep sesi art arda
+   ölümlerde (aralık 120 ms) yağmura dönmüyor.
+6. **Hortum ve Tufan yoğunluğu (ses kalabalığı):** Tufan + Hortum + Girdap + Hava Cebi bir arada, ~300 düşman. Doğuşta tek
+   seferlik ses (Hortum, Tufan), Girdap 4 sn'de bir. Ses bulamacı oluyor mu, savuruş ve isabet duyulabiliyor mu,
+   müzik bastırılıyor mu? Rahatsız ediyorsa `Sfx.MIN_GAP_MS` ve `Sfx.LIMITS` (scripts/audio/sfx.gd) ayarlanır.
+7. **Evrim anı:** Ay Orağı (`evolution_5`), Göğün Mızrağı (`evolution_6`), Kasırga Patlaması (`evolution_7`), Tufan
+   (`evolution_8`). Evrim sesi, beceri sesinin üstüne bindiğinde (Tufan: evrim anı + ilk doğuş) boğuşuyor mu?
+8. Seviye yükseltme sesi (`level_up_evolution`) ile evrim sesi arka arkaya gelince karışıyor mu?
+
+#### Seviye ve ayar
+9. **Ayarlar ▸ EFEKT** kaydırıcısı Zyfen seslerini de ölçekler (0% sessiz, 100% tam); MÜZİK kaydırıcısı bu seslere etki etmez.
+10. Zyfen sesleri genel olarak Gunslinger seslerine göre çok yüksek/alçak mı (LUFS hedefleri `tools/audio/sfx_manifest.json`)?
