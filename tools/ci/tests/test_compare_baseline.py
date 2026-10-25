@@ -20,7 +20,8 @@ def rows(seed0, n, scale=1.0, policies=("strong", "kite", "greedy", "idle"), cha
             t = float(np.clip(rng.normal(500, 60) * scale, 60, 1100))
             alive = k < int(n * survive_frac)
             out.append({"character": char, "policy": pol, "seed": seed0 + k, "time": 1200.0 if alive else round(t, 1),
-                        "hp_mid": 0.6 if alive else (0.2 if t >= 600 else -1.0)})
+                        "hp_mid": 0.6 if alive else (0.2 if t >= 600 else -1.0),
+                        "kills5": int(t * 0.8) if (alive or t >= 300) else -1, "hp_early": 0.7})
     return out
 
 
@@ -93,3 +94,39 @@ def test_cli_input_errors(tmp_path):
     r = subprocess.run([sys.executable, str(BAL / "compare_baseline.py"), str(tmp_path / "yok"), str(tmp_path / "yok2")],
                        capture_output=True, text=True)
     assert r.returncode == 2
+
+
+def test_aux_metrics_missing_values_are_skipped():
+    assert cb.kills5({"kills5": 405}) == 405.0
+    assert cb.kills5({"kills5": -1}) is None  # 5 dk'ya ulaşmadı
+    assert cb.hp_early({"hp_early": 0.82}) == 0.82
+    assert cb.hp_early({"hp_early": -1.0}) is None
+    vals = cb.values([{"policy": "strong", "seed": 1, "kills5": -1}, {"policy": "strong", "seed": 2, "kills5": 300}], "strong", "kills5")
+    assert vals == {2: 300.0}
+
+
+def test_aux_metrics_reported_with_noise_but_never_decide():
+    a = rows(1, 60)
+    b = rows(1, 60, scale=1.0)
+    noise = rows(2001, 60, rng_seed=7)
+    res = cb.compare(a, [dict(r) for r in a], noise_rows=noise, boot=200)
+    m = res["policies"]["strong"]["metrics"]
+    for name in cb.AUX_METRICS:
+        n = m[name]["noise"]
+        assert "verdict" not in m[name]
+        assert n["ci"]["lo"] <= n["ci"]["hi"] and isinstance(n["band_resolvable"], bool)
+    assert m["hp_early"]["noise"]["rel"] == 0.0  # hp_early sabit => fark 0
+    # yardımcı ölçüt gürültüsü ne kadar büyük olursa olsun karar değişmez
+    wild = rows(2001, 60, scale=0.5, rng_seed=7)
+    for r in wild:
+        r["kills5"] = -1 if r["seed"] % 2 else 10
+    res2 = cb.compare(a, [dict(r) for r in a], noise_rows=wild, boot=200)
+    assert res2["policies"]["strong"]["metrics"]["kills5"].get("verdict") is None
+    assert b  # rows() ölçekli üretim hata vermez
+
+
+def test_report_shows_aux_metric_noise_ci():
+    a = rows(1, 60)
+    res = cb.compare(a, [dict(r) for r in a], noise_rows=rows(2001, 60, rng_seed=3), boot=100)
+    md = cb.render(res, "A400", "B400")
+    assert "kills5" in md and "hp_early" in md and "GA " in md
