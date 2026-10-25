@@ -51,7 +51,7 @@ if [ "$PART" = "verify" ]; then
   [[ "${GATE_SHARD_COUNT:-}" =~ ^[0-9]+$ ]] || { echo "GATE_PART=verify için GATE_SHARD_COUNT=N gerekir" >&2; exit 2; }
 fi
 
-rm -rf .gate && mkdir -p .gate
+rm -rf .gate && mkdir -p .gate || { echo "GATE FAIL: .gate çalışma dizini temizlenemedi/oluşturulamadı (yazma yetkisi? dizin sahibi: $(id -un))" >&2; exit 1; }
 
 # Adım süreleri (v2.0 S0/F-028): her adım bitince "süre: N sn" yazılır, sonda tablo basılır (.gate/times.log).
 STEP_NAME=""
