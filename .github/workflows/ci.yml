@@ -8,6 +8,8 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      ASHEN_EVIDENCE_DIR: ${{ runner.temp }}/import-evidence
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,11 +21,21 @@ jobs:
           path: ~/.cache/ashen-bastion
           key: godot-${{ hashFiles('.godot-version') }}
       - run: bash tools/gate.sh
+      - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-evidence-${{ github.job }}-${{ matrix.group || 0 }}
+          path: ${{ runner.temp }}/import-evidence
+          retention-days: 14
+          if-no-files-found: ignore
   selftest:
     # F-028: senaryo -> grup tablosu tools/ci/selftest_gate.sh içindedir (GROUP[...]=N); matrix.group tablodaki tüm
     # gruplar (test_selftest_gate_groups.py denetler). Her grup bağımsız iş: en uzun grup ≈ 7 dk (S0: 409 s), timeout 20 dk.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      ASHEN_EVIDENCE_DIR: ${{ runner.temp }}/import-evidence
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +51,14 @@ jobs:
           path: ~/.cache/ashen-bastion
           key: godot-${{ hashFiles('.godot-version') }}
       - run: bash tools/ci/selftest_gate.sh --group ${{ matrix.group }}
+      - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-evidence-${{ github.job }}-${{ matrix.group || 0 }}
+          path: ${{ runner.temp }}/import-evidence
+          retention-days: 14
+          if-no-files-found: ignore
   export-debug:
     runs-on: ubuntu-24.04
     timeout-minutes: 30

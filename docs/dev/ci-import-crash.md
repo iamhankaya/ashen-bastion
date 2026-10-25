@@ -22,3 +22,11 @@ sürüm + `checksums.txt` SHA-512 doğrulaması `ensure_godot.sh`'te). `.godot/`
 temiz içe aktarır; anahtar sorunu yok. Yerelde bozuk `.godot`: `--import` çıkış 0 verir, yalnız `ERROR:` yazar (gate "günlükte hata
 satırı" ile kırmızı) ve sıfırlanmış `.ctex` dosyalarını yeniden üretmez; çözüm `rm -rf .godot`. Prova: `bash tools/ci/prova_import_cache.sh`.
 Testler: `tools/ci/tests/test_godot_import.py`.
+
+**Kanıt toplama (sonraki gerçek çöküş için).** `ci.yml` `test` ve `selftest` işleri `ASHEN_EVIDENCE_DIR=$RUNNER_TEMP/import-evidence` ayarlar;
+`godot_import.sh` `ulimit -c unlimited` koyar ve her çöküşte (yeniden deneme sonunda iş yeşil olsa bile) şunları o dizine toplar:
+`import.log`, `import.log.deneme1`, `import_retry.txt`, `ortam.txt` (core_pattern, nproc, bellek), çalışma dizinine düşen `core*` ve
+`gdb` varsa `bt.txt` (ilk 8 çerçeve CI özetinde). Dizin `import-evidence-<iş>-<grup>` adıyla 14 gün saklanan artifact olarak yüklenir
+(`if: always()`, `if-no-files-found: ignore`). Selftest kopyaları geçici dizinde olduğundan kanıt mutlak yola yazılır. Sınır: runner'ın
+`kernel.core_pattern` değeri borulu (apport/systemd) ise core çalışma dizinine düşmez; `ortam.txt` bunu gösterir ve açık noktadır.
+`use_multiple_threads=false` bilerek eklenmedi (ölçülmemiş; ayrı karar).

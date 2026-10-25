@@ -15,6 +15,7 @@ echo "[ 30% ] reimport | a.png"
 case "$step" in
   ok) exit 0 ;;
   abrt) kill -ABRT $$ ;;
+  abrtcore) echo corebytes > core; kill -ABRT $$ ;;
   abrt_err) echo "ERROR: bozuk kaynak"; kill -ABRT $$ ;;
   fail) echo "SCRIPT ERROR: x"; exit 1 ;;
   kill9) kill -KILL $$ ;;
@@ -22,7 +23,7 @@ esac
 """
 
 
-def run(tmp_path, plan, umask="022", summary=True):
+def run(tmp_path, plan, umask="022", summary=True, evidence=False):
     fake = tmp_path / "fake_godot.sh"
     fake.write_text(FAKE)
     fake.chmod(0o755)
@@ -34,6 +35,8 @@ def run(tmp_path, plan, umask="022", summary=True):
     }
     if summary:
         env["GITHUB_STEP_SUMMARY"] = str(tmp_path / "summary.md")
+    if evidence:
+        env["ASHEN_EVIDENCE_DIR"] = str(tmp_path / "evid")
     (tmp_path / "proj" / ".gate").mkdir(exist_ok=True)
     r = subprocess.run(
         ["bash", "-c", f"umask {umask}; bash {SCRIPT} .gate/import.log"],
@@ -92,3 +95,18 @@ def test_works_under_restrictive_umask_and_stdin_script(tmp_path):
     src = f"bash {SCRIPT} .gate/import.log\necho SONRAKI_SATIR\n"
     r = subprocess.run(["bash", "-s"], input=src, cwd=tmp_path / "proj", env=env, capture_output=True, text=True)
     assert "SONRAKI_SATIR" in r.stdout
+
+
+def test_evidence_is_collected_on_crash_even_when_retry_succeeds(tmp_path):
+    r, n = run(tmp_path, "abrtcore,ok", evidence=True)
+    assert r.returncode == 0 and n == 2
+    files = sorted(p.name for p in (tmp_path / "evid").rglob("*") if p.is_file())
+    assert "ortam.txt" in files and "import.log" in files and "import.log.deneme1" in files
+    assert "core" in files  # core çalışma dizininden kanıt dizinine taşındı
+    assert not (tmp_path / "proj" / "core").exists()
+    assert "gdb yok" in r.stderr or "geri izleme" in r.stderr
+
+
+def test_no_evidence_dir_means_nothing_written(tmp_path):
+    r, n = run(tmp_path, "abrt,ok")
+    assert r.returncode == 0 and not (tmp_path / "evid").exists()
