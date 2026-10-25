@@ -145,6 +145,8 @@ const LEVEL_KEY_BOUNDS := {
 	"damage_mult": [0.0, 20.0],
 	"pierce": [0.0, 50.0],
 	"push": [0.0, 2000.0],
+	"min_spawn_dist": [0.0, 2000.0],
+	"keep_out": [0.0, 2000.0],
 }
 const MAX_LEVEL_LIMIT := 8
 const MAX_BURST_COUNT := 400
@@ -705,6 +707,17 @@ func _validate_active_levels(out: PackedStringArray, file: String, levels: Array
 				if v < float(b[0]) or v > float(b[1]):
 					_err(out, "out_of_range", file, "levels[%d].%s = %s, aralık %s" % [i, k, v, b])
 					return
+		var row: Dictionary = levels[i]
+		if row.has("min_spawn_dist") and row.has("keep_out"):
+			# Hortum/Tufan: doğuş uzaklığı keep_out'tan küçük olamaz (doğan bölge hemen yasak daireye düşerdi).
+			if float(row["min_spawn_dist"]) < float(row["keep_out"]):
+				_err(
+					out,
+					"out_of_range",
+					file,
+					"levels[%d].min_spawn_dist keep_out'tan küçük olamaz" % i
+				)
+				return
 	for k in (levels[0] as Dictionary).keys():
 		var dec: bool = LEVEL_KEYS_NONDECREASING.has(k)
 		var inc: bool = LEVEL_KEYS_NONINCREASING.has(k)

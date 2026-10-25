@@ -148,7 +148,7 @@ func test_ground_enemy_is_not_flung_into_solid_ruin() -> void:
 		assert_gte(end.distance_to(Vector2(c.x, c.y)), c.z + er - 1.0, "harabe dairesine gömülmedi")
 
 
-func test_movement_goes_to_target_and_returns_when_too_far() -> void:
+func test_movement_goes_to_target_and_does_not_turn_back_beyond_max_dist() -> void:
 	var sim := WindKit.make()
 	var i := _twister(
 		sim,
@@ -157,15 +157,26 @@ func test_movement_goes_to_target_and_returns_when_too_far() -> void:
 	)
 	WindKit.zone_steps(sim, 60)
 	assert_almost_eq(sim.zones.pos[i].x, 350.0, 1.0, "1 sn x 100 px/sn hedefe doğru")
-	# max_dist aşılınca hedef oyuncuya (0,0) döner.
+	# Kullanıcı kararı 2026-10-25: max_dist aşılınca oyuncuya dönme kuralı yok.
 	WindKit.zone_steps(sim, 120)
-	assert_lt(sim.zones.pos[i].x, 400.0, "oyuncudan max_dist ötesine gitmez")
-	assert_eq(sim.zones.target[i], sim.player_pos)
+	assert_gt(sim.zones.pos[i].x, 400.0, "max_dist ötesine de hedefe doğru gider")
+	assert_eq(sim.zones.target[i], Vector2(2000, 0), "hedef oyuncuya çevrilmez")
+
+
+func test_movement_never_approaches_player_inside_keep_out() -> void:
+	var sim := WindKit.make()
+	var i := _twister(
+		sim,
+		Vector2(300, 0),
+		{"speed": 100.0, "keep_out": 250.0, "target": Vector2.ZERO, "retarget": 99.0}
+	)
+	WindKit.zone_steps(sim, 300)
+	assert_gte(sim.zones.pos[i].distance_to(sim.player_pos), 249.5, "keep_out'a girmez")
 
 
 func test_retarget_consumes_exactly_one_randf_even_without_enemies() -> void:
 	var sim := WindKit.make()
-	_twister(sim, Vector2(250, 0), {"speed": 0.0, "max_dist": 9999.0})  # retarget_left 0 => ilk adımda
+	_twister(sim, Vector2(250, 0), {"speed": 0.0, "keep_out": 250.0})  # retarget_left 0 => ilk adımda
 	var ref := RandomNumberGenerator.new()
 	ref.seed = sim.rng_combat.seed
 	ref.state = sim.rng_combat.state
@@ -173,7 +184,9 @@ func test_retarget_consumes_exactly_one_randf_even_without_enemies() -> void:
 	WindKit.zone_steps(sim, 1)
 	assert_eq(sim.rng_combat.state, ref.state, "tam 1 randf")
 	assert_eq(
-		sim.zones.target[0], sim.player_pos + WindSystem.IDLE_OFFSET, "düşman yok => oyuncu + ofset"
+		sim.zones.target[0],
+		sim.player_pos + Vector2(250, 0),
+		"düşman yok => bölgenin yönünde keep_out uzaklıkta nokta"
 	)
 
 
@@ -212,7 +225,9 @@ func test_cast_twisters_ring_spacing_scaling_and_single_randf() -> void:
 	assert_eq(sim.zones.count, 3)
 	for i in 3:
 		assert_eq(sim.zones.kind[i], ZonePool.KIND_GIANT)
-		assert_almost_eq(sim.zones.pos[i].distance_to(sim.player_pos), WindSystem.SPAWN_DIST, 0.01)
+		assert_almost_eq(
+			sim.zones.pos[i].distance_to(sim.player_pos), WindSystem.DEFAULT_MIN_SPAWN, 0.01
+		)
 		assert_almost_eq(sim.zones.radius[i], 190.0 * 1.6, 0.01)
 		assert_almost_eq(sim.zones.life[i], 8.0 * 1.5, 0.01)
 		assert_eq(sim.zones.speed[i], 110.0)

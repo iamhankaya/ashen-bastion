@@ -63,7 +63,8 @@ func test_hortum_does_not_cast_without_nearby_enemy_and_keeps_cooldown_ready() -
 
 func test_hortum_spawns_count_twisters_with_level_values() -> void:
 	var sim := WindKit.make(&"hortum", 4)  # 2 hortum r200 ömür 3,8 hasar 14 çekme 100
-	WindKit.dummy(sim, Vector2(300, 0))
+	WindKit.dummy(sim, Vector2(400, 0))  # iki uzak küme: bölgeler ayrı kümelerde doğar
+	WindKit.dummy(sim, Vector2(-400, 0))
 	WindKit.skill_steps(sim, 1)
 	assert_eq(sim.zones.count, 2)
 	for i in 2:
@@ -75,9 +76,7 @@ func test_hortum_spawns_count_twisters_with_level_values() -> void:
 		assert_almost_eq(sim.zones.fling[i], 0.0, 0.001)
 		assert_almost_eq(sim.zones.tick_every[i], 0.4, 0.001)
 		assert_eq(sim.zones.speed[i], 90.0)
-	assert_almost_eq(
-		sim.zones.pos[0].distance_to(sim.zones.pos[1]), 2.0 * WindSystem.SPAWN_DIST, 4.0
-	)
+	assert_almost_eq(sim.zones.pos[0].distance_to(sim.zones.pos[1]), 800.0, 4.0)
 
 
 func test_hortum_cooldown_divides_by_fire_rate_and_respawns() -> void:

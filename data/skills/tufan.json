@@ -22,6 +22,8 @@
       "target_mode": "cluster",
       "retarget_every": 1.5,
       "max_dist": 700,
+      "min_spawn_dist": 300,
+      "keep_out": 250,
       "boss_mult": 1.0
     }
   ],
