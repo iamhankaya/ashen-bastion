@@ -45,6 +45,7 @@ g.get_achievement(id) -> AchievementDef        # null olabilir
 | `placeholder` | bool, isteğe bağlı (v2.0) | `true` = görsel yer tutucu; yalnız debug yapıda "YER TUTUCU" etiketi. Release'te de kartta/sahnede soğuk ton + baş harf monogramı gösterilir |
 | `display_upper` | metin ≤ 22 karakter, isteğe bağlı (v2.0 düzeltme) | büyük harfli ad; özel adlarda `upper_tr` noktalı İ üretir ("GUNSLİNGER"), boşsa `upper_tr(name)` |
 | `order` | sayı, isteğe bağlı (v2.0 düzeltme) | vitrin sırası (küçük önce; eşitlikte dosya adı sırası); yoksa 1000 |
+| `sfx` | nesne, isteğe bağlı (v2.0.2 A4) | olay -> ses: anahtarlar `shot`, `hit`, `reload_start`, `reload_end`, `dry` (başkası `unknown_key`); değer ses kimliği ya da kimlik dizisi (`shot` dizisi silah indeksiyle seçilir). Kimlik `assets/audio/sfx/<id>.ogg` ya da `<id>_1.ogg` varyasyonu olarak var olmalı (`asset_missing`). Sözlük VARSA anahtarı olmayan olay sessizdir (Gunslinger'a özgü sesler Zyfen'de çalmaz); sözlük YOKSA eski varsayılan sesler |
 
 `base_gun` v2.0'da YOKTUR (JSON'da görülürse `unknown_key`). Yeni karakter yalnız veri + görsel ekleyerek tanımlanır;
 sıra `order` alanıdır, eşitlikte dosya adı sırası (`character_ids`).
@@ -52,6 +53,32 @@ sıra `order` alanıdır, eşitlikte dosya adı sırası (`character_ids`).
 `rig`: `body`, `arm` (görsel yolu), `display_height` (1..1000), `native_facing` (`left|right`), `shoulders` (iki `[x,y]`, 0..1),
 `arm_pivot`, `muzzle` (`[x,y]`, 0..1), `arm_scale` (0,01..5), `sway`: `hem_from_y` 0..1, `scarf_rect` `[x0,y0,x1,y1]` (0..1, x0<x1, y0<y1),
 `amp` 0..100, `lag` 0..1. Omuz/pivot/namlu normalize tahmindir; ekranda ayarlanır.
+
+`rig.armless` (v2.0.2, isteğe bağlı bool; `DataV202Rig`): `true` = tek parça gövde, kol düzeneği yok. `arm, arm_pivot, muzzle, shoulders,
+arm_scale` zorunlu değildir, verilirse yok sayılır. Kolsuz rigde ek alanlar (kollu rigde bunlar `unknown_key`):
+
+| Alan | Tür / aralık | Not |
+|---|---|---|
+| `cast_point` | `[fx, fy]`, ±0,5 | **zorunlu**. Atış (el) noktası: `display_height` kesri, gövde kutusu merkezine göre, +x = bakılan yön, +y aşağı (`PlayerRig.cast_point_world`; aynalamada x işareti tersine). Başlangıç değeri tahmindir, cast karesinde ölçülür |
+| `action_while_moving` | bool, varsayılan `false` | cast/gather kareleri hareket ederken de mi gösterilir (yalnız görünüm; sim/hash'e girmez) |
+| `cast` | `{frames 2..8, fire_frame 0..frames-1, fps 8..60}` | savuruş kareleri; bozuk = `out_of_range`/`missing_field`/`unknown_key` |
+| `gather` | `{frames 2..8}` | rüzgar toplama (doldurma) kareleri |
+| `walk_cast` | `cast` ile aynı şema | yürürken savuruş kareleri (isteğe bağlı üçüncü küme) |
+
+`cast`/`gather`/`walk_cast` varsa `walk.strip` ve `walk.cell` zorunludur (`walk.frames` 0 olabilir: yürüme prosedürel, kümeler yine geçerli).
+Hücre sırası (`RigFrames`): yürüme `0..W-1`, duruş `W`, cast, gather, walk_cast; toplam `W+1+C+G+WC`. Kabul: toplam hücre × hücre genişliği
+≤ 8192 (`out_of_range`); şerit dokusu varsa boyutu `toplam × w` × `h` olmalı (`bad_type`).
+
+**Manifest `palm` ↔ `cast_point` (v2.0.2):** `strip_manifest.json` `palm: {fire_frame, point:[fx, fy]}` atış karesindeki (`cast.fire_frame`) avucun
+`cast_point` ile AYNI uzaydaki karşılığıdır. `--palm-px X,Y` kaynak kare görselindeki (kırpılmamış) avuç pikselidir; dönüşüm
+(`make_zyfen_strip.palm_to_cast_point`): hücre px = (palm − karenin alfa kutusu başı) × klip ölçeği + karenin hücredeki yeri (x = hücre içi
+konum, kare alt kenara oturur: üst = 320 − kare boyu); `fx = (hücre_x − hücre_genişliği/2) / 320`, `fy = (hücre_y − 160) / 320`
+(hücre 320 px = `display_height`, hücre merkezi = gövde merkezi; `native_facing: left` ise `fx` işareti çevrilir). Gate testi
+`|palm − cast_point| ≤ 0,03` (≈ 6 dünya px) bekler; `cast_point` değeri değişirse `--palm-px` yeniden ölçülür.
+
+Şerit, gövde görseli, manifest ve kalite raporu `tools/art/make_zyfen_strip.py` ile üretilir (hücre genişliği girdiden hesaplanır, `walk.cell`
+buraya yazılır; kapı: `foot_slide`, klip yükseklik sapması, toplam genişlik;
+bkz. `tools/art/README.md`). Çıktı kalite raporu `art/source/zyfen/quality.json` yürüme kalite kapısı testinin girdisidir.
 
 `rig.walk` (v1.1, isteğe bağlı; `CharacterDef.walk`): kareli yürüme. Anahtarlar `WALK_KEYS`:
 
@@ -104,23 +131,33 @@ Yeni hata kodları (v2.0): `unknown_stat`, `ach_count`, `tier_missing`, `scope_m
   `passive` = `kind:passive` beceri, `passive_min_level` 1..pasifin `max_level`'ı. Her aktifin en çok bir evrimi olur.
 - `sfx` (isteğe bağlı, **yalnız evrimde**): evrim kazanılınca çalan ses kimliği; `assets/audio/sfx/<sfx>.ogg` var olmalı
   (hatalar: evrim dışında `unknown_key`, boş/metin değil `bad_type`, dosya yok `asset_missing`). Alan yoksa `evolution_1` çalar.
-  Dört evrime `evolution_1…4` atanmıştır; `evolution_5`, `evolution_6` yeni karakter evrimleri için yedektir.
+  Dört evrime `evolution_1…4` atanmıştır; Zyfen'in evrimleri `evolution_5…8` kullanır (Ay Orağı 5, Göğün Mızrağı 6,
+  Kasırga Patlaması 7, Tufan 8).
+- `cast_sfx` (isteğe bağlı, aktif ve evrimde; pasifte `unknown_key`): becerinin ateşlenme/doğuş sesi (`SimFx.skill_sfx`
+  ile çalar). Tek dosya ya da `_1..N` varyasyon; yoksa `asset_missing`. Sürekli bölgeler (hortum, tufan) doğuşta tek
+  seferlik, Girdap 4 sn'de bir; `Sfx.MIN_GAP_MS` aynı sesin en kısa tekrar aralığını sınırlar.
 - `tags`: metin dizisi. `rhythm` = şarjör ritmiyle etkileşir. **İçerik tamamlandı (slice 2)** modunda `rhythm` etiketli
   **aktif** sayısı ≥ 2 (`rhythm_count`).
-- `levels[i]` sayısal değerlerden oluşan nesnedir; **tüm seviyelerde aynı anahtar kümesi** (`levels_keys`).
+- `levels[i]` sayısal değerlerden oluşan nesnedir; **tüm seviyelerde aynı anahtar kümesi** (`levels_keys`). İstisna: `target_mode` (Hortum/Tufan, `"cluster"`) metindir; hız/hedefleme düğmeleri `speed`, `retarget_every` (sn; yoksa türe göre yedek), `max_dist` (kullanılmaz), `min_spawn_dist` (doğuşta oyuncudan en az uzaklık, px), `keep_out` (oyuncuya en fazla yaklaşma, px; `min_spawn_dist >= keep_out`), `boss_mult` sayıdır.
 - **Aktif seviye monotonluğu** (anahtar adına göre): azalmayan `damage, count, radius, pellets, chance, bounces, ex_damage, ex_radius, damage_mult, pierce, push`; artmayan
   `cooldown, interval, every_n`. Diğer anahtarlar serbest sayı.
 - **Pasif `levels[i]` o seviyedeki TOPLAM değerdir** (seviye 3 = 3 seviyenin toplamı). Anahtarlar sabit küme (bilinmeyen = `passive_key`):
 
 | Anahtar | Tür | Aralık | Uygulama |
 |---|---|---|---|
-| `bullet_dmg_mult`, `fire_rate_mult`, `area_mult`, `explosion_dmg_mult`, `move_speed_mult`, `pickup_mult`, `range_mult` | x | -0,9..5 | etkin = `1 + x`, farklı pasifler toplanır |
+| `bullet_dmg_mult`, `fire_rate_mult`, `area_mult`, `explosion_dmg_mult`, `move_speed_mult`, `pickup_mult`, `range_mult`, `wind_time_mult` (v2.0.2) | x | -0,9..5 | etkin = `1 + x`, farklı pasifler toplanır. `wind_time_mult`: rüzgar bölgesi/toplama süresi; alan için mevcut `area_mult` yeniden kullanılır |
 | `reload_time_mult` | x | -0,9..0 | etkin = `1 + x` (negatif = daha kısa); `Magazine` min 0,35 sn uygular |
 | `mag_add` | tamsayı | 0..20 | şarjöre eklenir |
 | `max_hp_add` | sayı | 0..1000 | |
 | `regen` | sayı | 0..50 | can/sn |
 
   Monotonluk: |toplam| seviyeyle azalmaz (`reload_time_mult` -0,1, -0,2, … geçerli).
+- `pool` (v2.0.2, isteğe bağlı; `DataV202Pool`): `"common"` (varsayılan; her karakter) ya da var olan karakter kimliği (yalnız o karakter görür:
+  `SkillDef.available_to`, `Loadout` süzgeci). Bilinmeyen karakter `unknown_ref`, metin değil `bad_type`. Evrimin havuzu `requires.active`
+  becerisininkiyle aynı olmalı, `starting_skill` havuzu karakterinki ya da `common` olmalı (`requires_ref`).
+- `variants` (v2.0.2, isteğe bağlı, **yalnız `pool: common`**; özel havuzda `unknown_key`): `{"<karakter>": {name, icon, desc}}`, hepsi isteğe bağlı;
+  karakter var olmalı (`unknown_ref`), `name` ≤ 18 karakter, `desc` verilirse uzunluğu `max_level` (`out_of_range`), `icon` görsel yolu (`asset_missing`).
+  Çözüm: `SkillDef.name_for/icon_for/desc_for(character_id)`; variant yoksa ortak değer.
 - Görsel yolu (`icon`, `sprite`, `rig.body/arm`): `placeholder:<ad>` ya da var olan dosya (`res://…` ya da `assets/` altında; `.png/.svg/.webp`).
 
 ## Düşman — `enemies/<id>.json`

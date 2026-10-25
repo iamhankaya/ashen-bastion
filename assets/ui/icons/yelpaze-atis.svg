@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" fill="none" stroke-linejoin="round" stroke-linecap="round" role="img" aria-label="Yelpaze Atış"><title>Yelpaze Atış</title>
-<path d="M48 84 L16 20 M48 84 L48 12 M48 84 L80 20" stroke="#7A6045" stroke-width="3" stroke-dasharray="2 8"/>
-<g fill="#EFE7D6" stroke="#2B0E14" stroke-width="3">
-<g transform="translate(18 24) rotate(-26)"><path d="M-6 12 V-2 Q-6 -12 0 -16 Q6 -12 6 -2 V12 Z"/></g>
-<g transform="translate(48 18)"><path d="M-6 12 V-2 Q-6 -12 0 -16 Q6 -12 6 -2 V12 Z"/></g>
-<g transform="translate(78 24) rotate(26)"><path d="M-6 12 V-2 Q-6 -12 0 -16 Q6 -12 6 -2 V12 Z"/></g></g>
-<circle cx="48" cy="84" r="8" fill="#E8A24A" stroke="#2B0E14" stroke-width="3"/>
-</svg>

@@ -43,10 +43,10 @@ static func read(path: String, valid: PackedStringArray = PackedStringArray()) -
 	return parse(FileAccess.get_file_as_string(path), valid)
 
 
-## V2_SLICES_FORCE simgeleri (boş olabilir).
-static func forced() -> PackedStringArray:
+## Zorlama değişkenindeki simgeler (boş olabilir). Varsayılan V2_SLICES_FORCE; v2.0.2 V202_SLICES_FORCE geçirir.
+static func forced(env_name: String = FORCE_ENV) -> PackedStringArray:
 	var out := PackedStringArray()
-	var raw := OS.get_environment(FORCE_ENV).replace(",", " ")
+	var raw := OS.get_environment(env_name).replace(",", " ")
 	for tok in raw.split(" ", false):
 		var t := tok.strip_edges()
 		if not t.is_empty() and not out.has(t):

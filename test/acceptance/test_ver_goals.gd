@@ -187,7 +187,7 @@ func test_rhythm_tags_cover_active_skills_that_react_to_the_magazine() -> void:
 	var rhythm_all := 0
 	for id in data.skill_ids:
 		var def := data.get_skill(id)
-		if "rhythm" in def.tags:
+		if "rhythm" in def.tags and def.available_to(&"gunslinger"):  # v2.0.2: Zyfen'in sayımı K fazında
 			rhythm_all += 1
 			if def.kind == SkillDef.KIND_ACTIVE:
 				rhythm_actives.append(id)

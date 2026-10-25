@@ -6,6 +6,7 @@ const CONTROLLER := "res://scripts/ctrl/game_controller.gd"
 const CEILING := 960
 const S3_CEILING := 946
 const GAME_DATA := "res://scripts/sim/game_data.gd"
+const GAME_SIM := "res://scripts/sim/game_sim.gd"
 
 
 func _lines(path: String) -> int:
@@ -51,5 +52,10 @@ func test_controller_delegations_are_single_calls() -> void:
 
 func test_game_data_growth_is_bounded() -> void:
 	# v1.1 sonu 897 satır; v2.0 ek <= 40 (doğrulayıcılar data_v2.gd'de), gdlint tavanı 1000.
-	assert_lte(_lines(GAME_DATA), 897 + 40)
+	assert_lte(_lines(GAME_DATA), 897 + 40 + 4)  # v2.0.2: +4 (937 → 941; doğrulayıcılar data_v202_*.gd'de)
 	assert_lt(_lines(GAME_DATA), 1000)
+
+
+func test_game_sim_stays_within_the_v202_budget() -> void:
+	# v2.0.2 S1: game_sim.gd tavanı 990 (rüzgar sistemi WindSystem/WindUtil'de yaşar; sim yalnız delegasyon taşır).
+	assert_lte(_lines(GAME_SIM), 990, "game_sim.gd satır sayısı (tavan 990)")

@@ -102,6 +102,8 @@ var frame_a: int = 0
 var frame_b: int = 0
 var frame_mix: float = 0.0
 var walk_phase: float = 0.0
+## Kolsuz rig: yürürken cast/walk_cast klibi oynarken yürüme saati dondurulur (klip bitince kaldığı yerden sürer).
+var hold_walk: bool = false
 var hit: float = 0.0
 var tint_amt: float = 0.0
 var tint: Color = BORDO
@@ -416,7 +418,7 @@ func _update_walk(dt: float, vel: Vector2) -> void:
 	if mode == Mode.WALK:
 		if framed:
 			var dist := speed * dt
-			if dist <= 60.0:  # ışınlanma yok sayılır
+			if dist <= 60.0 and not hold_walk:  # ışınlanma yok sayılır
 				_phase = WalkCycle.advance(_phase, dist, _stride)
 			frame_a = WalkCycle.frame_at(_phase, _frames)
 			frame_b = frame_a

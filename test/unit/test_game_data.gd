@@ -32,11 +32,12 @@ func test_default_data_is_valid() -> void:
 
 func test_shipped_evolutions_have_distinct_existing_sfx() -> void:
 	var gd := GameData.load_dir("res://data")
-	var used := {}
+	var used := {}  # v2.0.2: yalnız aynı havuzdaki evrimler birbirinden farklı (6 dosya, 8 evrim: yer tutucu paylaşımı)
 	for sk in gd.skills_of_kind(SkillDef.KIND_EVOLUTION):
 		assert_true(ResourceLoader.exists("res://assets/audio/sfx/%s.ogg" % sk.sfx), str(sk.id))
-		assert_false(used.has(sk.sfx), "ses tekrarı: %s" % sk.sfx)
-		used[sk.sfx] = true
+		var key := "%s/%s" % [sk.pool, sk.sfx]
+		assert_false(used.has(key), "ses tekrarı: %s" % key)
+		used[key] = true
 
 
 func test_sfx_field_validation_codes() -> void:

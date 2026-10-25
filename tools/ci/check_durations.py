@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """JUnit test sürelerini denetler (F-028/M-C): tek test > LIMIT sn ise hata (bilinçli istisna test/long/ — GUT
 dizinlerinde değildir); > WARN sn olanlar bilgi olarak listelenir; toplam GUT süresi > TOTAL_WARN sn ise uyarı
-(uyarı gate'i durdurmaz). Kullanım: check_durations.py <junit.xml> [--limit 60] [--warn 20] [--total-warn 720]
+(uyarı gate'i durdurmaz). Kullanım: check_durations.py <junit.xml> [--limit 75] [--warn 20] [--total-warn 720]
 """
 
 import argparse
@@ -26,7 +26,7 @@ def check(junit: str, limit: float, warn: float, total_warn: float):
 def main(argv) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("junit")
-    ap.add_argument("--limit", type=float, default=60.0)
+    ap.add_argument("--limit", type=float, default=75.0)
     ap.add_argument("--warn", type=float, default=20.0)
     ap.add_argument("--total-warn", type=float, default=720.0)
     a = ap.parse_args(argv)

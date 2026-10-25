@@ -8,6 +8,8 @@ const HEAL_ID := &"heal"
 const HEAL_FRACTION := 0.25
 
 var data: GameData = null
+## v2.0.2: boş = filtresiz (eski davranış); doluysa yalnız `available_to(character_id)` beceriler sunulur/evrimleşir.
+var character_id: StringName = &""
 ## Davranışların setup'ına verilen SkillApi (GameSim); zayıf bağ (sim <-> loadout döngüsü sızıntı yapmasın).
 ## Bağlı değilse davranış kurulmaz (birim testlerde).
 var _api_ref: WeakRef = null
@@ -15,8 +17,9 @@ var _actives: Array[SkillState] = []
 var _passives: Array[SkillState] = []
 
 
-func _init(p_data: GameData = null) -> void:
+func _init(p_data: GameData = null, p_character_id: StringName = &"") -> void:
 	data = p_data
+	character_id = p_character_id
 
 
 func bind_api(sim: GameSim) -> void:
@@ -67,7 +70,7 @@ func add_or_upgrade(skill_id: StringName) -> void:
 ## Evrim hazırsa evrim kimliği, değilse &"". Koşul: aktif max_level + eşleşen pasif seviye >= 1.
 func evolution_ready() -> StringName:
 	for evo in data.skills_of_kind(SkillDef.KIND_EVOLUTION):
-		if state_of(evo.id) != null:
+		if state_of(evo.id) != null or not evo.available_to(character_id):
 			continue
 		var rq := evo.requires
 		var act := state_of(StringName(str(rq.get("active", ""))))
@@ -105,12 +108,16 @@ func roll_choices(rng: RandomNumberGenerator) -> Array[Choice]:
 			pool.append(_card(Choice.KIND_UPGRADE, st.def, st.level, st.level + 1))
 	var consumed := _consumed_actives()
 	for def in data.skills_of_kind(SkillDef.KIND_ACTIVE):
-		if consumed.has(def.id):
+		if consumed.has(def.id) or not def.available_to(character_id):
 			continue  # evrime dönüşen ham aktif tekrar "yeni" olarak sunulmaz
 		if state_of(def.id) == null and _actives.size() < ACTIVE_SLOTS:
 			pool.append(_card(Choice.KIND_NEW, def, 0, 1))
 	for def in data.skills_of_kind(SkillDef.KIND_PASSIVE):
-		if state_of(def.id) == null and _passives.size() < PASSIVE_SLOTS:
+		if (
+			state_of(def.id) == null
+			and _passives.size() < PASSIVE_SLOTS
+			and def.available_to(character_id)
+		):
 			pool.append(_card(Choice.KIND_NEW, def, 0, 1))
 	var evo_id := evolution_ready()
 	var out: Array[Choice] = []
@@ -139,15 +146,27 @@ func _consumed_actives() -> Dictionary:
 	return out
 
 
+## `skill_id` için `next_level` seviyesine giden kart (tür: evrim / sahipse yükseltme / yeni); ad, ikon ve açıklama
+## karaktere göre çözülür. Bilinmeyen kimlik => null. Havuz süzgeci uygulanmaz (zorunlu/debug kart).
+func card_for(skill_id: StringName, next_level: int) -> Choice:
+	var def := data.get_skill(skill_id)
+	if def == null:
+		return null
+	var kind := Choice.KIND_EVOLUTION
+	if def.kind != SkillDef.KIND_EVOLUTION:
+		kind = Choice.KIND_UPGRADE if level_of(skill_id) > 0 else Choice.KIND_NEW
+	return _card(kind, def, next_level - 1, next_level)
+
+
 func _card(kind: StringName, def: SkillDef, from_level: int, to_level: int) -> Choice:
 	var c := Choice.new()
 	c.kind = kind
 	c.skill_id = def.id
 	c.from_level = from_level
 	c.to_level = to_level
-	c.title = def.display_name
-	c.desc = def.desc[to_level - 1] if to_level - 1 < def.desc.size() else ""
-	c.icon = def.icon
+	c.title = def.name_for(character_id)
+	c.desc = def.desc_for(character_id, to_level)
+	c.icon = def.icon_for(character_id)
 	return c
 
 
@@ -156,6 +175,7 @@ func _new_state(def: SkillDef, level: int) -> SkillState:
 	st.id = def.id
 	st.def = def
 	st.level = level
+	st.icon = def.icon_for(character_id)
 	if def.kind != SkillDef.KIND_PASSIVE and SkillRegistry.BEHAVIORS.has(def.behavior):
 		st.behavior = SkillRegistry.BEHAVIORS[def.behavior].new()
 	_setup(st)

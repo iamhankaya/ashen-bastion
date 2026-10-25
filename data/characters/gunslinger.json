@@ -58,5 +58,15 @@
   "portrait": "res://assets/ui/portre-seviye-atlama.png",
   "blurb": "Dengeli ve çevik; çift tabancasıyla sürüyü ateş altında tutar.",
   "display_upper": "GUNSLINGER",
-  "order": 1
+  "order": 1,
+  "sfx": {
+    "shot": [
+      "shot_right",
+      "shot_left"
+    ],
+    "hit": "hit",
+    "reload_start": "reload_spin",
+    "reload_end": "reload_click",
+    "dry": "dry_fire"
+  }
 }

@@ -4,16 +4,25 @@ extends RefCounted
 ## ters sırayla gezin). Mermi başına vurulan düşman kümesi (HIT_SLOTS halka tampon).
 
 const CAP := 600
-const HIT_SLOTS := 12
+## Halka tampon: HIT_SLOTS dolunca en eski kayıt ezilir (tanımlı davranış). v2.0.2: delen kesikler için 12 -> 96 (S1 ölçümü:
+## 60 düşmanlık yığında 48 yuva 40 düşmana çift hasar verdi, 96 sıfır; plan kuralı).
+const HIT_SLOTS := 96
+## Sorgu/çarpışma yarıçapı varsayılanı; GameSim.BULLET_RADIUS bunu gösterir (pool -> sim döngüsel bağımlılık yok).
+const DEFAULT_RADIUS := 8.0
 
 # flags (bit maskesi)
 const FLAG_EXPLODES := 1  # isabette
-const FLAG_EXPLODE_ON_EXPIRE := 2  # dinamit
+const FLAG_EXPLODE_ON_EXPIRE := 2  # ömrü bitince patlar
 const FLAG_EXPLODE_ON_BOUNCE := 4  # zincirleme_patlama
 const FLAG_RICOCHET := 8
 const FLAG_RADIAL := 16  # yalnız görsel
-const FLAG_LOB := 32  # yay atış (dinamit): düşmana çarpmaz, ömrü bitince patlar
+const FLAG_LOB := 32  # yay atış: düşmana çarpmaz, ömrü bitince patlar
 const FLAG_SHRAPNEL := 64  # şarapnel parçası: öldürdüğü düşman yeniden şarapnel saçmaz
+const FLAG_WIND := 128  # rüzgar kesiği (hilal): yalnız görsel/etiket
+const FLAG_SPLIT := 256  # bölünen kesiğin çocuğu: tekrar bölünmez
+const FLAG_SPLITTER := 512  # bölünen kesiğin ebeveyni: ilk isabette biter ve çocuk doğurur (U3)
+## Sınırsız delme: pierce bu değerde sayaç tükenmez (her isabette azalsa da pratikte biter).
+const PIERCE_ALL := 99
 
 const DEFAULT_LIFE := 1.2
 
@@ -29,6 +38,8 @@ var ex_radius: PackedFloat32Array = PackedFloat32Array()
 var ex_dmg: PackedFloat32Array = PackedFloat32Array()
 var push: PackedFloat32Array = PackedFloat32Array()
 var gun: PackedInt32Array = PackedInt32Array()
+## Çarpışma yarıçapı (px); spawn o["radius"], yok ya da <= 0 ise DEFAULT_RADIUS. remove() kopyalar.
+var rad: PackedFloat32Array = PackedFloat32Array()
 var hit_n: PackedInt32Array = PackedInt32Array()  # toplam işaretleme sayısı (halka tampon yazım sayacı)
 var hit_ids: PackedInt32Array = PackedInt32Array()  # CAP * HIT_SLOTS
 
@@ -45,11 +56,13 @@ func _init() -> void:
 	ex_dmg.resize(CAP)
 	push.resize(CAP)
 	gun.resize(CAP)
+	rad.resize(CAP)
 	hit_n.resize(CAP)
 	hit_ids.resize(CAP * HIT_SLOTS)
 
 
-## o: pierce:int, bounces:int, life:float (=1.2), flags:int, ex_radius, ex_dmg, push:float, gun:int
+## o: pierce:int, bounces:int, life:float (=1.2; <= 0 da 1.2), flags:int, ex_radius, ex_dmg, push:float, gun:int,
+## radius:float (=DEFAULT_RADIUS; <= 0 da varsayılan)
 ## Dönen değer mermi indeksidir (çıkarma olana kadar geçerli). -1 = havuz dolu.
 func spawn(p: Vector2, v: Vector2, damage: float, o: Dictionary = {}) -> int:
 	if count >= CAP:
@@ -59,7 +72,10 @@ func spawn(p: Vector2, v: Vector2, damage: float, o: Dictionary = {}) -> int:
 	pos[i] = p
 	vel[i] = v
 	dmg[i] = damage
-	life[i] = float(o.get("life", DEFAULT_LIFE))
+	var lf := float(o.get("life", DEFAULT_LIFE))
+	life[i] = lf if lf > 0.0 else DEFAULT_LIFE
+	var rd := float(o.get("radius", DEFAULT_RADIUS))
+	rad[i] = rd if rd > 0.0 else DEFAULT_RADIUS
 	flags[i] = int(o.get("flags", 0))
 	pierce[i] = int(o.get("pierce", 0))
 	bounces[i] = int(o.get("bounces", 0))
@@ -88,8 +104,10 @@ func remove(i: int) -> void:
 		ex_dmg[i] = ex_dmg[last]
 		push[i] = push[last]
 		gun[i] = gun[last]
+		rad[i] = rad[last]
 		hit_n[i] = hit_n[last]
-		for k in HIT_SLOTS:
+		# Yalnız dolu slotlar kopyalanır (HIT_SLOTS döngüsü yok): has_hit zaten mini(hit_n, HIT_SLOTS) kadarına bakar.
+		for k in mini(hit_n[last], HIT_SLOTS):
 			hit_ids[i * HIT_SLOTS + k] = hit_ids[last * HIT_SLOTS + k]
 	count = last
 
@@ -102,7 +120,7 @@ func has_hit(pid: int, enemy_id: int) -> bool:
 	return false
 
 
-## Halka tampon: 12'den fazla düşmana vuran (delici) mermide en eski kayıt unutulur.
+## Halka tampon: HIT_SLOTS'tan fazla düşmana vuran (delici) mermide en eski kayıt unutulur.
 func mark_hit(pid: int, enemy_id: int) -> void:
 	hit_ids[pid * HIT_SLOTS + (hit_n[pid] % HIT_SLOTS)] = enemy_id
 	hit_n[pid] += 1

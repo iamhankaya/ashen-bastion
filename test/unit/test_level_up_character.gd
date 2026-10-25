@@ -32,8 +32,8 @@ func test_default_header_is_gunslinger() -> void:
 
 func test_header_uses_character_name_upper_tr() -> void:
 	var s := _screen()
-	s.show_choices([], 3, _data, _data.get_character(&"barutcu"))
-	assert_eq(s.name_label.text, "BARUTÇU")
+	s.show_choices([], 3, _data, _data.get_character(&"zyfen"))
+	assert_eq(s.name_label.text, "ZYFEN")
 	s.show_choices([], 3, _data, _data.get_character(&"gunslinger"))
 	assert_eq(s.name_label.text, "GUNSLINGER", "F-029: display_upper (özel ad, noktalı İ yok)")
 	assert_eq(s.title_label.text, "SEVİYE 3")
@@ -49,7 +49,7 @@ func test_name_with_dotted_i_is_uppercased_correctly() -> void:
 
 func test_portrait_comes_from_character() -> void:
 	var s := _screen()
-	var c := _data.get_character(&"barutcu")
+	var c := _data.get_character(&"zyfen")
 	s.show_choices([], 2, _data, c)
 	assert_eq(s.portrait_node.texture, UiKit.texture(c.portrait))
 

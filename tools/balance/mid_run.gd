@@ -6,23 +6,50 @@ extends SceneTree
 ## Çıktı satırı: süre, 0-5 dk ve 10-20 dk ortalama can oranı (yaşarken), 5 dk sonundaki öldürme/seviye.
 
 const MAX_STEPS := 72000  # 1200 sn
-const PRIORITY: Array[StringName] = [
-	&"zincirleme_patlama",
-	&"kiyamet_mermisi",
-	&"mermi_firtinasi",
-	&"gurleyen_yelpaze",
-	&"seken_mermi",
-	&"barut_kesesi",
-	&"son_mermi_patlar",
-	&"hizli_doldurma",
-	&"doldurma_sacilmasi",
-	&"fazladan_mermi",
-	&"agir_kursun",
-	&"hizli_parmak",
-	&"saglam_yelek",
-	&"cevik_cizme",
-	&"miknatis",
-]
+## Karakter başına kart önceliği (v2.0.2). Evrim kartı her zaman en üstte (`_choose`); listede olmayan kimlik sona,
+## 0-3 rastgele payla. Bilinmeyen karakter Gunslinger listesini kullanır (v2.0.1 ölçümleriyle birebir aynı).
+const PRIORITY_BY_CHAR: Dictionary = {
+	&"gunslinger":
+	[
+		&"zincirleme_patlama",
+		&"kiyamet_mermisi",
+		&"mermi_firtinasi",
+		&"gurleyen_yelpaze",
+		&"seken_mermi",
+		&"barut_kesesi",
+		&"son_mermi_patlar",
+		&"hizli_doldurma",
+		&"doldurma_sacilmasi",
+		&"fazladan_mermi",
+		&"agir_kursun",
+		&"hizli_parmak",
+		&"saglam_yelek",
+		&"cevik_cizme",
+		&"miknatis",
+	],
+	&"zyfen":
+	[
+		&"ay_oragi",
+		&"tufan",
+		&"kasirga_patlamasi",
+		&"gogun_mizragi",
+		&"furtina_gozu",
+		&"hortum",
+		&"bolunen_kesik",
+		&"nefes_dalgasi",
+		&"delen_ruzgar",
+		&"girdap",
+		&"hava_cebi",
+		&"hava_bicaklari",
+		&"agir_kursun",
+		&"hizli_parmak",
+		&"hizli_doldurma",
+		&"fazladan_mermi",
+		&"saglam_yelek",
+		&"cevik_cizme",
+		&"miknatis",
+	],
+}
 
 
 func _initialize() -> void:
@@ -58,7 +85,7 @@ func _run(seed_value: int, policy: String, character: StringName) -> Dictionary:
 		guard += 1
 		if sim.state == GameSim.State.LEVEL_UP:
 			if policy == "strong":
-				_choose(sim, rng)
+				_choose(sim, rng, character)
 			elif not Bots.choose(sim, rng):
 				break
 			continue
@@ -114,16 +141,17 @@ func _move(sim: GameSim, policy: String) -> Vector2:
 	return g if g != Vector2.ZERO else threat
 
 
-func _choose(sim: GameSim, rng: RandomNumberGenerator) -> void:
+func _choose(sim: GameSim, rng: RandomNumberGenerator, character: StringName) -> void:
+	var priority: Array = PRIORITY_BY_CHAR.get(character, PRIORITY_BY_CHAR[&"gunslinger"])
 	var cards := sim.pending_choices()
 	var best := 0
 	var best_rank := 1 << 20
 	for i in cards.size():
-		var rank := PRIORITY.find(cards[i].skill_id)
+		var rank := priority.find(cards[i].skill_id)
 		if cards[i].kind == Choice.KIND_EVOLUTION:
 			rank = -1
 		elif rank < 0:
-			rank = PRIORITY.size() + rng.randi_range(0, 3)
+			rank = priority.size() + rng.randi_range(0, 3)
 		if rank < best_rank:
 			best_rank = rank
 			best = i

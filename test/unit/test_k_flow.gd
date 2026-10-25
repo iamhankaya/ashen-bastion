@@ -32,23 +32,23 @@ func _ctrl() -> GameController:
 	return gc
 
 
-func test_select_barutcu_then_play_uses_barutcu() -> void:
+func test_select_zyfen_then_play_uses_zyfen() -> void:
 	var gc := _ctrl()
 	gc.open_characters()
 	assert_eq(gc.screen, PauseLogic.Screen.CHARACTERS)
 	var scr: CharactersScreen = gc.v2.characters.screen
-	scr.set_focus_id(&"barutcu")
+	scr.set_focus_id(&"zyfen")
 	assert_true(scr.press_select())
 	assert_eq(gc.screen, PauseLogic.Screen.CHARACTERS, "SEÇ ekrandan çıkmaz")
 	gc._on_back()
 	assert_eq(gc.screen, PauseLogic.Screen.MENU)
-	assert_string_contains(gc.menu.version_label.text, "Barutçu")
+	assert_string_contains(gc.menu.version_label.text, "Zyfen")
 	gc.start_run()
-	assert_eq(gc.sim.character.id, &"barutcu")
+	assert_eq(gc.sim.character.id, &"zyfen")
 
 
 func test_level_up_header_shows_character_name() -> void:
-	get_tree().root.get_node("Settings").character_id = "barutcu"
+	get_tree().root.get_node("Settings").character_id = "zyfen"
 	var gc := _ctrl()
 	gc.start_run()
 	gc.sim.debug_add_xp(30)
@@ -57,7 +57,7 @@ func test_level_up_header_shows_character_name() -> void:
 	assert_eq(gc.sim.state, GameSim.State.LEVEL_UP)
 	gc._show_level_up()  # v1.1 ekran gecikmesi atlanır: başlık davranışı sınanır
 	assert_eq(gc.screen, PauseLogic.Screen.LEVEL_UP)
-	assert_eq(gc.level_up.name_label.text, "BARUTÇU")
+	assert_eq(gc.level_up.name_label.text, "ZYFEN")
 
 
 func test_characters_screen_hidden_stops_motion_after_leaving() -> void:

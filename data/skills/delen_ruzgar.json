@@ -1,0 +1,40 @@
+{
+  "id": "delen_ruzgar",
+  "kind": "active",
+  "name": "Delen Rüzgar",
+  "icon": "res://assets/ui/icons/delen-ruzgar.png",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "delen_ruzgar",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "cooldown": 3.2,
+      "damage": 80
+    },
+    {
+      "cooldown": 3.0,
+      "damage": 105
+    },
+    {
+      "cooldown": 2.7,
+      "damage": 135
+    },
+    {
+      "cooldown": 2.4,
+      "damage": 170
+    },
+    {
+      "cooldown": 2.1,
+      "damage": 215
+    }
+  ],
+  "desc": [
+    "En yüksek canlı düşmana her şeyi delen ağır bir rüzgar mızrağı atar.",
+    "Daha sık ve daha sert.",
+    "Daha sık ve daha sert.",
+    "Daha sık ve daha sert.",
+    "Delen rüzgar en üst seviyede."
+  ],
+  "cast_sfx": "delen_ruzgar"
+}

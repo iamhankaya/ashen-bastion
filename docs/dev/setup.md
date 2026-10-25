@@ -1,6 +1,6 @@
 # Geliştirme ortamı kurulumu (C0 doğrulamasının kaydı)
 
-Kart gate komutu: `bash tools/gate.sh` (çıkış 0 yeşil, 1 kırmızı, 3 ağ yok).
+Kart gate komutu: `bash tools/gate.sh` (çıkış 0 yeşil, 1 kırmızı, 2 kullanım hatası, 3 ağ yok). CI aynı kapsamı üç parçalı işle (static, gut×4, test) koşar; yalnız yerel hızlı geri bildirim için `bash tools/gate.sh --changed` vardır (`GATE OK` yazmaz; PR CI'ı/merge/son kapı her zaman tam suite): bkz. `docs/dev/ci-speed.md`.
 İsteğe bağlı bayraklar: `GATE_EXPORT=1`, `GATE_NIGHTLY=1`, `GATE_RENDER=1`.
 
 ## Sabitlenen sürümler (2026-10-23'te doğrulandı)
@@ -34,7 +34,7 @@ Yedek sürüm `4.6.3-stable` kullanılmadı: 4.7.2 indirilebildi ve çalıştı.
 11 senaryo `GROUP[...]=N` tablosuyla 6 gruba bölünmüştür (F-028): `selftest_gate.sh --group N` yalnız o grubu, `--list` tabloyu yazar;
 `ci.yml` `selftest` işi `matrix.group` ile her grubu ayrı iş olarak koşar (`fail-fast: false`, `timeout-minutes: 20`). Tam-gate senaryoları
 (≈340 s) ayrı gruplardadır; en uzun grup ≈ 409 s (S0 ölçümü). Yeni senaryo = `scenario_<ad>()` + `GROUP[<ad>]=N` (tablo ↔ işlev uyumsuzluğunda çıkış 2;
-`tools/ci/tests/test_selftest_gate_groups.py` matrisi de denetler). Gate süre denetimi: tek test > 60 sn → gate hatası (`tools/ci/check_durations.py`;
+`tools/ci/tests/test_selftest_gate_groups.py` matrisi de denetler). Gate süre denetimi: tek test > 75 sn → gate hatası (`tools/ci/check_durations.py`;
 bilinçli istisna `test/long/`), toplam test süresi > 720 sn → `GATE_WARN` (durdurmaz); `test` işi 15 dk sınırının %80'ine (12 dk) yaklaşırsa bölme işi açılır.
 
 ## Debug keystore

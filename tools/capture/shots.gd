@@ -122,7 +122,11 @@ func _run() -> void:
 				for t in [&"curumus_piyade", &"les_kargasi", &"sovalye_hayaleti"]:
 					c.sim.debug_fill(t, 90, 380.0)
 				for sk in [
-					&"yelpaze_atis", &"dinamit", &"seken_mermi", &"son_mermi_patlar", &"sarapnel"
+					&"yelpaze_atis",
+					&"doldurma_sacilmasi",
+					&"seken_mermi",
+					&"son_mermi_patlar",
+					&"sarapnel"
 				]:
 					c.sim.debug_grant(sk, 3)
 				c.sim.max_hp = 1.0e9
@@ -152,7 +156,7 @@ func _run() -> void:
 				c.sim.player_pos = target + Vector2(0, 380)
 				c.sim.debug_fill(&"curumus_piyade", 25, 520.0)
 				c.sim.debug_grant(&"son_mermi_patlar", 4)
-				c.sim.debug_grant(&"dinamit", 3)
+				c.sim.debug_grant(&"doldurma_sacilmasi", 3)
 				c.sim.max_hp = 1.0e9
 				c.sim.hp = 1.0e9
 				advance(150)
@@ -249,7 +253,7 @@ func _run() -> void:
 			"chars", "chars_b", "chars_lock":
 				await _chars(sc)
 			"levelup_b":
-				root.get_node("Settings").character_id = "barutcu"
+				root.get_node("Settings").character_id = "zyfen"
 				await fresh()
 				c.sim.debug_add_xp(30)
 				advance(5, Vector2.ZERO, false)
@@ -321,7 +325,7 @@ func _run() -> void:
 	quit()
 
 
-## v2.0 K2 öz-kontrolü: vitrin (gunslinger odak / barutcu odak / kilitli simülasyonu). Kayıt dosyasına yazmaz.
+## v2.0 K2 öz-kontrolü: vitrin (gunslinger odak / zyfen odak / kilitli simülasyonu). Kayıt dosyasına yazmaz.
 func _chars(sc: String) -> void:
 	await fresh()
 	c.go_menu()
@@ -330,15 +334,15 @@ func _chars(sc: String) -> void:
 	await frames(30)
 	var scr: CharactersScreen = c.v2.characters.screen
 	if sc == "chars_b":
-		scr.set_focus_id(&"barutcu")
+		scr.set_focus_id(&"zyfen")
 		await frames(40)
 	elif sc == "chars_lock":
 		var d := GameData.load_default()
-		d.get_character(&"barutcu").unlock_achievement = &"ilk_kan"
+		d.get_character(&"zyfen").unlock_achievement = &"ilk_kan"
 		scr.open(d, null, &"gunslinger")
-		scr.set_focus_id(&"barutcu")
+		scr.set_focus_id(&"zyfen")
 		await frames(40)
-		d.get_character(&"barutcu").unlock_achievement = &""
+		d.get_character(&"zyfen").unlock_achievement = &""
 	await shot(sc)
 
 

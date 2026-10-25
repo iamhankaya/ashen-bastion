@@ -1,0 +1,41 @@
+{
+  "id": "tufan",
+  "kind": "evolution",
+  "name": "Tufan",
+  "icon": "res://assets/ui/icons/tufan.png",
+  "max_level": 1,
+  "tags": [],
+  "behavior": "tufan",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "cooldown": 9.0,
+      "count": 3,
+      "radius": 190,
+      "damage": 20,
+      "interval": 0.35,
+      "pull": 260,
+      "life": 8.0,
+      "push": 220,
+      "fling": 0,
+      "speed": 110,
+      "target_mode": "cluster",
+      "retarget_every": 1.5,
+      "max_dist": 700,
+      "min_spawn_dist": 300,
+      "keep_out": 250,
+      "boss_mult": 1.0
+    }
+  ],
+  "desc": [
+    "Üç dev hortum uzun süre savaş alanını süpürür."
+  ],
+  "requires": {
+    "active": "hortum",
+    "active_level": 5,
+    "passive": "furtina_gozu",
+    "passive_min_level": 1
+  },
+  "sfx": "evolution_8",
+  "cast_sfx": "tufan"
+}

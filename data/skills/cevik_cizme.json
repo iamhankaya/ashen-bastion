@@ -2,7 +2,7 @@
   "id": "cevik_cizme",
   "kind": "passive",
   "name": "Çevik Çizme",
-  "icon": "placeholder:cevik_cizme",
+  "icon": "res://assets/ui/icons/cevik-cizme.png",
   "max_level": 5,
   "tags": [],
   "levels": [
@@ -28,5 +28,19 @@
     "Hareket hızı +%18.",
     "Hareket hızı +%24.",
     "Hareket hızı +%30."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Rüzgar Adımı",
+      "icon": "res://assets/ui/icons/zyfen/cevik-cizme.png",
+      "desc": [
+        "Hareket hızı +%6.",
+        "Hareket hızı +%12.",
+        "Hareket hızı +%18.",
+        "Hareket hızı +%24.",
+        "Hareket hızı +%30."
+      ]
+    }
+  }
 }

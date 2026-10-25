@@ -1,8 +1,9 @@
 {
   "id": "zincirleme_patlama",
   "kind": "evolution",
+  "pool": "gunslinger",
   "name": "Zincirleme Patlama",
-  "icon": "placeholder:zincirleme_patlama",
+  "icon": "res://assets/ui/icons/zincirleme-patlama.png",
   "max_level": 1,
   "tags": [
     "rhythm"

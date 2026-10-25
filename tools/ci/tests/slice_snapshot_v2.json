@@ -1,0 +1,354 @@
+[
+ {
+  "name": "table_bos_dosya",
+  "text": "",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: (yok)\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_yalniz_yorum",
+  "text": "# K B M\n# yorum\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: (yok)\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_tek_simge",
+  "text": "K\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_uc_simge_bosluk",
+  "text": "K B M\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K B M\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_satir_ayracli",
+  "text": "K\nB\nM\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K B M\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_bosluk_ve_sekme",
+  "text": "  K\t B  \n\n  M\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K B M\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_yorum_arasi",
+  "text": "# basla\nK\n# orta\nB\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K B\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_crlf",
+  "text": "K\r\nB\r\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K B\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_yinelenen_simge",
+  "text": "K K\nK\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_sira_korunur",
+  "text": "M K\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: M K\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "table_kucuk_harf",
+  "text": "k\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: satır 1: geçersiz simge 'k' (geçerli: K B M)\n"
+  }
+ },
+ {
+  "name": "table_esittir_isareti",
+  "text": "K=2\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: satır 1: geçersiz simge 'K=2' (geçerli: K B M)\n"
+  }
+ },
+ {
+  "name": "table_bilinmeyen_simge",
+  "text": "X\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: satır 1: geçersiz simge 'X' (geçerli: K B M)\n"
+  }
+ },
+ {
+  "name": "table_gecerli_arasinda_bilinmeyen",
+  "text": "K X B\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: satır 1: geçersiz simge 'X' (geçerli: K B M)\n"
+  }
+ },
+ {
+  "name": "table_satir_sonu_yorum_gecersiz",
+  "text": "K # bitti\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: satır 1: geçersiz simge '#' (geçerli: K B M)\nSLICE_ERROR: satır 1: geçersiz simge 'bitti' (geçerli: K B M)\n"
+  }
+ },
+ {
+  "name": "table_virgul_gecersiz",
+  "text": "K,B\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: satır 1: geçersiz simge 'K,B' (geçerli: K B M)\n"
+  }
+ },
+ {
+  "name": "table_v11_simgesi_gecersiz",
+  "text": "D1\n",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: satır 1: geçersiz simge 'D1' (geçerli: K B M)\n"
+  }
+ },
+ {
+  "name": "missing_file",
+  "text": null,
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: dilim dosyası yok: <TMP>/slices.txt\n"
+  }
+ },
+ {
+  "name": "unmarked_pending",
+  "text": "# yok\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"2\"><testcase name=\"test_k4_x\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase><testcase name=\"test_b1_y\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: (yok)\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "marked_pending",
+  "text": "K\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"2\"><testcase name=\"test_k4_x\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase><testcase name=\"test_k5_y\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: K: işaretli dilimde 1 pending test: test/acceptance/test_acc_v2_chars.gd::test_k4_x\n"
+  }
+ },
+ {
+  "name": "marked_zero",
+  "text": "K\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"1\"><testcase name=\"test_b1_y\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: K: işaretli dilimde hiç test yok (test_k<N>_… öneki)\n"
+  }
+ },
+ {
+  "name": "marked_real",
+  "text": "K\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"3\"><testcase name=\"test_k4_x\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_k10_y\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_b1_z\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "other_pending",
+  "text": "K\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"2\"><testcase name=\"test_k4_x\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_m2_p\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "sliceless_only",
+  "text": "M\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"3\"><testcase name=\"test_m1_a\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_m9_b\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_m10_c\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: M: işaretli dilimde hiç test yok (test_m<N>_… öneki)\n"
+  }
+ },
+ {
+  "name": "sliceless_mix",
+  "text": "M\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"3\"><testcase name=\"test_m1_a\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_m2_b\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_m10_c\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: M\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "force_pending",
+  "text": "# yok\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"1\"><testcase name=\"test_k4_x\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase></testsuite></testsuites>",
+  "force": "K",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: K: işaretli dilimde 1 pending test: test/acceptance/test_acc_v2_chars.gd::test_k4_x\n"
+  }
+ },
+ {
+  "name": "force_invalid",
+  "text": "# yok\n",
+  "junit": null,
+  "force": "Z",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: V2_SLICES_FORCE: geçersiz simge 'Z'\n"
+  }
+ },
+ {
+  "name": "force_comma",
+  "text": "# yok\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"2\"><testcase name=\"test_k4_x\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_b1_y\" assertions=\"1\" status=\"pending\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"><skipped message=\"pending\">x</skipped></testcase></testsuite></testsuites>",
+  "force": "K,B",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: B: işaretli dilimde 1 pending test: test/acceptance/test_acc_v2_chars.gd::test_b1_y\n"
+  }
+ },
+ {
+  "name": "syntax_error_skips_junit",
+  "text": "Q\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"1\"><testcase name=\"test_k4_x\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: satır 1: geçersiz simge 'Q' (geçerli: K B M)\n"
+  }
+ },
+ {
+  "name": "all_marked_mixed",
+  "text": "K B M\n",
+  "junit": "<testsuites><testsuite name=\"s\" tests=\"4\"><testcase name=\"test_k1_a\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_b2_b\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_m3_c\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase><testcase name=\"test_m11_d\" assertions=\"1\" status=\"pass\" classname=\"test/acceptance/test_acc_v2_chars.gd\" time=\"0.01\"></testcase></testsuite></testsuites>",
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K B M\n",
+   "stderr": ""
+  }
+ },
+ {
+  "name": "junit_missing",
+  "text": "K\n",
+  "junit": "__MISSING__",
+  "force": "",
+  "expect": {
+   "rc": 1,
+   "stdout": "",
+   "stderr": "SLICE_ERROR: JUnit yok: <TMP>/yok.xml\n"
+  }
+ },
+ {
+  "name": "real_repo_file",
+  "text": "__REPO__",
+  "junit": null,
+  "force": "",
+  "expect": {
+   "rc": 0,
+   "stdout": "dilim işaretleri: K M B\n",
+   "stderr": ""
+  }
+ }
+]

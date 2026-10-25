@@ -1,8 +1,9 @@
 {
   "id": "keskin_nisan",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Keskin Nişan",
-  "icon": "placeholder:keskin_nisan",
+  "icon": "res://assets/ui/icons/keskin-nisan.png",
   "max_level": 5,
   "tags": [],
   "behavior": "keskin_nisan",

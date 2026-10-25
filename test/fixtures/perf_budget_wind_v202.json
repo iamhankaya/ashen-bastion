@@ -1,0 +1,10 @@
+{
+  "_comment": "v2.0.2 K (tester): Zyfen rüzgar seti en kötü durum bütçesi, adım başı ortalama iş sayacı tavanı. Senaryo test_acc_v202_wind_perf.gd (seed 161, start_time 900, 300 piyade sürekli tamamlanır, ölümsüz, seviye atlama kapalı, 480 adım, durağan oyuncu). Ölçüm 2026-10-24, entegrasyon d913d47: cells_scanned 479.9, collision_tests 8.86, enemy_updates 301.1, hash_inserts 301.9, hash_queries 20.6, proj_updates 3.94, explosions 0. Tavan = ölçülen x 1,25 (kod değişimi payı; sayaçlar deterministiktir, ölçüm gürültüsü yoktur) yukarı yuvarlanmış. Değişirse gerekçesi raporlanır.",
+  "hash_inserts": 378,
+  "hash_queries": 26,
+  "cells_scanned": 600,
+  "collision_tests": 12,
+  "enemy_updates": 377,
+  "proj_updates": 5,
+  "explosions": 1
+}

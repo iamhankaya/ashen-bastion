@@ -1,8 +1,9 @@
 {
   "id": "cift_tabanca",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Çift Tabanca",
-  "icon": "placeholder:cift_tabanca",
+  "icon": "res://assets/ui/icons/cift-tabanca.png",
   "max_level": 5,
   "tags": [],
   "behavior": "cift_tabanca",

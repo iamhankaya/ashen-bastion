@@ -2,7 +2,7 @@
   "id": "hizli_doldurma",
   "kind": "passive",
   "name": "Hızlı Doldurma",
-  "icon": "placeholder:hizli_doldurma",
+  "icon": "res://assets/ui/icons/hizli-doldurma.png",
   "max_level": 5,
   "tags": [
     "rhythm"
@@ -30,5 +30,19 @@
     "Doldurma süresi -%30.",
     "Doldurma süresi -%40.",
     "Doldurma süresi -%50."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Çabuk Toplayış",
+      "icon": "res://assets/ui/icons/zyfen/hizli-doldurma.png",
+      "desc": [
+        "Rüzgar toplama süresi -%10.",
+        "Rüzgar toplama süresi -%20.",
+        "Rüzgar toplama süresi -%30.",
+        "Rüzgar toplama süresi -%40.",
+        "Rüzgar toplama süresi -%50."
+      ]
+    }
+  }
 }

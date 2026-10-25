@@ -1,8 +1,9 @@
 {
   "id": "seken_mermi",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Seken Mermi",
-  "icon": "placeholder:seken_mermi",
+  "icon": "res://assets/ui/icons/seken-mermi.png",
   "max_level": 5,
   "tags": [
     "rhythm"

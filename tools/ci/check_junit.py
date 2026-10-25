@@ -5,7 +5,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 
-def main(junit: str, mins_path: str) -> int:
+def main(junit: str, mins_path: str, only: set[str] | None = None) -> int:
     root = ET.parse(junit).getroot()
     # pending/skip edilen testler sayılmaz (hiçbir şey doğrulamazlar)
     got = {
@@ -17,6 +17,8 @@ def main(junit: str, mins_path: str) -> int:
         errors.append("JUnit toplam test sayısı sıfır")
     mins = json.load(open(mins_path))
     for name, need in mins.items():
+        if only is not None and name not in only:
+            continue
         have = got.get(name, 0)
         if have < need:
             errors.append(f"{name}: {have} test < asgari {need}")
@@ -26,4 +28,8 @@ def main(junit: str, mins_path: str) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1], sys.argv[2]))
+    # --only DOSYA: asgari sayı yalnız bu dosyada listelenen test dosyaları için denetlenir (hızlı mod; tools/gate.sh --changed)
+    only = None
+    if "--only" in sys.argv:
+        only = set(open(sys.argv[sys.argv.index("--only") + 1], encoding="utf-8").read().split())
+    sys.exit(main(sys.argv[1], sys.argv[2], only))

@@ -20,6 +20,9 @@ const LEVEL_UP_EVOLUTION := &"level_up_evolution"
 
 var sim_bus: SimBus = null
 var data: GameData = null  # evrim `sfx` alanı için (isteğe bağlı)
+## v2.0.2 A4: karakterin olay->ses sözlüğü (CharacterDef.sfx). Boş: eski varsayılan sesler (yalıtılmış kullanım/test).
+var character_sfx: Dictionary = {}
+var sim_fx: SimFx = null
 var track: StringName = &""
 
 var _players: Array[AudioStreamPlayer] = []
@@ -66,10 +69,16 @@ func _exit_tree() -> void:
 	_reset_bus_volume()
 
 
-func bind(bus: SimBus, game_data: GameData = null) -> void:
+func bind(
+	bus: SimBus, game_data: GameData = null, character: CharacterDef = null, fx: SimFx = null
+) -> void:
 	_unbind()
 	sim_bus = bus
 	data = game_data
+	character_sfx = character.sfx if character != null else {}
+	sim_fx = fx
+	if fx != null:
+		fx.skill_sfx.connect(_on_skill_sfx)
 	_lord_alive = false
 	bus.shot_fired.connect(_on_shot)
 	bus.reload_started.connect(_on_reload_started)
@@ -86,6 +95,10 @@ func bind(bus: SimBus, game_data: GameData = null) -> void:
 
 
 func _unbind() -> void:
+	if sim_fx != null and sim_fx.skill_sfx.is_connected(_on_skill_sfx):
+		sim_fx.skill_sfx.disconnect(_on_skill_sfx)
+	sim_fx = null
+	character_sfx = {}
 	if sim_bus == null:
 		return
 	for pair in [
@@ -243,23 +256,23 @@ func _on_killed(type_id: StringName, _pos: Vector2) -> void:
 
 
 func _on_hit(_pos: Vector2) -> void:
-	_play(&"hit")
+	_play(sound_for(&"hit", 0, &"hit"))
 
 
 func _on_shot(gun: int, _origin: Vector2, _dir: Vector2) -> void:
-	_play(&"shot_right" if gun == 0 else &"shot_left")
+	_play(sound_for(&"shot", gun, &"shot_right" if gun == 0 else &"shot_left"))
 
 
 func _on_reload_started(_d: float) -> void:
-	_play(&"reload_spin")
+	_play(sound_for(&"reload_start", 0, &"reload_spin"))
 
 
 func _on_reload_finished() -> void:
-	_play(&"reload_click")
+	_play(sound_for(&"reload_end", 0, &"reload_click"))
 
 
 func _on_dry(_g: int) -> void:
-	_play(&"dry_fire")
+	_play(sound_for(&"dry", 0, &"dry_fire"))
 
 
 func _on_gem(_v: int) -> void:
@@ -299,6 +312,28 @@ func _on_evolution(evo_id: StringName) -> void:
 	_play(evolution_sound(data, evo_id))
 
 
+## Olay için ses kimliği: karakter sözlüğü varsa onun girdisi (girdi yoksa o olay sessiz: karaktere özgü sesler başkasında
+## çalmaz; dizide `index` silah indeksidir), sözlük boşsa eski varsayılan `legacy`.
+func sound_for(event: StringName, index: int, legacy: StringName) -> StringName:
+	if character_sfx.is_empty():
+		return legacy
+	var v: Variant = character_sfx.get(String(event), null)
+	if v is Array and not (v as Array).is_empty():
+		return StringName(str(v[clampi(index, 0, (v as Array).size() - 1)]))
+	if v is String:
+		return StringName(v)
+	return &""
+
+
+## Beceri ateşlendi/doğdu (SimFx.skill_sfx): becerinin `cast_sfx` alanı varsa çalar.
+func _on_skill_sfx(skill_id: StringName) -> void:
+	var sk := data.get_skill(skill_id) if data != null else null
+	if sk != null and sk.cast_sfx != &"":
+		_play(sk.cast_sfx)
+
+
 func _play(id: StringName) -> void:
+	if id == &"":
+		return
 	played.emit(id)
 	Sfx.play(id)

@@ -9,11 +9,9 @@ extends Node2D
 ## Animasyon durumu PlayerAnim'dedir (saf); bu sınıf yalnız uygular. dt = görünüm süresi (duraklatmada 0).
 ## Pivot/omuz/namlu headless'ta görsel doğrulanamaz; kullanıcıda ekran görüntüsüyle doğrulanır.
 
-const ARM_FLIP_BAND := 0.5  # sin(30°): kol aynasında arm_rot işaretinin yumuşak geçiş bandı
 const SWAY_SHADER := "res://assets/shaders/player_sway.gdshader"
 const RIM_SHADER := "res://assets/shaders/rim_sprite.gdshader"
 const DEFAULT_HEIGHT := 112.0
-const FAR_ARM_TINT := Color(0.8, 0.8, 0.8, 1.0)
 const RING_RADIUS := 26.0
 const PAD := 12  # rim için doku etrafı saydam dolgu (doku pikseli)
 const RIM_COLOR := Color(0.80, 0.72, 0.56)
@@ -25,9 +23,12 @@ const FLASH_STEP := 1.0 / 30.0  # 3 karelik titreşim
 ## kalır, eğim omzu ayaktan değil belden kaydırır (v2.0.1: ≈17 px → ≤6 px).
 const HIP_FRAC := 0.65
 
-var far_arm: Sprite2D
+var far_arm: Sprite2D  # arm_rig.far_arm (kol bloğu ArmRig'de; adlar geriye dönük)
 var body: MeshInstance2D
 var near_arm: Sprite2D
+var arm_rig: ArmRig = ArmRig.new()
+## Kolsuz rig (Zyfen): atış/toplama/yürürken savuruş kare seçimi; kare modunda frame_a/b'yi geçersiz kılar.
+var cast_anim: CastAnim = CastAnim.new()
 var rig_node: Node2D
 var reload_ring: ReloadRing
 var shadow: Shadow
@@ -40,14 +41,12 @@ var _sim: GameSim = null
 var _rig: Dictionary = {}
 var _height: float = DEFAULT_HEIGHT
 var _aim_dt: float = 0.0
-var _arm_len: float = 70.0
 var _facing_left: bool = false
 var _last_pos: Vector2 = Vector2.ZERO
 var _last_steps: int = 0
 var _vel: Vector2 = Vector2.ZERO
 var _sway: float = 0.0
 var _pad_world: Vector2 = Vector2.ZERO
-var _arm_orig: Vector2 = Vector2(120, 48)
 var _real: bool = false
 var _hit_dir: Vector2 = Vector2.ZERO
 var _ring_pulse: float = 0.0
@@ -57,6 +56,7 @@ var _flicker: float = 0.0
 var _strip_ready: bool = false
 ## Kare modunda gövde kutusu = tek hücre (dünya px, dolgu hariç); duruş görseliyle aynı ölçek, ayak = alt kenar.
 var _cell_world: Vector2 = Vector2.ZERO
+var _was_reloading: bool = false
 var _rng := RandomNumberGenerator.new()
 
 
@@ -186,6 +186,7 @@ class MuzzleFlash:
 	var left := PackedFloat32Array([0.0, 0.0])
 	var rot := PackedFloat32Array([0.0, 0.0])
 	var scl := PackedFloat32Array([1.0, 1.0])
+	var cool: bool = false  # kolsuz rig: avuçta sıcak alev yerine soğuk rüzgar parıltısı
 
 	func _draw() -> void:
 		for g in 2:
@@ -219,12 +220,11 @@ func _init() -> void:
 	aura.z_index = -1
 	rig_node = Node2D.new()
 	rig_node.name = "Rig"
-	far_arm = _make_arm("FarArm", -1)
-	far_arm.modulate = FAR_ARM_TINT
+	far_arm = arm_rig.far_arm
 	body = MeshInstance2D.new()
 	body.name = "Body"
 	body.texture = PlaceholderArt.body_texture()
-	near_arm = _make_arm("NearArm", 1)
+	near_arm = arm_rig.near_arm
 	reload_ring = ReloadRing.new()
 	reload_ring.name = "ReloadRing"
 	reload_ring.z_index = 3
@@ -304,21 +304,22 @@ static func arm_flip(rotation_rad: float) -> float:
 
 ## Görünüm omzu (dünya): kolun dönüş merkezi, Rig dönüşümü dahil. Eğimle sim omzundan birkaç px ayrışır.
 func shoulder_view(gun: int) -> Vector2:
-	return position + rig_node.transform * _arm_of(gun).position
+	if PlayerRig.is_armless(_rig):  # Rig pivotu ayak: avuç noktası ayağa göre yerelleştirilir
+		var cp := PlayerRig.cast_point_world(Vector2.ZERO, _facing_left, _rig)
+		return position + rig_node.transform * (cp - Vector2(0.0, body_size(_rig).y * 0.5))
+	return position + rig_node.transform * arm_rig.arm_of(gun).position
 
 
 ## Görünüm namlusu (dünya): kol dönüşü/ölçeği/ayna dahil; PlayerRig.muzzle_world ile aynı kol geometrisi.
 func muzzle_view(gun: int) -> Vector2:
+	if PlayerRig.is_armless(_rig):  # kolsuz: namlu yok, atış noktası = avuç (cast_point)
+		return shoulder_view(gun)
 	var m: Array = _rig.get("muzzle", [0.98, 0.37])
 	var pv: Array = _rig.get("arm_pivot", [0.11, 0.47])
 	var local := Vector2(
-		(float(m[0]) - float(pv[0])) * _arm_orig.x, (float(m[1]) - float(pv[1])) * _arm_orig.y
+		(float(m[0]) - float(pv[0])) * arm_rig.orig.x, (float(m[1]) - float(pv[1])) * arm_rig.orig.y
 	)
-	return position + rig_node.transform * (_arm_of(gun).transform * local)
-
-
-func _arm_of(gun: int) -> Sprite2D:
-	return near_arm if gun == 0 else far_arm
+	return position + rig_node.transform * (arm_rig.arm_of(gun).transform * local)
 
 
 ## Her kare: sim'i oku, animasyonu ilerlet, rig'i yerleştir. dt <= 0 (duraklatma) animasyonu ilerletmez.
@@ -344,7 +345,9 @@ func update_view(dt: float) -> void:
 		_vel = moved / (float(steps) * GameSim.STEP)
 	elif moved != Vector2.ZERO and dt > 0.0:
 		_vel = moved / dt  # sim dışı konum değişimi (ışınlanma/test): doğrudan
+	_update_cast(dt, mag)
 	anim.update(dt, _vel, _facing_left, rp)
+	_cast_frame_override()
 	_aim_dt = dt
 	_apply_pose(dt, moved)
 	_update_ring(dt, mag, rp)
@@ -354,6 +357,30 @@ func update_view(dt: float) -> void:
 	aura.time += dt
 	if aura.mask != 0 or aura.level_ring >= 0.0 or dt > 0.0:
 		aura.queue_redraw()
+
+
+## Kolsuz rig: doldurma kenarlarını yoklar ve CastAnim'i ilerletir (yürüme saati klip boyunca dondurulur).
+func _update_cast(dt: float, mag: Magazine) -> void:
+	if not _strip_ready or not PlayerRig.is_armless(_rig):
+		return
+	if mag.reloading and not _was_reloading:
+		cast_anim.on_reload(mag.reload_total)
+	elif _was_reloading and not mag.reloading:
+		cast_anim.on_reload_end()
+	_was_reloading = mag.reloading
+	cast_anim.update(dt, anim.mode == PlayerAnim.Mode.WALK)
+	anim.hold_walk = cast_anim.holds_walk()
+
+
+## cast/gather/walk_cast karesi varsa gövde hücresini onunla değiştirir (çapraz solma yok); ölüm/duruş geçişi dokunulmaz.
+func _cast_frame_override() -> void:
+	if not _strip_ready or not PlayerRig.is_armless(_rig) or anim.mode == PlayerAnim.Mode.DEAD:
+		return
+	var f := cast_anim.frame()
+	if f >= 0:
+		anim.frame_a = f
+		anim.frame_b = f
+		anim.frame_mix = 0.0
 
 
 ## Etki aurası maskesi: süre sayaçları doğrudan okunur (BuffManager.active D2 gövdesidir).
@@ -413,10 +440,10 @@ func _apply_pose(dt: float, moved: Vector2) -> void:
 		mat.set_shader_parameter("frame_a", float(anim.frame_a))
 		mat.set_shader_parameter("frame_b", float(anim.frame_b))
 		mat.set_shader_parameter("frame_mix", anim.frame_mix)
-	# kollar
-	var aims := _aims()
-	_place_arm(near_arm, 0, aims[0])
-	_place_arm(far_arm, 1, aims[1])
+	if arm_rig.enabled():  # kollu rig: kollar hedefe döner (kolsuzda kol düğümü yok)
+		var aims := _aims()
+		_place_arm(near_arm, 0, aims[0])
+		_place_arm(far_arm, 1, aims[1])
 
 
 func _update_ring(dt: float, mag: Magazine, rp: float) -> void:
@@ -469,22 +496,20 @@ func _aims() -> PackedFloat32Array:
 	return anim.aim_cur
 
 
-## Kol Rig'in çocuğudur: dünya açısını korumak için dönüşü Rig dönüşünden çıkarır; omuz Rig yerelinde görünüm omzudur.
-## Kare modunda omuz = duruş omzu + gösterilen karenin sapması (çapraz solmada iki kare harmanlanır) ve görünüm omzu sim
-## omzundan kenetlenmez: kol pivotu hep gövdenin omzundadır (v2.0.1; eğimin kaydırması bel pivotuyla küçültülür).
+## Kol Rig'in çocuğudur (yerleşim ArmRig'de): omuz Rig yerelinde görünüm omzudur. Kare modunda omuz = duruş omzu +
+## gösterilen karenin sapması (çapraz solmada iki kare harmanlanır); kol pivotu hep gövdenin omzundadır.
 func _place_arm(arm: Sprite2D, gun: int, aim: float) -> void:
-	var flip := arm_flip(aim)
-	var kx := _arm_len / maxf(_arm_orig.x, 1.0)
-	var ky := _arm_len * PlayerRig.ARM_ASPECT / maxf(_arm_orig.y, 1.0)
-	var local_aim := aim - rig_node.rotation
-	# arm_rot "yukarı" işareti aim dikeyi geçerken flip ile 2×arm_rot sıçrardı: ±30° bandında yumuşak geçiş
-	var soft := clampf(cos(aim) / ARM_FLIP_BAND, -1.0, 1.0)
-	arm.rotation = local_aim - anim.arm_rot[gun] * soft
-	arm.scale = Vector2(kx * anim.arm_len[gun], ky * flip)
-	var sh := _shoulder_now(gun)
-	var half_h := body_size(_rig).y * 0.5
-	var in_rig := Vector2(sh.x, (sh.y - half_h) * anim.sy)
-	arm.position = in_rig - Vector2.from_angle(local_aim) * anim.arm_back[gun]
+	arm_rig.place(
+		arm,
+		aim,
+		rig_node.rotation,
+		_shoulder_now(gun),
+		body_size(_rig).y * 0.5,
+		anim.sy,
+		anim.arm_rot[gun],
+		anim.arm_back[gun],
+		anim.arm_len[gun]
+	)
 
 
 ## Gösterilen karenin omzu (Player yerel). Kare modu dışında duruş omzu.
@@ -507,19 +532,27 @@ func _anim_rig(rig: Dictionary) -> Dictionary:
 
 
 ## rig.walk geçerliyse hücre hücre dolgulu şerit dokusu; değilse null (prosedürel yedek). Geçerlilik: frames 2..12, şerit
-## dosyası var, genişlik (frames+1) hücreye ve `cell` boyutuna tam uyuyor.
+## dosyası var, genişlik hücre sayısına ve `cell` boyutuna tam uyuyor. Hücre sayısı: kollu frames+1, kolsuz RigFrames
+## (yürüme + duruş + cast + gather + walk_cast); kolsuzda yürüme kareleri 0 olabilir (şerit yine geçerli).
 func _load_strip(rig: Dictionary) -> Texture2D:
 	var w: Variant = rig.get("walk", null)
 	if not (w is Dictionary):
 		return null
 	var n := int(w.get("frames", 0))
 	var cell: Variant = w.get("cell", null)
-	if n < 2 or n > DataV11.WALK_MAX_FRAMES or not (cell is Array) or cell.size() < 2:
+	var armless := PlayerRig.is_armless(rig)
+	var cells := RigFrames.total_cells(rig) if armless else n + 1
+	if armless:
+		if cells < 2:
+			return null
+	elif n < 2:
 		return null
-	var tex := ArtLoader.padded_cells(str(w.get("strip", "")), n + 1, PAD)
+	if n > DataV11.WALK_MAX_FRAMES or not (cell is Array) or cell.size() < 2:
+		return null
+	var tex := ArtLoader.padded_cells(str(w.get("strip", "")), cells, PAD)
 	if tex == null:
 		return null
-	var want := Vector2((n + 1) * (int(cell[0]) + 2 * PAD), int(cell[1]) + 2 * PAD)
+	var want := Vector2(cells * (int(cell[0]) + 2 * PAD), int(cell[1]) + 2 * PAD)
 	if tex.get_size() != want or int(cell[0]) < 1 or int(cell[1]) < 1:
 		push_warning("PlayerView: yürüme şeridi 'cell' ile uyuşmuyor: %s" % w.get("strip", ""))
 		return null
@@ -529,13 +562,13 @@ func _load_strip(rig: Dictionary) -> Texture2D:
 func _apply_rig(rig: Dictionary) -> void:
 	_rig = rig
 	_height = float(rig.get("display_height", DEFAULT_HEIGHT))
-	_arm_len = float(rig.get("arm_scale", 0.62)) * _height
+	var armless := PlayerRig.is_armless(rig)
 	var stand := body_size(rig)
 	var size := stand
 	# Görseller: gerçek dosya varsa dolgulu (rim için) doku, yoksa geçici şekil.
 	var body_tex := ArtLoader.padded(str(rig.get("body", "")), PAD)
 	var arm_tex := ArtLoader.padded(str(rig.get("arm", "")), PAD)
-	_real = body_tex != null and arm_tex != null
+	_real = body_tex != null and (arm_tex != null or armless)
 	var strip_tex: Texture2D = _load_strip(rig) if _real else null
 	_strip_ready = strip_tex != null
 	_cell_world = Vector2.ZERO
@@ -544,7 +577,7 @@ func _apply_rig(rig: Dictionary) -> void:
 	_pad_world = Vector2.ZERO
 	if _strip_ready:
 		var w: Dictionary = rig["walk"]
-		cells = int(w["frames"]) + 1
+		cells = RigFrames.total_cells(rig) if armless else int(w["frames"]) + 1
 		var cell_px := Vector2(float(w["cell"][0]), float(w["cell"][1]))
 		var stand_px := body_tex.get_size() - Vector2(PAD, PAD) * 2.0  # duruş görseli: dünya ölçeği
 		var k := size.y / maxf(stand_px.y, 1.0)
@@ -553,22 +586,17 @@ func _apply_rig(rig: Dictionary) -> void:
 		body.texture = strip_tex
 		pad_frac = Vector2(PAD, PAD) / (cell_px + Vector2(PAD, PAD) * 2.0)
 		size = _cell_world
-		_arm_orig = arm_tex.get_size() - Vector2(PAD, PAD) * 2.0
-		for arm in [near_arm, far_arm]:
-			arm.texture = arm_tex
 	elif _real:
 		body.texture = body_tex
 		var ts := body_tex.get_size()
 		pad_frac = Vector2(PAD, PAD) / ts
 		_pad_world = Vector2(PAD, PAD) / (ts - Vector2(PAD, PAD) * 2.0) * size
-		for arm in [near_arm, far_arm]:
-			arm.texture = arm_tex
-		_arm_orig = arm_tex.get_size() - Vector2(PAD, PAD) * 2.0
 	else:
 		body.texture = PlaceholderArt.body_texture()
-		for arm in [near_arm, far_arm]:
-			arm.texture = PlaceholderArt.arm_texture()
-		_arm_orig = PlaceholderArt.arm_texture().get_size()
+	arm_rig.apply(rig, _height, arm_tex, _real and not armless, PAD)
+	muzzle_flash.cool = armless
+	cast_anim.configure(rig)
+	_was_reloading = false
 	body.mesh = PlaceholderArt.grid_mesh(size + _pad_world * 2.0, 16, 24, -_pad_world)
 	if ResourceLoader.exists(SWAY_SHADER):
 		var mat := ShaderMaterial.new()
@@ -591,26 +619,6 @@ func _apply_rig(rig: Dictionary) -> void:
 		mat.set_shader_parameter("rim_px", clampf(RIM_SCREEN_PX / texel_world, 1.0, 12.0))
 		mat.set_shader_parameter("rim_color", Vector3(RIM_COLOR.r, RIM_COLOR.g, RIM_COLOR.b))
 		body.material = mat
-	var pivot := Vector2(0.11, 0.47)
-	var pv: Variant = rig.get("arm_pivot", [])
-	if pv is Array and pv.size() >= 2:
-		pivot = Vector2(float(pv[0]), float(pv[1]))
-	var pad_px := Vector2(PAD, PAD) if _real else Vector2.ZERO
-	for arm in [near_arm, far_arm]:
-		arm.offset = -(pad_px + pivot * _arm_orig)
-		if _real and ResourceLoader.exists(RIM_SHADER):
-			var am := ShaderMaterial.new()
-			am.shader = load(RIM_SHADER)
-			am.set_shader_parameter("sprite_tex", arm_tex)
-			var kx := _arm_len / maxf(_arm_orig.x, 1.0)
-			am.set_shader_parameter("rim_px", clampf(RIM_SCREEN_PX / kx, 1.0, 12.0))
-			am.set_shader_parameter("rim_color", Vector3(RIM_COLOR.r, RIM_COLOR.g, RIM_COLOR.b))
-			var tint := FAR_ARM_TINT if arm == far_arm else Color.WHITE
-			am.set_shader_parameter("tint", Vector4(tint.r, tint.g, tint.b, 1.0))
-			arm.material = am
-			arm.modulate = Color.WHITE
-		elif arm == far_arm:
-			arm.modulate = FAR_ARM_TINT
 	shadow.size = Vector2(stand.x * 0.9, stand.x * 0.28)
 	shadow.position = Vector2(0, stand.y * 0.5)
 	aura.position = Vector2(0, stand.y * 0.5)
@@ -620,23 +628,18 @@ func _apply_rig(rig: Dictionary) -> void:
 	reload_ring.radius = RING_RADIUS
 
 
-func _make_arm(node_name: String, z: int) -> Sprite2D:
-	var s := Sprite2D.new()
-	s.name = node_name
-	s.texture = PlaceholderArt.arm_texture()
-	s.centered = false
-	s.z_index = z
-	return s
-
-
 # --- sim olayları -----------------------------------------------------------------------------
 
 
-func _on_shot_fired(gun: int, _origin: Vector2, _dir: Vector2) -> void:
+func _on_shot_fired(gun: int, origin: Vector2, _dir: Vector2) -> void:
 	if gun < 0 or gun > 1 or _sim == null:
 		return
-	anim.on_shot(gun)
-	muzzle_flash.points[gun] = muzzle_view(gun) - position
+	if PlayerRig.is_armless(_rig):  # kolsuz: geri tepme yok; atış avuçtan (sim'in çıkış noktası), kare klibi başlar
+		cast_anim.on_shot()
+		muzzle_flash.points[gun] = origin - position
+	else:
+		anim.on_shot(gun)
+		muzzle_flash.points[gun] = muzzle_view(gun) - position
 	muzzle_flash.left[gun] = Motion.sec(Motion.MUZZLE_FLASH)
 	muzzle_flash.rot[gun] = deg_to_rad(_rng.randf_range(-8.0, 8.0))
 	muzzle_flash.scl[gun] = _rng.randf_range(0.8, 1.2)

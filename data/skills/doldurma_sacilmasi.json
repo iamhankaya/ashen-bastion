@@ -1,8 +1,9 @@
 {
   "id": "doldurma_sacilmasi",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Doldurma Saçılması",
-  "icon": "placeholder:doldurma_sacilmasi",
+  "icon": "res://assets/ui/icons/doldurma-sacilmasi.png",
   "max_level": 5,
   "tags": [
     "rhythm"

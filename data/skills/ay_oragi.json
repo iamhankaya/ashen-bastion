@@ -1,0 +1,32 @@
+{
+  "id": "ay_oragi",
+  "kind": "evolution",
+  "name": "Ay Orağı",
+  "icon": "res://assets/ui/icons/ay-oragi.png",
+  "max_level": 1,
+  "tags": [
+    "rhythm"
+  ],
+  "behavior": "ay_oragi",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "every_n": 2,
+      "damage_mult": 2.0,
+      "radius": 40,
+      "speed": 1300,
+      "range": 1100
+    }
+  ],
+  "desc": [
+    "Her 2. kesik, bölünmeyen dev bir hilale dönüşür."
+  ],
+  "requires": {
+    "active": "bolunen_kesik",
+    "active_level": 5,
+    "passive": "agir_kursun",
+    "passive_min_level": 1
+  },
+  "sfx": "evolution_5",
+  "cast_sfx": "ay_oragi"
+}

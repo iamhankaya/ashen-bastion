@@ -1,0 +1,337 @@
+{
+  "stages": {
+    "s1": {
+      "barutcu": {
+        "11": {
+          "elites": 0.0,
+          "hash": 4142216615.0,
+          "kills": 112.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 7200.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 152249796.0,
+          "kills": 109.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7200.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 2924170550.0,
+          "kills": 107.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 7200.0
+        }
+      },
+      "gunslinger": {
+        "11": {
+          "elites": 0.0,
+          "hash": 3836495480.0,
+          "kills": 134.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 8110.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 469968811.0,
+          "kills": 122.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7479.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 672840567.0,
+          "kills": 118.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 7543.0
+        }
+      }
+    },
+    "u1a": {
+      "gunslinger": {
+        "11": {
+          "elites": 0.0,
+          "hash": 3836495480.0,
+          "kills": 134.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 8110.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 469968811.0,
+          "kills": 122.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7479.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 672840567.0,
+          "kills": 118.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 7543.0
+        }
+      }
+    },
+    "u1b": {
+      "gunslinger": {
+        "11": {
+          "elites": 0.0,
+          "hash": 500033848.0,
+          "kills": 125.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 7581.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 3935248278.0,
+          "kills": 198.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 10488.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 722930297.0,
+          "kills": 137.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 8354.0
+        }
+      },
+      "zyfen": {
+        "11": {
+          "elites": 0.0,
+          "hash": 3274793562.0,
+          "kills": 113.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 7354.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 2222889812.0,
+          "kills": 108.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7214.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 2113660307.0,
+          "kills": 109.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 7200.0
+        }
+      }
+    },
+    "u2": {
+      "gunslinger": {
+        "11": {
+          "elites": 0.0,
+          "hash": 500033848.0,
+          "kills": 125.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 7581.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 3935248278.0,
+          "kills": 198.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 10488.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 722930297.0,
+          "kills": 137.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 8354.0
+        }
+      },
+      "zyfen": {
+        "11": {
+          "elites": 0.0,
+          "hash": 1154193265.0,
+          "kills": 118.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 7487.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 1836553061.0,
+          "kills": 119.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7468.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 4118357919.0,
+          "kills": 134.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 8322.0
+        }
+      }
+    },
+    "v201": {
+      "barutcu": {
+        "11": {
+          "elites": 0.0,
+          "hash": 4142216615.0,
+          "kills": 112.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 7200.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 152249796.0,
+          "kills": 109.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7200.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 2924170550.0,
+          "kills": 107.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 7200.0
+        }
+      },
+      "gunslinger": {
+        "11": {
+          "elites": 0.0,
+          "hash": 3836495480.0,
+          "kills": 134.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "7665415464325916712",
+          "state": 0.0,
+          "steps": 8110.0
+        },
+        "23": {
+          "elites": 0.0,
+          "hash": 469968811.0,
+          "kills": 122.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "-3646173203522872587",
+          "state": 0.0,
+          "steps": 7479.0
+        },
+        "37": {
+          "elites": 0.0,
+          "hash": 672840567.0,
+          "kills": 118.0,
+          "level_ups": 4.0,
+          "pickups": 0.0,
+          "rng_combat": "5910330884281979355",
+          "state": 0.0,
+          "steps": 7543.0
+        }
+      }
+    },
+    "zyfen_u3": {
+      "zyfen": {
+        "11": {
+          "elites": 0,
+          "hash": 2525077236,
+          "kills": 140,
+          "level_ups": 4,
+          "pickups": 1,
+          "rng_combat": "1459649969612456486",
+          "state": 0,
+          "steps": 8280
+        },
+        "23": {
+          "elites": 0,
+          "hash": 3203541488,
+          "kills": 372,
+          "level_ups": 4,
+          "pickups": 0,
+          "rng_combat": "-6156009592058404567",
+          "state": 0,
+          "steps": 16766
+        },
+        "37": {
+          "elites": 0,
+          "hash": 1515438261,
+          "kills": 332,
+          "level_ups": 4,
+          "pickups": 0,
+          "rng_combat": "704381363495311777",
+          "state": 0,
+          "steps": 15459
+        }
+      }
+    }
+  },
+  "version": 1.0
+}

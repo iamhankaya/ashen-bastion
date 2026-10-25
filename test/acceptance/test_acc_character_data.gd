@@ -19,6 +19,10 @@ func _hero_data() -> GameData:
 	hero["pickup_radius"] = 140
 	hero["range"] = 650
 	SimKit.write_json(dir.path_join("characters/%s.json" % HERO), hero)
+	# v2.0.2: başlangıç becerisi karakterin ya da ortak havuzdan olmalı; geçici kopyada ortak yapılır (gerçek veri değişmez).
+	var tabanca: Dictionary = SimKit.read_json(dir.path_join("skills/cift_tabanca.json"))
+	tabanca["pool"] = "common"
+	SimKit.write_json(dir.path_join("skills/cift_tabanca.json"), tabanca)
 	return GameData.load_dir(dir)
 
 

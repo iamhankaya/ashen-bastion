@@ -1,0 +1,39 @@
+{
+  "id": "ruzgar_kesigi",
+  "kind": "active",
+  "name": "Rüzgar Kesiği",
+  "icon": "res://assets/ui/icons/ruzgar-kesigi.png",
+  "max_level": 5,
+  "tags": [],
+  "behavior": "ruzgar_kesigi",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "damage": 12,
+      "interval": 0.36
+    },
+    {
+      "damage": 14,
+      "interval": 0.34
+    },
+    {
+      "damage": 17,
+      "interval": 0.32
+    },
+    {
+      "damage": 19,
+      "interval": 0.3
+    },
+    {
+      "damage": 22,
+      "interval": 0.28
+    }
+  ],
+  "desc": [
+    "Her atışta düşmanları delip geçen bir rüzgar kesiği savurur.",
+    "Kesik daha sert vurur.",
+    "Kesik daha sert vurur, el daha çevik.",
+    "Kesik daha sert vurur, el daha çevik.",
+    "Rüzgar kesiği en üst seviyede."
+  ]
+}

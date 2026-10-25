@@ -1,8 +1,9 @@
 {
   "id": "barut_kesesi",
   "kind": "passive",
+  "pool": "gunslinger",
   "name": "Barut Kesesi",
-  "icon": "placeholder:barut_kesesi",
+  "icon": "res://assets/ui/icons/barut-kesesi.png",
   "max_level": 5,
   "tags": [],
   "levels": [

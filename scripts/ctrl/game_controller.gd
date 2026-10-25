@@ -345,7 +345,7 @@ func _bind(new_sim: GameSim) -> void:
 	player_view.bind(sim)
 	hud.bind(sim)
 	if sim != null:
-		audio.bind(sim.bus, sim.data)
+		audio.bind(sim.bus, sim.data, sim.character, sim.fx)
 		sim.bus.run_ended.connect(_on_run_ended)
 		sim.bus.player_damaged.connect(_on_player_damaged)
 	_v11_bind(sim)
@@ -451,7 +451,9 @@ func _show_result() -> void:
 		stats = {"time": sim.time, "level": sim.level, "kills": sim.kills, "evolutions": []}
 		stats.merge(V11State.end_stats(sim))
 		_run_won = sim.state == GameSim.State.WON
-	var combos := UiKit.combo_rows(stats.get("evolutions", []), sim.data)
+	var combos := UiKit.combo_rows(
+		stats.get("evolutions", []), sim.data, sim.character.id if sim.character != null else &""
+	)
 	var sub := ""
 	if _run_won:
 		sub = WON_SUB
@@ -796,6 +798,8 @@ func _v11_on_screen(next: int) -> void:
 
 ## Boş kovan (P8): silindir hizasından, ateş yönünün tersine yatay fırlar.
 func _on_shot_for_shell(gun: int, origin: Vector2, dir: Vector2) -> void:
+	if PlayerRig.is_armless(sim.character.rig):  # kolsuz karakterde kovan yok (v2.0.2)
+		return
 	var port := (origin + player_view.shoulder_view(gun)) * 0.5
 	fx_renderer.add_shell(port, Vector2(-signf(dir.x), 0.0))
 

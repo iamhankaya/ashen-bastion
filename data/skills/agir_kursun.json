@@ -2,7 +2,7 @@
   "id": "agir_kursun",
   "kind": "passive",
   "name": "Ağır Kurşun",
-  "icon": "placeholder:agir_kursun",
+  "icon": "res://assets/ui/icons/agir-kursun.png",
   "max_level": 5,
   "tags": [],
   "levels": [
@@ -28,5 +28,19 @@
     "Mermi hasarı +%30.",
     "Mermi hasarı +%40.",
     "Mermi hasarı +%50."
-  ]
+  ],
+  "pool": "common",
+  "variants": {
+    "zyfen": {
+      "name": "Bilenmiş Rüzgar",
+      "icon": "res://assets/ui/icons/zyfen/agir-kursun.png",
+      "desc": [
+        "Kesik hasarı +%10.",
+        "Kesik hasarı +%20.",
+        "Kesik hasarı +%30.",
+        "Kesik hasarı +%40.",
+        "Kesik hasarı +%50."
+      ]
+    }
+  }
 }

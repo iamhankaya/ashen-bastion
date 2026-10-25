@@ -1,0 +1,38 @@
+{
+  "id": "furtina_gozu",
+  "kind": "passive",
+  "name": "Fırtına Gözü",
+  "icon": "res://assets/ui/icons/furtina-gozu.png",
+  "max_level": 5,
+  "tags": [],
+  "pool": "zyfen",
+  "levels": [
+    {
+      "area_mult": 0.12,
+      "wind_time_mult": 0.1
+    },
+    {
+      "area_mult": 0.24,
+      "wind_time_mult": 0.2
+    },
+    {
+      "area_mult": 0.36,
+      "wind_time_mult": 0.3
+    },
+    {
+      "area_mult": 0.48,
+      "wind_time_mult": 0.4
+    },
+    {
+      "area_mult": 0.6,
+      "wind_time_mult": 0.5
+    }
+  ],
+  "desc": [
+    "Rüzgar alanları +%12 geniş, +%10 uzun sürer.",
+    "Alan +%24, süre +%20.",
+    "Alan +%36, süre +%30.",
+    "Alan +%48, süre +%40.",
+    "Alan +%60, süre +%50."
+  ]
+}

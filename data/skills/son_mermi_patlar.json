@@ -1,8 +1,9 @@
 {
   "id": "son_mermi_patlar",
   "kind": "active",
+  "pool": "gunslinger",
   "name": "Son Mermi Patlar",
-  "icon": "placeholder:son_mermi_patlar",
+  "icon": "res://assets/ui/icons/son-mermi-patlar.png",
   "max_level": 5,
   "tags": [
     "rhythm"

@@ -8,7 +8,7 @@ for p in glob.glob(sys.argv[1] + "/*.jsonl"):
 print("| politika | karakter | n | süre medyan | süre ort. | hp 0-5dk | hp 10-20dk | 5dk öldürme | 5dk seviye | 20dk'ya ulaşan |")
 print("|---|---|---|---|---|---|---|---|---|---|")
 for pol in ("strong", "kite", "greedy", "idle"):
-    for ch in ("gunslinger", "barutcu", "hepsi"):
+    for ch in ("gunslinger", "zyfen", "hepsi"):
         r = [x for x in rows if x["policy"] == pol and (ch == "hepsi" or x["character"] == ch)]
         if not r:
             continue

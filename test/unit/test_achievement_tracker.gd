@@ -167,7 +167,7 @@ func test_b2_total_chars5() -> void:
 	var tr_b := _make(&"gunslinger")
 	tr_b.finish(false, {"time": 400})
 	assert_false(_store.is_unlocked(&"cifte_yol"), "aynı karakter iki kez sayılmaz")
-	var tr_c := _make(&"barutcu")
+	var tr_c := _make(&"zyfen")
 	tr_c.finish(false, {"time": 400})
 	assert_true(_store.is_unlocked(&"cifte_yol"))
 	assert_eq(_opened.count(&"cifte_yol"), 1)

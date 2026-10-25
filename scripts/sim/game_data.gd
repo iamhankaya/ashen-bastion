@@ -21,6 +21,7 @@ const PASSIVE_KEYS: PackedStringArray = [
 	"regen",
 	"pickup_mult",
 	"range_mult",
+	"wind_time_mult",
 ]
 ## Çarpan türü pasifler x saklar, etkin değer 1 + x. Diğerleri toplamdır.
 const PASSIVE_ADDITIVE_KEYS: PackedStringArray = ["mag_add", "max_hp_add", "regen"]
@@ -36,6 +37,7 @@ const PASSIVE_BOUNDS := {
 	"regen": [0.0, 50.0],
 	"pickup_mult": [-0.9, 5.0],
 	"range_mult": [-0.9, 5.0],
+	"wind_time_mult": [-0.9, 5.0],
 }
 ## Aktif seviye anahtarları: değer seviyeyle azalmamalı / artmamalı.
 const LEVEL_KEYS_NONDECREASING: PackedStringArray = [
@@ -71,6 +73,7 @@ const CHARACTER_KEYS: PackedStringArray = [
 	"placeholder",
 	"display_upper",
 	"order",
+	"sfx",
 ]
 const RIG_KEYS: PackedStringArray = [
 	"body",
@@ -303,6 +306,7 @@ func validate(registry: Dictionary = {}, complete: bool = false) -> PackedString
 	WavesValidator.run(self, out)
 	DataV11.validate(self, out)
 	DataV2.validate(self, out, complete)
+	DataV202Pool.validate(self, out)
 	if not _ruins_failed and _raw_ruins != null:
 		RuinsValidator.run(self, _raw_ruins, out)
 	if complete:
@@ -551,7 +555,7 @@ func _validate_skills(out: PackedStringArray, reg: Dictionary) -> void:
 
 
 func _validate_skill(out: PackedStringArray, file: String, d: Dictionary, reg: Dictionary) -> void:
-	_unknown_keys(out, file, d, SKILL_KEYS)
+	_unknown_keys(out, file, d, SKILL_KEYS + DataV202Pool.KEYS)
 	_str(out, file, d, "name")
 	_check_asset(out, file, d, "icon")
 	if not d.has("kind") or not (d["kind"] is String) or not SKILL_KINDS.has(d["kind"]):
@@ -650,7 +654,7 @@ func _validate_levels_shape(
 		var keys: Array = (row as Dictionary).keys()
 		keys.sort()
 		for k in keys:
-			if not _is_num(row[k]):
+			if not (_is_num(row[k]) or SkillDef.is_text_level_key(k, row[k])):
 				_err(out, "bad_type", file, "levels[%d].%s sayı olmalı" % [i, k])
 				return false
 		if i == 0:
@@ -872,7 +876,7 @@ func _validate_character(out: PackedStringArray, file: String, d: Dictionary) ->
 	elif not (d["rig"] is Dictionary):
 		_err(out, "bad_type", file, "'rig' nesne olmalı")
 	else:
-		_validate_rig(out, file + " rig", d["rig"])
+		DataV202Rig.validate(self, out, file + " rig", d["rig"])
 
 
 func _validate_rig(out: PackedStringArray, ctx: String, r: Dictionary) -> void:

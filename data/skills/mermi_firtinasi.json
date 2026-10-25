@@ -1,8 +1,9 @@
 {
   "id": "mermi_firtinasi",
   "kind": "evolution",
+  "pool": "gunslinger",
   "name": "Mermi Fırtınası",
-  "icon": "placeholder:mermi_firtinasi",
+  "icon": "res://assets/ui/icons/mermi-firtinasi.png",
   "max_level": 1,
   "tags": [
     "rhythm"

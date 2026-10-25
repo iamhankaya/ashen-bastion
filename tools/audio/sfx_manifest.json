@@ -28,6 +28,27 @@
     {"id": "evolution_5", "target_lufs": -17.0, "max_s": 1.8},
     {"id": "evolution_6", "target_lufs": -17.0, "max_s": 1.8},
     {"id": "explosion", "target_lufs": -26.0, "max_s": 2.2},
-    {"id": "dry_fire", "target_lufs": -26.0, "max_s": 0.15}
+    {"id": "dry_fire", "target_lufs": -26.0, "max_s": 0.15},
+    {"id": "zyfen_cast_1", "src": "art/source/zyfen/audio/zyfen_cast_1.wav", "target_lufs": -24, "max_s": 0.65},
+    {"id": "zyfen_cast_2", "src": "art/source/zyfen/audio/zyfen_cast_2.wav", "target_lufs": -24, "max_s": 0.65},
+    {"id": "zyfen_cast_3", "src": "art/source/zyfen/audio/zyfen_cast_3.wav", "target_lufs": -24, "max_s": 0.65},
+    {"id": "zyfen_wind_hit_1", "src": "art/source/zyfen/audio/zyfen_wind_hit_1.wav", "target_lufs": -26, "max_s": 0.65},
+    {"id": "zyfen_wind_hit_2", "src": "art/source/zyfen/audio/zyfen_wind_hit_2.wav", "target_lufs": -26, "max_s": 0.65},
+    {"id": "zyfen_gather", "src": "art/source/zyfen/audio/zyfen_gather.wav", "target_lufs": -26, "max_s": 1.25},
+    {"id": "zyfen_gather_done", "src": "art/source/zyfen/audio/zyfen_gather_done.wav", "target_lufs": -24, "max_s": 0.5},
+    {"id": "hava_bicaklari_1", "src": "art/source/zyfen/audio/hava_bicaklari_1.wav", "target_lufs": -24, "max_s": 0.5},
+    {"id": "hava_bicaklari_2", "src": "art/source/zyfen/audio/hava_bicaklari_2.wav", "target_lufs": -24, "max_s": 0.5},
+    {"id": "hava_bicaklari_3", "src": "art/source/zyfen/audio/hava_bicaklari_3.wav", "target_lufs": -24, "max_s": 0.5},
+    {"id": "delen_ruzgar", "src": "art/source/zyfen/audio/delen_ruzgar.wav", "target_lufs": -22, "max_s": 0.7},
+    {"id": "girdap", "src": "art/source/zyfen/audio/girdap.wav", "target_lufs": -26, "max_s": 2.0},
+    {"id": "hortum", "src": "art/source/zyfen/audio/hortum.wav", "target_lufs": -24, "max_s": 2.0},
+    {"id": "hava_cebi", "src": "art/source/zyfen/audio/hava_cebi.wav", "target_lufs": -26, "max_s": 0.7},
+    {"id": "nefes_dalgasi", "src": "art/source/zyfen/audio/nefes_dalgasi.wav", "target_lufs": -22, "max_s": 0.85},
+    {"id": "ay_oragi", "src": "art/source/zyfen/audio/ay_oragi.wav", "target_lufs": -22, "max_s": 1.25},
+    {"id": "kasirga_patlamasi", "src": "art/source/zyfen/audio/kasirga_patlamasi.wav", "target_lufs": -20, "max_s": 1.5},
+    {"id": "gogun_mizragi", "src": "art/source/zyfen/audio/gogun_mizragi.wav", "target_lufs": -22, "max_s": 1.25},
+    {"id": "tufan", "src": "art/source/zyfen/audio/tufan.wav", "target_lufs": -20, "max_s": 3.0},
+    {"id": "evolution_7", "src": "art/source/zyfen/audio/evolution_7.wav", "target_lufs": -17, "max_s": 1.8},
+    {"id": "evolution_8", "src": "art/source/zyfen/audio/evolution_8.wav", "target_lufs": -17, "max_s": 1.8}
   ]
 }

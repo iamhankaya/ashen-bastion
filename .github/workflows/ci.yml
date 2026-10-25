@@ -5,25 +5,98 @@ on:
 permissions:
   contents: read
 jobs:
-  test:
+  # F-044: tam gate (tools/gate.sh) üç parçaya bölündü; BİRLEŞİMLERİ tam gate ile aynı kapsamdır ve PR CI'ında, entegrasyon
+  # merge'ünde ve son kapıda (main) HER ZAMAN tam kapsam koşar. Hızlı mod (`gate.sh --changed`) CI'da yasaktır (gate.sh reddeder)
+  # ve burada ASLA kullanılmaz (tools/ci/tests/test_ci_workflow.py denetler). Kapsam: docs/dev/ci-speed.md.
+  #   static : adım 1-5 (kurulum, içe aktarma, lint, veri doğrulama, dilim sözdizimi, Python testleri)
+  #   gut    : adım 1-2 + 6, GUT test dosyaları GATE_SHARD=K/N parçalarına bölünür (tools/ci/shard.py; her dosya tam bir parçada)
+  #   test   : parça JUnit'lerini birleştirir, kapsamı denetler (eksik/yinelenen dosya = kırmızı) + adım 7 sahte yeşil korumaları.
+  #            "test" adı korunur: dal koruması bu bağlamı bekleyebilir; yeşil = static + tüm gut parçaları + sahte yeşil korumaları.
+  static:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 10
+    env:
+      ASHEN_EVIDENCE_DIR: /tmp/import-evidence
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install "gdtoolkit==4.5.0" pytest pillow numpy scipy soundfile pyloudnorm
+          cache: pip
+          cache-dependency-path: tools/ci/requirements-ci.txt
+      - run: pip install -r tools/ci/requirements-ci.txt
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ashen-bastion
           key: godot-${{ hashFiles('.godot-version') }}
-      - run: bash tools/gate.sh
+      - uses: actions/cache@v4
+        with:
+          # Yalnız TAM eşleşen anahtar (restore-keys yok): içe aktarma girdileri aynıysa önbellek aynıdır; içe aktarma adımı yine koşar.
+          path: .godot
+          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+      - run: GATE_PART=static bash tools/gate.sh
+      - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-evidence-${{ github.job }}
+          path: /tmp/import-evidence
+          retention-days: 14
+          if-no-files-found: ignore
+  gut:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ASHEN_EVIDENCE_DIR: /tmp/import-evidence
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ashen-bastion
+          key: godot-${{ hashFiles('.godot-version') }}
+      - uses: actions/cache@v4
+        with:
+          path: .godot
+          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+      - run: GATE_PART=gut GATE_SHARD=${{ matrix.shard }}/4 bash tools/gate.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gut-junit-${{ matrix.shard }}
+          path: .gate/junit-${{ matrix.shard }}.xml
+          retention-days: 7
+          if-no-files-found: ignore
+      - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-evidence-${{ github.job }}-${{ matrix.shard }}
+          path: /tmp/import-evidence
+          retention-days: 14
+          if-no-files-found: ignore
+  test:
+    needs: [static, gut]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: gut-junit-*
+          path: ${{ runner.temp }}/shards
+          merge-multiple: true
+      - run: GATE_PART=verify GATE_SHARD_COUNT=4 GATE_JUNIT_DIR=${{ runner.temp }}/shards bash tools/gate.sh
   selftest:
     # F-028: senaryo -> grup tablosu tools/ci/selftest_gate.sh içindedir (GROUP[...]=N); matrix.group tablodaki tüm
     # gruplar (test_selftest_gate_groups.py denetler). Her grup bağımsız iş: en uzun grup ≈ 7 dk (S0: 409 s), timeout 20 dk.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      ASHEN_EVIDENCE_DIR: /tmp/import-evidence
     strategy:
       fail-fast: false
       matrix:
@@ -33,12 +106,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install "gdtoolkit==4.5.0" pytest pillow numpy scipy soundfile pyloudnorm
+          cache: pip
+          cache-dependency-path: tools/ci/requirements-ci.txt
+      - run: pip install -r tools/ci/requirements-ci.txt
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ashen-bastion
           key: godot-${{ hashFiles('.godot-version') }}
       - run: bash tools/ci/selftest_gate.sh --group ${{ matrix.group }}
+      - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-evidence-${{ github.job }}-${{ matrix.group || 0 }}
+          path: /tmp/import-evidence
+          retention-days: 14
+          if-no-files-found: ignore
   export-debug:
     runs-on: ubuntu-24.04
     timeout-minutes: 30

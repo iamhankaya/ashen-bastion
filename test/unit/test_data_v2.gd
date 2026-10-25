@@ -111,26 +111,35 @@ func test_real_data_is_valid_in_complete_mode() -> void:
 	assert_eq(GameData.load_dir(REAL).validate({}, true), PackedStringArray())
 
 
-func test_barutcu_values_and_assets() -> void:
+func test_barutcu_and_dynamite_are_gone() -> void:
 	var g := GameData.load_dir(REAL)
-	assert_true(g.character_ids.has(&"barutcu"))
-	var c := g.get_character(&"barutcu")
-	assert_eq(c.display_name, "Barutçu")
-	assert_eq(c.max_hp, 120.0)
-	assert_eq(c.move_speed, 270.0)
-	assert_eq(c.mag_cap, 5)
-	assert_eq(c.reload_time, 1.2)
-	assert_eq(c.pickup_radius, 120.0)
-	assert_eq(c.collision_radius, 24.0)
-	assert_eq(c.attack_range, 650.0)
-	assert_eq(c.starting_skill, &"dinamit")
-	assert_true(c.placeholder)
-	assert_eq(c.unlock_achievement, &"", "ödül yok: kilit yok")
-	assert_eq(c.walk.get("frames"), 0)
-	for p in [c.rig["body"], c.rig["arm"], c.portrait]:
-		assert_true(FileAccess.file_exists(p), p)
-		assert_true(p.contains("barutcu_"), p)
+	assert_false(g.character_ids.has(&"barutcu"))
+	assert_null(g.get_skill(&"dinamit"))
+	for p in [
+		"res://data/characters/barutcu.json",
+		"res://data/skills/dinamit.json",
+		"res://scripts/sim/skills/dinamit.gd",
+		"res://assets/gfx/char/barutcu_arm.png",
+		"res://assets/ui/icons/dinamit.svg",
+	]:
+		assert_false(FileAccess.file_exists(p), "silinmeliydi: %s" % p)
+	assert_true(FileAccess.file_exists("res://assets/ui/icons/hud-patlama.svg"))
+
+
+func test_zyfen_values_and_assets() -> void:
+	var g := GameData.load_dir(REAL)
+	var c := g.get_character(&"zyfen")
+	assert_eq(c.display_name, "Zyfen")
+	assert_eq(c.max_hp, 85.0)
+	assert_eq(c.mag_cap, 8)
+	assert_eq(c.reload_time, 1.3)
+	assert_eq(c.starting_skill, &"ruzgar_kesigi")
+	assert_eq(g.get_skill(c.starting_skill).pool, &"zyfen")
 	assert_eq(g.get_skill(c.starting_skill).kind, SkillDef.KIND_ACTIVE)
+	assert_false(c.placeholder, "U2: gerçek gövde şeridi ve portre bağlandı")
+	assert_eq(c.unlock_achievement, &"", "ödül yok: kilit yok")
+	for p in [c.rig["body"], c.portrait]:
+		assert_true(FileAccess.file_exists(p), p)
 	assert_lte(c.blurb.length(), 120)
 	assert_ne(c.blurb, "")
 
@@ -147,10 +156,8 @@ func test_gunslinger_gets_portrait_and_blurb_unchanged_stats() -> void:
 
 
 func test_character_ids_follow_order_field() -> void:
-	# F-030: `order` (gunslinger 1, barutcu 2); eşitlikte dosya adı sırası.
-	assert_eq(
-		GameData.load_dir(REAL).character_ids, [&"gunslinger", &"barutcu"] as Array[StringName]
-	)
+	# F-030: `order` (gunslinger 1, zyfen 2); eşitlikte dosya adı sırası.
+	assert_eq(GameData.load_dir(REAL).character_ids, [&"gunslinger", &"zyfen"] as Array[StringName])
 
 
 func test_character_def_defaults_for_missing_v2_fields() -> void:

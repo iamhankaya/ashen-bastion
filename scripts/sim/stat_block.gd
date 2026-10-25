@@ -15,6 +15,8 @@ var max_hp_add: float = 0.0
 var regen: float = 0.0
 var pickup_mult: float = 1.0
 var range_mult: float = 1.0
+## v2.0.2: rüzgar bölgesi/toplama süresi çarpanı (Fırtına Gözü); etkin = 1 + x.
+var wind_time_mult: float = 1.0
 ## Süreli etki çarpanları (Öfke Barutu: hasar, Kızgın Namlu: atış hızı); etki yokken 1.
 var buff_dmg_mult: float = 1.0
 var buff_rate_mult: float = 1.0
@@ -42,6 +44,7 @@ func rebuild(loadout: Loadout, data: GameData) -> void:
 	regen = float(s.get("regen", 0.0))
 	pickup_mult = 1.0 + float(s.get("pickup_mult", 0.0))
 	range_mult = 1.0 + float(s.get("range_mult", 0.0))
+	wind_time_mult = 1.0 + float(s.get("wind_time_mult", 0.0))
 	_apply_buffs()
 
 

@@ -1,0 +1,30 @@
+{
+  "id": "kasirga_patlamasi",
+  "kind": "evolution",
+  "name": "Kasırga Patlaması",
+  "icon": "res://assets/ui/icons/kasirga-patlamasi.png",
+  "max_level": 1,
+  "tags": [],
+  "behavior": "kasirga_patlamasi",
+  "pool": "zyfen",
+  "levels": [
+    {
+      "damage": 36,
+      "radius": 900,
+      "push": 260,
+      "count": 2,
+      "interval": 0.5
+    }
+  ],
+  "desc": [
+    "Rüzgar toplarken ekran boyu iki dalga yayılır."
+  ],
+  "requires": {
+    "active": "nefes_dalgasi",
+    "active_level": 5,
+    "passive": "hizli_doldurma",
+    "passive_min_level": 1
+  },
+  "sfx": "evolution_7",
+  "cast_sfx": "kasirga_patlamasi"
+}

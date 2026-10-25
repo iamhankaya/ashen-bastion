@@ -268,7 +268,7 @@ func _fill(slots: Array[SkillSlot], states: Array[SkillState]) -> void:
 	for i in slots.size():
 		if i < states.size() and states[i] != null:
 			var st := states[i]
-			var icon := st.def.icon if st.def != null else ""
+			var icon := Hud._icon_of(st)
 			var evo := st.def != null and st.def.kind == SkillDef.KIND_EVOLUTION
 			slots[i].set_skill(st.id, st.level, icon, evo)
 		else:
