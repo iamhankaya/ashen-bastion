@@ -60,3 +60,10 @@ Yöntem kb notu: kareler video kareleridir; üretici araç yan görünümde baca
 256 px kare tuval -> `assets/ui/icons/<id-tireli>.png` (13 rüzgar becerisi) ve `assets/ui/icons/zyfen/<ortak-id-tireli>.png`
 (7 pasif varyantı). `art/source/zyfen/fx/*.png` (13) -> her kenarda >= %8 şeffaf pay (sönük kenar pikselleri silinir, tuval
 büyür), en-boy oranı korunur, uzun kenar <= 512 px -> `assets/gfx/fx/zyfen/`. Yüklenen kod: `scripts/view/zyfen_fx.gd`.
+
+## Zyfen efekt v2 (T20261025-57)
+
+`process_zyfen_fx.py` artık `art/source/zyfen/fx_v2/` (32 katmanlı parça) kaynağını `assets/gfx/fx/zyfen/fx_<ad>.png` yapar:
+mermi/bölge parçaları uzun kenar 512, `hortum_akis` 256 (döşenebilir; küçültme 3x3 döşeyerek yapılır, dikiş çıkmaz), küçük
+parçalar (`tas_*`, `parilti`) 128. Küçültme alfa-önçarpımlıdır. `hortum_akis` oyunda `assets/shaders/wind_flow.gdshader`
+içinde `repeat_enable` örnekleyiciyle döşenir (Godot 4'te döşeme doku içe aktarma ayarı değil, örnekleyici/CanvasItem özelliğidir).
