@@ -211,6 +211,7 @@
  "test/unit/test_v202_wind_zones.gd": 0.1,
  "test/unit/test_v202_zyfen_perf.gd": 1.2,
  "test/unit/test_v203_a_zz_contract.gd": 0.3,
+ "test/unit/test_v203_b_orbs.gd": 0.3,
  "test/unit/test_v203_b_zz_contract.gd": 0.3,
  "test/unit/test_v203_c_migration.gd": 0.3,
  "test/unit/test_v203_c_steps.gd": 0.3,

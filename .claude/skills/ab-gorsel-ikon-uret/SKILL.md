@@ -1,11 +1,17 @@
 ---
 name: ab-gorsel-ikon-uret
-description: Ashen Bastion için portre, beceri/başarım ikonu, efekt dokusu veya UI görseli üretirken (kullanıcı makinesinde Codex ile görsel, düz yeşil zemin, tools/art işleme hattı, APK boyutu) kullan.
+description: Ashen Bastion için portre, beceri/başarım ikonu, efekt dokusu veya UI görseli üretirken (Codex ile görsel, kullanıcı makinesi veya bulut, düz yeşil zemin, tools/art işleme hattı, APK boyutu) kullan.
 ---
 
 # Görsel ve ikon hattı
 
-Kural (karar 2026-10-25): görsel ve ikon **kullanıcı makinesinde Codex ile üretilir ve repoya girmeden kullanıcıya gösterilir**; onaydan sonra eklenir. Kısa video Gemini ile. Bulut çalışanı görsel üretmez, uydurmaz; araç yoksa açık nokta yazar. Komut, yol ve hesap ayrıntısı bu skill'e/repoya yazılmaz. Kaynak/model notu `art/source/<ad>/README.md`'ye (araç, istem, tarih).
+Kural (kararlar 2026-10-25, 2026-10-26): görsel ve ikon **Codex ile üretilir** (`codex exec`; kullanıcı makinesinde de bulut çalışanında da) ve **repoya girmeden kullanıcıya gösterilir**; onaydan sonra eklenir. Kısa video Gemini ile (bulutta `GEMINI_API_KEY`). Araç yoksa uydurma, açık nokta yaz. Kaynak/model notu `art/source/<ad>/README.md`'ye (araç, istem, tarih).
+
+## Codex kullanımı
+- Bulutta oturum yoksa `codex login --device-auth` çalıştır, cihaz kodunu `[VLAD:ASK]` ile kullanıcıya ilet (yerelde `vlad task ask`); giriş yapılmadan üretme.
+- Çıktı `~/.codex/generated_images/<oturum>/` altına düşer; hedefe (`art/source/<ad>/`) kopyala.
+- Paralel `codex exec` zaman aşımına uğrar: görselleri **tek tek** üret.
+- Üretilen her görsel repoya girmeden kullanıcıya gösterilir (yol/önizleme + seçenekler); onaysız eklenmez. Onaylı kaynak repoda zaten varsa yeniden üretme, README'deki onay notuna dayan.
 
 ## Adımlar
 1. **İstem:** `docs/design/v2.0/prompts.md` şablonları (ortak stil, negatif, kare kare üretim). Esin kaynağı adı istemde geçmez. Portre güvenli alanı P1: 1024×1536, yüz üst üçte birde (göz %24–30), alt %40 önemsiz, önemli her şey x %12–88 ve y %6–62.
