@@ -240,7 +240,7 @@ func test_constants() -> void:
 	assert_eq(CharactersScreen.SelectState.LOCKED, 2)
 	assert_eq(DataV2.ATLAS_CELLS_MAX, 16)
 	assert_eq(DataV2.TIERS, PackedStringArray(["kolay", "orta", "zor", "cok_zor"]))
-	assert_eq(DataV2.ACH_KEYS.size(), 8)
+	assert_eq(DataV2.ACH_KEYS.size(), 11, "v2.0.3: +steps, group, legacy")
 
 
 func test_toast_rect_contract() -> void:

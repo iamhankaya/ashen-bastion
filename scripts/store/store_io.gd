@@ -12,7 +12,12 @@ const INT_LIMIT := 1.0e15
 ## `v` != version, kök sözlük değil) => ok=false, corrupt=true ve içerik `<yol>.bad` (tek yedek, boş içerik saklanmaz).
 ## `MAX_BYTES`'tan büyük => ok=false, corrupt=true (.bad yazılmaz). `<yol>.tmp` hiç okunmaz.
 static func read_versioned(path: String, version: int) -> Dictionary:
-	var out := {"ok": false, "data": null, "corrupt": false}
+	return read_versioned_any(path, PackedInt32Array([version]))
+
+
+## `read_versioned` ile aynı, ama `versions` içindeki her `v` kabul edilir (v2.0.3 kayıt göçü); sonuca `version` (okunan `v`) eklenir.
+static func read_versioned_any(path: String, versions: PackedInt32Array) -> Dictionary:
+	var out := {"ok": false, "data": null, "corrupt": false, "version": -1}
 	if not FileAccess.file_exists(path):
 		return out
 	var f := FileAccess.open(path, FileAccess.READ)
@@ -25,9 +30,10 @@ static func read_versioned(path: String, version: int) -> Dictionary:
 	var text := f.get_as_text()
 	f.close()
 	var json := JSON.new()
-	if json.parse(text) == OK and _valid_root(json.data, version):
+	if json.parse(text) == OK and _valid_root(json.data, versions):
 		out["ok"] = true
 		out["data"] = json.data
+		out["version"] = int(json.data["v"])
 		return out
 	out["corrupt"] = true
 	_keep_bad(path, text)
@@ -63,11 +69,11 @@ static func int_of(v: Variant, clamp_big: bool) -> Variant:
 	return null
 
 
-static func _valid_root(data: Variant, version: int) -> bool:
+static func _valid_root(data: Variant, versions: PackedInt32Array) -> bool:
 	if not (data is Dictionary):
 		return false
 	var v: Variant = (data as Dictionary).get("v", null)
-	return (v is int or v is float) and float(v) == float(version)
+	return (v is int or v is float) and versions.has(int(v)) and float(v) == floorf(float(v))
 
 
 ## Bozuk dosyanın içeriğini tek yedek olarak saklar (önceki .bad üzerine yazılır). Boş içerik saklanmaz.

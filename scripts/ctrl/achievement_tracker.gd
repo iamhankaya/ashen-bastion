@@ -42,6 +42,7 @@ const S_RUN_EVOLUTIONS := 16
 const S_RUN_UNLIMITED_KILLS := 17
 const S_RUN_WON := 18
 const S_RUN_BOMB_HITS := 19
+const S_TOTAL_BOSS_KILLS := 20
 
 const ELIT_PIYADE := &"elit_piyade"
 const ELITE_MASKS := {&"elit_piyade": 1, &"elit_sovalye": 2, &"elit_karga": 4}

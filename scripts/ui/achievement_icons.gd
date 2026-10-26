@@ -26,6 +26,7 @@ const FAMILY := {
 	"run_unlimited_kills": "mermi-firtinasi",
 	"run_won": "kiyamet-mermisi",
 	"run_bomb_hits": "hud-patlama",
+	"total_boss_kills": "hud-oldurme",
 }
 
 

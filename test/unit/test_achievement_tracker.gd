@@ -88,6 +88,7 @@ func test_stat_index_constants_match_stats_order() -> void:
 		"run_unlimited_kills": AchievementTracker.S_RUN_UNLIMITED_KILLS,
 		"run_won": AchievementTracker.S_RUN_WON,
 		"run_bomb_hits": AchievementTracker.S_RUN_BOMB_HITS,
+		"total_boss_kills": AchievementTracker.S_TOTAL_BOSS_KILLS,
 	}
 	assert_eq(names.size(), AchievementDef.STATS.size())
 	for n in names:
