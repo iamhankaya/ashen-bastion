@@ -205,3 +205,25 @@ func test_safe_area_extra_lifts_whole_column_and_restores() -> void:
 	await _settle()
 	assert_almost_eq(m.play_button.global_position.y, 1763.0, 0.5)
 	assert_almost_eq(m.version_label.global_position.y, 2288.0, 0.5)
+
+
+func test_stacked_scene_clips_and_icons_center() -> void:
+	var m := _menu()
+	await _settle()
+	m.set_font_scale(2.0)
+	await _settle()
+	assert_true(m._scene.clip_contents, "zemin yaması sahne kutusuna kırpılı (denetim #3)")
+	var g := m.characters_button.get_node("MiniPortrait") as Control
+	assert_almost_eq(
+		g.position.y, (MainMenu.STACK_BTN_H - g.size.y) * 0.5, 0.5, "ikon düğmede dikey ortalı"
+	)
+
+
+func test_mini_portrait_is_round_with_ring() -> void:
+	var m := _menu()
+	await _settle()
+	assert_not_null(
+		(m.characters_button.get_node("MiniPortrait") as TextureRect).material, "daire maskesi"
+	)
+	m.set_character_portrait(null)
+	assert_false(m._mini_ring.visible, "portre yoksa halka da yok")

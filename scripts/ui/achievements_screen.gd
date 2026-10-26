@@ -100,13 +100,17 @@ func _build() -> void:
 	list.add_child(content)
 	_fade_top = _fade(true)
 	_fade_bottom = _fade(false)
-	list.get_v_scroll_bar().value_changed.connect(func(_v: float) -> void: _update_sticky())
+	list.get_v_scroll_bar().value_changed.connect(
+		func(_v: float) -> void:
+			_update_sticky()
+			_update_fade_top()
+	)
 	error_label = UiKit.label("Başarım listesi yüklenemedi", &"", 34, UiKit.KEMIK_300)
 	error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	error_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	error_label.visible = false
 	add_child(error_label)
-	back_button = UiKit.button("GERİ", &"secondary", BACK_H)
+	back_button = UiKit.back_button(BACK_H)
 	back_button.pressed.connect(func() -> void: back_requested.emit())
 	add_child(back_button)
 	_layout()
@@ -169,7 +173,7 @@ func _populate() -> void:
 	count_label.visible = not failed
 	count_sub.visible = not failed
 	chronicle.visible = not failed
-	_fade_top.visible = not failed
+	_fade_top.visible = not failed and list.scroll_vertical > 0
 	_fade_bottom.visible = not failed
 	if not failed:
 		count_label.text = "%d / %d" % [_open_n, _total]
@@ -255,7 +259,13 @@ func scroll_to_group(index: int) -> void:
 
 func _scroll_to_node(n: Control) -> void:
 	if list != null and is_instance_valid(n):
-		list.scroll_vertical = int(n.position.y)
+		list.scroll_vertical = int(n.position.y) + 1  # +1: yapışkan başlık devralır, başlık solmada kalmaz
+
+
+## Tepede (kaydırma 0) üst solma yok: ilk başlık/boş durum paneli sönmez (denetim v2.0.3-son #4, #5).
+func _update_fade_top() -> void:
+	if _fade_top != null and list != null:
+		_fade_top.visible = list.visible and list.scroll_vertical > 0
 
 
 ## Kaydırma konumuna göre üstte kalan grubun başlığını liste tepesine sabitler; sıradaki başlık yaklaşınca onu iter.

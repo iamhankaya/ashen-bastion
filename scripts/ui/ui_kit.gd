@@ -299,6 +299,17 @@ static func button(text: String, kind: StringName = &"primary", height: float = 
 	return b
 
 
+## Tüm ekranlarda ortak GERİ düğmesi (taş levha; denetim v2.0.3-son #1).
+static func back_button(height: float = 132.0) -> Button:
+	var b := button("GERİ", &"secondary", height)
+	b.add_theme_font_size_override(&"font_size", 48)
+	for st in [&"normal", &"hover", &"focus"]:
+		b.add_theme_stylebox_override(st, skin_box("dugme-dolu"))
+	b.add_theme_stylebox_override(&"pressed", skin_box("dugme-basili"))
+	b.accessibility_name = "Geri"
+	return b
+
+
 ## v2.0.3 9-slice yüzey (levha, dugme-*, lento); doku yoksa düz kutuya düşer (testte içe aktarma beklenmez).
 static func skin_box(skin_name: String, margin: int = 40, fallback: Color = KAHVE_900) -> StyleBox:
 	var t := texture(SKIN_DIR + skin_name + ".svg")

@@ -174,12 +174,7 @@ func _build() -> void:
 	_title_box.add_child(title_label)
 	add_child(_title_box)
 
-	back_button = UiKit.button("GERİ", &"secondary", BACK_H)
-	back_button.add_theme_font_size_override(&"font_size", 48)
-	for st in [&"normal", &"hover", &"focus"]:
-		back_button.add_theme_stylebox_override(st, UiKit.skin_box("dugme-dolu"))
-	back_button.add_theme_stylebox_override(&"pressed", UiKit.skin_box("dugme-basili"))
-	back_button.accessibility_name = "Geri"
+	back_button = UiKit.back_button(BACK_H)
 	back_button.anchor_left = 0.5
 	back_button.anchor_right = 0.5
 	back_button.offset_left = -W * 0.5
@@ -369,12 +364,7 @@ func _build_licenses() -> void:
 	lic_panel.add_child(rows)
 	_lic_card.add_child(lic_panel)
 	licenses.add_child(_lic_card)
-	lic_back_button = UiKit.button("GERİ", &"secondary", BACK_H)
-	lic_back_button.add_theme_font_size_override(&"font_size", 48)
-	lic_back_button.add_theme_stylebox_override(&"normal", UiKit.skin_box("dugme-dolu"))
-	lic_back_button.add_theme_stylebox_override(&"hover", UiKit.skin_box("dugme-dolu"))
-	lic_back_button.add_theme_stylebox_override(&"pressed", UiKit.skin_box("dugme-basili"))
-	lic_back_button.accessibility_name = "Geri"
+	lic_back_button = UiKit.back_button(BACK_H)
 	lic_back_button.anchor_left = 0.5
 	lic_back_button.anchor_right = 0.5
 	lic_back_button.offset_left = -W * 0.5
@@ -499,7 +489,7 @@ func _slider_row(parent: Control, caption: String) -> HSlider:
 	var name_label := UiKit.label(caption, &"LabelAccent", _fs(36))
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(name_label)
-	var val := UiKit.label("100%", &"LabelAccent", _fs(40), UiKit.KEMIK_100)
+	var val := UiKit.label("%100", &"LabelAccent", _fs(40), UiKit.KEMIK_100)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val.custom_minimum_size.x = 160.0 * (1.6 if _big else 1.0)
 	head.add_child(val)
@@ -561,10 +551,10 @@ func _changed(s: HSlider, v: float, final: bool) -> void:
 		set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on, true)
 		sound_toggled.emit(true)
 	if s == music_slider:
-		music_value.text = "%d%%" % pct
+		music_value.text = "%%%d" % pct
 		st.set_music_pct(pct, final)
 	else:
-		sfx_value.text = "%d%%" % pct
+		sfx_value.text = "%%%d" % pct
 		st.set_sfx_pct(pct, final)
 		if final:
 			Sfx.play(PREVIEW_ID)
@@ -580,8 +570,8 @@ func set_values(music_pct: int, sfx_pct: int, vib: bool, animate: bool = false) 
 	_hareket_on = st.hareket_azalt
 	music_slider.set_value_no_signal(music_pct)
 	sfx_slider.set_value_no_signal(sfx_pct)
-	music_value.text = "%d%%" % music_pct
-	sfx_value.text = "%d%%" % sfx_pct
+	music_value.text = "%%%d" % music_pct
+	sfx_value.text = "%%%d" % sfx_pct
 	_set_switch(sound_button, _sound_on, "Ses", animate)
 	_set_switch(vibration_button, vib, "Titreşim", animate)
 	_set_switch(hareket_button, _hareket_on, "Hareketi azalt", animate)

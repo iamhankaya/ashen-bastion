@@ -171,9 +171,7 @@ func test_d26_stacked_icons_are_vertically_centered_and_floor_patch_is_clipped()
 		for c in (b as Button).get_children():
 			if c is UiKit.Glyph and c.visible or c is MainMenu.AchRing:
 				var mid: float = c.position.y + c.size.y * 0.5
-				assert_almost_eq(
-					mid, (168.0 - 40.0) * 0.5, 1.0, "%s ikonu başlıkla hizalı" % b.name
-				)
+				assert_almost_eq(mid, 168.0 * 0.5, 1.0, "%s ikonu düğmede dikey ortalı" % b.name)
 	var scene := m.get_node("Scene") as Control
 	assert_lte(
 		scene.get_global_rect().end.y,
