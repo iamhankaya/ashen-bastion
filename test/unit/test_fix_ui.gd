@@ -64,18 +64,12 @@ func test_empty_state_label_is_bounded_to_its_text_after_safe_area() -> void:
 	assert_lte(s.empty_text.size.y, 200.0)
 
 
-func test_menu_column_is_936_wide_and_toggles_fit_454() -> void:
+func test_menu_column_is_936_wide_and_ghost_buttons_fit_454() -> void:
 	var m := MainMenu.new()
 	add_child_autofree(m)
 	await get_tree().process_frame
 	await get_tree().process_frame
-	for sound in [true, false]:
-		for vib in [true, false]:
-			m.set_settings(sound, vib)
-			await get_tree().process_frame
-			assert_lte(m.sound_button.get_combined_minimum_size().x, 454.0, "SES ×%s" % sound)
-			assert_lte(
-				m.vibration_button.get_combined_minimum_size().x, 454.0, "TİTREŞİM ×%s" % vib
-			)
-	assert_almost_eq(m.scores_button.size.x, 936.0, 0.5, "sütun 936")
-	assert_almost_eq(m.sound_button.size.x, m.vibration_button.size.x, 1.0)
+	assert_lte(m.scores_button.get_combined_minimum_size().x, 454.0, "EN İYİ SKORLAR")
+	assert_lte(m.settings_button.get_combined_minimum_size().x, 454.0, "AYARLAR")
+	assert_almost_eq(m.play_button.size.x, 936.0, 0.5, "sütun 936")
+	assert_almost_eq(m.scores_button.size.x, m.settings_button.size.x, 1.0)

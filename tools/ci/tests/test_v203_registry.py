@@ -30,7 +30,7 @@ def test_slice_file_parses_and_separates_symbols():
     assert set(marks) <= {"A", "B", "C", "D"}, "dilim işaretini yalnız ilgili faz açar"
     lines = text.splitlines()
     idx = [i for i, ln in enumerate(lines) if re.fullmatch(r"#?[ABCD]", ln.strip())]
-    assert len(idx) == 4, "her faz için bir simge satırı (açık ya da kapalı)"
+    assert len(idx) == 4, "her faz için bir simge satırı (açık: 'B', kapalı: '#B')"
     assert all(b - a >= 2 for a, b in zip(idx, idx[1:])), "simge satırları bitişik olmamalı (birleşme dostu)"
 
 

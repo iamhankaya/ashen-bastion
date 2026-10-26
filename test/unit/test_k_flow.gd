@@ -42,7 +42,7 @@ func test_select_zyfen_then_play_uses_zyfen() -> void:
 	assert_eq(gc.screen, PauseLogic.Screen.CHARACTERS, "SEÇ ekrandan çıkmaz")
 	gc._on_back()
 	assert_eq(gc.screen, PauseLogic.Screen.MENU)
-	assert_string_contains(gc.menu.version_label.text, "Zyfen")
+	assert_string_contains((gc.menu.characters_button.get_node("Sub") as Label).text, "Zyfen")
 	gc.start_run()
 	assert_eq(gc.sim.character.id, &"zyfen")
 
