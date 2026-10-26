@@ -15,16 +15,17 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 
 ## Adımlar
 1. **Tasarım belgesi:** `docs/design/<sürüm>/<tarih>-<ad>-design.md` (örnek `docs/design/v2.0.2/2026-10-24-zyfen-design.md`). Sayılar, havuz, kilit kullanıcı onayı ister. Esin kaynağı olan karakter/eser adı hiçbir yerde geçmez (public repo).
-2. **Veri iskeleti:** `data/characters/<id>.json` (alanlar aşağıda; şema `docs/data-schema.md`). Dosya adı = `id`.
+2. **Veri iskeleti:** `data/characters/<id>.json` (alanlar aşağıda; şema `docs/data-schema.md`). Dosya adı = `id`. **Sıra:** `validate_data` JSON'u görsel dosyaları (`portrait`, `rig.body`, `walk.strip`; kolsuz rig için `placeholder:` yok, gerçek şerit gerekir) ve başlangıç becerisinin havuzu (`requires_ref`) yokken `asset_missing`/`requires_ref` ile reddeder; şerit PNG'si de `godot --headless --import` yapılmadan yüklenemez. Bu yüzden JSON'u adım 3–4'ten (görseller, beceri, import) sonra bağla; ondan önce alanları taslak olarak sakla.
 3. **Görseller:** portre → `ab-gorsel-ikon-uret`; yürüme/cast/gather kareleri ve şerit → `ab-animasyon-seridi`.
-4. **Beceri havuzu:** `pool: "<id>"` özel aktif/evrimler → `ab-beceri-ekle`. `starting_skill` `kind: active` olmalı; havuzu karakterin kimliği ya da `common` (`requires_ref`).
+4. **Beceri havuzu:** `pool: "<id>"` özel aktif/evrimler → `ab-beceri-ekle`. `starting_skill` `kind: active` olmalı; havuzu karakterin kimliği ya da `common` (`requires_ref`). Depoda `common` havuzlu aktif beceri yok: yeni karakter kendi havuzlu bir başlangıç becerisi getirir.
 5. **Ses:** karakter `sfx{}` sözlüğü ve beceri `cast_sfx` → `ab-ses-ekle`. Sözlük varsa anahtarı olmayan olay sessiz kalır.
 6. **Kilit (isteğe bağlı):** `unlock: {"achievement": "<id>"}` → başarım `ab-basarim-ekle`.
-7. **Denge:** `ab-denge-olcumu` ile Gunslinger ±%5 kanıtı (`kills5`, `hp_early`) ve yeni karakterin DPS bandı.
-8. **Altın hash:** yeni karakter için yeni aşama kaydı (`test/fixtures/golden_hashes.json`, `tools/golden/golden_run.gd`). Gunslinger kayıtları değişmez; eşitlik zinciri testleri (ör. "u3 = u1b") korunur.
-9. **Ekran öz-kontrolü:** xvfb ile `tools/capture/shots_zyfen.gd` örneği (seçim ekranı, duruş, yürüme, cast, gather, aynalama) — kendi `shots_<id>.gd`'ni onun kalıbıyla yaz.
-10. **Cihaz listesi:** ortak `docs/dev/user-verify.md`'ye yazma; kendi bölüm dosyanı `docs/dev/user-verify/` altına yaz.
-11. `bash tools/gate.sh` yeşil; `docs/dev/new-character.md` ile çelişki yok.
+7. **Mevcut testleri güncelle:** karakter listesi/sayısını sabitleyen testler yeni karakterde kırmızı olur (kuru denemede 4 test): `test/unit/test_character_roster.gd` (`test_ids_follow_order_field`), `test/unit/test_characters_screen.gd` (`test_f030_gunslinger_first_by_order_field`), `test/acceptance/test_acc_v2_chars.gd` (`test_k10_single_character_set_works`, zyfen silince 1 karakter kalacağını varsayar), `test/unit/test_v202_pool_real.gd` (`test_empty_character_id_keeps_old_unfiltered_behavior`, filtresiz aktif beceri sayısı). Beklenen değerleri yeni karaktere göre güncelle (kusurlu davranışı değil sayıyı); `tools/gate_min_tests.json` gerekirse.
+8. **Denge:** `ab-denge-olcumu` ile Gunslinger ±%5 kanıtı (`kills5`, `hp_early`) ve yeni karakterin DPS bandı; `tools/balance/mid_run.gd` `PRIORITY_BY_CHAR`'a karakter satırı (yoksa Gunslinger önceliği kullanılır) ve `mid_all.sh` varsayılan `CHARS` listesi.
+9. **Altın hash:** yeni karakter için yeni aşama kaydı (`test/fixtures/golden_hashes.json`, `tools/golden/golden_run.gd`). Gunslinger kayıtları değişmez; eşitlik zinciri testleri (ör. "u3 = u1b") korunur.
+10. **Ekran öz-kontrolü:** xvfb ile `tools/capture/shots_zyfen.gd` örneği (seçim ekranı, duruş, yürüme, cast, gather, aynalama) — kendi `shots_<id>.gd`'ni onun kalıbıyla yaz.
+11. **Cihaz listesi:** ortak `docs/dev/user-verify.md`'ye yazma; kendi bölüm dosyanı `docs/dev/user-verify/` altına yaz.
+12. `bash tools/gate.sh` yeşil; `docs/dev/new-character.md` ile çelişki yok.
 
 ## Tek parça gövde yöntemi (Zyfen'den ölçülmüş başlangıç değerleri)
 - **Şerit, AnimatedSprite2D değil:** gövde tek `MeshInstance2D` (`scripts/view/player_view.gd`), tek yatay şerit PNG, hücre = UV bölgesi. Sway shader ve rim konturu hücre dolgusuna (`PAD=12`) bağlı; doğrulayıcı hücre/doku boyutunu denetler (`scripts/sim/data_v202_rig.gd`).
@@ -37,7 +38,7 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 - **Bilinen sınırlar:** tek `cast_point` (iki bağımsız nişanlı silah için yetmez); kare tutarlılığı (renk/kıyafet sıçraması) elle denetlenir; iki yönlü `walk_cast` yok.
 
 ## Dokunulan dosyalar
-`data/characters/<id>.json`; `assets/gfx/char/<id>_{body,strip,portrait}.png` + `.import`; `art/source/<id>/` (kare, `strip_manifest.json`, `quality.json`); `docs/data-schema.md`; `docs/dev/new-character.md`; `tools/gate_min_tests.json` (yeni test eklenirse). Dokunulmaz: `scripts/ctrl/character_roster.gd` (`DEFAULT_ID = gunslinger`), Gunslinger dosyaları.
+`data/characters/<id>.json`; `assets/gfx/char/<id>_{body,strip,portrait}.png` + `.import`; `art/source/<id>/` (kare, `strip_manifest.json`, `quality.json`); `docs/data-schema.md`; `docs/dev/new-character.md`; `tools/gate_min_tests.json` (yeni test eklenirse); karakter listesi sabitleyen mevcut testler (adım 7). Dokunulmaz: `scripts/ctrl/character_roster.gd` (`DEFAULT_ID = gunslinger`), Gunslinger dosyaları.
 
 ## Doğrulama
 - `bash tools/gate.sh` (adım 4 `validate_data` karakter hatalarını dosya/alan olarak söyler; `test/fixtures/rig_bad_*` örnek bozuk rig'ler).
@@ -45,6 +46,7 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 - Yürüme kalite kapısı `art/source/<id>/quality.json` `pass: true`; kırmızıysa waiver yolu `docs/design/walk-waiver-<id>.md` (tarih + kullanıcı onayı + ölçüm + gerekçe).
 
 ## Kontrol listesi (kart çalışma notlarından)
+- [ ] `godot --headless --import` yapıldı, `validate_data` 0 hata; karakter listesi sabitleyen 4 mevcut test güncellendi.
 - [ ] Yürüme/aksiyon kareleri **video → ffmpeg → yeşil silme** hattından; görsel üreticiyle kare kare çizilen yürüme kullanılmaz (yan görünümde bacak sırası çizilemez; tek ızgarada tutarlı döngü çıkmaz). `--preview` ile bağlamadan önce ölç.
 - [ ] Bilinen açığı sabitleyen test baştan `karakterizasyon (F-xxx)` adıyla; kabul testi kusurlu davranışı beklenen değer yapmaz, bulgu kimliğine bağlı `pending` yazılır.
 - [ ] Paralel fazlar ortak kayıt dosyalarına (`tools/gate_min_tests.json`, dilim dosyaları) yazarsa sözleşme fazı önceden hazırlar; rapordan önce entegrasyon dalını yeniden al.

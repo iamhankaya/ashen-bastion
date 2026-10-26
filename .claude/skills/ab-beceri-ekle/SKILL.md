@@ -14,7 +14,7 @@ Başlamadan: kb kartının `## Çalışma notları` bölümünü oku; kapı `bas
 4. **Davranış:** `docs/dev/skill-hooks.md` (kanca imzaları değişmez, sona eklenir; `test/` altındaki `test_contract_hooks.gd` makine okunur denetler). Rastgelelik yalnız `rng_combat`.
 5. **İkon:** `ab-gorsel-ikon-uret`; **ses:** `ab-ses-ekle` (`cast_sfx`); **efekt:** `ab-efekt-shader`.
 6. **Testler:** birim `test/unit/test_v202_wind_basic.gd`, `test_v202_wind_evo.gd` kalıbı; kabul tabloları `test/helpers/expected_tables_v202.gd`; sayı değişirse test itirazı turu; yeni test dosyası → `ab-test-ve-kapi`.
-7. **Fuzz/ölçüm:** `test/helpers/fuzz_invariants.gd`, `tools/balance/mid_run.gd` `PRIORITY`.
+7. **Fuzz/ölçüm:** `test/helpers/fuzz_invariants.gd`, `tools/balance/mid_run.gd` `PRIORITY_BY_CHAR`.
 8. **DPS bandı:** `tools/balance/dps_density.gd` (evrim ÷ aktif 1,8–2,2) → `ab-denge-olcumu`.
 
 ## Dokunulan dosyalar

@@ -10,7 +10,7 @@ Girdi: duruş görseli + üç kısa video. Çıktı: `assets/gfx/char/<id>_strip
 ## Adımlar
 1. **Duruş referansı:** şeffaf 1024×1536 PNG → `art/source/<id>/<id>_idle.png` (aracın varsayılan duruş adı `<src dizin adı>_idle.png`; başka ad için `--idle`). Görsel kullanıcı makinesinde Codex ile üretilir, repoya girmeden kullanıcıya gösterilir (bkz. `ab-gorsel-ikon-uret`).
 2. **Üç kısa video (kullanıcıdan):** yürüme, cast, gather. Düz yeşil zemin, sabit kamera, yan görünüm, sağa bakar, 24 fps. Videolar repoya girmez (`art/source/zyfen/` altında yoktur).
-3. **Kare çıkarma (öneri, repoda betik yok):** `ffmpeg -i walk.mp4 -vf "select='eq(n,155)+eq(n,159)+…'" -vsync 0 f_%02d.png`. Zyfen değerleri: yürüme bir tam adım döngüsü, eşit aralıkla 8 kare (24 fps'de kare 155–182); cast 6 kare (57, 61, 64, 67, 73, 79; açık avuç 4. kare = atış anı); gather 4 kare (13, 22, 40, 63). Hangi kareleri seçtiğini `art/source/<id>/README.md`'ye yaz.
+3. **Kare çıkarma (öneri, repoda betik yok):** `ffmpeg -i walk.mp4 -vf "select='eq(n,155)+eq(n,159)+…'" -fps_mode passthrough f_%02d.png` (ffmpeg ≥ 5.1; eski sürümde `-vsync 0`). Zyfen değerleri: yürüme bir tam adım döngüsü, eşit aralıkla 8 kare (24 fps'de kare 155–182); cast 6 kare (57, 61, 64, 67, 73, 79; açık avuç 4. kare = atış anı); gather 4 kare (13, 22, 40, 63). Hangi kareleri seçtiğini `art/source/<id>/README.md`'ye yaz.
 4. **Yeşil silme:** `tools/art/chroma_key.py` (`key_image`). Zyfen: alfa = 1 − clamp((G − max(R,B) − 20)/40); yarı saydam pikselde G ≤ max(R,B)+8. Çıktı: `art/source/<id>/frames/{walk,cast,gather}/*.png`.
 5. **Şerit:**
    ```
