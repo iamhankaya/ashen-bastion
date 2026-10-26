@@ -35,7 +35,7 @@ const METHODS := {
 	"AchievementStore":
 	{
 		"_init": ["p_path", O],
-		"load_file": ["", B],
+		"load_file": ["defs", B],  # v2.0.3: göç için isteğe bağlı aile tanımları
 		"save": ["", B],
 		"is_unlocked": ["id", B],
 		"unlocked_at": ["id", I],
@@ -80,7 +80,7 @@ const METHODS := {
 	"AchievementToast":
 	{
 		"rect": ["safe_top", TYPE_RECT2],
-		"show_def": ["def", N],
+		"show_def": ["def,step", N],  # v2.0.3: isteğe bağlı kademe
 		"apply_state": ["q", N],
 	},
 	"CharactersScreen":
@@ -252,8 +252,10 @@ func test_store_defaults() -> void:
 	var s := AchievementStore.new("user://test_ach_contract_never_written.json")
 	assert_eq(s.path, "user://test_ach_contract_never_written.json")
 	assert_eq(s.unlocked, {})
-	assert_eq(s.totals, {"kills": 0, "runs": 0, "wins": 0, "play_secs": 0})
-	assert_eq(s.best, {"score": 0, "time": 0, "level": 0})
+	assert_eq(s.totals.keys(), Array(AchievementStore.TOTAL_KEYS), "v2.0.3: boss_kills eklendi")
+	assert_eq(int(s.totals["kills"]) + int(s.totals["boss_kills"]), 0)
+	assert_eq(s.best.keys(), Array(AchievementStore.BEST_KEYS), "v2.0.3: koşu en iyileri eklendi")
+	assert_eq(int(s.best["score"]) + int(s.best["time"]) + int(s.best["level"]), 0)
 	assert_eq(s.chars5, PackedStringArray())
 	assert_false(s.corrupt)
 	assert_false(s.dirty)

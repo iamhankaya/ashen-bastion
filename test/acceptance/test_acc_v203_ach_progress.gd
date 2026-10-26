@@ -268,7 +268,7 @@ func test_c8_screen_all_open_shows_total_and_the_completion_line() -> void:
 		return
 	var st := AchKit.store()
 	for a in AchKit.data().achievements:
-		st.unlock(a.id, TS)
+		st.unlock_step(a.id, a.thresholds().size(), TS)
 	st.totals["kills"] = 999999
 	var s := _screen(st)
 	await get_tree().process_frame
@@ -278,8 +278,14 @@ func test_c8_screen_all_open_shows_total_and_the_completion_line() -> void:
 func test_c8_screen_safe_area_keeps_back_button_inside_and_title_below_the_inset() -> void:
 	if _gate():
 		return
-	var s := _screen(AchKit.store())
-	s.size = ExpectedLayoutV2.REF
+	# Ekran tam ekran çıpalı: boyut REF'li bir host Control'e verilir (çıpalı düğümde `size` atanmaz).
+	var host := Control.new()
+	host.custom_minimum_size = ExpectedLayoutV2.REF
+	host.size = ExpectedLayoutV2.REF
+	add_child_autofree(host)
+	var s := AchievementsScreen.new()
+	host.add_child(s)
+	s.open(AchKit.data(), AchKit.store())
 	var extra := Vector4(0.0, 120.0, 0.0, 90.0)
 	s.apply_safe_area(extra)
 	await get_tree().process_frame

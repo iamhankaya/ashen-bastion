@@ -60,7 +60,9 @@ func _play(sim: GameSim, policy: StringName, tracker: AchievementTracker) -> Arr
 
 
 func _tracker_for(sim: GameSim, character: StringName) -> AchievementTracker:
-	var tr := AchievementTracker.new(AchKit.data(), AchKit.store(), character, AchKit.clock())
+	var tr := AchievementTracker.new(
+		AchKit.legacy_data(), AchKit.store(), character, AchKit.clock()
+	)
 	tr.attach(sim.bus)
 	return tr
 

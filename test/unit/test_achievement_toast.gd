@@ -5,7 +5,7 @@ var _data: GameData
 
 
 func before_each() -> void:
-	_data = GameData.load_default()
+	_data = AchKit.legacy_data()
 
 
 func _toast() -> AchievementToast:

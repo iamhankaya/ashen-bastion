@@ -19,13 +19,13 @@ func _write(text: String) -> void:
 func _loaded(text: String) -> AchievementStore:
 	_write(text)
 	var s := AchievementStore.new(PATH)
-	s.load_file()
+	s.load_file(AchKit.legacy_data().achievements)
 	return s
 
 
 func test_missing_file_gives_empty_state() -> void:
 	var s := AchievementStore.new(PATH)
-	assert_false(s.load_file())
+	assert_false(s.load_file(AchKit.legacy_data().achievements))
 	assert_false(s.corrupt)
 	assert_eq(s.unlocked.size(), 0)
 	assert_eq(s.totals["kills"], 0)
@@ -46,7 +46,7 @@ func test_half_json_is_corrupt_with_bad_backup() -> void:
 
 
 func test_wrong_version_is_corrupt() -> void:
-	var s := _loaded('{"v":2,"unlocked":{"ilk_kan":5}}')
+	var s := _loaded('{"v":3,"unlocked":{"ilk_kan":5}}')
 	assert_true(s.corrupt)
 	assert_false(s.is_unlocked(&"ilk_kan"))
 
@@ -107,7 +107,7 @@ func test_unknown_ids_are_preserved_and_roundtrip() -> void:
 	s.unlock(&"ilk_kan", 5)
 	assert_true(s.save())
 	var s2 := AchievementStore.new(PATH)
-	assert_true(s2.load_file())
+	assert_true(s2.load_file(AchKit.legacy_data().achievements))
 	assert_eq(s2.unlocked_at(&"gelecek_basarim"), 99)
 	assert_eq(s2.unlocked_at(&"ilk_kan"), 5)
 
@@ -163,7 +163,7 @@ func test_tmp_is_not_read() -> void:
 	f.store_string('{"v":1,"unlocked":{"ilk_kan":5}}')
 	f.close()
 	var s := AchievementStore.new(PATH)
-	assert_false(s.load_file())
+	assert_false(s.load_file(AchKit.legacy_data().achievements))
 	assert_false(s.is_unlocked(&"ilk_kan"))
 
 
@@ -173,7 +173,7 @@ func test_corrupt_file_repaired_by_next_save() -> void:
 	s.unlock(&"ilk_kan", 9)
 	assert_true(s.save())
 	var s2 := AchievementStore.new(PATH)
-	assert_true(s2.load_file())
+	assert_true(s2.load_file(AchKit.legacy_data().achievements))
 	assert_false(s2.corrupt)
 	assert_eq(s2.unlocked_at(&"ilk_kan"), 9)
 
@@ -187,7 +187,7 @@ func test_roundtrip_and_file_layout() -> void:
 	assert_true(s.save())
 	assert_false(s.dirty)
 	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(PATH))
-	assert_eq(int(d["v"]), 1)
+	assert_eq(int(d["v"]), AchievementStore.VERSION_V2)
 	assert_eq(int(d["unlocked"]["ilk_kan"]), 1761270000)
 	assert_eq(int(d["totals"]["kills"]), 12)
 	assert_eq(int(d["best"]["score"]), 100)

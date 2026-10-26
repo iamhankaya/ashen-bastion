@@ -43,7 +43,7 @@ func test_iso_game_data_default_cache_not_mutated_by_acceptance_helpers() -> voi
 	var a := GameData.load_default()
 	var b := GameData.load_default()
 	assert_same(a, b, "önbellek tek örnek")
-	assert_eq(a.achievements.size(), 22)
+	assert_eq(a.achievements.size(), 19, "v2.0.3: 19 aile")
 	assert_true(a.character_ids.has(&"zyfen"))
 
 

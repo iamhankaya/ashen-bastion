@@ -1,222 +1,321 @@
 [
   {
-    "id": "ilk_kan",
-    "name": "İlk Kan",
-    "desc": "İlk düşmanını öldür.",
-    "stat": "total_kills",
-    "target": 1,
-    "scope": "total",
-    "tier": "kolay",
-    "icon": "res://assets/ui/achievements/ilk_kan.png"
-  },
-  {
-    "id": "bes_dakika",
-    "name": "Beş Dakika",
-    "desc": "Tek koşuda 5 dakika hayatta kal.",
+    "id": "endure",
+    "name": "Endure",
+    "desc": "Tek koşuda hayatta kal.",
     "stat": "run_time",
-    "target": 300,
     "scope": "run",
-    "tier": "kolay",
+    "steps": [
+      300,
+      600,
+      900,
+      1200
+    ],
+    "group": "THE WATCH",
+    "legacy": {
+      "bes_dakika": 1,
+      "on_dakika": 2,
+      "on_bes_dakika": 3
+    },
     "icon": "res://assets/ui/achievements/bes_dakika.png"
   },
   {
-    "id": "seviye_10",
-    "name": "Onuncu Basamak",
-    "desc": "Tek koşuda 10. seviyeye ulaş.",
-    "stat": "run_level",
-    "target": 10,
-    "scope": "run",
-    "tier": "kolay",
-    "icon": "res://assets/ui/achievements/seviye_10.png"
-  },
-  {
-    "id": "yerlesik",
-    "name": "Yerleşik",
-    "desc": "10 koşu oyna.",
-    "stat": "total_runs",
-    "target": 10,
-    "scope": "total",
-    "tier": "kolay",
-    "icon": "res://assets/ui/achievements/yerlesik.png"
-  },
-  {
-    "id": "tambur_ustasi",
-    "name": "Tambur Ustası",
-    "desc": "Tek koşuda 100 kez doldur.",
-    "stat": "run_reloads",
-    "target": 100,
-    "scope": "run",
-    "tier": "kolay",
-    "icon": "res://assets/ui/achievements/tambur_ustasi.png"
-  },
-  {
-    "id": "alti_silah",
-    "name": "Tam Kadro",
-    "desc": "6 aktif beceri yuvasını doldur.",
-    "stat": "run_active_slots",
-    "target": 6,
-    "scope": "run",
-    "tier": "kolay",
-    "icon": "res://assets/ui/achievements/alti_silah.png"
-  },
-  {
-    "id": "kirim",
-    "name": "Kırım",
-    "desc": "Tek koşuda 500 düşman öldür.",
-    "stat": "run_kills",
-    "target": 500,
-    "scope": "run",
-    "tier": "orta",
-    "icon": "res://assets/ui/achievements/kirim.png"
-  },
-  {
-    "id": "on_dakika",
-    "name": "On Dakika",
-    "desc": "Tek koşuda 10 dakika hayatta kal.",
-    "stat": "run_time",
-    "target": 600,
-    "scope": "run",
-    "tier": "orta",
-    "icon": "res://assets/ui/achievements/on_dakika.png"
-  },
-  {
-    "id": "seri_ustasi",
-    "name": "Seri Ustası",
-    "desc": "SERİ çarpanını ×5'e çıkar.",
-    "stat": "run_best_mult",
-    "target": 5,
-    "scope": "run",
-    "tier": "orta",
-    "icon": "res://assets/ui/achievements/seri_ustasi.png"
-  },
-  {
-    "id": "piyade_avcisi",
-    "name": "Piyade Avcısı",
-    "desc": "Elit piyadeyi öldür.",
-    "stat": "run_elit_piyade",
-    "target": 1,
-    "scope": "run",
-    "tier": "orta",
-    "icon": "res://assets/ui/achievements/piyade_avcisi.png"
-  },
-  {
-    "id": "eklenti_avcisi",
-    "name": "Eklenti Avcısı",
-    "desc": "Tek koşuda 5 eklenti topla.",
-    "stat": "run_pickups",
-    "target": 5,
-    "scope": "run",
-    "tier": "orta",
-    "icon": "res://assets/ui/achievements/eklenti_avcisi.png"
-  },
-  {
-    "id": "dokunulmaz",
-    "name": "Dokunulmaz",
-    "desc": "İlk 3 dakika hiç hasar alma.",
+    "id": "untouched",
+    "name": "Untouched",
+    "desc": "Hiç hasar almadan hayatta kal.",
     "stat": "run_clean_secs",
-    "target": 180,
     "scope": "run",
-    "tier": "orta",
+    "steps": [
+      180,
+      300,
+      600
+    ],
+    "group": "THE WATCH",
+    "legacy": {
+      "dokunulmaz": 1
+    },
     "icon": "res://assets/ui/achievements/dokunulmaz.png"
   },
   {
-    "id": "seviye_20",
-    "name": "Yirminci Basamak",
-    "desc": "Tek koşuda 20. seviyeye ulaş.",
-    "stat": "run_level",
-    "target": 20,
-    "scope": "run",
-    "tier": "orta",
-    "icon": "res://assets/ui/achievements/seviye_20.png"
+    "id": "vigil",
+    "name": "Vigil",
+    "desc": "Toplam oyun süresi biriktir.",
+    "stat": "total_play_secs",
+    "scope": "total",
+    "steps": [
+      3600,
+      18000,
+      72000
+    ],
+    "group": "THE WATCH"
   },
   {
-    "id": "kalabalik_kesici",
-    "name": "Kalabalık Kesici",
-    "desc": "Toplam 10.000 düşman öldür.",
+    "id": "rampage",
+    "name": "Rampage",
+    "desc": "Tek koşuda düşman öldür.",
+    "stat": "run_kills",
+    "scope": "run",
+    "steps": [
+      500,
+      1000,
+      2000,
+      3500
+    ],
+    "group": "THE CULLING",
+    "legacy": {
+      "kirim": 1
+    },
+    "icon": "res://assets/ui/achievements/kirim.png"
+  },
+  {
+    "id": "reaper",
+    "name": "Reaper",
+    "desc": "Toplam düşman öldür.",
     "stat": "total_kills",
-    "target": 10000,
     "scope": "total",
-    "tier": "orta",
-    "icon": "res://assets/ui/achievements/kalabalik_kesici.png"
+    "steps": [
+      1,
+      250,
+      2500,
+      10000
+    ],
+    "group": "THE CULLING",
+    "legacy": {
+      "ilk_kan": 1,
+      "kalabalik_kesici": 4
+    },
+    "icon": "res://assets/ui/achievements/ilk_kan.png"
   },
   {
-    "id": "cifte_yol",
-    "name": "Çifte Yol",
-    "desc": "İki farklı karakterle 5 dakika hayatta kal.",
-    "stat": "total_chars5",
-    "target": 2,
-    "scope": "total",
-    "tier": "orta",
-    "icon": "res://assets/ui/achievements/cifte_yol.png"
-  },
-  {
-    "id": "on_bes_dakika",
-    "name": "On Beş Dakika",
-    "desc": "Tek koşuda 15 dakika hayatta kal.",
-    "stat": "run_time",
-    "target": 900,
-    "scope": "run",
-    "tier": "zor",
-    "icon": "res://assets/ui/achievements/on_bes_dakika.png"
-  },
-  {
-    "id": "uc_elit",
-    "name": "Üç Elit",
-    "desc": "Tek koşuda üç elit türünü de öldür.",
-    "stat": "run_elite_kinds",
-    "target": 3,
-    "scope": "run",
-    "tier": "zor",
-    "icon": "res://assets/ui/achievements/uc_elit.png"
-  },
-  {
-    "id": "ilk_evrim",
-    "name": "İlk Evrim",
-    "desc": "Bir evrim kazan.",
-    "stat": "run_evolutions",
-    "target": 1,
-    "scope": "run",
-    "tier": "zor",
-    "icon": "res://assets/ui/achievements/ilk_evrim.png"
-  },
-  {
-    "id": "skor_100k",
-    "name": "Yüz Bin",
-    "desc": "Tek koşuda 100.000 skor yap.",
-    "stat": "run_score",
-    "target": 100000,
-    "scope": "run",
-    "tier": "zor",
-    "icon": "res://assets/ui/achievements/skor_100k.png"
-  },
-  {
-    "id": "sinirsiz_kirim",
-    "name": "Sınırsız Kırım",
-    "desc": "Sonsuz Tambur sırasında 100 düşman öldür.",
+    "id": "unbound",
+    "name": "Unbound",
+    "desc": "Sonsuz Tambur sırasında düşman öldür.",
     "stat": "run_unlimited_kills",
-    "target": 100,
     "scope": "run",
-    "tier": "zor",
+    "steps": [
+      100,
+      250,
+      500
+    ],
+    "group": "THE CULLING",
+    "legacy": {
+      "sinirsiz_kirim": 1
+    },
     "icon": "res://assets/ui/achievements/sinirsiz_kirim.png"
   },
   {
-    "id": "kale_lordu_devrildi",
-    "name": "Kale Lordu Devrildi",
-    "desc": "Koşuyu kazan: Kale Lordu'nu devir.",
-    "stat": "run_won",
-    "target": 1,
+    "id": "demolisher",
+    "name": "Demolisher",
+    "desc": "Tek Kara Bomba ile düşman vur.",
+    "stat": "run_bomb_hits",
     "scope": "run",
-    "tier": "cok_zor",
+    "steps": [
+      20,
+      35,
+      50
+    ],
+    "group": "THE CULLING",
+    "legacy": {
+      "bomba_ustasi": 1
+    },
+    "icon": "res://assets/ui/achievements/bomba_ustasi.png"
+  },
+  {
+    "id": "bossbane",
+    "name": "Bossbane",
+    "desc": "Elit boss öldür (toplam).",
+    "stat": "total_boss_kills",
+    "scope": "total",
+    "steps": [
+      1,
+      10,
+      30
+    ],
+    "group": "THE CROWNED",
+    "legacy": {
+      "piyade_avcisi": 1
+    },
+    "icon": "res://assets/ui/achievements/piyade_avcisi.png"
+  },
+  {
+    "id": "elite_trio",
+    "name": "Elite Trio",
+    "desc": "Tek koşuda üç elit türünü de öldür.",
+    "stat": "run_elite_kinds",
+    "scope": "run",
+    "steps": [
+      3
+    ],
+    "group": "THE CROWNED",
+    "legacy": {
+      "uc_elit": 1
+    },
+    "icon": "res://assets/ui/achievements/uc_elit.png"
+  },
+  {
+    "id": "lordslayer",
+    "name": "Lordslayer",
+    "desc": "Kale Lordu'nu devir.",
+    "stat": "total_wins",
+    "scope": "total",
+    "steps": [
+      1,
+      5,
+      25
+    ],
+    "group": "THE CROWNED",
+    "legacy": {
+      "kale_lordu_devrildi": 1
+    },
     "icon": "res://assets/ui/achievements/kale_lordu_devrildi.png"
   },
   {
-    "id": "bomba_ustasi",
-    "name": "Bomba Ustası",
-    "desc": "Tek Kara Bomba ile 20 düşmanı vur.",
-    "stat": "run_bomb_hits",
-    "target": 20,
+    "id": "ascendant",
+    "name": "Ascendant",
+    "desc": "Tek koşuda seviye atla.",
+    "stat": "run_level",
     "scope": "run",
-    "tier": "cok_zor",
-    "icon": "res://assets/ui/achievements/bomba_ustasi.png"
+    "steps": [
+      10,
+      20,
+      30
+    ],
+    "group": "THE ARMORY",
+    "legacy": {
+      "seviye_10": 1,
+      "seviye_20": 2
+    },
+    "icon": "res://assets/ui/achievements/seviye_10.png"
+  },
+  {
+    "id": "ascension",
+    "name": "Ascension",
+    "desc": "Tek koşuda evrim kazan.",
+    "stat": "run_evolutions",
+    "scope": "run",
+    "steps": [
+      1,
+      2,
+      4
+    ],
+    "group": "THE ARMORY",
+    "legacy": {
+      "ilk_evrim": 1
+    },
+    "icon": "res://assets/ui/achievements/ilk_evrim.png"
+  },
+  {
+    "id": "quick_hands",
+    "name": "Quick Hands",
+    "desc": "Tek koşuda tamburu doldur.",
+    "stat": "run_reloads",
+    "scope": "run",
+    "steps": [
+      100,
+      250,
+      500
+    ],
+    "group": "THE ARMORY",
+    "legacy": {
+      "tambur_ustasi": 1
+    },
+    "icon": "res://assets/ui/achievements/tambur_ustasi.png"
+  },
+  {
+    "id": "unbroken",
+    "name": "Unbroken",
+    "desc": "SERİ çarpanını yükselt.",
+    "stat": "run_best_mult",
+    "scope": "run",
+    "steps": [
+      5,
+      8
+    ],
+    "group": "THE ARMORY",
+    "legacy": {
+      "seri_ustasi": 1
+    },
+    "icon": "res://assets/ui/achievements/seri_ustasi.png"
+  },
+  {
+    "id": "renown",
+    "name": "Renown",
+    "desc": "Tek koşuda skor yap.",
+    "stat": "run_score",
+    "scope": "run",
+    "steps": [
+      100000,
+      250000,
+      500000
+    ],
+    "group": "THE ARMORY",
+    "legacy": {
+      "skor_100k": 1
+    },
+    "icon": "res://assets/ui/achievements/skor_100k.png"
+  },
+  {
+    "id": "scavenger",
+    "name": "Scavenger",
+    "desc": "Tek koşuda eklenti topla.",
+    "stat": "run_pickups",
+    "scope": "run",
+    "steps": [
+      5,
+      10,
+      20
+    ],
+    "group": "THE ARMORY",
+    "legacy": {
+      "eklenti_avcisi": 1
+    },
+    "icon": "res://assets/ui/achievements/eklenti_avcisi.png"
+  },
+  {
+    "id": "full_arsenal",
+    "name": "Full Arsenal",
+    "desc": "6 aktif beceri yuvasını doldur.",
+    "stat": "run_active_slots",
+    "scope": "run",
+    "steps": [
+      6
+    ],
+    "group": "THE ARMORY",
+    "legacy": {
+      "alti_silah": 1
+    },
+    "icon": "res://assets/ui/achievements/alti_silah.png"
+  },
+  {
+    "id": "garrison",
+    "name": "Garrison",
+    "desc": "Koşu oyna.",
+    "stat": "total_runs",
+    "scope": "total",
+    "steps": [
+      10,
+      50,
+      250
+    ],
+    "group": "THE ROAD",
+    "legacy": {
+      "yerlesik": 1
+    },
+    "icon": "res://assets/ui/achievements/yerlesik.png"
+  },
+  {
+    "id": "two_roads",
+    "name": "Two Roads",
+    "desc": "İki farklı karakterle 5 dakika hayatta kal.",
+    "stat": "total_chars5",
+    "scope": "total",
+    "steps": [
+      2
+    ],
+    "group": "THE ROAD",
+    "legacy": {
+      "cifte_yol": 1
+    },
+    "icon": "res://assets/ui/achievements/cifte_yol.png"
   }
 ]

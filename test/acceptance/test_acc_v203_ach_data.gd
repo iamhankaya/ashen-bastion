@@ -13,6 +13,9 @@ const FAMILY_GROUPS := {
 	"THE ROAD": ["Garrison", "Two Roads"],
 }
 
+## Eski kimlik -> ailenin toplam sayacına taşınan iki kayıt (run_elit_piyade → total_boss_kills, run_won → total_wins).
+const SCOPE_CHANGED := ["piyade_avcisi", "kale_lordu_devrildi"]
+
 
 func _gate() -> bool:
 	return V203Slice.require(self, "C")
@@ -120,8 +123,10 @@ func test_c3_old_achievement_keeps_stat_scope_and_threshold_at_its_mapped_step()
 			if row.is_empty():
 				continue
 			var k := int(a.legacy[old_id])
-			assert_eq(String(a.stat), row[1], "%s: stat" % old_id)
-			assert_eq(String(a.scope), row[4], "%s: kapsam" % old_id)
+			# Spec bilerek iki kimliğin stat/kapsamını değiştirir (tek koşu bayrağı → toplam sayaç); VLAD kararı (T20261026-63).
+			if not SCOPE_CHANGED.has(String(old_id)):
+				assert_eq(String(a.stat), row[1], "%s: stat" % old_id)
+				assert_eq(String(a.scope), row[4], "%s: kapsam" % old_id)
 			assert_eq(a.thresholds()[k - 1], row[2], "%s: eşik %s kademe %d" % [old_id, a.id, k])
 
 

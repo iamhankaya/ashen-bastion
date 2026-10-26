@@ -614,7 +614,9 @@ func _controller() -> GameController:
 	var c := GameController.new()
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	c.v2_opts = {
-		"data": AchKit.data(), "achievements_path": AchKit.tmp_path("m6"), "clock": AchKit.clock()
+		"data": AchKit.legacy_data(),
+		"achievements_path": AchKit.tmp_path("m6"),
+		"clock": AchKit.clock()
 	}
 	add_child(c)
 	_ctrl = c
@@ -686,7 +688,9 @@ func test_m8a_flow_apply_safe_areas_refreshes_hud_pause_and_level_up() -> void:
 	host.add_child(lu)
 	var ps := PauseScreen.new()
 	host.add_child(ps)
-	var flow := V2Flow.new({"data": AchKit.data(), "achievements_path": AchKit.tmp_path("m8a")})
+	var flow := V2Flow.new(
+		{"data": AchKit.legacy_data(), "achievements_path": AchKit.tmp_path("m8a")}
+	)
 	flow.build_world(
 		{
 			"ui_root": host,

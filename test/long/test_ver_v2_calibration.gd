@@ -11,7 +11,7 @@ const MAX_STEPS := 72000
 
 func test_ver_v2_calibration_report() -> void:
 	var ids: Array[StringName] = []
-	for a in AchKit.data().achievements:
+	for a in AchKit.legacy_data().achievements:
 		ids.append(a.id)
 	var table := {}  # "char/policy" -> {id: açılan koşu sayısı}
 	var meta := {}
