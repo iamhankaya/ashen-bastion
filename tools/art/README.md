@@ -45,15 +45,17 @@ height_dev_pct, width_dev_pct, foot_slide}`. `foot_slide` basan ayağın kare ba
 Kalite kapısı sonuçları ve komutlar: `docs/dev/v1.1-d4/README.md`. Testler: `tests/test_make_strip.py` (sentetik 7 hücreli sayfa).
 
 
-## Zyfen şeridi (v2.0.2 U2)
+## Kolsuz rig şeridi (`make_zyfen_strip.py`; v2.0.2 U2, karakterden bağımsız)
 
-`python3 tools/art/make_zyfen_strip.py --src art/source/zyfen --out assets/gfx/char/zyfen_strip.png --body-out assets/gfx/char/zyfen_body.png --manifest art/source/zyfen/strip_manifest.json --quality art/source/zyfen/quality.json [--stride 130] [--align feet|torso] [--walk-cast '<glob>'] [--palm-px 444,132] [--preview]`
+`python3 tools/art/make_zyfen_strip.py --src art/source/<id> --out assets/gfx/char/<id>_strip.png --body-out assets/gfx/char/<id>_body.png --manifest art/source/<id>/strip_manifest.json --quality art/source/<id>/quality.json [--display-height 200] [--idle <png>] [--stride 130] [--align feet|torso] [--walk-cast '<glob>'] [--palm-px 444,132] [--fire-frame 3] [--native-facing right|left] [--preview]`
 
-19 hücre (8 yürüme, 1 duruş, 6 cast, 4 gather; `--walk-cast` ile + N). Hücre genişliği tüm klip alfa kutularından hesaplanır
+Karakter kimliği `--src` dizin adıdır; duruş görseli varsayılan olarak `<src>/<kimlik>_idle.png` (`--idle` ile değişir); `--display-height` karakter
+verisindeki `rig.display_height` (varsayılan 200) ve `--stride` `walk.stride` ile aynı olmalıdır. Dosya adı Zyfen döneminden kalmadır; Zyfen çıktısı birebir aynıdır.
+Zyfen için: `--src art/source/zyfen ... --palm-px 444,132` (19 hücre: 8 yürüme, 1 duruş, 6 cast, 4 gather; `--walk-cast` ile + N). Hücre genişliği tüm klip alfa kutularından hesaplanır
 (320 px boy). Yürüme kareleri varsayılan olarak basan ayağa göre hizalanır (`--align feet`; kare başına ≤24 px kaydırma); kapı
 `foot_slide` ≥ N-2 çift ≤3 px, klip boy sapması ≤%6, toplam genişlik ≤8192. Kapı kırmızıysa çıkış kodu 1 ve `quality.json`
-`pass: false` (sessiz yedek yok; `test_make_zyfen_strip.py` depodaki çıktıyı denetler). `stride`, `zyfen.json` `walk.stride` ile aynı olmalıdır. `--palm-px` verilirse manifeste `palm` (cast_point uzayı) yazılır, bkz. `docs/data-schema.md`.
-Yöntem kb notu: kareler video kareleridir; üretici araç yan görünümde bacak sırasını değiştiremediği için video yöntemi kullanıldı.
+`pass: false` (sessiz yedek yok; `test_make_zyfen_strip.py` depodaki çıktıyı denetler). `--palm-px` verilirse manifeste `palm` (cast_point uzayı) yazılır, bkz. `docs/data-schema.md`.
+Yöntem kb notu: kareler video kareleridir; üretici araç yan görünümde bacak sırasını değiştiremediği için video yöntemi kullanıldı. Adımlar: `.claude/skills/ab-animasyon-seridi/SKILL.md`.
 
 ## Zyfen ikon ve efektleri (`process_zyfen_fx.py`, v2.0.2 A2a)
 `python tools/art/process_zyfen_fx.py [--check]`: `art/source/zyfen/icons/*.png` (20, 1254 px) -> alfa kutusuna kırp, uzun kenar %80,

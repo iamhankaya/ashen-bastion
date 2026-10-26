@@ -1,6 +1,6 @@
 # Ashen Bastion v2.0 — AI görsel istemleri (isteğe bağlı)
 
-**Hepsi isteğe bağlıdır:** görsel gelmezse yer tutucu stili çalışır (`DESIGN.md` §6.3). Görseli kullanıcı üretir; yerleştirme `docs/dev/new-character.md` (K9). Öncelik: **P1 → P2 → P4 → P3**.
+**Hepsi isteğe bağlıdır:** görsel gelmezse yer tutucu stili çalışır (`DESIGN.md` §6.3). Görsel ve ikonlar kullanıcının makinesinde Codex ile üretilir ve repoya girmeden kullanıcıya gösterilir, onaydan sonra eklenir (karar 2026-10-25; kısa video Gemini ile); yerleştirme `docs/dev/new-character.md` (K9). Öncelik: **P1 → P2 → P4 → P3**.
 İsimler **çalışma adıdır** (Barutçu); kullanıcı konsepti değiştirirse yalnız "Karakter tarifi" bloğu değişir, kurallar aynı kalır. Esin kaynağı olan bir karakterin/eserin adı **istemde ve repoda geçmez** (public repo).
 
 ## Ortak kurallar (v1.1 `prompts.md` ile aynı çizgi)
