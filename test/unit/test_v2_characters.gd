@@ -42,7 +42,7 @@ func after_each() -> void:
 func test_builds_hidden_screen_and_menu_label() -> void:
 	assert_not_null(_chars.screen)
 	assert_false(_chars.screen.visible)
-	assert_string_contains(_menu.version_label.text, "Gunslinger")
+	assert_string_contains((_menu.characters_button.get_node("Sub") as Label).text, "Gunslinger")
 
 
 func test_open_requests_characters_screen_and_focuses_selected() -> void:
@@ -68,7 +68,7 @@ func test_select_saves_character_and_updates_menu() -> void:
 	_chars.screen.set_focus_id(&"zyfen")
 	assert_true(_chars.screen.press_select())
 	assert_eq(get_tree().root.get_node("Settings").character_id, "zyfen")
-	assert_string_contains(_menu.version_label.text, "Zyfen")
+	assert_string_contains((_menu.characters_button.get_node("Sub") as Label).text, "Zyfen")
 	assert_true(FileAccess.file_exists(TMP), "geçici yola yazıldı, gerçek dosyaya değil")
 
 
