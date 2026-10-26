@@ -23,6 +23,13 @@ const GRABBER := 84
 const RAIL_H := 28
 const CARD_GAP := 30
 const PREVIEW_ID := &"shot_right"
+const SWITCH_SEC := 0.14
+## LİSANSLAR alt ekranı satırları: [başlık, açıklama] (kaynaklar: assets/fonts/LICENSE-*-OFL.txt, LICENSES-audio.md).
+const LICENSE_ROWS := [
+	["CINZEL", "Yazı tipi · SIL Open Font License 1.1"],
+	["INTER", "Yazı tipi · SIL Open Font License 1.1"],
+	["SES VE MÜZİK", "Kaynaklar ve lisanslar: LICENSES-audio.md"],
+]
 const SECTION_TITLES := {
 	&"ses": "SES", &"dokunus": "DOKUNUŞ", &"gorunum": "GÖRÜNÜM", &"hakkinda": "HAKKINDA"
 }
@@ -39,11 +46,16 @@ var back_button: Button
 var scroll: ScrollContainer
 var column: VBoxContainer
 var muted_note: Label
+var licenses_button: Button
+var licenses: Control
+var lic_back_button: Button
 
 var _sound_on: bool = true
 var _vibration_on: bool = true
 var _hareket_on: bool = false
 var _title_box: Control
+var _lic_title: Control
+var _lic_card: Control
 var _title_drop: float = 0.0
 
 
@@ -68,13 +80,29 @@ class Switch:
 		add_child(plate)
 		set_on(false)
 
-	func set_on(p_on: bool) -> void:
+	## `animate`: eski mühür 140 ms içinde solar; `hareket_azalt` açıkken anlık (DESIGN §6).
+	func set_on(p_on: bool, animate: bool = false) -> void:
 		on = p_on
 		word.text = "AÇIK" if on else "KAPALI"
 		word.add_theme_color_override(&"font_color", UiKit.KEMIK_100 if on else UiKit.KEMIK_300)
+		var old := plate.texture
 		plate.texture = UiKit.texture(
 			UiKit.SKIN_DIR + ("anahtar-ac.svg" if on else "anahtar-kapali.svg")
 		)
+		if not animate or old == null or old == plate.texture:
+			return
+		var st := get_node_or_null(^"/root/Settings")  # ağaçta değilken sorulmaz (_init çağrısı animate=false)
+		if st != null and st.hareket_azalt:
+			return
+		var ghost := TextureRect.new()
+		ghost.texture = old
+		ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ghost.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		UiKit.fill(ghost)
+		plate.add_child(ghost)
+		var tw := create_tween()
+		tw.tween_property(ghost, "modulate:a", 0.0, SWITCH_SEC)
+		tw.tween_callback(ghost.queue_free)
 
 
 func _ready() -> void:
@@ -153,6 +181,7 @@ func _build() -> void:
 	back_button.offset_bottom = BACK_TOP + BACK_H
 	back_button.pressed.connect(close)
 	add_child(back_button)
+	_build_licenses()
 	set_values(AudioMix.MAX_PCT, AudioMix.MAX_PCT, true)
 
 
@@ -210,6 +239,108 @@ func _build_hakkinda() -> void:
 	v.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(v)
 	card.add_child(row)
+	card.add_child(_licenses_row())
+
+
+## HAKKINDA > LİSANSLAR satırı: tek dokunma hedefi, sağda ">" işareti.
+func _licenses_row() -> Button:
+	licenses_button = Button.new()
+	licenses_button.flat = true
+	licenses_button.custom_minimum_size = Vector2(0, ROW_H)
+	licenses_button.accessibility_name = "Lisanslar"
+	licenses_button.add_theme_stylebox_override(
+		&"focus", UiKit.stylebox(Color(0, 0, 0, 0), UiKit.BRONZ_300, 6, 8)
+	)
+	var h := HBoxContainer.new()
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.fill(h)
+	var v := VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_child(UiKit.label("LİSANSLAR", &"LabelAccent", 36))
+	v.add_child(UiKit.label("Yazı tipleri, ses ve müzik.", &"", 28, UiKit.KEMIK_300))
+	h.add_child(v)
+	var chevron := UiKit.label("›", &"LabelAccent", 56)
+	chevron.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	h.add_child(chevron)
+	licenses_button.add_child(h)
+	licenses_button.pressed.connect(_open_licenses)
+	return licenses_button
+
+
+## LİSANSLAR alt ekranı (DESIGN `02d`): lento başlık, tek kart, GERİ ayarlara döner.
+func _build_licenses() -> void:
+	licenses = Control.new()
+	licenses.name = "Licenses"
+	UiKit.fill(licenses)
+	licenses.mouse_filter = Control.MOUSE_FILTER_STOP
+	var bg := ColorRect.new()
+	bg.color = UiKit.TAS_900
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.fill(bg)
+	licenses.add_child(bg)
+	_lic_title = PanelContainer.new()
+	_lic_title.add_theme_stylebox_override(&"panel", UiKit.skin_box("lento", 60, UiKit.TAS_800))
+	_lic_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_lic_title.anchor_left = 0.5
+	_lic_title.anchor_right = 0.5
+	_lic_title.offset_left = -260.0
+	_lic_title.offset_right = 260.0
+	_lic_title.offset_top = TITLE_TOP
+	_lic_title.offset_bottom = TITLE_TOP + 120.0
+	var t := UiKit.label("LİSANSLAR", &"LabelTitle", 60)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_lic_title.add_child(t)
+	licenses.add_child(_lic_title)
+	_lic_card = PanelContainer.new()
+	_lic_card.add_theme_stylebox_override(&"panel", UiKit.skin_box("levha", 40, UiKit.TAS_800))
+	_lic_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_lic_card.anchor_left = 0.5
+	_lic_card.anchor_right = 0.5
+	_lic_card.offset_left = -W * 0.5
+	_lic_card.offset_right = W * 0.5
+	_lic_card.offset_top = LIST_TOP + 10.0
+	var rows := VBoxContainer.new()
+	rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rows.add_theme_constant_override(&"separation", 12)
+	for r in LICENSE_ROWS:
+		var box := VBoxContainer.new()
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(UiKit.label(r[0], &"LabelAccent", 36))
+		var d := UiKit.label(r[1], &"", 28, UiKit.KEMIK_300)
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(d)
+		rows.add_child(box)
+	_lic_card.add_child(rows)
+	licenses.add_child(_lic_card)
+	lic_back_button = UiKit.button("GERİ", &"secondary", BACK_H)
+	lic_back_button.add_theme_font_size_override(&"font_size", 48)
+	lic_back_button.add_theme_stylebox_override(&"normal", UiKit.skin_box("dugme-dolu"))
+	lic_back_button.add_theme_stylebox_override(&"hover", UiKit.skin_box("dugme-dolu"))
+	lic_back_button.add_theme_stylebox_override(&"pressed", UiKit.skin_box("dugme-basili"))
+	lic_back_button.accessibility_name = "Geri"
+	lic_back_button.anchor_left = 0.5
+	lic_back_button.anchor_right = 0.5
+	lic_back_button.offset_left = -W * 0.5
+	lic_back_button.offset_right = W * 0.5
+	lic_back_button.offset_top = BACK_TOP
+	lic_back_button.offset_bottom = BACK_TOP + BACK_H
+	lic_back_button.pressed.connect(_close_licenses)
+	licenses.add_child(lic_back_button)
+	licenses.visible = false
+	add_child(licenses)
+
+
+func _open_licenses() -> void:
+	licenses.visible = true
+	lic_back_button.grab_focus.call_deferred()
+
+
+func _close_licenses() -> void:
+	licenses.visible = false
+	licenses_button.grab_focus.call_deferred()
 
 
 ## Tek sürüm kaynağı: project.godot `application/config/version`.
@@ -352,7 +483,7 @@ func _changed(s: HSlider, v: float, final: bool) -> void:
 	var st := _settings()
 	if not st.sound_on:
 		st.set_sound(true)
-		set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on)
+		set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on, true)
 		sound_toggled.emit(true)
 	if s == music_slider:
 		music_value.text = "%d%%" % pct
@@ -365,7 +496,7 @@ func _changed(s: HSlider, v: float, final: bool) -> void:
 
 
 ## Değerleri dışarıdan ayarla (sinyal yaymaz). Ses ve hareket azalt durumu `Settings`ten okunur.
-func set_values(music_pct: int, sfx_pct: int, vib: bool) -> void:
+func set_values(music_pct: int, sfx_pct: int, vib: bool, animate: bool = false) -> void:
 	_vibration_on = vib
 	if music_slider == null:
 		return
@@ -376,9 +507,9 @@ func set_values(music_pct: int, sfx_pct: int, vib: bool) -> void:
 	sfx_slider.set_value_no_signal(sfx_pct)
 	music_value.text = "%d%%" % music_pct
 	sfx_value.text = "%d%%" % sfx_pct
-	_set_switch(sound_button, _sound_on, "Ses")
-	_set_switch(vibration_button, vib, "Titreşim")
-	_set_switch(hareket_button, _hareket_on, "Hareketi azalt")
+	_set_switch(sound_button, _sound_on, "Ses", animate)
+	_set_switch(vibration_button, vib, "Titreşim", animate)
+	_set_switch(hareket_button, _hareket_on, "Hareketi azalt", animate)
 	muted_note.visible = not _sound_on
 	for s in [music_slider, sfx_slider]:
 		(s as Control).modulate = Color.WHITE if _sound_on else Color(1, 1, 1, 0.55)
@@ -386,8 +517,8 @@ func set_values(music_pct: int, sfx_pct: int, vib: bool) -> void:
 	sfx_slider.accessibility_name = "Efekt, yüzde %d" % sfx_pct
 
 
-func _set_switch(b: Button, on: bool, spoken: String) -> void:
-	(b.get_meta(&"switch") as Switch).set_on(on)
+func _set_switch(b: Button, on: bool, spoken: String, animate: bool = false) -> void:
+	(b.get_meta(&"switch") as Switch).set_on(on, animate)
 	b.accessibility_name = "%s, %s" % [spoken, "açık" if on else "kapalı"]
 
 
@@ -396,12 +527,16 @@ func open() -> void:
 	var st := _settings()
 	set_values(st.music_pct, st.sfx_pct, st.vibration_on)
 	scroll.scroll_vertical = 0
+	licenses.visible = false
 	visible = true
 	back_button.grab_focus.call_deferred()
 
 
 ## Klavye/odak ile değişen (bırakma olayı olmayan) değerler de yazılır.
 func close() -> void:
+	if licenses.visible:  # Android geri: önce LİSANSLAR alt ekranı kapanır, ayarlar açık kalır
+		_close_licenses()
+		return
 	visible = false
 	_settings().save_settings()
 	back_requested.emit()
@@ -428,6 +563,13 @@ func apply_safe_area(extra: Variant = null) -> void:
 	back_button.offset_bottom = BACK_TOP - e.w + BACK_H
 	back_button.offset_left = -W * 0.5 + shift
 	back_button.offset_right = W * 0.5 + shift
+	_lic_title.offset_top = TITLE_TOP + e.y
+	_lic_title.offset_bottom = TITLE_TOP + e.y + 120.0
+	_lic_card.offset_top = LIST_TOP + 10.0 + e.y
+	lic_back_button.offset_top = BACK_TOP - e.w
+	lic_back_button.offset_bottom = BACK_TOP - e.w + BACK_H
+	lic_back_button.offset_left = -W * 0.5 + shift
+	lic_back_button.offset_right = W * 0.5 + shift
 
 
 func _settings() -> Node:
@@ -436,18 +578,18 @@ func _settings() -> Node:
 
 func _on_sound() -> void:
 	_settings().set_sound(not _sound_on)
-	set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on)
+	set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on, true)
 	sound_toggled.emit(_sound_on)
 
 
 func _on_vibration() -> void:
-	set_values(int(music_slider.value), int(sfx_slider.value), not _vibration_on)
+	set_values(int(music_slider.value), int(sfx_slider.value), not _vibration_on, true)
 	vibration_toggled.emit(_vibration_on)
 
 
 func _on_hareket() -> void:
 	_settings().set_hareket_azalt(not _hareket_on)
-	set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on)
+	set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on, true)
 	hareket_azalt_toggled.emit(_hareket_on)
 
 

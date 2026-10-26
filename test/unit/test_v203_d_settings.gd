@@ -142,3 +142,78 @@ func test_d8_menu_reduce_motion_stops_embers_and_breath() -> void:
 		assert_eq(m.hero.scale, Vector2.ONE, "nefes durur")
 	st.set_hareket_azalt(false)
 	assert_true(m.embers.visible)
+
+
+func test_d9_licenses_row_opens_subscreen_and_back_returns_to_settings() -> void:
+	var sc := _screen()
+	assert_false(sc.licenses.visible)
+	sc.licenses_button.pressed.emit()
+	assert_true(sc.licenses.visible)
+	for r in SettingsScreen.LICENSE_ROWS:
+		assert_true(AchKit.any_text_contains(sc.licenses, r[0]), r[0])
+	assert_true(AchKit.any_text_contains(sc.licenses, "LICENSES-audio.md"))
+	watch_signals(sc)
+	sc.close()  # Android geri: yalnız alt ekran kapanır
+	assert_false(sc.licenses.visible)
+	assert_true(sc.visible, "ayarlar açık kalır")
+	assert_signal_not_emitted(sc, "back_requested")
+	sc.licenses_button.pressed.emit()
+	sc.lic_back_button.pressed.emit()
+	assert_false(sc.licenses.visible)
+	assert_true(sc.visible)
+
+
+func test_d10_licenses_subscreen_respects_safe_area() -> void:
+	var host := Control.new()
+	host.size = Vector2(1080, 2400)
+	add_child_autofree(host)
+	var sc := SettingsScreen.new()
+	host.add_child(sc)
+	sc.open()
+	sc.licenses_button.pressed.emit()
+	sc.apply_safe_area(Vector4(0, 130, 0, 150))
+	await get_tree().process_frame
+	assert_lte(sc.lic_back_button.get_global_rect().end.y, 2400.0 - 72.0 - 150.0 + 0.5)
+	assert_gte(sc.licenses.find_child("*", true, false).get_global_rect().position.y, 0.0)
+
+
+func test_d11_switch_fades_in_140ms_and_is_instant_with_reduced_motion() -> void:
+	var sc := _screen()
+	var sw := sc.vibration_button.get_meta(&"switch") as SettingsScreen.Switch
+	sc.vibration_button.pressed.emit()
+	assert_eq(sw.plate.get_child_count(), 1, "eski mühür solarak kalır")
+	await get_tree().create_timer(SettingsScreen.SWITCH_SEC + 0.1).timeout
+	assert_eq(sw.plate.get_child_count(), 0, "140 ms sonra temizlenir")
+	st.set_hareket_azalt(true)
+	sc.vibration_button.pressed.emit()
+	assert_eq(sw.plate.get_child_count(), 0, "hareket azalt açık: anlık")
+
+
+func test_d12_big_font_scale_stacks_half_buttons_in_one_column_without_clipping() -> void:
+	var host := Control.new()
+	host.size = Vector2(1080, 2400)
+	add_child_autofree(host)
+	var m := MainMenu.new()
+	host.add_child(m)
+	await get_tree().process_frame
+	assert_false(m.is_stacked())
+	m.set_font_scale(2.0)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_true(m.is_stacked())
+	var prev_end := m.play_button.get_global_rect().end.y
+	for b in [m.characters_button, m.achievements_button, m.scores_button, m.settings_button]:
+		var r := (b as Button).get_global_rect()
+		assert_almost_eq(r.size.x, 936.0, 1.0, "%s tam genişlik" % b.name)
+		assert_gte(r.size.y, 168.0 - 0.5, b.name)
+		assert_gte(r.position.y, prev_end + 27.0 - 1.0, "%s üstündekiyle örtüşmez" % b.name)
+		prev_end = r.end.y
+	assert_lte(m.version_label.get_global_rect().end.y, 2400.0 - 72.0 + 0.5)
+	if m.hero != null:
+		var hr := m.hero.get_global_rect()
+		assert_almost_eq(hr.size.x, 512.0, 1.0, "karakter %80")
+		assert_lte(hr.end.y, m.play_button.get_global_rect().position.y)
+		assert_gte(hr.position.y, m._head.get_global_rect().position.y + 300.0, "başlığın altında")
+	m.set_font_scale(1.0)
+	await get_tree().process_frame
+	assert_almost_eq(m.play_button.global_position.y, 1763.0, 0.5, "1× düzen geri gelir")

@@ -1,7 +1,27 @@
 class_name MainMenu
 extends Control
+
+
 ## Ana sayfa v2.0.3 (docs/design/v2.0.3/DESIGN.md §2): "kapıdan bakış" sahnesi (kemer/kule/sur/sancak/meşale, zemin yaması,
 ## kül/kor), OYNA (birincil, 180 px), KARAKTERLER | BAŞARIMLAR (dolu), EN İYİ SKORLAR | AYARLAR (hayalet), sürüm satırı.
+## Yazı ölçeği (Android erişilebilirlik 2×): > 1,3 iken KARAKTERLER/BAŞARIMLAR ve SKORLAR/AYARLAR tek sütuna düşer,
+## düğmeler 168 px olur; hiçbir şey kesilmez. Kaynak: çağıran (Godot yazı ölçeğini kendiliğinden vermez).
+func set_font_scale(f: float) -> void:
+	_font_scale = f
+	if _col == null:
+		return
+	var stacked := is_stacked()
+	_half_row.vertical = stacked
+	_ghost_row.vertical = stacked
+	for b in [characters_button, achievements_button, scores_button, settings_button]:
+		(b as Button).custom_minimum_size.y = STACK_BTN_H if stacked else 132.0
+	apply_safe_area(_safe_extra)
+
+
+func is_stacked() -> bool:
+	return _font_scale > STACK_FONT_SCALE
+
+
 ## Ses/titreşim anahtarları AYARLAR'a taşındı. `Settings.hareket_azalt` açıkken kül/kor, meşale, sancak ve nefes durur.
 ## Sürüm etiketine 3 dokunuş: yalnız debug derlemede `debug_stress_requested` (stres koşusu, U1-10).
 
@@ -24,6 +44,10 @@ const DEFAULT_CHARACTER := "Gunslinger"
 const DEFAULT_ACH_TOTAL := 22
 const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
+const STACK_FONT_SCALE := 1.3  # font_scale bunun üstündeyse yarım düğmeler tek sütuna düşer (DESIGN §2, 01d)
+const STACK_BTN_H := 168.0
+const STACK_COL_TOP := -1099.0  # OYNA 180 + 4 × 168 + 5 × 27 + sürüm 40 = 1027 → y 1301
+const STACK_HERO_SCALE := 0.8
 const EMBER_MAX := 36  # tasarım tavanı 40
 const FLOOR_RECT := Rect2(40.0, 1322.0, 1000.0, 400.0)
 
@@ -58,6 +82,10 @@ var _char_name: String = DEFAULT_CHARACTER
 var _taps: int = 0
 var _tap_left: float = 0.0
 var _t: float = 0.0
+var _font_scale: float = 1.0
+var _safe_extra := Vector4.ZERO
+var _half_row: BoxContainer
+var _ghost_row: BoxContainer
 
 
 ## Prosedürel zemin: void → tas_900 → void dikey geçiş.
@@ -183,7 +211,7 @@ func _build() -> void:
 	crest.offset_bottom = 24.0
 	play_button.add_child(crest)
 	col.add_child(play_button)
-	var half := HBoxContainer.new()
+	var half := BoxContainer.new()  # tek sütunda `vertical` açılır (HBoxContainer yönü sabittir)
 	half.name = "HalfRow"
 	half.add_theme_constant_override(&"separation", 27)
 	characters_button = _half_button("KARAKTERLER", "CharactersButton")
@@ -196,7 +224,8 @@ func _build() -> void:
 	half.add_child(characters_button)
 	half.add_child(achievements_button)
 	col.add_child(half)
-	var row := HBoxContainer.new()
+	_half_row = half
+	var row := BoxContainer.new()
 	row.name = "GhostRow"
 	row.add_theme_constant_override(&"separation", 27)
 	scores_button = _ghost_button("EN İYİ SKORLAR", &"trophy", "ScoresButton")
@@ -206,6 +235,7 @@ func _build() -> void:
 	row.add_child(scores_button)
 	row.add_child(settings_button)
 	col.add_child(row)
+	_ghost_row = row
 	version_label = UiKit.label(version_text(), &"", 26, UiKit.KEMIK_500)
 	version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	version_label.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -486,18 +516,23 @@ func apply_safe_area(extra: Variant = null) -> void:
 		e = UiKit.current_safe_extra(Vector2(1080.0, 2400.0))
 	if _col == null:
 		return
+	_safe_extra = e
+	var stacked := is_stacked()
 	var up := maxf(0.0, (72.0 + e.w) - (-COL_BOTTOM))
 	var head_drop := maxf(0.0, e.y - (HEAD_TOP - TOP_DEFAULT))
 	var shift := (e.x - e.z) * 0.5
 	_head.offset_top = HEAD_TOP + head_drop
-	_col.offset_top = COL_TOP - up
+	_col.offset_top = (STACK_COL_TOP if stacked else COL_TOP) - up
 	_col.offset_bottom = COL_BOTTOM - up
 	_col.offset_left = -W * 0.5 + shift
 	_col.offset_right = W * 0.5 + shift
 	if hero != null:
 		# K-01: başlık üst paya göre inince karakterin üstü de aynı farkla iner; alt kenar alt paya göre yukarı çıkar.
-		hero.offset_top = HERO_TOP + head_drop
-		hero.offset_bottom = HERO_BOTTOM - up
+		# Tek sütunda karakter %80'e küçülür (y 500-1246, başlık ile OYNA arasında).
+		hero.offset_top = (-700.0 if stacked else HERO_TOP) + head_drop
+		hero.offset_bottom = (46.0 if stacked else HERO_BOTTOM) - up
+		hero.offset_left = -320.0 * (STACK_HERO_SCALE if stacked else 1.0)
+		hero.offset_right = 320.0 * (STACK_HERO_SCALE if stacked else 1.0)
 	emblem.offset_top = -380.0 + head_drop
 	emblem.offset_bottom = 280.0 - up
 
