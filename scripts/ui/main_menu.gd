@@ -50,6 +50,7 @@ const TAP_WINDOW := 1.2
 const STACK_FONT_SCALE := 1.3  # font_scale bunun üstündeyse yarım düğmeler tek sütuna düşer (DESIGN §2, 01d)
 const STACK_BTN_H := 168.0
 const MINI_PX := 68.0
+const MINI_GAP := 40.0  # mini portre ile başlık arası ek sol iç boşluk
 const MINI_CROP := Rect2(160.0, 80.0, 704.0, 704.0)  # 1024×1536 portrenin baş-omuz karesi
 const STACK_COL_TOP := -1099.0  # OYNA 180 + 4 × 168 + 5 × 27 + sürüm 40 = 1027 → y 1301
 const STACK_HERO_SCALE := 0.8
@@ -83,6 +84,7 @@ var _torch: TextureRect
 var _ring: AchRing
 var _person: UiKit.Glyph
 var _mini: TextureRect
+var _mini_ring: Control
 var _characters_sub: Label
 var _achievements_sub: Label
 var _char_name: String = DEFAULT_CHARACTER
@@ -126,6 +128,19 @@ class Emblem:
 			draw_circle(p, r * 0.1, Color(UiKit.BRONZ_300, 0.85))
 		draw_circle(c, r * 0.14, UiKit.BRONZ_700)
 		draw_circle(c, r * 0.07, UiKit.AMBER)
+
+
+## Mini portre bronz halkası (68 px).
+class MiniRing:
+	extends Control
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(68, 68)
+		size = custom_minimum_size
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		draw_arc(size * 0.5, 31.0, 0.0, TAU, 48, UiKit.BRONZ_500, 5.0, true)
 
 
 ## BAŞARIMLAR ilerleme halkası (68 px): dolu yay amber, kalan bordo_900, ortada yıldız.
@@ -235,7 +250,15 @@ func _build() -> void:
 	_mini.size = _mini.custom_minimum_size
 	_mini.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_mini.stretch_mode = TextureRect.STRETCH_SCALE
+	_mini.material = _circle_mask()
 	characters_button.add_child(_glyph_at(_mini))
+	_mini_ring = MiniRing.new()  # bronz halka (DESIGN §2 kademe 2)
+	_mini_ring.name = "MiniRing"
+	_mini_ring.visible = false
+	characters_button.add_child(_glyph_at(_mini_ring))
+	# Başlık mini portreden ≥16 px uzakta: sol iç boşluk artar (denetim #6).
+	for st in [&"normal", &"hover", &"pressed", &"disabled"]:
+		(characters_button.get_theme_stylebox(st) as StyleBox).content_margin_left += MINI_GAP
 	achievements_button = _half_button("BAŞARIMLAR", "AchievementsButton")
 	achievements_button.pressed.connect(func() -> void: achievements_requested.emit())
 	_ring = AchRing.new()
@@ -271,6 +294,7 @@ func _build() -> void:
 func _build_scene() -> void:
 	_scene = Control.new()
 	_scene.name = "Scene"
+	_scene.clip_contents = true  # tek sütunda zemin yaması düğmelerin altına taşmaz (denetim v2.0.3-son #3)
 	_scene.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiKit.fill(_scene)
 	add_child(_scene)
@@ -416,6 +440,18 @@ func _ellipse_mask() -> ShaderMaterial:
 	return m
 
 
+## Sert kenarlı daire maskesi (mini portre).
+func _circle_mask() -> ShaderMaterial:
+	var sh := Shader.new()
+	sh.code = (
+		"shader_type canvas_item;\n"
+		+ "void fragment() { COLOR.a *= smoothstep(0.5, 0.485, length(UV - 0.5)); }"
+	)
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	return m
+
+
 func _ayrac(flip: bool) -> TextureRect:
 	var t := TextureRect.new()
 	t.texture = UiKit.texture(UiKit.SKIN_DIR + "ayrac.svg")
@@ -470,14 +506,15 @@ func _glyph_at(g: Control) -> Control:
 	return g
 
 
-## Yarım düğme ikonu: 132 yükseklikte y 32; tek sütunda (168) başlık yazısıyla (alt satır payı 40 düşülmüş) dikey ortalanır.
+## Yarım düğme ikonu: düğme yüksekliğinde (132 / tek sütunda 168) dikey ortalanır.
 func _center_glyph(b: Button) -> void:
 	if b != characters_button and b != achievements_button:
 		return  # hayalet düğmelerin ikonu `_place_glyph` ile zaten ortalı
+	var h := STACK_BTN_H if is_stacked() else 132.0
 	for c in b.get_children():
-		if c is UiKit.Glyph or c is AchRing or c.name == "MiniPortrait":
+		if c is UiKit.Glyph or c is AchRing or c.name == "MiniPortrait" or c.name == "MiniRing":
 			var g := c as Control
-			g.position.y = (STACK_BTN_H - 40.0 - g.size.y) * 0.5 if is_stacked() else 32.0
+			g.position.y = (h - g.size.y) * 0.5
 
 
 ## Hayalet düğme (dolgusuz, bronz kenar): ikon 48 + Cinzel 32; ikon yazının soluna oturur.
@@ -514,6 +551,7 @@ func set_character_portrait(tex: Texture2D) -> void:
 		at.region = MINI_CROP
 		_mini.texture = at
 	_mini.visible = _mini.texture != null
+	_mini_ring.visible = _mini.visible
 	_person.visible = not _mini.visible
 
 

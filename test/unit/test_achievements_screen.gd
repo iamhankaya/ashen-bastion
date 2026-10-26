@@ -459,3 +459,19 @@ func _icon(row: Control) -> TextureRect:
 		if c is TextureRect and (c as TextureRect).size == Vector2(84.0, 84.0):
 			return c
 	return null
+
+
+func test_top_fade_hidden_at_scroll_zero_and_shared_back_button() -> void:
+	var s := _screen()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_false(s._fade_top.visible, "tepede üst solma yok: boş durum paneli/ilk başlık sönmez")
+	s.list.scroll_vertical = 200
+	await get_tree().process_frame
+	assert_gt(s.list.scroll_vertical, 0, "liste kaydırılabilir")
+	s._update_fade_top()
+	assert_true(s._fade_top.visible, "kaydırılınca solma var")
+	assert_true(
+		s.back_button.get_theme_stylebox(&"normal") is StyleBoxTexture,
+		"GERİ taş levha (ortak bileşen)"
+	)

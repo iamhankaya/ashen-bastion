@@ -18,6 +18,7 @@ var _w: float = 936.0
 class Seal:
 	extends Control
 	var state: int = 0  # 0 hiç yok, 1 ilerliyor, 2 tamam
+	var frac: float = 0.0  # ilerliyorken dolu yay oranı
 
 	func _init() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -35,7 +36,17 @@ class Seal:
 				draw_polyline(pts, UiKit.VOID, 6.0, true)
 			1:
 				draw_circle(c, r, UiKit.TAS_800)
-				draw_arc(c, r - 3.0, 0.0, TAU, 40, UiKit.BRONZ_300, 6.0, true)
+				draw_arc(c, r - 3.0, 0.0, TAU, 40, UiKit.KAHVE_500, 6.0, true)
+				draw_arc(
+					c,
+					r - 3.0,
+					-PI * 0.5,
+					-PI * 0.5 + TAU * clampf(frac, 0.08, 0.92),
+					40,
+					UiKit.BRONZ_300,
+					6.0,
+					true
+				)
 				draw_circle(c, r * 0.28, UiKit.BRONZ_300)
 			_:
 				draw_circle(c, r, UiKit.TAS_900)
@@ -75,6 +86,7 @@ func set_state(opened: Array[int], totals: Array[int]) -> void:
 		var o := opened[i] if i < opened.size() else 0
 		var t := totals[i] if i < totals.size() else 0
 		_seals[i].state = 2 if (t > 0 and o >= t) else (1 if o > 0 else 0)
+		_seals[i].frac = float(o) / float(t) if t > 0 else 0.0
 		_seals[i].queue_redraw()
 		buttons[i].accessibility_name = "%s, %d / %d" % [AchievementDef.GROUPS[i], o, t]
 	queue_redraw()
