@@ -54,6 +54,7 @@ var _focus: StringName = &""
 var _t: float = 0.0
 var _portrait: TextureRect
 var _ghost: TextureRect
+var _video: PortraitPlayer
 var _lock_ring: Control
 var _panel: PanelContainer
 var _stat_values: Array[Label] = []
@@ -101,6 +102,9 @@ func _build() -> void:
 	_portrait = _portrait_rect("Portrait")
 	stage.add_child(_ghost)
 	stage.add_child(_portrait)
+	_video = PortraitPlayer.new()  # statik portrenin çocuğu: nefes/sürüklenme/çapraz solma birlikte gelir
+	_video.size = Vector2(PORTRAIT_W, PORTRAIT_H)
+	_portrait.add_child(_video)
 	var shade := TextureRect.new()
 	shade.name = "Shade"
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -383,9 +387,16 @@ func _place_name_chip() -> void:
 	chip_label.position = Vector2(MARGIN + name_label.get_minimum_size().x + 28.0, y + base)
 
 
+func _reduce_motion() -> bool:
+	var st := get_node_or_null(^"/root/Settings")
+	return st != null and st.hareket_azalt
+
+
 func _apply_running() -> void:
 	var on := is_visible_in_tree()
 	set_process(on)
+	if _video != null:
+		_video.paused = not on
 	if particles != null:
 		particles.emitting = on
 
@@ -508,6 +519,7 @@ func _refresh_info() -> void:
 	_ghost.texture = _portrait.texture
 	_portrait.texture = tex
 	_portrait.self_modulate = PLACEHOLDER_TINT if c.placeholder else Color.WHITE
+	_video.show_source("" if c.placeholder else c.portrait_video, _reduce_motion())
 	_stage_mono.text = UiKit.character_upper(c).substr(0, 1) if c.placeholder else ""
 	_placeholder_tag.visible = OS.is_debug_build() and c.placeholder
 	_place_name_chip.call_deferred()

@@ -149,19 +149,20 @@ def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "f
     walk_files = sorted(glob.glob(str(src / "frames/walk/*.png")))
     cast_files = sorted(glob.glob(str(src / "frames/cast/*.png")))
     gather_files = sorted(glob.glob(str(src / "frames/gather/*.png")))
-    if not (walk_files and cast_files and gather_files):
-        raise SystemExit("kare dosyaları eksik: %s/frames/{walk,cast,gather}" % src)
-    clips = {
-        "walk": Clip("walk", walk_files, "upper"),
-        "cast": Clip("cast", cast_files, "feet"),
-        "gather": Clip("gather", gather_files, "feet"),
-    }
+    if not walk_files:
+        raise SystemExit("kare dosyaları eksik: %s/frames/walk" % src)
+    if bool(cast_files) != bool(gather_files):
+        raise SystemExit("cast ve gather birlikte olmalı (ya da ikisi de yok: yalnız yürüme şeridi): %s/frames" % src)
+    clips = {"walk": Clip("walk", walk_files, "upper")}
+    if cast_files:  # cast/gather yoksa (bölünmüş rig: Gunslinger) şerit = N yürüme + 1 duruş
+        clips["cast"] = Clip("cast", cast_files, "feet")
+        clips["gather"] = Clip("gather", gather_files, "feet")
     if walk_cast:
         clips["walk_cast"] = Clip("walk_cast", sorted(walk_cast), "upper")
     idle_raw = _trim(_load_rgba(idle_path or src / f"{src.name}_idle.png"))
     idle_scale = CELL_H / idle_raw.shape[0]
     idle = _scaled(idle_raw, idle_scale)
-    order = ["walk", "idle", "cast", "gather"] + (["walk_cast"] if "walk_cast" in clips else [])
+    order = ["walk", "idle"] + [k for k in ("cast", "gather", "walk_cast") if k in clips]
     seq: list[tuple[str, np.ndarray, str]] = []
     for k in order:
         if k == "idle":
@@ -212,17 +213,20 @@ def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "f
         "cell": [cw, CELL_H],
         "strip_width": int(strip.shape[1]),
         "walk": {"frames": n_walk, "scale": round(clips["walk"].scale, 5)},
-        "cast": {"frames": len(clips["cast"].imgs), "scale": round(clips["cast"].scale, 5)},
-        "gather": {"frames": len(clips["gather"].imgs), "scale": round(clips["gather"].scale, 5)},
         "idle": {"index": n_walk, "scale": round(idle_scale, 5)},
         "body_scale": round(idle_scale, 5),
         "stride": stride,
         "foot_slide": fs,
         "height_dev_pct": {k: c.height_dev_pct for k, c in clips.items()},
     }
+    for k in ("cast", "gather"):
+        if k in clips:
+            manifest[k] = {"frames": len(clips[k].imgs), "scale": round(clips[k].scale, 5)}
     if "walk_cast" in clips:
         manifest["walk_cast"] = {"frames": len(clips["walk_cast"].imgs), "scale": round(clips["walk_cast"].scale, 5)}
     if palm_px is not None:
+        if "cast" not in clips:
+            raise SystemExit("--palm-px için cast kareleri gerekir")
         c = clips["cast"]
         if not 0 <= fire_frame < len(c.imgs):
             raise SystemExit("fire_frame %d cast kare sayısı %d dışında" % (fire_frame, len(c.imgs)))
@@ -315,7 +319,7 @@ def main(argv=None) -> int:
     Image.fromarray(body, "RGBA").save(args.body_out, optimize=True)
     if args.preview:
         labels = [f"w{i}" for i in range(manifest["walk"]["frames"])] + ["idle"]
-        labels += [f"c{i}" for i in range(manifest["cast"]["frames"])] + [f"g{i}" for i in range(manifest["gather"]["frames"])]
+        labels += [f"c{i}" for i in range(manifest.get("cast", {}).get("frames", 0))] + [f"g{i}" for i in range(manifest.get("gather", {}).get("frames", 0))]
         labels += [f"wc{i}" for i in range(manifest.get("walk_cast", {}).get("frames", 0))]
         pv = Path(args.preview_dir) / f"{Path(args.src).name}_strip_preview.png"
         write_preview(strip, manifest["cell"][0], labels, pv)

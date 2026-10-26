@@ -121,3 +121,30 @@ def test_committed_outputs_match_the_data_and_the_tool():
     assert z["cast"]["frames"] == m["cast"]["frames"] and z["gather"]["frames"] == m["gather"]["frames"]
     body = Image.open(ROOT / "assets/gfx/char/zyfen_body.png")
     assert body.size[1] == 320
+
+
+# --- v2.0.3 A: yalnız yürüme (bölünmüş rig, cast/gather yok) ---------------------------------------------------------
+
+GS = ROOT / "art" / "source" / "gunslinger"
+
+
+def test_walk_only_source_builds_walk_plus_idle_cells():
+    strip, body, m = mz.build(GS, None, 110.0, idle_path=ROOT / "assets/gfx/char/gunslinger_body.png")
+    assert m["cells"] == m["walk"]["frames"] + 1 and "cast" not in m and "gather" not in m
+    cw, ch = m["cell"]
+    assert strip.shape == (320, m["cells"] * cw, 4) and m["idle"]["index"] == m["walk"]["frames"]
+    assert mz.gate(m)["pass"], "Gunslinger yürüme kalite kapısı"
+
+
+def test_committed_gunslinger_quality_and_strip_match_character_json():
+    q = json.loads((GS / "quality.json").read_text())
+    assert q["pass"] is True and all(q["checks"].values())
+    w = json.loads((ROOT / "data/characters/gunslinger.json").read_text())["rig"]["walk"]
+    m = json.loads((GS / "strip_manifest.json").read_text())
+    assert (w["frames"], w["stride"], w["cell"]) == (m["walk"]["frames"], m["stride"], m["cell"])
+    assert Image.open(ROOT / "assets/gfx/char/gunslinger_body_walk.png").size == (m["strip_width"], 320)
+
+
+def test_palm_px_without_cast_is_refused():
+    with pytest.raises(SystemExit):
+        mz.build(GS, None, 110.0, palm_px=(1.0, 1.0), idle_path=ROOT / "assets/gfx/char/gunslinger_body.png")

@@ -164,7 +164,14 @@ sürer ve C fazı geçişi yapar:
 
 ### A fazı notları
 
-(A fazı doldurur: `walk` şeridi, `quality.json`, portre videosu hattı. Bu bölüm dışındaki satırlara dokunmaz; B bu belgeye dokunmaz.)
+- **Gunslinger yürüme (F-038, F-064):** bölünmüş rig (gövde yürür, tabancalı kol `gunslinger_arm.png` ayrı parça; `rig.armless` YOK).
+  `rig.walk{frames: 8, stride: 110, cell: [202, 320], strip: gunslinger_body_walk.png, shoulder_dev: []}`; şerit = 8 yürüme + 1 duruş hücresi
+  (`PlayerView` bölünmüş rig düzeni). Üretim: `tools/art/make_zyfen_strip.py` yalnız-yürüme kipi (cast/gather kare dizini yoksa); duruş
+  `gunslinger_body.png` AYNEN kalır (`--body-out` depoya yazılmaz). Kalite: `art/source/gunslinger/quality.json` `pass:true`
+  (foot_slide 8/8 çift ≤3 px, boy sapması %1,83, genişlik 1818). `stride` 136 → 110: videonun gerçek adımı; yalnız görünüm, sim değişmez.
+- **Hareketli portre:** `assets/video/portrait/<id>.ogv` (Theora, 576×864, 20 fps; Gunslinger ping-pong 7,95 sn, Zyfen 4 sn).
+  `PortraitPlayer` (`scripts/ui/portrait_player.gd`): hareket azalt açık / dosya yok / yüklenemez / 1,5 sn'de ilk kare yok → görünmez, statik portre kalır.
+  Kaynak, model ve istem: `art/source/<id>/README.md`.
 
 ## Beceri — `skills/<id>.json`
 

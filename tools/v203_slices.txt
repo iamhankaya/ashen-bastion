@@ -7,7 +7,7 @@
 # (tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless).
 # Test adı öneki: test_a<N>_ (A), test_b<N>_ (B), test_c<N>_ (C), test_d<N>_ (D); dosyalar test_*_v203_*.
 # Simge satırları arasındaki bu yorum satırları BİLİNÇLİDİR: dört faz paralel açınca bitişik satır çakışması çıkmasın.
-#A
+A
 # -- B --
 B
 # -- C --
