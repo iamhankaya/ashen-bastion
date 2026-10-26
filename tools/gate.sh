@@ -9,6 +9,8 @@
 #   GATE_PART=static bash tools/gate.sh                       adım 1-5: kurulum, içe aktarma, lint, veri, Python testleri
 #   GATE_PART=gut GATE_SHARD=K/N bash tools/gate.sh           adım 1-2 + 6: yalnız K. parçanın GUT test dosyaları
 #   GATE_PART=verify GATE_SHARD_COUNT=N bash tools/gate.sh    parça JUnit'lerini birleştirir + adım 7 (Godot gerekmez)
+# Yerel tam gate GUT'u paralel koşar (F-066): GATE_JOBS=N süreç (varsayılan min(4, çekirdek); 1 = eski tek süreç).
+#   Parçalama + kapsam kanıtı CI ile aynıdır (tools/ci/run_gut_parallel.sh: shard.py check-merge --require-all).
 # Hızlı mod (YALNIZ geliştirici geri bildirimi; docs/dev/ci-speed.md):
 #   bash tools/gate.sh --changed [--base REF]
 #   Değişen dosyalara göre test seçer (tools/ci/test_map.py); eşlemede yeri olmayan/paylaşılan dosya => tam gate.
@@ -38,6 +40,14 @@ if [ $FAST -eq 1 ]; then
   if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
     echo "HIZLI MOD CI'DA YASAK: PR CI'ı, entegrasyon merge'ü ve son kapı her zaman tam suite koşar (docs/dev/ci-speed.md)" >&2; exit 2
   fi
+fi
+# GUT süreç sayısı (yalnız PART=all, tam gate): varsayılan min(4, çekirdek); GATE_JOBS=1 => tek süreç.
+if [ -n "${GATE_JOBS:-}" ]; then
+  [[ "$GATE_JOBS" =~ ^[1-9][0-9]*$ ]] || { echo "GATE_JOBS geçersiz: '$GATE_JOBS' (pozitif tam sayı)" >&2; exit 2; }
+  JOBS="$GATE_JOBS"
+else
+  JOBS="$(nproc 2>/dev/null || echo 1)"; [[ "$JOBS" =~ ^[0-9]+$ ]] || JOBS=1
+  [ "$JOBS" -gt 4 ] && JOBS=4
 fi
 SHARD_K=0; SHARD_N=0
 if [ "$PART" = "gut" ]; then
@@ -185,6 +195,12 @@ fi
 
 if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; then
   step "6. Birim + kabul (GUT)"
+  if [ "$PART" = "all" ] && [ $FAST -eq 0 ] && [ "$JOBS" -gt 1 ]; then
+    # F-066: tam yerel gate GUT'u $JOBS paralel süreçte koşar; birleşik JUnit adım 7'nin girdisidir.
+    echo "GUT $JOBS paralel süreçte (GATE_JOBS=1 tek süreç)"
+    bash tools/ci/run_gut_parallel.sh "$JOBS" || fail "GUT paralel koşu (bkz. .gate/gut-*.log)"
+    scan_log .gate/gut.log
+  else
   "$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gconfig="$GUT_CONFIG" > "$GUT_LOG" 2>&1
   gut_rc=$?
   tail -n 30 "$GUT_LOG"
@@ -195,6 +211,7 @@ if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; t
   fi
   [ $gut_rc -eq 0 ] || fail "GUT çıkış kodu $gut_rc"
   scan_log "$GUT_LOG"
+  fi
 fi
 
 if [ "$PART" = "verify" ]; then
