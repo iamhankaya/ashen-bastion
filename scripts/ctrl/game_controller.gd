@@ -167,8 +167,6 @@ func _build_ui() -> void:
 	menu.name = "Menu"
 	ui.add_child(menu)
 	menu.play_requested.connect(start_run)
-	menu.sound_toggled.connect(_on_sound)
-	menu.vibration_toggled.connect(_on_vibration)
 	menu.settings_requested.connect(open_settings)
 	_build_settings_screen()
 	menu.debug_stress_requested.connect(start_stress)
@@ -524,6 +522,7 @@ func _v11_order_world() -> void:
 ## Yeni ekranların güvenli alanı (çentik, yuvarlak köşe); pencere boyutu değişince yenilenir.
 func _apply_safe_areas() -> void:
 	menu.apply_safe_area()
+	settings_screen.apply_safe_area()
 	result_screen.apply_safe_area()
 	scores_screen.apply_safe_area()
 	v2.apply_safe_areas()
@@ -879,6 +878,7 @@ func _build_settings_screen() -> void:
 	settings_screen.name = "Settings"
 	ui.add_child(settings_screen)
 	settings_screen.vibration_toggled.connect(_on_vibration)
+	settings_screen.sound_toggled.connect(_on_sound)
 
 
 func open_settings() -> void:

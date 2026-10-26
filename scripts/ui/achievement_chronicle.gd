@@ -34,11 +34,11 @@ class Seal:
 				)
 				draw_polyline(pts, UiKit.VOID, 6.0, true)
 			1:
-				draw_circle(c, r, UiKit.MOR_800)
+				draw_circle(c, r, UiKit.TAS_800)
 				draw_arc(c, r - 3.0, 0.0, TAU, 40, UiKit.BRONZ_300, 6.0, true)
 				draw_circle(c, r * 0.28, UiKit.BRONZ_300)
 			_:
-				draw_circle(c, r, UiKit.MOR_900)
+				draw_circle(c, r, UiKit.TAS_900)
 				draw_arc(c, r - 3.0, 0.0, TAU, 40, UiKit.KAHVE_500, 6.0, true)
 
 

@@ -151,7 +151,7 @@ func setup(p_def: AchievementDef, store: AchievementStore, w: float, open: bool,
 		edge = UiKit.BRONZ_700 if step_have < 3 else UiKit.BRONZ_500
 	if complete:
 		edge = UiKit.BRONZ_500
-	var sb := UiKit.stylebox(UiKit.MOR_700 if open else UiKit.MOR_800, edge, 4, 14)
+	var sb := UiKit.stylebox(UiKit.TAS_700 if open else UiKit.TAS_800, edge, 4, 14)
 	for st in [&"normal", &"hover", &"pressed", &"focus"]:
 		add_theme_stylebox_override(st, sb)
 	_build_head(store, complete, bias)

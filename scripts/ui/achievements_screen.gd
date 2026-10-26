@@ -69,7 +69,7 @@ func _build() -> void:
 		return
 	_built = true
 	var bg := ColorRect.new()
-	bg.color = UiKit.MOR_900
+	bg.color = UiKit.TAS_900
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiKit.fill(bg)
 	add_child(bg)
@@ -116,8 +116,8 @@ func _build() -> void:
 func _fade(top: bool) -> TextureRect:
 	var g := Gradient.new()
 	g.offsets = PackedFloat32Array([0.0, 1.0])
-	var a := UiKit.MOR_900
-	var b := Color(UiKit.MOR_900, 0.0)
+	var a := UiKit.TAS_900
+	var b := Color(UiKit.TAS_900, 0.0)
 	g.colors = PackedColorArray([a, b] if top else [b, a])
 	var t := GradientTexture2D.new()
 	t.gradient = g
@@ -281,7 +281,7 @@ func _update_sticky(scroll: float = -1.0) -> void:
 		sticky.size = Vector2(_w, GROUP_H)
 		sticky.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		sticky.add_theme_stylebox_override(
-			&"panel", UiKit.stylebox(Color(UiKit.MOR_900, 1.0), Color(0, 0, 0, 0), 0, 0)
+			&"panel", UiKit.stylebox(Color(UiKit.TAS_900, 1.0), Color(0, 0, 0, 0), 0, 0)
 		)
 		sticky.add_child(_group_header(g["name"], g["opened"], g["total"]))
 		add_child(sticky)
@@ -299,7 +299,7 @@ func _info_panel(text: String) -> Control:
 	var p := Panel.new()
 	p.custom_minimum_size = Vector2(_w, PANEL_H)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	p.add_theme_stylebox_override(&"panel", UiKit.stylebox(UiKit.MOR_800, UiKit.KAHVE_500, 4, 14))
+	p.add_theme_stylebox_override(&"panel", UiKit.stylebox(UiKit.TAS_800, UiKit.KAHVE_500, 4, 14))
 	var l := UiKit.label(text, &"", 32, UiKit.KEMIK_300)
 	l.add_theme_font_override(&"font", UiKit.font_semibold())
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

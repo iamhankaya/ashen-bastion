@@ -26,7 +26,7 @@ func set_step(p_step: int, p_complete: bool = false) -> void:
 func _draw() -> void:
 	var body := BODY
 	if step == 0:
-		_frame(body, UiKit.MOR_800, UiKit.KAHVE_500, 4)
+		_frame(body, UiKit.TAS_800, UiKit.KAHVE_500, 4)
 		return
 	if step >= 4:
 		draw_circle(body.get_center(), 62.0, Color(UiKit.AMBER, 0.14))  # halo
@@ -35,7 +35,7 @@ func _draw() -> void:
 		_crown()
 		return
 	var edge := AchievementIcons.step_color(step)
-	_frame(body, UiKit.MOR_800, edge, 4)
+	_frame(body, UiKit.TAS_800, edge, 4)
 	if step == 2:
 		for p in _corners(body, 12.0):
 			draw_circle(p, 5.0, edge)

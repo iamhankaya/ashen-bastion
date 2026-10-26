@@ -116,7 +116,7 @@ func _tex(n: String, pos: Vector2, sz: Vector2) -> TextureRect:
 func _style(tier: StringName) -> void:
 	var hard := tier == &"zor" or tier == &"cok_zor"
 	var sb := UiKit.stylebox(
-		Color(UiKit.MOR_800, 0.94), UiKit.AMBER if hard else UiKit.BRONZ_500, 4, 18
+		Color(UiKit.TAS_800, 0.94), UiKit.AMBER if hard else UiKit.BRONZ_500, 4, 18
 	)
 	if hard:
 		sb.shadow_color = Color(UiKit.AMBER, 0.35)
