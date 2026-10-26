@@ -152,6 +152,26 @@ class Glyph:
 					cog.append(c + Vector2.from_angle(TAU * i / 24.0) * rad)
 				draw_colored_polygon(cog, color)
 				draw_circle(c, r * 0.34, UiKit.TAS_800)
+			&"speaker", &"speaker_muted":
+				var cone := PackedVector2Array(
+					[
+						c + Vector2(-r * 0.9, -r * 0.3),
+						c + Vector2(-r * 0.45, -r * 0.3),
+						c + Vector2(r * 0.15, -r * 0.8),
+						c + Vector2(r * 0.15, r * 0.8),
+						c + Vector2(-r * 0.45, r * 0.3),
+						c + Vector2(-r * 0.9, r * 0.3),
+					]
+				)
+				draw_colored_polygon(cone, color)
+				var sw := maxf(3.0, r * 0.16)
+				if kind == &"speaker":
+					draw_arc(c + Vector2(r * 0.1, 0.0), r * 0.55, -0.9, 0.9, 12, color, sw, true)
+				else:  # üzeri çizili: kırmızı çarpı (can_kritik)
+					var x0 := c + Vector2(r * 0.35, -r * 0.45)
+					var x1 := c + Vector2(r * 0.95, r * 0.45)
+					draw_line(x0, x1, UiKit.CAN_KRITIK, sw, true)
+					draw_line(Vector2(x0.x, x1.y), Vector2(x1.x, x0.y), UiKit.CAN_KRITIK, sw, true)
 			&"person":
 				draw_circle(c + Vector2(0.0, -r * 0.42), r * 0.34, color)
 				var body := PackedVector2Array()
