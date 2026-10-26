@@ -27,8 +27,15 @@ func _run() -> void:
 				await process_frame
 			await create_timer(1.2).timeout
 			var vp := s.find_children("*", "PortraitPlayer", true, false)
-			print("%s %s: oynatıcı=%d oynuyor=%s görünür=%s" % [mode, id, vp.size(), vp[0].is_playing(), vp[0].visible])
-			root.get_viewport().get_texture().get_image().save_png("%s%s_%s.png" % [out_dir, mode, id])
+			print(
+				(
+					"%s %s: oynatıcı=%d oynuyor=%s görünür=%s"
+					% [mode, id, vp.size(), vp[0].is_playing(), vp[0].visible]
+				)
+			)
+			root.get_viewport().get_texture().get_image().save_png(
+				"%s%s_%s.png" % [out_dir, mode, id]
+			)
 			s.queue_free()
 			await process_frame
 	st.hareket_azalt = false
