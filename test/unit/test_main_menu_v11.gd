@@ -18,15 +18,14 @@ func test_button_order_play_half_row_scores_toggles() -> void:
 	assert_not_null(m.scores_button)
 	assert_eq(m.scores_button.text, "EN İYİ SKORLAR")
 	var col := m.play_button.get_parent() as Control
-	assert_eq(m.scores_button.get_parent(), col)
+	assert_eq(m.scores_button.get_parent().get_parent(), col)
 	assert_eq(m.play_button.get_index(), 0)
 	assert_eq(m.characters_button.get_parent().get_index(), 1, "v2.0: KARAKTERLER | BAŞARIMLAR 2.")
-	assert_eq(m.scores_button.get_index(), 2)
-	assert_eq(m.sound_button.get_parent().get_index(), 3, "ses/titreşim sırası 4.")
+	assert_eq(m.scores_button.get_parent().get_index(), 2, "v2.0.3: EN İYİ SKORLAR | AYARLAR 3.")
+	assert_eq(m.settings_button.get_parent(), m.scores_button.get_parent())
 	assert_lt(m.play_button.global_position.y, m.scores_button.global_position.y)
-	assert_lt(m.scores_button.global_position.y, m.sound_button.global_position.y)
 	assert_eq(m.scores_button.size.y, 132.0)
-	assert_gte(m.scores_button.size.x, 936.0)
+	assert_almost_eq(m.scores_button.size.x, 454.5, 1.0)
 	assert_eq(m.play_button.size.y, 180.0)
 
 
@@ -35,21 +34,21 @@ func test_column_top_at_least_1556_and_gap_27() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var col := m.play_button.get_parent() as Control
-	assert_gte(col.global_position.y, 1556.0 - 0.01)
+	assert_gte(col.global_position.y, 1763.0 - 0.01)
 	var gap := m.characters_button.global_position.y - (m.play_button.global_position.y + 180.0)
 	assert_almost_eq(gap, 27.0, 0.5)
 
 
-func test_hero_box_960x960_ends_by_1520() -> void:
+func test_hero_box_640x932_ends_by_1532() -> void:
 	var m := _menu()
 	await get_tree().process_frame
 	if m.hero == null:
 		pending("ana görsel dosyası yok: hero kutusu kurulmaz")
 		return
-	assert_eq(m.hero.offset_right - m.hero.offset_left, 960.0)
-	assert_eq(m.hero.offset_bottom - m.hero.offset_top, 960.0)
-	assert_lte(1200.0 + m.hero.offset_bottom, 1520.0 + 0.01)
-	assert_gte(1200.0 + m.hero.offset_top, 560.0 - 0.01)
+	assert_eq(m.hero.offset_right - m.hero.offset_left, 640.0)
+	assert_eq(m.hero.offset_bottom - m.hero.offset_top, 932.0)
+	assert_lte(1200.0 + m.hero.offset_bottom, 1532.0 + 0.01)
+	assert_gte(1200.0 + m.hero.offset_top, 600.0 - 0.01)
 
 
 func test_scores_requested_signal() -> void:
