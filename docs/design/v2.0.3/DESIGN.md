@@ -1,171 +1,165 @@
-# Ashen Bastion v2.0.3 — Tasarım (ana sayfa, ayarlar, başarımlar, ruh küreleri)
+# Ashen Bastion v2.0.3 — Tasarım (yeniden tasarım turu: ana sayfa, ayarlar, başarımlar, satır açık)
 
-Tarih: 2026-10-26 · Görev: T20261026-58 (çatı T20261026-56) · Faz: tasarım, kod yok.
-Girdiler: spec raporu T20261026-57 (kullanıcı kararlarıyla), `docs/ui/DESIGN-UI.md`, `docs/ui/tokens.json`, `docs/design/v2.0/DESIGN.md` (+`tokens-v2.0.md`), kod: `main_menu.gd`, `settings_screen.gd`, `achievements_screen.gd`, `gem_renderer.gd`; küre kaynakları `art/source/gem-orbs/`.
-Maketler: `mock/` (statik HTML + Chromium ekran görüntüsü, **1080×2400**, kaynak `mock/build.py` → `python3 build.py && node shoot.js`). Token'lar: `tokens-v2.0.3.md` (+ `.json`). Küre brifi: §5.
-Godot Control ağacına uygulanır (web değil); ölçüler 1080×2400 tasarım pikseli, 1 dp ≈ 2,75 px, dokunma ≥132, güvenli alan üst 96 / alt 72 / yan 36 (çentikte `apply_safe_area`). **Yeni renk/yazı tipi yok**: v2.0 + `tokens.json` yeniden kullanıldı. Etiketler: *(öneri)* = kesin değeri uygulama fazı belirler; **[AÇIK]** = kullanıcı kararı.
+Tarih: 2026-10-26 · Görev: T20261026-58 (çatı T20261026-56) · Faz: tasarım, değişiklik turu. Kod yazılmadı.
+Girdiler: `docs/review/v2.0.3-ui-direction.md` (Game Director brifi, **bağlayıcı**), kullanıcı kararları (2026-10-26), ilk tur tasarımı (git geçmişi `7a7f763`), `docs/ui/DESIGN-UI.md`, `docs/ui/tokens.json`, `docs/design/v2.0/`, oyun sanatı `art/ref/harita/{harabe-parcalari,zemin-doku}.png`, `art/ui/frames/`, `art/source/gem-orbs/`.
+Çıktı: `mock/` (maketler, 1080×2400), `frames/` (Godot 9-slice SVG kaynakları), `tokens-v2.0.3.md` + `.json`. Maketleri yeniden üretmek: `python3 mock/make_assets.py && python3 mock/build.py && node mock/shoot.js`; çerçeveler: `python3 frames/make_frames.py`.
+Uygulama dili **Godot Control / StyleBoxTexture (9-slice) / TextureRect / Label / Shader**; CSS'e özgü filtre/blur yok. Maketlerde yalnız şu iki yaklaşık kısayol var, ikisi de Godot karşılığıyla belirtildi: kilitli ikonun koyulaşması (`CanvasItem.modulate`), renk körlüğü paneli (tarayıcı matrisi; asıl sayılar Python ölçümü).
 
-## 1. Temel kararlar
-
-| # | Karar | Gerekçe |
+## 0. Skill'ler (bu tur ZORUNLU; ne katkı verdi)
+| Skill | Durum | Katkı |
 |---|---|---|
-| D1 | **Ana sayfa:** SES/TİTREŞİM satırı kalkar; yerine **EN İYİ SKORLAR \| AYARLAR** yarım düğmeleri (454×132). AYARLAR sağ-üst köşeden ana sütuna iner. | Köşe düğmesi sabit koordinatlı, 26 px yazılı, başparmaktan uzak ve güvenli alan dışıydı (spec D, `main_menu.gd:27-28,216-225`; v2.0.1 çentik hatası). Ana sütunda 132 px hedefi, aynı stil, başparmak bölgesinde. |
-| D2 | **Ana görsel aynı resim, 960×960 → 960×1100** (y 560–1660). | Ayarlar satırı kalkınca 137 px boşalır; kullanıcı kararı "ana görsel değişmez" korunur (yeniden çizim yok), yalnız ölçek +%15. |
-| D3 | **Sürüm satırı** `Sürüm 2.0.3 · <karakter>` y 2288–2328 (bayat `VERSION="2.0"` kalkar; sürüm tek kaynaktan, **öneri:** `ProjectSettings` `application/config/version`). | Spec D bulgusu. |
-| D4 | **Ayarlar = bölümlü kartlar:** SES · DOKUNUŞ · GÖRÜNÜM · HAKKINDA; her satırın tamamı dokunur (≥132). Anahtar = 156×84 + **AÇIK/KAPALI sözcüğü**. | Düz yazı listesi yerine düzgün kontroller (görev Tanım). Renk tek başına anlam taşımaz (anahtar konumu + sözcük). |
-| D5 | **Ses modeli tek anahtar + iki kaydırıcı:** `TÜM SESLER` (eski ana-sayfa SES = `sound_on`), MÜZİK, EFEKT. Anahtar kapalıyken kaydırıcılar soluk (yine okunur) ve **kaydırıcıya dokunmak sesi açar**. | Spec: SES ayarlara taşınır; üç modelin çelişkisi (`sound_on` + `music_pct` + `sfx_pct`) kullanıcıya tek yerde, mantıklı sırada gösterilir. Kapalı + kaydırıcı = "çalışmıyor" sanılmasın. |
-| D6 | **HAREKETİ AZALT** anahtarı GÖRÜNÜM'de (varsayılan KAPALI; kullanıcı kararı). | Hareketli portre yalnız seçim ekranında; açıkken statik portre + nefes/sürüklenme/parçacık yok. |
-| D7 | **HAKKINDA:** Sürüm + LİSANSLAR (›) alt ekranı (yazı tipleri OFL, ses `LICENSES-audio.md`). | Kullanıcı kararı "HAKKINDA". Oyun içi lisans yüzeyi yoktu. |
-| D8 | **Başarım = aile, kademe = Romen rakamı + baklava + çerçeve rengi.** Kademe başına yeni ikon yok. | Kullanıcı kararı (kademe gösterimi çerçeve). 53 kademe için 53 ikon APK/üretim maliyeti; çerçeve + rakam + baklava üç kanalda anlam verir. |
-| D9 | **Satır = ilerleme odaklı:** sonraki kademeye `değer/hedef` + çubuk; tamamlananda **TAMAM** çipi. "TEK KOŞU" çipi kalkar (spec: `best.*` genişler). | Kullanıcı "seviye ve ilerleme gösterimi" istedi. |
-| D10 | **Satıra dokun = kademe listesini aç/kapa** (satır içi, aynı anda 1 açık). Sürükleme kaydırır. | 4 eşiğin hepsini görmek için ayrı ekran gerekmez; tarih + hedef tek yerde. |
-| D11 | **Küreler:** üç tip aynı ruh-alevi ailesi; ayrım **renk + boyut (34/48/68 px) + silüet (taç, halka)**; normal kendi başına soğuk-beyaz, elit mor, boss amber. | Kullanıcı seçimi (normal/elit/boss_ruh_3). Renk körlüğü §5.3. |
+| `ui-ux-pro-max` | yüklendi; `search.py` çalıştırıldı | `--domain ux` ile dokunma hedefi/aralığı (Android 48 dp, ≥8 px) ve reduced-motion kuralları doğrulandı → 132 px hedef, `hareket_azalt` kapsamı. `--design-system "dark fantasy mobile game menu"` jenerik çıktı verdi (Hero+Features+CTA, yeşil/altın palet); **uygunsuz bulundu, uygulanmadı** (oyun menüsü, web landing değil). Pre-delivery kontrol listesi (kontrast, safe area, ikon, dokunma geri bildirimi) §8'e alındı. |
+| `design-taste-frontend` | yüklendi; **app screen** kolu (`references/app-screens.md`) | Ayarlar/başarımlar için "renk veriye, krom'a değil", "KPI tip, tile değil" (özet `31 / 53` tipografi + kroniği, kart yok), "dürüst boş durum" (sıfırlar sıfır yazar), "ürüne yüz ver" (kimlik palet/doku/silüetten). Web sayfa kuralları (gradyan/gölge/ince çizgi yasağı) oyun menüsüne **uygulanmadı**: ışık/zemin/meşale oyun sanatının kendisidir; yasak olan "jenerik şablon" (mor degrade + 18 px yuvarlak + hap) kaldırıldı. Ayrıca "içi boş alanı süsle doldurma; ölçek/içerik/gerçek görsel ile doldur" ilkesiyle ana sayfada yeni görsel üretilmedi, mevcut oyun sanatı kullanıldı. |
+| `impeccable` | yüklendi (`shape`, `critique`, `document` yönü; kod değiştiren komutlar yok) | `shape`: ekran başına tek soru + öncelik (§1); `critique`: ilk tur maketlerine Director bulgularıyla çift okuma, heuristik skor (§1 tablo "ilk tur → şimdi"); `document`: bu belge + token tabloları. **Sınır:** `impeccable context/detect` CLI (web DOM dedektörü) çalıştırılmadı; Godot render'ı olmadığı için eleştiri maketler + kod okumasıyla yapıldı. |
+Yüklenemeyen skill yok.
 
-## 2. Ana sayfa (`01-ana-sayfa.png`, ölçülü `01b`, ilk açılış `01c`, 2× yazı `01d`)
+## 1. Yön özeti ve brifle eşleşme
+Director'ın özeti: işlev sağlam, görsel kimlik jenerik. **Yön:** işlevi koru, yüzeyi ve metaforu değiştir; menüler "kalenin içinden" okunsun (kapı/kemer, sancak, taş levha, kor, kül, mühür).
 
-Sütun x 72–1008, aralık 27; **sütun üstü y 1763** (v2.0: 1556), alt sınır 2261, sürüm y 2288.
-
-| Öğe | Boyut | y | Not |
-|---|---|---|---|
-| OYNA | 936×180 | 1763 | değişmedi (birincil, bordo) |
-| KARAKTERLER \| BAŞARIMLAR | 454×132 ×2 | 1970 | v2.0 ile aynı; alt satır = karakter adı, **`açılan/toplam` kademe sayısı** ("31/53"; `DEFAULT_ACH_TOTAL` kalkar, `set_achievement_count(open,total)` imzası aynı) |
-| EN İYİ SKORLAR \| AYARLAR | 454×132 ×2 | 2129 | ikon 52 + Cinzel 700 **34** (+0,06 em); `button_secondary`; dişli glifi `UiKit.Glyph` (yeni `gear`) |
-| Sürüm | Inter 600 26 `kemik_500` (A pasif metin 5,9:1) | 2288 | tek satır, ortalı |
-| Ana görsel | 960×1100 `contain` | 560–1660 | alt gradyan y 1683'te başlar |
-
-Durumlar: varsayılan · basılı (6 px aşağı) · odak (`border_focus` 6 px; sıra OYNA → KARAKTERLER → BAŞARIMLAR → SKORLAR → AYARLAR) · ilk açılış `0/53`, Gunslinger (`01c`) · kayıt okunamadı: varsayılan karakter + `0/53`, hata iletisi yok (v2.0 ile aynı) · **2× yazı (`01d`)**: yarım düğmeler **tek sütuna** düşer (168 yüksek, etiket 56 px, alt satır 52 px), sütun üstü y 1301, ana görsel 700 yüksekliğe küçülür; OYNA 80 px. Kural: `font_scale > 1,3` ise tek sütun. Başlık (ASH AND STEEL / ASHEN BASTION) sanat işi olarak ölçeklenmez.
-Güvenli alan: tüm sütun + sürüm `apply_safe_area` (AYARLAR artık sütunda; ayrı offset yok → `_place_trophy`, `SETTINGS_TOP/W/H` sabitleri kalkar).
-
-## 3. Ayarlar (`02-ayarlar.png`, ölçülü `02a`, sessiz+hareket azalt `02b`, 2× `02c`, lisanslar `02d`)
-
-Başlık "AYARLAR" y 130 ortalı, Cinzel 900 80 (BAŞARIMLAR ile aynı). Liste **kaydırmalı** y 260–2172 (üst/alt 80 px solma, 8 px kaydırma ipucu); GERİ **sabit** y 2196–2328 (alt 72 güvenli). Bölüm başlığı 72 yüksek, Cinzel 700 34 (+0,14 em) `bronz_300`; kart 936 genişlik, aralık 36, iç dolgu 30.
-
-| Bölüm | İçerik | Yükseklik (varsayılan yazı) |
+| Brif | Karar (bu tur) | Nerede |
 |---|---|---|
-| SES | TÜM SESLER (anahtar) · MÜZİK `%0–100` (%5 adım) · EFEKT | 560 (sessizken +40: "Ses kapalı. Bir kaydırıcıya dokunmak sesi açar.") |
-| DOKUNUŞ | TİTREŞİM + 1 satır açıklama | 176 |
-| GÖRÜNÜM | HAREKETİ AZALT + 2 satır açıklama | 226 |
-| HAKKINDA | SÜRÜM `2.0.3` · LİSANSLAR › | 316 |
+| C1 palet | token düzeyi: `mor_*` yüzeyler → `tas_*`; mor yalnız XP + ikincil vurgu; tüm ekranlar için eşleme + kontrast yeniden hesaplandı | `tokens-v2.0.3.md` §1–3 |
+| C2 köşe dili | 18 px yuvarlak + degrade + hap → **pahlı (chamfer) 9-slice levha/düğme**, köşe perçini; yeni `frames/` SVG'leri | `frames/`, `mock/*` |
+| C3 hareket | yalnız ana sayfa hareketli (kül/kor, meşale, sancak, nefes); ayarlar/başarımlar sakin | §2, §6 |
+| C4 metin | üst yazı **ASH AND STEEL kalır** (kullanıcı); sürüm satırında karakter adı kalktı → `Sürüm 2.0.3` | §2 |
+| C5 başlık | bronz ayraçlı üst yazı + taş oyma harf (2 geçiş gölge) | §2 |
+| A1 karakter asılı | kapı önünde, zemin yaması + kül halkası + sert gölge; namlu alevi kenar kesiği eritme + ışımayla örtüldü | §2 |
+| A2 düğme hiyerarşisi | 3 kademe: OYNA (sancak tepeli bordo) › KARAKTERLER\|BAŞARIMLAR (dolu, mini portre / ilerleme halkası) › SKORLAR\|AYARLAR (hayalet) | §2 |
+| A3 OYNA | sivri tepe süsü (`oyna-tepe`) + basılı kor parlaması | §2 |
+| S1/S2 telefon ayarı gibi | taş duvar dokulu "sakin oda", lento başlık, oyma levha bölümler | §3 |
+| S3 sessiz durumu | ton + **üzeri çizili hoparlör simgesi** + açıklayıcı satır | §3 |
+| S4 gesture | kaydırıcı: ilk 12 px yatay ağırlıklıysa tutamak yakalanır; anahtar satırında 24 px eşik | §3, §8 |
+| B1 satır aşırı yüklü | kademe iki kanala indi: plaka (silüet + Roma rozeti) + segmentli çubuk; "KADEME II" etiketi kalktı | §4 |
+| B2 kademe renkleri yakın | ayrım **silüet** (yalın · perçin · köşebent · taç); gri tonlama sınaması `mock/04b` | §4.4 |
+| B3 özet | "kale kroniği": 5 grup mührü zincirde | §4 |
+| B5 hızlı atlama | mühüre dokun → gruba kay + sticky grup başlığı | §4 |
+| B4 kilitli ikon | koyu silüet (`modulate`) + kilit rozeti 48; ad soluklaştırılmaz | §4 |
+| D1–D3 satır açık | tek nesne: satır + panel birleşik `levha-yuksek`; kademe yolu = zincirle bağlı mühürler; çubuk kaybolur | §4.3 |
+| Skor tablosu | "ilk tur → şimdi": jenerik şablon riski yüksek → düşük; satır bileşen sayısı 7 → 5 | — |
 
-Bileşenler:
-- **Anahtar** 156×84, topuz 60; AÇIK: `bordo_700` zemin, `bronz_300` kenar, topuz sağda, sözcük `kemik_100`; KAPALI: `mor_900` zemin, `kahve_500` kenar, topuz solda `kemik_500`, sözcük `kemik_500`. Sözcük Inter 700 26. Tüm satır tek dokunma hedefi; 80 ms geri bildirim.
-- **Kaydırıcı** dokunma bandı 132 (ray 20 + kenar 3, tutamak 84 `kemik_100` + 6 px `bronz_500`), dolgu `bronz_500 → bronz_300`; değer Cinzel 700 40 sağda ("%70"). Sürüklerken ses anında değişir; bırakınca kaydedilir; EFEKT bırakılınca örnek atış (mevcut davranış korunur).
-- **Soluk (sessiz) durum:** dolgu `kahve_500`, tutamak `kemik_500`; **değer metni soluklaştırılmaz** (kontrast ≥4,5:1; `kemik_500/mor_800` 5,9).
-- Satır etiketi Cinzel 700 36 (+0,06 em) `UiKit.upper_tr`; açıklama Inter 400 28/34 `kemik_300`.
+**Bilinçli sapmalar (gerekçeli):**
+1. Brif "baklavalar plakanın alt kenarına bütünleşik" dedi; maketlerde plaka alt kenarına sığdırınca 12 px baklavalar çerçeveyle yarıştı. Aynı bilgi **segmentli çubuğa** taşındı (kademe sayısı kadar segment, dolu = geçilen). Kanallar hâlâ iki: plaka + segment.
+2. Brif "çubuk kaybolsun ya da yolun üst ucuna dönüşsün": seçenek 1 (kaybolur; değer yolun aktif mührüne taşınır).
+3. Ana sayfada "kapıdan bakış" için `harabe-parcalari`'ndan **kemer, kule, sur, 2 sancak, meşale** yeşil perdesi silinerek (kod dışı, `mock/make_assets.py`) kırpıldı; **yeni görsel üretilmedi**. Uygulama C/D bu kırpmaları `tools/art` ile aynı yöntemle kalıcı dokulara çevirir (aşağıda §7).
+4. Üst yazı İngilizce kalır (kullanıcı); başlık altı ayraç `ayrac.svg`'dir.
 
-Durumlar: varsayılan (`02`) · sessiz + hareket azalt açık + titreşim kapalı (`02b`) · **2× yazı (`02c`)**: etiketler 72 px, açıklama 56 px; anahtar etiketin **altına** sarar, kartlar uzar, liste kaydırılır, GERİ sabit kalır (kesilme yok) · LİSANSLAR alt ekranı (`02d`): kaydırmalı liste, GERİ → ayarlar · duraklatmadan açıldığında: aynı ekran, GERİ duraklatmaya döner (`pause_screen.gd` girişi korunur) · eski `settings.cfg`: `hareket_azalt=false`.
-Odak/D-pad: ▲▼ satırlar, ◄► kaydırıcı (5 puan), A/Enter anahtar; varsayılan odak ilk satır; Android geri = GERİ.
-Güvenli alan: `apply_safe_area` **ayarlar ekranı dahil** (spec: `_apply_safe_areas` ayarları içermiyor, kart çalışma notu ihlali); üst pay başlık + liste üstünü, alt pay GERİ'yi kaydırır, liste yüksekliği payı emer. `COL_TOP=380` sabiti kalkar.
-Hata durumu yok (yerel dosya). Yükleme yok.
+## 2. Ana sayfa (`01-ana-sayfa`, ölçülü `01b`, hareket azalt `01c`, 2× yazı `01d`, ilk açılış `01e`)
 
-## 4. Başarımlar (`03-basarimlar.png`, ölçülü `03a`, boş `03b`, hepsi açık `03c`, satır açık `03d`, kademe dili `04`)
+**Soru:** "Oynamaya hazır mıyım?" → OYNA başparmak bölgesinde, sahne karakteri sahnede gösterir.
 
-### 4.1 Ekran
+Katmanlar (alttan üste, hepsi `Control` ağacında `TextureRect`/`Sprite2D`; z-sırası bu sıradır):
+1. zemin: `void→tas_900` dikey geçiş; üstte/altta `scene_fog` perdesi.
+2. **kapı arkası ışığı:** `scene_glow` additive radyal doku (Godot: `Sprite2D` + `CanvasItemMaterial blend_mode = ADD` ya da `PointLight2D`; kapı arkası y≈700–1500).
+3. uzak sahne (parlaklık %32–55, derin sis): kule (x −90), sur (x 650), **kemer** (680 genişlik, ortada, %78); alt 150 px sise erir (alfa maskesi dokuya pişirilir).
+4. sancaklar (x 28 / x 906), meşale (x 120, zemin üstü).
+5. **zemin yaması:** `zemin-doku`dan eliptik, kenarı yumuşak maskeli doku (1000×400) + kül halkası (2 px, `kemik_300 α0,16`) + karakter altında sert gölge (siyah radyal).
+6. **karakter** 640×932, `ana_gorsel` kaynağı, yatay 56 px alfa eritme; her iki namlu ucunda 140 px additive ışıma (kenar kesiği örtülür). Karakter **kutuya konmaz**.
+7. kül/kor parçacıkları (≤40; `amber_glow` %60, `kemik_300` %40).
+8. üst vinyet (başlık okunurluğu), alt vinyet (düğmeler).
 
-| Blok | Konum / boyut | İçerik |
-|---|---|---|
-| Başlık | y 130 | BAŞARIMLAR Cinzel 900 80 |
-| Özet | y 250 / çubuk y 340 | `31 / 53` Cinzel 700 56 + "kademe" Inter 600 32; çubuk 936×20 |
-| Liste | y 400–2172 kaydırmalı | grup başlığı + aile satırları |
-| Grup başlığı | 936×72 | SAĞ KALIM · KIRIM · BOSS · USTALIK · YOLCULUK (Cinzel 700 34); sağda `açılan kademe / toplam kademe` Inter 700 28, tamamlanınca `amber_glow` |
-| Aile satırı | 936×**168**, aralık 12 | §4.2 |
-| GERİ | y 2196 | sabit |
+Başlık: ASH AND STEEL (Cinzel 34, +0,5 em, `bronz_300`) iki yanında `ayrac`; ASHEN BASTION Cinzel 132/900, `kemik_100`, **taş oyma** (üst-sol 2 px açık, alt-sağ 3–4 px koyu: iki `Label` ya da `shadow_*` iki geçiş), kırmızı sis yok. Başlık içi "kül→kemik" degrade **öneri** (shader; yoksa düz `kemik_100`). Işık kaynağı kapının arkasındadır.
 
-Grup kademe toplamları spec tablosundan kodla hesaplanır (maketteki `5/11`, `7/14` yalnız örnektir). Aile → grup eşlemesi *(öneri)*: SAĞ KALIM: Hayatta Kalma, Dokunulmaz, Nöbet · KIRIM: Kırım, Öldürme, Sınırsız Kırım, Bomba Ustası · BOSS: Boss Avcısı, Üç Elit, Kale Lordu · USTALIK: Seviye, Evrim, Tambur Ustası, Seri Ustası, Skor, Eklenti Avcısı, Tam Kadro · YOLCULUK: Yerleşik, Çifte Yol (19 aile). Aile adları spec tablosundaki Türkçe adlarla (açık nokta 2 kapanır; ≤22 harf).
-
-### 4.2 Aile satırı anatomisi (936×168, `panel`, dolgu 24)
-| Parça | Ölçü | Açık / ilerleyen | Kilitli (0 kademe) |
-|---|---|---|---|
-| Plaka | 108×108, 5 px kenar = **kademe rengi**, ikon 68 | + sağ-alt **Romen rakamı** rozeti 46 (Cinzel 700 28, `bordo_900` zemin) | ikon %45 gri, kenar `kahve_500`, kilit rozeti 40 |
-| Ad | Cinzel 700 38/44 `upper_tr` tek satır | `kemik_100` | aynı (soluklaştırılmaz) |
-| Baklavalar + etiket | 16 px baklava × kademe sayısı (dolu = açıldı, kademe rengi); "KADEME II" Inter 600 26 | | "0 / 3" |
-| Açıklama | Inter 400 28/34 `kemik_300`, tek satır `…` | **sonraki** kademenin tanımı | ilk kademe |
-| Sağ sütun 232 | `değer/hedef` Cinzel 700 34 + 14 px çubuk | sonraki kademeye | `0/hedef` |
-| Tamamlanmış | — | kenar `bronz_500`, plaka `amber_glow`, **TAMAM** çipi (amber 3 px kenar, Inter 700 26) + son tarih; açıklama "Tüm kademeler açıldı." | — |
-
-Değer biçimi: süre `d:ss` (≤1 sa) / `dk` / `sa`; sayılar `tr` binlik nokta; hedefi aşan `hedef/hedef`. Koşu-kapsamlı ailede değer = kalıcı **en iyi** (spec).
-
-### 4.3 Durumlar
-| Durum | Gösterim |
-|---|---|
-| Varsayılan (`03`) | gruplar, ilerleyen/kilitli/TAMAM karışık |
-| **Boş / hepsi kilitli** (`03b`) | `0 / 53`, çubuk boş, 108 yüksek panel "Henüz kademe açılmadı. Bir koşuya başla.", tüm satırlar kilitli, hata iletisi yok |
-| **Hepsi açık** (`03c`) | `53 / 53` amber, çubuk amber, panel "Tüm başarımlar açıldı.", grup sayaçları amber |
-| **Satır açık** (`03d`) | satırın altında 4 kademe satırı: Romen · eşik · `✓ tarih` ya da `değer/hedef` / `Hedef N` (72 yüksek); açıkken ok yok, tekrar dokunma kapatır |
-| Kademe atlama | koşu içi bildirim "BAŞARIM AÇILDI · KADEME III / ÖLDÜRME III" (`04`); çoklu eşik = tek bildirim |
-| Sonuç özeti | "★ YENİ KADEME · N" çipi (v2.0 §5.3 ile aynı, metin "BAŞARIM" yerine "KADEME") |
-| Bilinmeyen kimlik | gösterilmez, silinmez |
-
-### 4.4 Kademe dili (`04-kademe-dili.png`)
-| Kademe | Çerçeve | Baklava | Rakam |
-|---|---|---|---|
-| Kilitli | `kahve_500` | boş | kilit |
-| I | `kemik_300` #CFC4AE | ◆◇◇◇ | I |
-| II | `bronz_300` #D2B47E | ◆◆◇◇ | II |
-| III | `amber_glow` | ◆◆◆◇ | III |
-| IV | `amber_glow` + bordo plaka + `glow_amber` | ◆◆◆◆ | IV |
-| TAMAM | `amber_glow` | hepsi dolu | "TAMAM" çipi |
-Anlam üç kanaldan (renk + rakam + baklava); renk körü için rakam yeterli. 1–3 kademeli ailelerde baklava sayısı kademe sayısı kadar, III. kademesi son olan ailede amber = tamamlanmış çerçeve.
-
-## 5. Ruh küreleri — görsel brif (`05-kure-gorsel-yonu.png`)
-
-### 5.1 Yön
-Üç küre **aynı ruh-alevi ailesi** (gözyaşı biçimli alev, iki boş/parlak göz, kuyruk): kullanıcı seçimi `normal_ruh_3`, `elit_ruh_3`, `boss_ruh_3` (kaynak `art/source/gem-orbs/{normal,elit,ara_boss}.png`, yeniden üretilmez). Ayrım üç kanaldan:
-
-| Tip | Renk (ölçülen çekirdek) | Silüet | Ekran boyutu | Işıma (kodla) |
+Düğme sütunu (x 72–1008, aralık 27):
+| Kademe | Öğe | Boyut / y | Yüzey | İçerik |
 |---|---|---|---|---|
-| Normal (xp<5) | soğuk beyaz-camgöbeği, RGB≈165,202,221 | küçük, ince, tek kuyruk | **34 px** (v1: 30) | yok (yalnız dokunun kendi halesi) |
-| Elit (5≤xp<80) | koyu doygun mor, RGB≈126,42,171 | geniş, 3 kuyruk, yörüngede kıvılcım halkası | **48 px** | hafif mor hale, yavaş **süzülme ±3 px / 1,8 sn** |
-| Ara boss (xp≥80) | sıcak altın-amber + beyaz sıcak çekirdek, RGB≈227,170,88 | en büyük, **taç** + 4 kor | **68 px** | amber hale + süzülme ±4 px / 1,4 sn |
-Birleşmiş taş (`GemPool` birleşmesi): sınıf **değerden** (eşikler yukarıda), boyut sınıf içinde `scale_for_value` ile ±%10; sınıf sınırı atlamaz. **Sim değişmez**; hash yalnız `count`/`total_value` (spec).
+| 1 | OYNA | 936×180 · 1763 | `dugme-birincil` (bordo) + `oyna-tepe` üst orta | Cinzel 68/900; basılı: 6 px iniş + `dugme-basili` + 80 ms kor parlaması |
+| 2 | KARAKTERLER \| BAŞARIMLAR | 454×132 · 1970 | `dugme-dolu` (taş) | KARAKTERLER: 68 px yuvarlak **mini portre** (bronz halka) + ad; BAŞARIMLAR: 68 px **ilerleme halkası** (`amber_glow` / `bordo_900`, 31/53) + `31/53` |
+| 3 | EN İYİ SKORLAR \| AYARLAR | 454×132 · 2129 | `dugme-hayalet` (dolgusuz, `bronz_500` kenar) | ikon 48 + Cinzel 32 |
+| — | Sürüm | Inter 26 `kemik_500` · 2288 | | `Sürüm 2.0.3` (karakter adı yok) |
 
-### 5.2 Tasarım gerekçesi
-- Mor XP kimliği (`xp #7C5CC4`) **elit sınıfında** korunur; XP çubuğu rengiyle tutarlı ("elit = çubuğu dolduran büyük ruh"); normal soğuk-beyaz ağırlıksızdır, boss amber `amber_glow` anlamıyla uyumlu (sıcak = güç/uyarı). Amber yalnız boss'ta kullanıldığı için "dikkat" anlamı aşınmaz.
-- Süzülme yalnız elit/boss: normal binlerce olabilir (CAP 300) → tek MultiMesh, kare başına ek maliyet yok; hareket **kayma kaydırma shader'ında (`TIME + instance id`)** *(öneri)*, `hareket_azalt` açıkken kapalı (oyun içi hareket azaltma yalnız portre için kullanıcı kararı; bu madde **[AÇIK 3]**).
-- Zemin üstü okunurluk: kemik/mor zemin (`#120b19`) üstünde üç küre de ≥ 3:1 parlaklık farkı taşır (L*≥36 mor, çekirdek parlak).
+Hedef boyutları aynı (≥132); ağırlık hiyerarşisi görsel. AYARLAR sütunda (üst köşe zor; D1 korunur). Sütun alt sınırı 2261, sürüm 2288–2328 (güvenli alan 72).
+**Durumlar:** varsayılan · basılı/odak (`border_focus` 6 px, sıra OYNA → KARAKTERLER → BAŞARIMLAR → SKORLAR → AYARLAR) · `hareket_azalt` AÇIK (`01c`): tüm hareket durur (§6), sahne statik, ışıma sabit düşük · ilk açılış (`01e`): `0/53`, halka boş · **2× yazı (`01d`)**: `font_scale > 1,3` → yarım düğmeler tek sütuna düşer (168 yüksek), karakter %80'e, kemer %74'e küçülür; başlık/OYNA arasında kalır, hiçbir şey kesilmez · kayıt okunamadı: `0/53` + varsayılan karakter, hata iletisi yok.
+Güvenli alan: `apply_safe_area`; çentikte başlık bloğu üst payla iner, sahne yüksekliği payı emer.
 
-### 5.3 Ayırt edilebilirlik ölçümü (128 px, opak çekirdek, Machado simülasyonu)
-| | L* normal | protan | deutan | tritan | alan |
-|---|---|---|---|---|---|
-| Normal | 79,0 | 80,4 | 78,0 | 79,1 | %11 |
-| Elit | 36,2 | 36,9 | 38,0 | 37,4 | %25 |
-| Boss | 74,1 | 70,6 | 76,0 | 73,1 | %23 |
+## 3. Ayarlar (`02-ayarlar`, ölçülü `02a`, sessiz + hareketi azalt `02b`, 2× yazı `02c`, lisanslar `02d`)
 
-- Normal–elit ΔL* ≥ 41, elit–boss ΔL* ≥ 33 (≥15 ✓, her simülasyonda).
-- **Normal–boss ΔL* = 4,9 (protan 9,8) < 15 ✗.** Silüet IoU normal–elit 0,37, normal–boss 0,46, elit–boss 0,51 (≤0,6 ✓); boyut oranı 1:2 (68/34).
-- **Karar önerisi:** çift kriteri "ΔL* ≥ 15 **veya** (boyut oranı ≥ 1,8 **ve** IoU ≤ 0,6)" olarak okunur; normal–boss bu ikinci yoldan geçer. Katı ΔL* gerekirse boss çekirdeği `Color(.75,.62,.5)` ile ~%28 koyulaşır (ΔL*≈15) ama "en parlak ruh" hissi azalır → **[AÇIK 1]**.
-- Ölçüm yöntemi: PIL, 128 px, α>0,8 piksel ortalaması; simülasyon sRGB→doğrusal, Machado 2009 (şiddet 1,0). Maketteki CVD görselleri tarayıcı `feColorMatrix` ile yaklaşıktır.
-- Uygulama B'nin yapacağı: aynı ölçümü işlenmiş 128 px atlas kareleri üzerinde yeniden koşmak (`tools/art/process_gem_orbs.py` testi).
+**Soru:** "Sesi/titreşimi/hareketi hızla ayarlayabilir miyim?" — "sakin oda": hareketli arka plan yok.
 
-### 5.4 Uygulama notları (B için)
-İşlenmiş doku 128×128 (normal 96 ile yeterli) şeffaf PNG; kenar payı ≥%8; `assets/gfx/fx/gems/`. Tek MultiMesh yerine tip başına 3 MultiMesh (aynı `GemRenderer` API'si) ya da atlas+`INSTANCE_CUSTOM`; ikisi de sim'e dokunmaz. Mevcut `COLOR_XP`/`COLOR_XP_BRIGHT` sabitleri ve değer<=1 ayrımı kalkar.
+- **Atmosfer:** `tas_900` zemin + çok düşük kontrastlı (≤%8) taş duvar dokusu (256×256 döşeme; **yeni doku**, önce kod/gürültü ile üretilir, görsel gerekiyorsa `[VLAD:ASK]`) + üstten sıcak tek ışık (`amber_glow α0,16`); alt 500 px `void`'e söner.
+- **Başlık:** "AYARLAR" `lento` (520×120, 9-slice margin 60/0/60/0) üstünde, Cinzel 64/900, y 96.
+- **Bölümler** (SES · DOKUNUŞ · GÖRÜNÜM · HAKKINDA): başlık Cinzel 34 + bronz çizgi (`StyleBoxFlat` 3 px, `bronz_700`) uzanır; kart = `levha` (9-slice margin 40; içerik dolgusu 28 + perçin köşeler).
+- **Satır:** etiket + tek açıklama (≤2 satır); satırın tamamı tek dokunma hedefi (≥132). Etiket Cinzel 36, açıklama Inter 28 `kemik_300`.
+- **Anahtar = kor mührü** (156×84, `anahtar-ac/kapali`): AÇIK = bordo levha, `bronz_300` halka, yuvada amber kor + sağda mühür; KAPALI = taş levha, `demir` halka, sönük yuva + sol mühür; sözcük **AÇIK/KAPALI** solda (renk tek kanal değil). Geçiş 140 ms + 200 ms kıvılcım (`hareket_azalt`'ta anlık).
+- **Kaydırıcı:** ray `ray.svg` (9-slice, 28 yüksek), dolgu `ray-dolgu` (kor: bordo→bronz→amber), tutamak `tutamak` madalyon 84; dokunma bandı 132; değer `%70` Cinzel 40. %5 adım çentikleri çok soluk (maket çizmedi; **öneri**).
+- **Sessiz durum** (TÜM SESLER KAPALI): ana satırda **üzeri çizili hoparlör** simgesi (kırmızı çarpı `can_kritik`), altında 76 yüksek satır "Ses kapalı. Bir kaydırıcıya dokunmak sesi açar."; kaydırıcılar soluk (`ray-dolgu-sessiz`, `tutamak-sessiz`) ama değer metni soluklaştırılmaz. **Kural korunur:** kaydırıcıya dokunmak ana anahtarı açar.
+- **GÖRÜNÜM → HAREKETİ AZALT** açıklaması: "Hareketli portreleri ve ekran efektlerini durdurur." (kapsam kullanıcı kararı: hepsi, §6).
+- **HAKKINDA:** SÜRÜM `2.0.3` · LİSANSLAR › (alt ekran `02d`; GERİ ayarlara döner).
+- **GERİ** 936×132, y 2196, sabit; liste y 250–2172 kaydırılır (alt 100 px solma, 8 px kaydırma ipucu; ilk kaydırmada 600 ms görünür).
+- **Gesture kuralı:** kaydırıcı bandında dokunuş yatay ağırlıklıysa (ilk 12 px) tutamak yakalanır, aksi hâlde liste kayar; anahtar satırında 24 px eşiği (kayan dokunuş = tetikleme yok). Test: kaydırırken kazara anahtar tetiklenmez.
+**Durumlar:** varsayılan · sessiz + hareket azalt AÇIK + titreşim KAPALI (`02b`) · **2× yazı (`02c`)**: etiketler 72, açıklama 56, anahtar etiketin altına sarar, kartlar uzar, liste kayar, GERİ sabit · duraklatmadan açılış: aynı ekran, GERİ duraklatmaya döner · eski `settings.cfg`: `hareket_azalt=false`. Hata/yükleme yok (yerel dosya).
+Güvenli alan: ayarlar ekranı dahil `apply_safe_area` (üst pay lento+liste, alt pay GERİ).
 
-## 6. Erişilebilirlik
-- **Kontrast (v2.0/v1 tablolarından, yeni çift yok):** `kemik_100/mor_800` 13,8 · `kemik_300/mor_800` 9,8 · `kemik_500/mor_800` 5,9 · `bronz_300/mor_800` 8,5 · AÇIK anahtar sözcüğü `kemik_100/bordo_700` 10,3 · `amber/mor_800` 7,8 · kademe I/II/III çerçeve `≥3:1` (`kemik_300`, `bronz_300`, `amber` / `kahve_700`). **Kilitli/pasif/soluk (sessiz) metinler soluklaştırılmaz.**
-- **Min metin 26 px**; 2× yazı: etiketler ×2 (72/56), kesilme yok (taşma = satır sarma ya da tek sütuna düşme, tablo §2, §3). Başlık/sanat metni (ASHEN BASTION) ölçeklenmez.
-- **Dokunma:** tüm hedefler ≥132 (anahtar satırı 132+, kaydırıcı bandı 132, GERİ 132), aralık ≥27; başarım satırı dokunma = aç/kapa (kazara geri dönüşü yok), kaydırma sürüklemesi dokunmayı yutmaz (eşik 24 px).
-- **Renk tek başına anlam taşımaz:** anahtar = konum + sözcük; kademe = rakam + baklava + çerçeve; kilit = rozet + ilerleme metni.
-- **Hareket/ışık:** hiçbir yeni öğe yanıp sönmez; küre süzülmesi ≤0,7 Hz ve ≤4 px; `hareket_azalt` portre için; anahtar geçişi 140 ms.
-- **Odak/klavye:** `border_focus` 6 px; sıralar §2–§3; diyalog yok.
-- **TalkBack (`accessibility_name`, Godot'ta destek varsa):** "Ayarlar" · "Tüm sesler, açık" · "Müzik, yüzde 70, kaydırıcı" · "Hareketi azalt, kapalı" · "Sürüm 2.0.3" · "Başarımlar, 31 / 53 kademe" · "Öldürme, kademe 2 / 4, sonraki hedef 5.000, 2.940" · "Üç Elit, tamamlandı".
-- **Türkçe büyük harf:** tüm dinamik metin `UiKit.upper_tr` (`to_upper` yasak); testte "İ/ı" (İLK, KALABALIK) denetlenir. "dk/sa" Cinzel'de büyük görünür (40 DK / 1 SA) — kabul.
-- **Güvenli alan:** ana sayfa sütunu + sürüm, ayarlar (liste + GERİ), başarımlar zaten; çentik ve gezinti çubuğunda testli.
+## 4. Başarımlar (`03`, ölçülü `03a`, boş `03b`, hepsi açık `03c`, satır açık `03d`, kademe dili `04` + gri `04b`)
 
-## 7. Dosya etkisi (uygulama D/C/B için girdi)
-- **D:** `main_menu.gd` (SES/TİTREŞİM satırı ve `_place_trophy`, `SETTINGS_*` kalkar; 2×2 yarım düğme ızgarası; sürüm), `settings_screen.gd` (yeniden yazım, `ScrollContainer`, `apply_safe_area`), `UiKit` (yeni `gear` glifi, `switch` bileşeni — `UiKit` sahibi D), `tools/capture/shots*.gd` (ekranlar), `docs/ui/DESIGN-UI.md` §6.1'e "bkz. v2.0.3" notu. `game_controller.gd` +2 satır payı.
-- **C:** `achievements_screen.gd` (aile satırı, açılır kademe listesi, grup eşlemesi), `achievement_icons.gd` (`tier_color` → kademe rengi 1–4 + tamam), `achievement_toast.gd` (rakam + baklava).
-- **B:** `gem_renderer.gd`, `gem_tiers.gd`, `assets/gfx/fx/gems/*`.
+**Soru:** "Sıradaki hedefim ne, ne kadar kaldı?" — kimlik: kale kroniği.
 
-## 8. Doğrulanmayanlar / varsayımlar
-- Maketler Chromium'dur, Godot render'ı değil; yazı tipi ölçüleri Cinzel/Inter ile (oyundaki font yüklemesi aynı dosyalar).
-- 2× yazı yalnız elle ölçeklenmiş makette gösterildi; gerçek `font_scale` Android'de Godot'ta sistem ayarından okunmaz *(Godot sürümüne bağlı)* — oyun içi 2× ölçek karşılığı **varsayım**: tüm `font_size` ×2 test modu.
-- Küre süzülme/hale oyun içi perf cihazda ölçülmedi.
-- Başarım eşik/grup toplamları spec'ten; örnek sayılar maket içindir.
-- Skill'ler: bkz. kapanış raporu.
+### 4.1 Üst alan
+Başlık BAŞARIMLAR (Cinzel 80/900, y 96). Özet `31 / 53 kademe` (Cinzel 56) + **kroniği şeridi**: bronz zincir üzerinde **5 grup mührü** (84 px; `muhur-dolu` = grup tamam amber ✓, `muhur-aktif` = ilerliyor, `muhur-sonuk` = hiç yok) ve altında kısa etiket (WATCH · CULLING · CROWNED · ARMORY · ROAD, Inter 26). Mühür dokunma = o gruba kay (hedef 187×132). Metin korunur (erişilebilirlik, kontrast).
 
-## 9. Açık noktalar
-1. **Normal–boss küre çifti ΔL* < 15** (4,9): kriter yorumu mu, boss koyulaştırma mı (§5.3)?
-2. Kademe eşik/aile adları spec tablosundan; grup eşlemesi (§4.1) kullanıcı onayı.
-3. **Hareket azaltma küre süzülmesini de kapatsın mı?** (öneri: evet; kullanıcı kararı yalnız portre için.)
-4. Satır içi kademe listesi (D10) onayı; alternatif: yalnız sonraki hedef.
-5. `application/config/version` ile tek sürüm kaynağı (öneri) — sözleşme/D kararı.
+### 4.2 Grup ve satır
+- **Grup başlığı** sticky: Cinzel 34 `bronz_300` + çizgi + sağda `açılan / toplam` (tamamlanınca amber).
+- **Aile satırı 936×150** (`levha`, margin 40 → içerik 20 px dolgu): plaka 108 · ad (Cinzel 38, tek satır) · **sonraki hedef** tek satır (Inter 28) · sağda `değer/hedef` (Cinzel 34) + **segmentli çubuk** 232×14 (kademe sayısı kadar segment; geçilenler dolu, aktif kısmi, gelecek boş; segment rengi = geçilen kademe rengi).
+- **Kademe iki kanalda:** (a) plaka silüeti + Roma rozeti, (b) segmentler. Ayrı "KADEME II" etiketi ve baklava satırı **yok**.
+- **Plaka silüeti** (`frames/plaka-*.svg`, yapısal fark): I yalın demir çerçeve (`demir`) · II 4 köşe perçini (`bronz_300`) · III köşebentler (`amber_glow`) · IV bordo plaka + amber köşebent + **taç** (üstte 14 px taşar; doku 108×122) + halo. Gri tonlama sınaması: `mock/04b` (I, II, III, IV, kilitli birbirinden ayırt edilir; II/III parlaklık yakın ama silüet farklı).
+- **Kilitli:** `plaka-kilitli` (`tas_500` kenar) + ikon **koyu silüet** (`modulate Color(.34,.30,.27)`) + kilit rozeti 48; ad `kemik_100` (soluk değil).
+- **Tamamlanan aile:** kenar `bronz_500`, plaka son kademe silüeti, tüm segmentler amber, **TAMAM** çipi (`dugme-hayalet` amber modulate), açıklama "Tüm kademeler açıldı. <tarih>".
+- Grup eşlemesi (öneri, spec ailelerine): THE WATCH: Hayatta Kalma, Dokunulmaz, Nöbet · THE CULLING: Kırım, Öldürme, Sınırsız Kırım, Bomba Ustası · THE CROWNED: Boss Avcısı, Üç Elit, Kale Lordu · THE ARMORY: Seviye, Evrim, Tambur Ustası, Seri Ustası, Skor, Eklenti Avcısı, Tam Kadro · THE ROAD: Yerleşik, Çifte Yol (19 aile). Aile adları şimdilik Türkçe (kullanıcı İngilizce seçimini yapınca değişir, §9).
+
+### 4.3 Satır açık (`03d`)
+Satıra dokun = tek nesne büyür: `levha-yuksek` içinde başlık satırı + **kademe yolu**: 4 mühür zincirle bağlı (`muhur-dolu` ✓ tarih · `muhur-aktif` kısmi, `2.940 / 5.000` amber · `muhur-sonuk` `Hedef 25.000` `kemik_500`, okunur). Üstteki segmentli çubuk **kaybolur** (değer yalnız aktif mührün yanında); sağda `˄` (kapat). Aynı genişlik, kenar boşluğu yok, ayrı gölge/yuvarlak kart yok; 180 ms (`hareket_azalt`'ta anlık); aynı anda 1 açık; açarken ses/titreşim yok. `accessibility_name`: "Öldürme, kademe 2 / 4, açık" / "kapalı".
+
+### 4.4 Durumlar
+Varsayılan · **boş/hepsi kilitli (`03b`)**: `0 / 53`, mühürler sönük, 108 yüksek panel "Henüz kademe açılmadı. Bir koşuya başla.", hata iletisi yok · **hepsi açık (`03c`)**: `53 / 53` amber, mühürler dolu, panel "Tüm başarımlar açıldı." · satır açık · koşu içi bildirim ("BAŞARIM AÇILDI · KADEME III / ÖLDÜRME III", `04`) ve sonuç özeti ("YENİ KADEME · 2") **aynı kaynak**: bildirim çıktıysa liste aynı karede açık (test) · bilinmeyen kimlik gösterilmez, silinmez · çoklu eşik = tek bildirim, en yüksek kademe.
+
+## 5. Ruh küreleri
+İlk tur brifi geçerlidir (kaynaklar `art/source/gem-orbs/`, 34/48/68 px, ölçüm: normal–elit ΔL* ≥41, elit–boss ≥33, normal–boss 4,9; IoU 0,37/0,46/0,51). Bu turda eklenenler: görsel yön `mock/05-kure-gorsel-yonu` yeni palet üzerinde yeniden çizildi; elit sınıfı mor kimliği XP çubuğuyla tutarlı (`xp` mor korunur). **`hareket_azalt` AÇIKken küre süzülmesi durur** (kullanıcı kararı). Normal–boss kriteri için karar önerisi hâlâ açık (§9-1).
+
+## 6. `hareket_azalt` kapsamı (kullanıcı kararı: hepsi durur)
+| Hareket | Açıkken |
+|---|---|
+| Hareketli portre (seçim ekranı) | statik portre |
+| Elit/boss küre süzülmesi (±3/±4 px) | sabit |
+| Ana sayfa kül/kor parçacıkları | görünmez (parçacık düğümü `visible=false`, `emitting=false`) |
+| Meşale titremesi | sabit düşük parlaklık |
+| Sancak sallanma (shader) | sabit |
+| Karakter nefesi (`ShowcaseMotion`) | sabit |
+| Anahtar kıvılcımı, satır açılma animasyonu | anlık (animasyonsuz) |
+| Dokunma geri bildirimi (80 ms), ekran girişi (220 ms) | **çalışır** (girdi/duran geçiş; titreme değil) — *öneri; ekran girişi de kapatılabilir* |
+Ayar satırı metni buna uyar; varsayılan KAPALI.
+
+## 7. Varlıklar ve kaynakları (mock/ ve frames/)
+- `mock/assets/*.png`: `art/ref/harita/harabe-parcalari.png` (yeşil perde silinmiş kırpmalar) ve `zemin-doku.png` (eliptik maske) ile `docs/ui/mockups/assets/gunslinger-atis-keyed.png` (kenar eritme) **türevleridir**; yeni görsel yok. Uygulama için kalıcı doku üretimi `tools/art` işidir (developer).
+- `frames/*.svg`: yeni, elle yazıldı; 9-slice kenar payları `frames/README.md`.
+- Taş duvar dokusu (ayarlar/başarım zemini): maketteki SVG desen **yalnız maket**; gerçek doku yeni görseldir → kullanıcıya gösterilmeden repoya girmez (§9-5).
+- `mock/` ve `frames/` için `docs/design/v2.0.3/.gdignore` var (APK'ya/içe aktarmaya girmez); commit'li `*.png.import` dosyaları silindi.
+
+## 8. Erişilebilirlik ve uygulama notları
+- **Kontrast:** `tokens-v2.0.3.md` §3 (hesaplandı). Kilitli/pasif/soluk metin soluklaştırılmaz; `tas_600` üstünde `kemik_500` metin yok (4,5, sınır).
+- **Dokunma:** tüm hedef ≥132, aralık ≥27 (ayarlar kartları aralığı 30); mühür bandı 187×132; satır dokunma = aç/kapa, kaydırma eşiği 24 px.
+- **Metin:** min 26 px; 2× yazıda sarma/tek sütun, kesilme yok.
+- **Renk dışı kanal:** anahtar = konum + sözcük; kademe = silüet + rozet + segment; kilit = rozet + metin; sessiz = çizili hoparlör + açıklama.
+- **Odak/D-pad:** `border_focus` 6 px; sıralar §2–§4; mühür şeridi ◄► ile gezilir.
+- **TalkBack (`accessibility_name`):** "Ses, kapalı" · "Müzik, yüzde 70" · "Hareketi azalt, kapalı" · "Başarımlar, 31 / 53 kademe" · "THE WATCH, 5 / 10" · "Öldürme, kademe 2 / 4, sonraki hedef 5.000, 2.940" · "Üç Elit, tamamlandı".
+- **Türkçe büyük harf:** Türkçe metin `UiKit.upper_tr`. **İngilizce grup/aile adları sabit büyük harf yazılır, `upper_tr` KULLANILMAZ** ("i"→"İ" olur). `to_upper` yasak (gate).
+- **Kabul/test (uygulama için):** namlu alevi kenarda kesilmez (kutu içi sınır testi); `hareket_azalt` AÇIK = parçacık/titreme/nefes/süzülme yok; 2× yazıda başlık kesilmez; kaydırıcı sürüklerken anahtar tetiklenmez; güvenli alan testi ayarlar dahil; kademe ayrımı gri tonlama ekran görüntüsünde de ayırt edilir; bildirim–liste tutarlılığı; satır açık/kapalı `accessibility_name`; sticky başlık.
+- **ui-ux-pro-max pre-delivery kontrolü:** emoji ikon yok (SVG/PNG) ✓ · dokunma geri bildirimi (basılı durum + 80 ms) ✓ · kontrast tablosu ✓ · safe area ✓ · reduced motion ✓ · tutarlı ikon dili ✓.
+
+## 9. Açık noktalar (kullanıcı kararı gerektirenler)
+1. **Normal–boss küre çifti ΔL* 4,9 (<15):** kriter yorumu (ΔL* **veya** boyut ≥1,8× + IoU ≤0,6) mi, boss koyultma mı?
+2. **Başarım GRUP adları — İngilizce (seçilecek):** aşağıdaki setlerden biri (ya da karışık). Görünüm: `mock/06-isim-onerileri`.
+
+| Grup (TR) | A · "THE …" (önerilen) | B · eylem | C · yalın |
+|---|---|---|---|
+| SAĞ KALIM | THE WATCH | LAST STAND | SURVIVAL |
+| KIRIM | THE CULLING | BODY COUNT | CARNAGE |
+| BOSS | THE CROWNED | THRONE BREAKERS | WARLORDS |
+| USTALIK | THE ARMORY | MASTERY | CRAFT |
+| YOLCULUK | THE ROAD | PILGRIMAGE | JOURNEY |
+   Gerekçe: A seti kale/harabe metaforuyla tutarlı tek kalıp (çatı, nöbet, taç, cephanelik, yol); B eylem odaklı ama uzunluk değişken (THRONE BREAKERS 15 harf); C en yalın/en az karakter.
+3. **Aile adları — İngilizce karşılık (isteğe bağlı; ilk öneri):** Hayatta Kalma → Endure / Last Light · Seviye → Ascendant / Rise · Kırım → Rampage / Onslaught · Öldürme → Reaper / Slayer · Boss Avcısı → Bossbane / Giant Slayer · Üç Elit → Elite Trio / Triple Crown · Evrim → Ascension / Rebirth · Tambur Ustası → Quick Hands / Spinner · Seri Ustası → Unbroken / Streak · Skor → Renown / Tally · Bomba Ustası → Demolisher / Bombardier · Eklenti Avcısı → Scavenger / Relic Hunter · Dokunulmaz → Untouched / Ghostwalk · Yerleşik → Garrison / Returning · Tam Kadro → Full Arsenal / Loaded · Sınırsız Kırım → Unbound / Limitless · Kale Lordu → Lordslayer / Usurper · Nöbet → Vigil / Night Watch · Çifte Yol → Two Roads / Dual Path. Aile adları Türkçe kalırsa grup başlıkları İngilizce, satır adları Türkçe olur (maketteki hâl).
+4. Kademe yolu satırı içi açılma (dokun-aç) ve mühüre dokun → gruba kay: onay (alternatif: yalnız sonraki hedef; yalnız sticky başlık).
+5. **Taş duvar dokusu** (ayarlar/başarım zemini) ve kalıcı sahne dokuları (kemer/kule/sur/sancak/meşale, zemin yaması) yeni görsel gerektirir: kod/gürültü ile mi, `harabe-parcalari` işlemesiyle mi, yoksa Codex üretimi mi? (Üretim olursa repoya girmeden `[VLAD:ASK]`.)
+6. Ekran girişi (220 ms) `hareket_azalt`'ta da kalsın mı (öneri: evet; yalnız dekoratif hareket kapanır).
+7. Başlık harf içi "kül→kemik" degrade (shader) isteniyor mu, düz `kemik_100` + taş oyma yeterli mi?
+8. Tek sürüm kaynağı (`application/config/version`).
+9. **Varsayımlar / doğrulanamayanlar:** maketler Chromium'dur, Godot render'ı değil (yazı tipi/9-slice yaklaşık); cihazda perf (≤40 parçacık, shader, p95) ölçülmedi; 2× yazı makette elle ölçeklendi; rakip ekranları (Brotato vb.) görsel olarak doğrulanamadı (Director brifi de aynısını belirtti); `impeccable` web dedektörü çalıştırılmadı; dokunmatik elde hissi denetlenemedi (v2.0.3 kullanıcı listesine eklenmeli: kaydırıcıda liste kayması, anahtar kazara tetik, ana sayfa akıcılığı Redmi Note 13 Pro).
