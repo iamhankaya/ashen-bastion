@@ -1,0 +1,16 @@
+{
+  "$comment": "v2.0.3 yeni/değişen token'lar. Ham renk yok; hepsi tokens.json takma adı.",
+  "color": {
+    "tier_1": "kemik_300", "tier_2": "bronz_300", "tier_3": "amber_glow", "tier_4": "amber_glow+glow_amber+bordo_700",
+    "tier_locked": "kahve_500", "tier_done": "amber_glow",
+    "switch_on": { "bg": "bordo_700", "edge": "bronz_300", "label": "kemik_100" },
+    "switch_off": { "bg": "mor_900", "edge": "kahve_500", "label": "kemik_500" },
+    "slider_fill": ["bronz_500", "bronz_300"], "slider_fill_muted": "kahve_500", "slider_knob_muted": "kemik_500"
+  },
+  "removed": ["gem_renderer.COLOR_XP", "gem_renderer.COLOR_XP_BRIGHT"],
+  "menu": { "col_top": 1763, "rows": { "play": 1763, "chars_ach": 1970, "scores_settings": 2129 }, "half_btn": [454, 132], "hero_box": [960, 1100], "hero_y": 560, "version_y": 2288, "stack_font_scale": 1.3 },
+  "settings": { "list_y": [260, 2172], "back_y": 2196, "card_h": { "ses": 560, "dokunus": 176, "gorunum": 226, "hakkinda": 316 }, "pad": 30, "gap": 36, "sec_h": 72, "switch": { "w": 156, "h": 84, "knob": 60, "border": 5 }, "slider": { "touch": 132, "rail": 20, "knob": 84, "step_pct": 5 }, "row_min": 132 },
+  "ach": { "row": [936, 168], "plate": 108, "badge": 46, "right_col": 232, "step_row": 72, "summary_y": 250, "bar_y": 340, "groups": ["SAĞ KALIM", "KIRIM", "BOSS", "USTALIK", "YOLCULUK"] },
+  "orb": { "px": { "normal": 34, "elit": 48, "ara_boss": 68 }, "texture": 128, "classes": { "normal": "xp<5", "elit": "5<=xp<80", "ara_boss": "xp>=80" }, "bob": { "elit": [3, 1800], "ara_boss": [4, 1400] } },
+  "motion_ms": { "switch_toggle": 140, "row_expand": 180 }
+}
