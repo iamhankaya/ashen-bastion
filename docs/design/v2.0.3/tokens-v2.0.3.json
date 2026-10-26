@@ -1,0 +1,180 @@
+{
+ "$comment": "v2.0.3 yeniden tasarım turu: yeni/değişen token'lar. Yüzeyler sıcak taş; mor yalnız XP + ikincil vurgu.",
+ "color": {
+  "void": "#0C0908",
+  "tas_900": "#151110",
+  "tas_800": "#1F1917",
+  "tas_700": "#2D2422",
+  "tas_600": "#3B302C",
+  "tas_500": "#4C3E38",
+  "mor_vurgu": "#4D3A6B",
+  "mor_iz": "#2F2342",
+  "demir": "#8C8379",
+  "overlay_dim": "#0C0908CC",
+  "tier_1": "demir",
+  "tier_2": "bronz_300",
+  "tier_3": "amber_glow",
+  "tier_4": "amber_glow+bordo_700+glow_amber",
+  "tier_locked": "tas_500",
+  "switch_on": {
+   "plate": "bordo_700",
+   "ring": "bronz_300",
+   "slot": "amber_glow"
+  },
+  "switch_off": {
+   "plate": "tas_800",
+   "ring": "demir",
+   "slot": "void"
+  },
+  "slider_fill": [
+   "bordo_500",
+   "bronz_500",
+   "amber_glow"
+  ],
+  "slider_fill_muted": "tas_500",
+  "slider_knob_muted": "kemik_500",
+  "scene_glow": "#E8A24A4D",
+  "scene_fog": "void"
+ },
+ "replaces": {
+  "mor_900": "tas_900",
+  "mor_800": "tas_800",
+  "mor_700": "tas_700",
+  "mor_500": "tas_600 (yüzey) / mor_vurgu (ikincil vurgu)"
+ },
+ "keep_purple": [
+  "xp",
+  "xp_parlak",
+  "mor_vurgu",
+  "mor_iz"
+ ],
+ "menu": {
+  "col_top": 1763,
+  "rows": {
+   "play": 1763,
+   "chars_ach": 1970,
+   "scores_settings": 2129
+  },
+  "half_btn": [
+   454,
+   132
+  ],
+  "version_y": 2288,
+  "char": [
+   640,
+   932
+  ],
+  "char_y": 600,
+  "char_edge_feather": 56,
+  "floor": [
+   1000,
+   400
+  ],
+  "scene_y": [
+   530,
+   1700
+  ],
+  "particles_max": 40,
+  "stack_font_scale": 1.3
+ },
+ "settings": {
+  "title_lento": [
+   520,
+   120
+  ],
+  "title_y": 96,
+  "list_y": [
+   250,
+   2172
+  ],
+  "back_y": 2196,
+  "card_h": {
+   "ses": 548,
+   "ses_muted_extra": 76,
+   "dokunus": 196,
+   "gorunum": 232,
+   "hakkinda": 308
+  },
+  "gap": 30,
+  "nine_slice_margin": 40,
+  "switch": [
+   156,
+   84
+  ],
+  "slider": {
+   "band": 132,
+   "rail": 28,
+   "knob": 84,
+   "step_pct": 5
+  },
+  "row_min": 132
+ },
+ "ach": {
+  "chronicle": {
+   "y": [
+    240,
+    440
+   ],
+   "seal": 84,
+   "hit": [
+    187,
+    132
+   ]
+  },
+  "group_h": 72,
+  "row": [
+   936,
+   150
+  ],
+  "row_gap": 12,
+  "plate": 108,
+  "badge": 46,
+  "right_col": 232,
+  "seg_h": 14,
+  "seg_gap": 4,
+  "open_step_h": 96,
+  "seal_open": 72,
+  "groups_en_recommended": [
+   "THE WATCH",
+   "THE CULLING",
+   "THE CROWNED",
+   "THE ARMORY",
+   "THE ROAD"
+  ]
+ },
+ "orb": {
+  "px": {
+   "normal": 34,
+   "elit": 48,
+   "ara_boss": 68
+  }
+ },
+ "motion_ms": {
+  "switch_toggle": 140,
+  "switch_spark": 200,
+  "row_expand": 180,
+  "menu_embers_life": [
+   3000,
+   5000
+  ],
+  "menu_torch_interval": [
+   1600,
+   2400
+  ],
+  "menu_banner": 3500,
+  "menu_breath": 2400,
+  "orb_bob_elit": 1800,
+  "orb_bob_boss": 1400
+ },
+ "reduce_motion_stops": [
+  "portrait_loop",
+  "orb_bob",
+  "menu_embers",
+  "menu_torch",
+  "menu_banner",
+  "menu_breath",
+  "switch_spark",
+  "row_expand",
+  "switch_toggle"
+ ]
+}
