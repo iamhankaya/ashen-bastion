@@ -177,6 +177,26 @@ func test_a8_switching_focus_between_characters_never_leaves_two_players_running
 	assert_lte(running, 1, "aynı anda en çok bir portre oynar")
 
 
+## Bozuk akış zaman aşımı yolu: gerçek bozuk .ogv motor ERROR satırı yazar (gate günlüğünü kırar), bu yüzden akış YOK iken
+## doğrudan _process çağrılır: ilk kare gelmezse START_TIMEOUT_SEC sonunda `failed` tek kez çıkar, oynatıcı gizli kalır.
+func test_a9_stalled_stream_gives_up_after_the_timeout_and_stays_hidden() -> void:
+	if _gate():
+		return
+	var p := PortraitPlayer.new()
+	add_child_autofree(p)
+	watch_signals(p)
+	p.set_process(true)
+	p._process(PortraitPlayer.START_TIMEOUT_SEC * 0.5)
+	assert_signal_not_emitted(p, "failed", "süre dolmadan vazgeçilmez")
+	assert_true(p.is_processing(), "süre dolana dek beklemeye devam eder")
+	p._process(PortraitPlayer.START_TIMEOUT_SEC)
+	assert_signal_emit_count(p, "failed", 1)
+	assert_false(p.is_processing(), "vazgeçince işlem durur")
+	assert_false(p.visible, "siyah çakma yok: gizli kalır")
+	assert_false(p.is_live())
+	assert_null(p.stream)
+
+
 # --- altın hash değişmezliği (HER ZAMAN) ----------------------------------------------------------------------
 
 

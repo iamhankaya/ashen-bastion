@@ -101,6 +101,30 @@ func test_d1_version_line_is_plain_2_0_3_without_the_character_name() -> void:
 	assert_eq(m.version_label.text, "Sürüm 2.0.3")
 
 
+## Üretim yolu: denetleyici menüyü kurunca sayaç gerçek kademe toplamını (53) gösterir; `MainMenu.DEFAULT_ACH_TOTAL`
+## (22, yalnız denetleyicisiz çıplak menüde görünür) ilk karede bile ekrana sızmamalı. Karar notu: sabit eski 22'de kaldığı
+## sürece çıplak menü "0/22" gösterir; bu test yalnız üretim akışını sabitler (sabitin 53'e çekilmesi önerisi rapordadır).
+func test_d1b_controller_built_menu_counts_shipped_steps_not_the_old_default() -> void:
+	if _gate():
+		return
+	var path := AchKit.tmp_path("d1b")
+	var c := GameController.new()
+	c.process_mode = Node.PROCESS_MODE_DISABLED
+	c.v2_opts = {"achievements_path": path, "clock": AchKit.clock()}
+	add_child(c)
+	c.highscores = Highscores.new(AchKit.tmp_path("d1bhs"))
+	c.go_menu()
+	var shown := AchKit.any_text_contains(c.menu, "0/53")
+	var stale := AchKit.any_text_contains(c.menu, "0/22")
+	# Denetleyici anahtarı kapalıysa (v2 akışı yok) çıplak menü varsayılanı görünür; o durum bu testin konusu değil.
+	if c.get_parent() != null:
+		c.get_parent().remove_child(c)
+	c.free()
+	AchKit.cleanup()
+	assert_true(shown, "denetleyici menüsü 0/53 gösterir")
+	assert_false(stale, "eski 22 varsayılanı sızmaz")
+
+
 func test_d1_home_progress_ring_text_is_open_over_total_steps() -> void:
 	if _gate():
 		return
