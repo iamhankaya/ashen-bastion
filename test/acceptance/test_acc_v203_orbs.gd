@@ -2,7 +2,7 @@ extends GutTest
 ## Kabul (v2.0.3 B): ruh küreleri — tip → görsel, üç tip ayırt edilir, sim değişmez, hareket azaltma.
 ## Kaynak: çatı kabul ölçütü #3, kullanıcı kararı (2026-10-26: normal–boss "ΔL* >= 15 VEYA boyut >= 1,8x + IoU <= 0,6" yeterli,
 ## boss koyultulmaz), DESIGN.md §5–6, sözleşme `GemTiers` (eşikler/doku yolları/ORB_PX değişmez).
-## Dilim B kapalıyken pending. Ölçüm kuralı sabittir: her küre ORB_PX boyutuna indirilip 68 px tuvale ortalanır; opak = alfa >= 0,5.
+## Dilim B kapalıyken pending. Test adı öneki `test_orb<N>_`: v2.0 dilim denetimi (tools/v2_slices.txt, simge B) sınıf süzgeci olmadığı için `test_b<N>_` adlarını kendi B dilimi sayıp gate kırıyor (Açık nokta). Ölçüm kuralı sabittir: her küre ORB_PX boyutuna indirilip 68 px tuvale ortalanır; opak = alfa >= 0,5.
 
 const CANVAS := 68
 const DELTA_L_MIN := 15.0
@@ -98,7 +98,7 @@ func _distinct(t1: int, t2: int) -> bool:
 # --- görseller ---------------------------------------------------------------------------------------------------------
 
 
-func test_b1_three_orb_textures_exist_load_and_are_pairwise_different_files() -> void:
+func test_orb1_three_orb_textures_exist_load_and_are_pairwise_different_files() -> void:
 	if _gate():
 		return
 	var seen := {}
@@ -118,7 +118,7 @@ func test_b1_three_orb_textures_exist_load_and_are_pairwise_different_files() ->
 		seen[key] = true
 
 
-func test_b2_every_pair_of_orb_types_is_distinguishable_by_the_agreed_rule() -> void:
+func test_orb2_every_pair_of_orb_types_is_distinguishable_by_the_agreed_rule() -> void:
 	if _gate():
 		return
 	assert_true(_distinct(GemTiers.NORMAL, GemTiers.ELIT), "normal–elit")
@@ -126,7 +126,7 @@ func test_b2_every_pair_of_orb_types_is_distinguishable_by_the_agreed_rule() -> 
 	assert_true(_distinct(GemTiers.NORMAL, GemTiers.BOSS), "normal–boss (boyut + biçim)")
 
 
-func test_b2_boss_orb_is_the_largest_and_orb_sizes_stay_the_contract_values() -> void:
+func test_orb2_boss_orb_is_the_largest_and_orb_sizes_stay_the_contract_values() -> void:
 	if _gate():
 		return
 	assert_eq(GemTiers.ORB_PX, PackedInt32Array([34, 48, 68]))
@@ -136,7 +136,7 @@ func test_b2_boss_orb_is_the_largest_and_orb_sizes_stay_the_contract_values() ->
 	)
 
 
-func test_b2_boss_orb_is_not_darkened_to_fake_a_difference() -> void:
+func test_orb2_boss_orb_is_not_darkened_to_fake_a_difference() -> void:
 	if _gate():
 		return
 	var boss := _canvas(GemTiers.BOSS)
@@ -163,7 +163,7 @@ func _sim_with_mixed_gems() -> GameSim:
 	return sim
 
 
-func test_b3_rendering_orbs_never_changes_the_sim_hash_or_gem_pool() -> void:
+func test_orb3_rendering_orbs_never_changes_the_sim_hash_or_gem_pool() -> void:
 	if _gate():
 		return
 	var sim := _sim_with_mixed_gems()
@@ -181,7 +181,7 @@ func test_b3_rendering_orbs_never_changes_the_sim_hash_or_gem_pool() -> void:
 	assert_eq(r.visible_count(), count0, "her taş çizilir (tipe göre görsel, sayı aynı)")
 
 
-func test_b3_same_seed_same_hash_whether_or_not_a_renderer_watched() -> void:
+func test_orb3_same_seed_same_hash_whether_or_not_a_renderer_watched() -> void:
 	if _gate():
 		return
 	var a := _sim_with_mixed_gems()
@@ -199,7 +199,7 @@ func test_b3_same_seed_same_hash_whether_or_not_a_renderer_watched() -> void:
 # --- hareket azaltma -------------------------------------------------------------------------------------------------------
 
 
-func test_b4_with_reduced_motion_orb_instances_do_not_drift_between_frames() -> void:
+func test_orb4_with_reduced_motion_orb_instances_do_not_drift_between_frames() -> void:
 	if _gate():
 		return
 	Settings.hareket_azalt = true
