@@ -160,7 +160,18 @@ func test_c4_unlock_reference_to_a_family_resolves_in_the_shipped_data() -> void
 	if _gate():
 		return
 	var d := GameData.load_default()
+	var checked := 0
 	for id in d.character_ids:
 		var u := d.get_character(id).unlock_achievement
 		if u != &"":
+			checked += 1
 			assert_not_null(d.get_achievement(u), "kilit başarımı aile kimliği: %s" % id)
+	# Gönderilen karakterlerin hiçbirinde kilit yoksa döngü hiçbir şey denemez (risky); çözümleme yolunu doğrudan sına:
+	if checked == 0:
+		var fam: AchievementDef = _defs()[0]
+		var c := CharacterDef.from_dict(
+			{"id": "kilitli", "unlock": {"achievement": String(fam.id)}}
+		)
+		assert_eq(c.unlock_achievement, fam.id, "unlock.achievement aile kimliği olarak okunur")
+		assert_not_null(d.get_achievement(c.unlock_achievement), "gerçek aile kimliği çözülür")
+	assert_null(d.get_achievement(&"no_such_family"), "bilinmeyen aile kimliği çözülmez")

@@ -16,7 +16,13 @@ func before_all() -> void:
 
 
 func after_each() -> void:
-	for p in [SETTINGS_TMP, STORE_TMP, STORE_TMP + ".bad", STORE_TMP + ".tmp"]:
+	for p in [
+		SETTINGS_TMP,
+		STORE_TMP,
+		STORE_TMP + ".bad",
+		STORE_TMP + ".tmp",
+		STORE_TMP + AchievementStore.BACKUP_SUFFIX
+	]:
 		if FileAccess.file_exists(p):
 			DirAccess.remove_absolute(p)
 
@@ -71,7 +77,9 @@ func test_p2_saved_barutcu_boots_as_gunslinger_and_survives_a_save_cycle() -> vo
 	)
 
 
-func test_p3_chars5_with_barutcu_is_byte_identical_after_load_and_save() -> void:
+## v2.0.3 C göçünden sonra davranış: v1 dosyası v2'ye geçer (bayt bayt aynı KALMAZ), ama `chars5` hiç filtrelenmez/sıralanmaz,
+## özgün v1 baytları `.v1.bak`'ta saklanır ve ikinci kayıt döngüsü kararlıdır (v2.0.2 niyeti: Barutçu kaydı silinmez).
+func test_p3_chars5_with_barutcu_survives_v1_to_v2_migration_verbatim() -> void:
 	if V202Slice.require(self, "P"):
 		return
 	var text := _store_json(["gunslinger", "barutcu"])
@@ -79,9 +87,22 @@ func test_p3_chars5_with_barutcu_is_byte_identical_after_load_and_save() -> void
 	var st := AchievementStore.new(STORE_TMP)
 	assert_true(st.load_file())
 	assert_false(st.corrupt)
+	assert_eq(Array(st.chars5), ["gunslinger", "barutcu"], "chars5 yüklemede filtrelenmez")
+	assert_eq(AchievementProgress.of(_data.get_achievement(&"two_roads"), st), 2, "ilerleme 2")
 	assert_true(st.save())
-	assert_eq(FileAccess.get_file_as_string(STORE_TMP), text, "bayt bayt aynı")
-	assert_eq(AchievementProgress.of(_data.get_achievement(&"cifte_yol"), st), 2, "ilerleme 2")
+	var saved: Variant = JSON.parse_string(FileAccess.get_file_as_string(STORE_TMP))
+	assert_eq(int(saved["v"]), AchievementStore.VERSION_V2, "ilk yazım v2")
+	assert_eq(saved["chars5"], ["gunslinger", "barutcu"], "chars5 yazımda bayt sırasıyla korunur")
+	assert_eq(
+		FileAccess.get_file_as_string(STORE_TMP + AchievementStore.BACKUP_SUFFIX),
+		text,
+		"özgün v1 baytları .v1.bak'ta"
+	)
+	var once := FileAccess.get_file_as_string(STORE_TMP)
+	var st2 := AchievementStore.new(STORE_TMP)
+	assert_true(st2.load_file())
+	assert_true(st2.save())
+	assert_eq(FileAccess.get_file_as_string(STORE_TMP), once, "ikinci kayıt döngüsü kararlı")
 
 
 func test_p4_new_run_of_zyfen_extends_chars5_without_dropping_barutcu() -> void:
