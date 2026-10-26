@@ -102,7 +102,7 @@ func test_player_walk_rig_defaults_are_valid_for_both_modes() -> void:
 	var rig: Dictionary = _data.get_character(&"gunslinger").rig
 	assert_true(rig.has("walk"), "rig.walk var")
 	var w: Dictionary = rig["walk"]
-	assert_almost_eq(float(w["stride"]), ExpectedTablesV11.WALK_STRIDE, 1e-4, "stride 136 px")
+	assert_almost_eq(float(w["stride"]), ExpectedTablesV11.WALK_STRIDE, 1e-4, "stride 110 px (v2.0.3 A)")
 	var n := int(w["frames"])
 	assert_true(n == 0 or (n >= 2 and n <= 12), "frames 0 (yedek) ya da 2..12: %d" % n)
 	if n > 0:

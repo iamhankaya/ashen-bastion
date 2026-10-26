@@ -53,7 +53,9 @@ func test_shoulder_deviation_follows_lean_geometry() -> void:
 		sim.player_pos += Vector2(5.0, 0.0)  # 300 px/sn
 		v.update_view(DT)
 	var lean := v.anim.lean
-	assert_gt(rad_to_deg(lean), 3.5)
+	# v2.0.3 A: Gunslinger kare modunda (walk.frames 8); eğim kare modunda LEAN_FRAME_SCALE ile küçülür
+	var framed := int((sim.character.rig["walk"] as Dictionary).get("frames", 0)) >= 2
+	assert_gt(rad_to_deg(lean), 3.5 * (PlayerAnim.LEAN_FRAME_SCALE if framed else 1.0))
 	var h := float(sim.character.rig["display_height"])
 	var want := PlayerRig.shoulder_world(0, sim.player_pos, false, sim.character.rig)
 	var dev := v.shoulder_view(0).distance_to(want)
@@ -113,7 +115,12 @@ func test_damage_event_flashes_and_shader_gets_uniforms() -> void:
 	assert_not_null(_shader_param(v, "scarf_amp"))
 	assert_not_null(_shader_param(v, "walk_phase"))
 	assert_not_null(_shader_param(v, "desat"))
-	assert_eq(float(_shader_param(v, "cells")), 1.0, "kare yok: tek hücre")
+	var frames := int((sim.character.rig["walk"] as Dictionary).get("frames", 0))
+	assert_eq(
+		float(_shader_param(v, "cells")),
+		float(frames + 1 if frames >= 2 else 1),
+		"yürüme hücreleri + duruş"
+	)
 
 
 func test_damage_direction_uses_the_nearest_enemy() -> void:
