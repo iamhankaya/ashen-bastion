@@ -104,7 +104,7 @@ func test_row_shows_next_goal_value_and_segments() -> void:
 	st.add_total(&"kills", 340)
 	st.unlock_step(&"reaper", 2, T0)
 	var r := _row(_screen(st), &"reaper")
-	assert_eq((r.get_node("Name") as Label).text, "REAPER")
+	assert_eq((r.get_node("Name") as Label).text, "Reaper")
 	assert_eq((r.get_node("Goal") as Label).text, "Toplam 2.500 düşman öldür")
 	assert_eq((r.get_node("Progress") as Label).text, "340/2.500")
 	assert_eq(r.segments.fills.size(), 4, "kademe sayısı kadar parça")
@@ -112,7 +112,7 @@ func test_row_shows_next_goal_value_and_segments() -> void:
 	assert_eq(r.segments.fills[1], 1.0)
 	assert_almost_eq(r.segments.fills[2], (340.0 - 250.0) / (2500.0 - 250.0), 0.001)
 	assert_eq(r.segments.fills[3], 0.0)
-	assert_eq(r.accessibility_name, "REAPER, kademe 2 / 4, sonraki hedef 2.500, 340, kapalı")
+	assert_eq(r.accessibility_name, "Reaper, kademe 2 / 4, sonraki hedef 2.500, 340, kapalı")
 
 
 func test_best_values_feed_run_families() -> void:

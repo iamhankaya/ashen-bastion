@@ -62,11 +62,11 @@ func test_real_data_has_19_families_and_53_steps_and_validates() -> void:
 	assert_eq(g.validate({}, true), PackedStringArray())
 
 
-func test_real_data_groups_cover_all_five_and_names_are_fixed_upper() -> void:
+func test_real_data_groups_cover_all_five_and_names_fit() -> void:
 	var seen := {}
 	for d in GameData.load_dir("res://data").achievements:
 		seen[String(d.group)] = true
-		assert_eq(d.display_name, d.display_name.to_upper(), "%s adı sabit büyük harf" % d.id)
+		assert_between(d.display_name.length(), 3, 22, d.id)  # Cinzel küçük büyük harf çizer; ad olduğu gibi gösterilir
 	for g in AchievementDef.GROUPS:
 		assert_true(seen.has(g), "%s grubunda aile var" % g)
 

@@ -58,12 +58,13 @@ func test_migration_keeps_legacy_unlock_dates_and_fills_lower_steps() -> void:
 	assert_eq(st.unlocked_at(&"reaper"), T + 7)
 
 
-func test_migration_seeds_counters_with_lower_bound() -> void:
+func test_migration_seeds_total_counters_with_lower_bound_but_not_run_bests() -> void:
 	var st: AchievementStore = _load_v1(_v1({"kalabalik_kesici": T}))[0]
 	assert_gte(int(st.totals["kills"]), 10000)
 	var st2: AchievementStore = _load_v1(_v1({"on_bes_dakika": T, "skor_100k": T}))[0]
-	assert_gte(int(st2.best["time"]), 900)
-	assert_gte(int(st2.best["score"]), 100000)
+	assert_eq(int(st2.best["time"]), 0, "koşu en iyileri tohumlanmaz")
+	assert_eq(int(st2.best["score"]), 0)
+	assert_eq(st2.step_count(&"endure"), 3, "kademe steps'te; ekran değeri eşikten gelir")
 	assert_eq(int(st2.totals["kills"]), 0, "başka sayaç tohumlanmaz")
 
 
@@ -195,15 +196,24 @@ func test_corrupt_v1_is_set_aside_and_state_is_empty() -> void:
 	assert_eq(st.unlocked.size(), 0)
 
 
-func test_without_defs_v1_stays_v1_so_no_mapping_is_lost() -> void:
+func test_load_file_without_defs_uses_default_data_and_migrates() -> void:
 	var p := AchKit.tmp_path()
 	AchKit.write_text(p, JSON.stringify(_v1({"ilk_kan": T})))
 	var st := AchievementStore.new(p)
 	assert_true(st.load_file())
+	assert_eq(st.step_count(&"reaper"), 1)
+	assert_false(st.unlocked.has(&"ilk_kan"))
+
+
+func test_v20_single_step_defs_keep_v1_layout_so_no_mapping_is_lost() -> void:
+	var p := AchKit.tmp_path()
+	AchKit.write_text(p, JSON.stringify(_v1({"ilk_kan": T})))
+	var st := AchievementStore.new(p)
+	assert_true(st.load_file(AchKit.legacy_data().achievements))
 	assert_true(st.unlocked.has(&"ilk_kan"))
 	assert_true(st.save())
 	var d: Dictionary = JSON.parse_string(AchKit.read_text(p))
-	assert_eq(int(d["v"]), 1, "tanım yokken göç yapılmaz")
+	assert_eq(int(d["v"]), 1, "aile yokken göç yapılmaz")
 	var again := AchievementStore.new(p)
 	assert_true(again.load_file(_defs))
 	assert_eq(again.step_count(&"reaper"), 1, "tanım gelince göçer")

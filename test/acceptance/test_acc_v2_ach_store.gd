@@ -29,7 +29,7 @@ func test_b1_missing_file_is_not_corrupt() -> void:
 	if _gate():
 		return
 	var st := AchievementStore.new(AchKit.tmp_path())
-	assert_false(st.load_file())
+	assert_false(st.load_file(AchKit.legacy_data().achievements))
 	assert_false(st.corrupt)
 	_assert_clean(st, "yok")
 
@@ -39,7 +39,7 @@ func test_b1_empty_file_resets_and_keeps_no_bad_backup() -> void:
 		return
 	var p := AchKit.tmp_path()
 	var st := _raw(p, "")
-	assert_false(st.load_file())
+	assert_false(st.load_file(AchKit.legacy_data().achievements))
 	assert_false(FileAccess.file_exists(p + ".bad"), "boş içerik .bad olarak saklanmaz")
 	_assert_clean(st, "boş")
 
@@ -50,7 +50,7 @@ func test_b1_truncated_json_is_corrupt_and_saved_as_bad() -> void:
 	var p := AchKit.tmp_path()
 	var broken := '{"v":1,"unlocked":{"ilk_kan":17'
 	var st := _raw(p, broken)
-	assert_false(st.load_file())
+	assert_false(st.load_file(AchKit.legacy_data().achievements))
 	assert_true(st.corrupt)
 	assert_true(FileAccess.file_exists(p + ".bad"), ".bad yedeği")
 	assert_eq(AchKit.read_text(p + ".bad"), broken, "yedek özgün içerik")
@@ -62,7 +62,7 @@ func test_b1_wrong_version_is_rejected_and_state_reset() -> void:
 		return
 	# v2.0.3: v2 artık geçerli sürüm; tanınmayan sürüm v3
 	var st := _raw(AchKit.tmp_path(), '{"v":3,"unlocked":{"ilk_kan":5},"totals":{"kills":9}}')
-	assert_false(st.load_file())
+	assert_false(st.load_file(AchKit.legacy_data().achievements))
 	assert_false(st.is_unlocked(&"ilk_kan"))
 	_assert_clean(st, "v:3")
 
@@ -72,7 +72,7 @@ func test_b1_root_array_is_corrupt() -> void:
 		return
 	var p := AchKit.tmp_path()
 	var st := _raw(p, "[1,2,3]")
-	assert_false(st.load_file())
+	assert_false(st.load_file(AchKit.legacy_data().achievements))
 	assert_true(st.corrupt)
 	assert_true(FileAccess.file_exists(p + ".bad"))
 	_assert_clean(st, "kök dizi")
@@ -82,7 +82,7 @@ func test_b1_unlocked_as_array_is_ignored_not_crash() -> void:
 	if _gate():
 		return
 	var st := _raw(AchKit.tmp_path(), '{"v":1,"unlocked":["ilk_kan"],"totals":{"kills":3}}')
-	st.load_file()
+	st.load_file(AchKit.legacy_data().achievements)
 	assert_eq(st.unlocked.size(), 0)
 	assert_false(st.is_unlocked(&"ilk_kan"))
 
@@ -96,7 +96,7 @@ func test_b1_wrong_typed_entries_are_dropped() -> void:
 		+ '"best":{"score":"x","time":{},"level":false},"chars5":[1,2,null,"gunslinger"]}'
 	)
 	var st := _raw(AchKit.tmp_path(), raw)
-	assert_true(st.load_file())
+	assert_true(st.load_file(AchKit.legacy_data().achievements))
 	assert_true(st.is_unlocked(&"ok"))
 	assert_false(st.is_unlocked(&"a"))
 	assert_false(st.is_unlocked(&"b"))
@@ -115,7 +115,7 @@ func test_b1_negative_values_are_not_accepted() -> void:
 		AchKit.tmp_path(),
 		'{"v":1,"unlocked":{"a":-5,"b":0},"totals":{"kills":-3},"best":{"score":-1}}'
 	)
-	st.load_file()
+	st.load_file(AchKit.legacy_data().achievements)
 	assert_false(st.is_unlocked(&"a"), "negatif unix")
 	assert_false(st.is_unlocked(&"b"), "unix < 1")
 	assert_gte(int(st.totals.get("kills", 0)), 0)
@@ -166,7 +166,7 @@ func test_b1_counter_cap_clamps_raw_int_below_int_limit() -> void:
 		return
 	# Plan B1: sayaç COUNTER_CAP'e kırpılır; ham int INT_LIMIT (1e15) üstü ayrı durumdur ve atılır.
 	var st := _raw(AchKit.tmp_path(), '{"v":1,"totals":{"kills":900000000000000}}')
-	st.load_file()
+	st.load_file(AchKit.legacy_data().achievements)
 	assert_eq(
 		int(st.totals["kills"]), AchievementStore.COUNTER_CAP, "INT_LIMIT altı ham int kırpılır"
 	)
@@ -176,7 +176,7 @@ func test_b1_raw_int_above_int_limit_is_dropped() -> void:
 	if _gate():
 		return
 	var st := _raw(AchKit.tmp_path(), '{"v":1,"totals":{"kills":10000000000000000}}')
-	st.load_file()
+	st.load_file(AchKit.legacy_data().achievements)
 	assert_eq(int(st.totals.get("kills", 0)), 0, "1e15 üstü ham int atılır")
 
 
@@ -184,7 +184,7 @@ func test_b1_huge_float_never_exceeds_cap_or_goes_negative() -> void:
 	if _gate():
 		return
 	var st := _raw(AchKit.tmp_path(), '{"v":1,"totals":{"kills":1e16,"runs":-1e16}}')
-	st.load_file()
+	st.load_file(AchKit.legacy_data().achievements)
 	assert_lte(int(st.totals["kills"]), AchievementStore.COUNTER_CAP)
 	assert_gte(int(st.totals["kills"]), 0)
 	assert_eq(int(st.totals["runs"]), 0, "-1e16 sıfır ya da reddedilir")
@@ -205,12 +205,12 @@ func test_b1_unknown_id_is_preserved_through_roundtrip() -> void:
 		return
 	var p := AchKit.tmp_path()
 	var st := _raw(p, '{"v":1,"unlocked":{"gelecek_basarim":1700000001}}')
-	assert_true(st.load_file())
+	assert_true(st.load_file(AchKit.legacy_data().achievements))
 	assert_true(st.is_unlocked(&"gelecek_basarim"), "bilinmeyen kimlik korunur")
 	st.dirty = true
 	assert_true(st.save())
 	var again := AchievementStore.new(p)
-	assert_true(again.load_file())
+	assert_true(again.load_file(AchKit.legacy_data().achievements))
 	assert_eq(again.unlocked_at(&"gelecek_basarim"), 1700000001)
 
 
@@ -222,7 +222,7 @@ func test_b1_65th_id_is_rejected_with_sorted_processing() -> void:
 	for i in range(69, -1, -1):
 		d["a%02d" % i] = 1700000000 + i
 	var st := _raw(AchKit.tmp_path(), JSON.stringify({"v": 1, "unlocked": d}))
-	assert_true(st.load_file())
+	assert_true(st.load_file(AchKit.legacy_data().achievements))
 	assert_eq(st.unlocked.size(), AchievementStore.MAX_UNLOCKED)
 	assert_true(st.is_unlocked(&"a00"))
 	assert_true(st.is_unlocked(&"a63"))
@@ -267,7 +267,7 @@ func test_b1_tmp_file_is_never_read() -> void:
 	var p := AchKit.tmp_path()
 	AchKit.write_text(p + ".tmp", '{"v":1,"unlocked":{"ilk_kan":1700000000}}')
 	var st := AchievementStore.new(p)
-	assert_false(st.load_file())
+	assert_false(st.load_file(AchKit.legacy_data().achievements))
 	assert_false(st.is_unlocked(&"ilk_kan"))
 
 
@@ -277,7 +277,7 @@ func test_b1_file_over_max_bytes_is_corrupt_without_bad_copy() -> void:
 	var p := AchKit.tmp_path()
 	var big := '{"v":1,"pad":"' + "x".repeat(StoreIo.MAX_BYTES + 10) + '"}'
 	var st := _raw(p, big)
-	assert_false(st.load_file())
+	assert_false(st.load_file(AchKit.legacy_data().achievements))
 	assert_true(st.corrupt)
 	assert_false(FileAccess.file_exists(p + ".bad"), "256 KB üstü .bad yazılmaz")
 
@@ -308,7 +308,7 @@ func test_b1_roundtrip_and_file_layout() -> void:
 	assert_eq(int(d["best"].get("time", 0)), 301)
 	assert_eq(Array(d["chars5"]), ["gunslinger"])
 	var again := AchievementStore.new(p)
-	assert_true(again.load_file())
+	assert_true(again.load_file(AchKit.legacy_data().achievements))
 	assert_eq(again.unlocked_at(&"ilk_kan"), 1700000005)
 	assert_eq(int(again.totals["play_secs"]), 600)
 	assert_eq(int(again.best["score"]), 1234)
@@ -421,11 +421,11 @@ func test_b1_repair_after_corruption_new_save_is_valid() -> void:
 		return
 	var p := AchKit.tmp_path()
 	var st := _raw(p, "{bozuk")
-	assert_false(st.load_file())
+	assert_false(st.load_file(AchKit.legacy_data().achievements))
 	assert_true(st.corrupt)
 	st.add_total(&"kills", 2)
 	assert_true(st.save())
 	var again := AchievementStore.new(p)
-	assert_true(again.load_file(), "onarım: yeni dosya geçerli")
+	assert_true(again.load_file(AchKit.legacy_data().achievements), "onarım: yeni dosya geçerli")
 	assert_eq(int(again.totals["kills"]), 2)
 	assert_true(FileAccess.file_exists(p + ".bad"), "eski bozuk içerik yedekte kalır")

@@ -73,7 +73,7 @@ func test_chars5_with_removed_character_is_kept_and_counts_two() -> void:
 	)
 	_write(STORE_TMP, text)
 	var st := AchievementStore.new(STORE_TMP)
-	assert_true(st.load_file())
+	assert_true(st.load_file(AchKit.legacy_data().achievements))
 	assert_false(st.corrupt)
 	assert_eq(Array(st.chars5), ["gunslinger", "barutcu"])
 	assert_eq(AchievementProgress.of(_data.get_achievement(&"two_roads"), st), 2)

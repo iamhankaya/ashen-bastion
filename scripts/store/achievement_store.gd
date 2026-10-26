@@ -55,7 +55,8 @@ func _init(p_path: String = DEFAULT_PATH) -> void:
 
 
 ## false = dosya yok/bozuk (durum sıfırlanır). Bozuk dosya `<yol>.bad` olarak saklanır; yarım `.tmp` hiç okunmaz.
-## `defs` (GameData.achievements) doluysa v1 dosyası aile/kademe kaydına göçer (bellekte; ilk `save()` yedekli yazar).
+## v1 dosyası aile/kademe kaydına göçer (bellekte; ilk `save()` yedekli yazar). `defs` (GameData.achievements) verilmezse
+## varsayılan veri kullanılır; aile içermeyen tanımlarla (v2.0 tek eşikli) kayıt v1 biçiminde kalır.
 func load_file(defs: Array = []) -> bool:
 	_reset()
 	var r := StoreIo.read_versioned_any(path, PackedInt32Array([VERSION, VERSION_V2]))
@@ -64,6 +65,8 @@ func load_file(defs: Array = []) -> bool:
 		return false
 	var clean := sanitize(r["data"])
 	if int(r["version"]) == VERSION:
+		if defs.is_empty():
+			defs = GameData.load_default().achievements
 		if not _has_families(defs):
 			_v1_layout = true
 		else:
@@ -358,6 +361,8 @@ static func migrate_v1(raw: Dictionary, defs: Array) -> Dictionary:
 	if (v is int or v is float) and int(v) >= VERSION_V2:
 		return raw.duplicate(true)
 	var out := AchievementMigration.migrate(sanitize(raw), defs)
+	var rt: Variant = raw.get("totals", null)
+	var rb: Variant = raw.get("best", null)
 	var st := {}
 	for id in out["steps"]:
 		st[String(id)] = (out["steps"][id] as Array).duplicate()
@@ -365,7 +370,16 @@ static func migrate_v1(raw: Dictionary, defs: Array) -> Dictionary:
 		"v": VERSION_V2,
 		"unlocked": _raw_unlocked(out["unlocked"]),
 		"steps": st,
-		"totals": out["totals"],
-		"best": out["best"],
+		"totals": _only_present(out["totals"], rt),
+		"best": _only_present(out["best"], rb),
 		"chars5": Array(out["chars5"]),
 	}
+
+
+## Sayaç sözlüğünden yalnız ham kayıtta olan ya da sıfırdan büyük anahtarları bırakır (yeni v2 anahtarları boşsa eklenmez).
+static func _only_present(clean: Dictionary, raw: Variant) -> Dictionary:
+	var out := {}
+	for k in clean:
+		if int(clean[k]) != 0 or (raw is Dictionary and (raw as Dictionary).has(k)):
+			out[k] = clean[k]
+	return out

@@ -19,13 +19,13 @@ func _write(text: String) -> void:
 func _loaded(text: String) -> AchievementStore:
 	_write(text)
 	var s := AchievementStore.new(PATH)
-	s.load_file()
+	s.load_file(AchKit.legacy_data().achievements)
 	return s
 
 
 func test_missing_file_gives_empty_state() -> void:
 	var s := AchievementStore.new(PATH)
-	assert_false(s.load_file())
+	assert_false(s.load_file(AchKit.legacy_data().achievements))
 	assert_false(s.corrupt)
 	assert_eq(s.unlocked.size(), 0)
 	assert_eq(s.totals["kills"], 0)
@@ -107,7 +107,7 @@ func test_unknown_ids_are_preserved_and_roundtrip() -> void:
 	s.unlock(&"ilk_kan", 5)
 	assert_true(s.save())
 	var s2 := AchievementStore.new(PATH)
-	assert_true(s2.load_file())
+	assert_true(s2.load_file(AchKit.legacy_data().achievements))
 	assert_eq(s2.unlocked_at(&"gelecek_basarim"), 99)
 	assert_eq(s2.unlocked_at(&"ilk_kan"), 5)
 
@@ -163,7 +163,7 @@ func test_tmp_is_not_read() -> void:
 	f.store_string('{"v":1,"unlocked":{"ilk_kan":5}}')
 	f.close()
 	var s := AchievementStore.new(PATH)
-	assert_false(s.load_file())
+	assert_false(s.load_file(AchKit.legacy_data().achievements))
 	assert_false(s.is_unlocked(&"ilk_kan"))
 
 
@@ -173,7 +173,7 @@ func test_corrupt_file_repaired_by_next_save() -> void:
 	s.unlock(&"ilk_kan", 9)
 	assert_true(s.save())
 	var s2 := AchievementStore.new(PATH)
-	assert_true(s2.load_file())
+	assert_true(s2.load_file(AchKit.legacy_data().achievements))
 	assert_false(s2.corrupt)
 	assert_eq(s2.unlocked_at(&"ilk_kan"), 9)
 

@@ -5,7 +5,8 @@ extends RefCounted
 
 ## `clean` = AchievementStore.sanitize çıktısı (v1 alanları; `steps` boş olabilir). Aynı biçimde yeni sözlük döner, girdi değişmez.
 ## Eski kimlikler `def.legacy` eşlemesiyle ailenin en yüksek kademesine taşınır (alt kademeler örtük açık, tarih korunur),
-## kademenin eşiği sayaçlara alt sınır olarak tohumlanır. Eşlenmeyen kimlikler olduğu gibi kalır.
+## kademenin eşiği toplam sayaçlara (`totals`) alt sınır olarak tohumlanır; koşu en iyileri (`best`) tohumlanmaz (kademe `steps`te,
+## ekran değeri en az açılan kademenin eşiğidir). Eşlenmeyen kimlikler olduğu gibi kalır.
 static func migrate(clean: Dictionary, defs: Array) -> Dictionary:
 	var out := clean.duplicate(true)
 	var unlocked: Dictionary = out["unlocked"]
@@ -42,13 +43,12 @@ static func _unix_for(at: Dictionary, k: int, top: int) -> int:
 	return 1
 
 
-## Aile eşiğini kaynak sayaca alt sınır olarak yazar (kaynağı olmayan stat: `total_chars5`, atlanır).
+## Toplam stat'ın eşiğini `totals` alt sınırı olarak yazar (`run_*` ve `total_chars5` tohumlanmaz).
 static func _seed(state: Dictionary, def: AchievementDef, value: int) -> void:
-	var s := String(def.stat)
-	var table: Dictionary = state["totals"] if AchievementDef.TOTAL_KEY.has(s) else state["best"]
-	var key: String = AchievementDef.TOTAL_KEY.get(s, AchievementDef.BEST_KEY.get(s, ""))
-	if key != "" and table.has(key):
-		table[key] = maxi(int(table[key]), mini(value, AchievementStore.COUNTER_CAP))
+	var key: String = AchievementDef.TOTAL_KEY.get(String(def.stat), "")
+	if key != "":
+		var t: Dictionary = state["totals"]
+		t[key] = maxi(int(t[key]), mini(value, AchievementStore.COUNTER_CAP))
 
 
 ## Sayaçların hak ettiği ama kayıtta olmayan kademeleri SESSİZCE verir (bildirim yok; kademe asla geri alınmaz).

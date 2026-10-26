@@ -30,7 +30,7 @@ static func run(opts: Dictionary) -> Dictionary:
 	var tracker: AchievementTracker = null
 	if bool(opts.get("tracker", false)):
 		var st := AchKit.store()
-		tracker = AchievementTracker.new(AchKit.data(), st, sim.character.id, AchKit.clock())
+		tracker = AchievementTracker.new(AchKit.legacy_data(), st, sim.character.id, AchKit.clock())
 		tracker.attach(sim.bus)
 	var rng := Bots.make_rng(seed_value)
 	var steps := 0

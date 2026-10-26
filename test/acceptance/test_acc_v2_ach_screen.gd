@@ -18,7 +18,7 @@ func _gate() -> bool:
 func _screen(st: AchievementStore, d: GameData = null) -> AchievementsScreen:
 	var s := AchievementsScreen.new()
 	add_child_autofree(s)
-	s.open(d if d != null else AchKit.data(), st)
+	s.open(d if d != null else AchKit.legacy_data(), st)
 	return s
 
 
@@ -217,7 +217,7 @@ func test_b6_safe_area_keeps_content_inside() -> void:
 	add_child_autofree(host)
 	var s := AchievementsScreen.new()
 	host.add_child(s)
-	s.open(AchKit.data(), AchKit.store())
+	s.open(AchKit.legacy_data(), AchKit.store())
 	s.apply_safe_area(ExpectedLayoutV2.SAFE_NOTCH)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -261,7 +261,7 @@ func test_b6_progress_helper_maps_sources() -> void:
 	if _gate():
 		return
 	var st := AchKit.store()
-	var d := AchKit.data()
+	var d := AchKit.legacy_data()
 	st.totals["kills"] = 7
 	st.totals["runs"] = 3
 	st.best["time"] = 120

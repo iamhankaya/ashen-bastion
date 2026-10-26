@@ -77,13 +77,14 @@ static func clock(unix: int = FIXED_UNIX) -> Callable:
 	return func() -> int: return unix
 
 
-## v2.0 kabul/birim testleri 22 tek eşikli başarım varsayar: gerçek `data/` + `LEGACY_DIR` kayıtları (v2.0.3 aile verisi ayrı test edilir).
+## v2.0 kabul/birim testleri 22 tek eşikli başarım varsayar: `legacy_data()` / `legacy_rig()` (gerçek `data/` + `LEGACY_DIR` kayıtları).
+## `data()` / `rig()` gerçek v2.0.3 aile verisidir.
 const LEGACY_DIR := "res://test/fixtures/ach_v20"
 static var _legacy: GameData = null
 
 
 static func data() -> GameData:
-	return legacy_data()
+	return GameData.load_default()
 
 
 static func legacy_data() -> GameData:
@@ -108,13 +109,20 @@ static func fake_store(open_ids: Array = []) -> AchievementStore:
 	return f
 
 
-## {"store","tracker","bus"}: yeni depo (geçici yol), tracker (gerçek data/), SimBus ve attach.
-static func rig(char_id: StringName = &"gunslinger", unix: int = FIXED_UNIX) -> Dictionary:
+## {"store","tracker","bus"}: yeni depo (geçici yol), tracker (gerçek aile verisi ya da `p_data`), SimBus ve attach.
+static func rig(
+	char_id: StringName = &"gunslinger", unix: int = FIXED_UNIX, p_data: GameData = null
+) -> Dictionary:
 	var st := store()
-	var tr := AchievementTracker.new(data(), st, char_id, clock(unix))
+	var tr := AchievementTracker.new(p_data if p_data != null else data(), st, char_id, clock(unix))
 	var bus := SimBus.new()
 	tr.attach(bus)
 	return {"store": st, "tracker": tr, "bus": bus}
+
+
+## v2.0 (22 tek eşikli kayıt) verisiyle `rig`.
+static func legacy_rig(char_id: StringName = &"gunslinger", unix: int = FIXED_UNIX) -> Dictionary:
+	return rig(char_id, unix, legacy_data())
 
 
 ## n kez düşman ölümü (varsayılan sıradan tür).

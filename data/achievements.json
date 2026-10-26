@@ -1,7 +1,7 @@
 [
   {
     "id": "endure",
-    "name": "ENDURE",
+    "name": "Endure",
     "desc": "Tek koşuda hayatta kal.",
     "stat": "run_time",
     "scope": "run",
@@ -21,7 +21,7 @@
   },
   {
     "id": "untouched",
-    "name": "UNTOUCHED",
+    "name": "Untouched",
     "desc": "Hiç hasar almadan hayatta kal.",
     "stat": "run_clean_secs",
     "scope": "run",
@@ -38,7 +38,7 @@
   },
   {
     "id": "vigil",
-    "name": "VIGIL",
+    "name": "Vigil",
     "desc": "Toplam oyun süresi biriktir.",
     "stat": "total_play_secs",
     "scope": "total",
@@ -51,7 +51,7 @@
   },
   {
     "id": "rampage",
-    "name": "RAMPAGE",
+    "name": "Rampage",
     "desc": "Tek koşuda düşman öldür.",
     "stat": "run_kills",
     "scope": "run",
@@ -69,7 +69,7 @@
   },
   {
     "id": "reaper",
-    "name": "REAPER",
+    "name": "Reaper",
     "desc": "Toplam düşman öldür.",
     "stat": "total_kills",
     "scope": "total",
@@ -88,7 +88,7 @@
   },
   {
     "id": "unbound",
-    "name": "UNBOUND",
+    "name": "Unbound",
     "desc": "Sonsuz Tambur sırasında düşman öldür.",
     "stat": "run_unlimited_kills",
     "scope": "run",
@@ -105,7 +105,7 @@
   },
   {
     "id": "demolisher",
-    "name": "DEMOLISHER",
+    "name": "Demolisher",
     "desc": "Tek Kara Bomba ile düşman vur.",
     "stat": "run_bomb_hits",
     "scope": "run",
@@ -122,7 +122,7 @@
   },
   {
     "id": "bossbane",
-    "name": "BOSSBANE",
+    "name": "Bossbane",
     "desc": "Elit boss öldür (toplam).",
     "stat": "total_boss_kills",
     "scope": "total",
@@ -139,7 +139,7 @@
   },
   {
     "id": "elite_trio",
-    "name": "ELITE TRIO",
+    "name": "Elite Trio",
     "desc": "Tek koşuda üç elit türünü de öldür.",
     "stat": "run_elite_kinds",
     "scope": "run",
@@ -154,7 +154,7 @@
   },
   {
     "id": "lordslayer",
-    "name": "LORDSLAYER",
+    "name": "Lordslayer",
     "desc": "Kale Lordu'nu devir.",
     "stat": "total_wins",
     "scope": "total",
@@ -171,7 +171,7 @@
   },
   {
     "id": "ascendant",
-    "name": "ASCENDANT",
+    "name": "Ascendant",
     "desc": "Tek koşuda seviye atla.",
     "stat": "run_level",
     "scope": "run",
@@ -189,7 +189,7 @@
   },
   {
     "id": "ascension",
-    "name": "ASCENSION",
+    "name": "Ascension",
     "desc": "Tek koşuda evrim kazan.",
     "stat": "run_evolutions",
     "scope": "run",
@@ -206,7 +206,7 @@
   },
   {
     "id": "quick_hands",
-    "name": "QUICK HANDS",
+    "name": "Quick Hands",
     "desc": "Tek koşuda tamburu doldur.",
     "stat": "run_reloads",
     "scope": "run",
@@ -223,7 +223,7 @@
   },
   {
     "id": "unbroken",
-    "name": "UNBROKEN",
+    "name": "Unbroken",
     "desc": "SERİ çarpanını yükselt.",
     "stat": "run_best_mult",
     "scope": "run",
@@ -239,7 +239,7 @@
   },
   {
     "id": "renown",
-    "name": "RENOWN",
+    "name": "Renown",
     "desc": "Tek koşuda skor yap.",
     "stat": "run_score",
     "scope": "run",
@@ -256,7 +256,7 @@
   },
   {
     "id": "scavenger",
-    "name": "SCAVENGER",
+    "name": "Scavenger",
     "desc": "Tek koşuda eklenti topla.",
     "stat": "run_pickups",
     "scope": "run",
@@ -273,7 +273,7 @@
   },
   {
     "id": "full_arsenal",
-    "name": "FULL ARSENAL",
+    "name": "Full Arsenal",
     "desc": "6 aktif beceri yuvasını doldur.",
     "stat": "run_active_slots",
     "scope": "run",
@@ -288,7 +288,7 @@
   },
   {
     "id": "garrison",
-    "name": "GARRISON",
+    "name": "Garrison",
     "desc": "Koşu oyna.",
     "stat": "total_runs",
     "scope": "total",
@@ -305,7 +305,7 @@
   },
   {
     "id": "two_roads",
-    "name": "TWO ROADS",
+    "name": "Two Roads",
     "desc": "İki farklı karakterle 5 dakika hayatta kal.",
     "stat": "total_chars5",
     "scope": "total",

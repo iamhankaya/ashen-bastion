@@ -58,7 +58,7 @@ func _locked_zyfen_data(achievement: String = "endure") -> GameData:
 
 
 func test_k1_resolve_defaults_to_gunslinger_for_missing_empty_unknown() -> void:
-	var d := AchKit.data()
+	var d := AchKit.legacy_data()
 	var st := AchKit.fake_store()
 	for saved in ["", "yok_boyle", "BARUTCU", " barutcu", "../barutcu"]:
 		var got := CharacterRoster.resolve(saved, d, st)
@@ -189,7 +189,9 @@ func test_k2_controller_source_has_no_hardcoded_character_constant() -> void:
 func test_k2_selected_zyfen_builds_matching_sim() -> void:
 	var st := _settings()
 	st.character_id = "zyfen"
-	var flow := V2Flow.new({"data": AchKit.data(), "achievements_path": AchKit.tmp_path("flow")})
+	var flow := V2Flow.new(
+		{"data": AchKit.legacy_data(), "achievements_path": AchKit.tmp_path("flow")}
+	)
 	var id := flow.selected_character()
 	assert_eq(id, &"zyfen")
 	var sim := SimKit.make(11, {"data_kind": "real", "character": id})
@@ -202,7 +204,9 @@ func test_k2_selected_zyfen_builds_matching_sim() -> void:
 
 func test_k2_selected_character_falls_back_without_selection() -> void:
 	_settings().character_id = ""
-	var flow := V2Flow.new({"data": AchKit.data(), "achievements_path": AchKit.tmp_path("flow")})
+	var flow := V2Flow.new(
+		{"data": AchKit.legacy_data(), "achievements_path": AchKit.tmp_path("flow")}
+	)
 	assert_eq(flow.selected_character(), &"gunslinger")
 	_settings().character_id = "kalinti_kimlik"
 	assert_eq(flow.selected_character(), &"gunslinger")
@@ -224,7 +228,7 @@ func _controller() -> GameController:
 	var c := GameController.new()
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	c.v2_opts = {
-		"data": AchKit.data(),
+		"data": AchKit.legacy_data(),
 		"achievements_path": AchKit.tmp_path("ctrl"),
 		"clock": AchKit.clock(),
 	}
@@ -256,7 +260,7 @@ func _label_with(root: Node, text: String) -> Label:
 func test_k3_levelup_shows_upper_cased_character_name() -> void:
 	if _gate():
 		return
-	var d := AchKit.data()
+	var d := AchKit.legacy_data()
 	var s := _levelup(d.get_character(&"gunslinger"))
 	assert_not_null(
 		_label_with(s, UiKit.character_upper(d.get_character(&"gunslinger"))),
@@ -289,17 +293,17 @@ func test_k3_levelup_without_portrait_opens_without_crash_and_has_no_portrait_no
 	var s := _levelup(c)
 	assert_not_null(s.title_label, "başlık düğümü var")
 	assert_null(s.find_child("Portrait", true, false), "Portrait düğümü yok")
-	var s2 := _levelup(AchKit.data().get_character(&"gunslinger"))
+	var s2 := _levelup(AchKit.legacy_data().get_character(&"gunslinger"))
 	assert_not_null(s2.find_child("Portrait", true, false), "portresi olan karakterde Portrait var")
 
 
 func test_k3_levelup_name_and_title_geometry() -> void:
 	if _gate():
 		return
-	var s := _levelup(AchKit.data().get_character(&"gunslinger"))
+	var s := _levelup(AchKit.legacy_data().get_character(&"gunslinger"))
 	await get_tree().process_frame
 	var name_label := _label_with(
-		s, UiKit.character_upper(AchKit.data().get_character(&"gunslinger"))
+		s, UiKit.character_upper(AchKit.legacy_data().get_character(&"gunslinger"))
 	)
 	assert_not_null(name_label)
 	if name_label != null:
@@ -315,7 +319,7 @@ func test_k3_levelup_name_and_title_geometry() -> void:
 func test_k3_levelup_safe_area_moves_cards_up_from_bottom() -> void:
 	if _gate():
 		return
-	var s := _levelup(AchKit.data().get_character(&"gunslinger"))
+	var s := _levelup(AchKit.legacy_data().get_character(&"gunslinger"))
 	await get_tree().process_frame
 	var before: float = s.cards[0].get_global_rect().end.y
 	s.call("apply_safe_area", ExpectedLayoutV2.SAFE_NOTCH)
@@ -407,7 +411,7 @@ func test_k5_showcase_motion_pure_values() -> void:
 func _open_screen() -> CharactersScreen:
 	var s := CharactersScreen.new()
 	add_child_autofree(s)
-	s.open(AchKit.data(), AchKit.fake_store(), &"gunslinger")
+	s.open(AchKit.legacy_data(), AchKit.fake_store(), &"gunslinger")
 	return s
 
 
@@ -566,7 +570,7 @@ func test_k9_new_character_doc_has_required_sections() -> void:
 
 
 func test_k10_no_real_character_has_unlock() -> void:
-	var d := AchKit.data()
+	var d := AchKit.legacy_data()
 	for id in d.character_ids:
 		assert_eq(d.get_character(id).unlock_achievement, &"", "%s: ödül yok -> kilitsiz" % id)
 		assert_true(CharacterRoster.is_unlocked(d.get_character(id), AchKit.fake_store()))
@@ -574,7 +578,7 @@ func test_k10_no_real_character_has_unlock() -> void:
 
 func test_k10_lock_reason_text_uses_achievement_name() -> void:
 	var d := _locked_zyfen_data()
-	assert_eq(CharacterRoster.lock_reason(d.get_character(&"zyfen"), d), "ENDURE başarımını aç")
+	assert_eq(CharacterRoster.lock_reason(d.get_character(&"zyfen"), d), "Endure başarımını aç")
 	assert_false(CharacterRoster.is_unlocked(d.get_character(&"zyfen"), AchKit.fake_store()))
 
 
@@ -592,7 +596,7 @@ func test_k10_locked_character_cannot_be_selected_on_screen() -> void:
 	assert_eq(s.select_button_state(), CharactersScreen.SelectState.LOCKED)
 	assert_false(s.press_select())
 	assert_signal_not_emitted(s, "selected")
-	assert_true(AchKit.any_text_contains(s, "ENDURE başarımını aç"), "kilit nedeni satırı")
+	assert_true(AchKit.any_text_contains(s, "Endure başarımını aç"), "kilit nedeni satırı")
 
 
 func test_k10_corrupt_store_keeps_locked_character_locked() -> void:
