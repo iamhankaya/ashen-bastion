@@ -7,6 +7,10 @@ extends RefCounted
 ##  "best":{"score":0,"time":0,"level":0},"chars5":["gunslinger"]}
 
 const VERSION := 1
+## v2.0.3: `v2` biçimi (aile/kademe `steps`) C fazında yazılır; o zamana dek okuma/yazma `VERSION` ile sürer.
+const VERSION_V2 := 2
+## v1 -> v2 göçünden önce, ilk v2 yazımında bir kez alınan yedek (`<yol>.v1.bak`).
+const BACKUP_SUFFIX := ".v1.bak"
 const DEFAULT_PATH := "user://achievements.json"
 const MAX_UNLOCKED := 64
 const MAX_CHARS5 := 16
@@ -190,3 +194,9 @@ func _reset() -> void:
 	chars5 = PackedStringArray()
 	corrupt = false
 	dirty = false
+
+
+## v1 ham kaydını v2'ye çevirir (saf, idempotent, girdiyi değiştirmez; `defs` = `GameData.achievements`).
+## SÖZLEŞME TASLAĞI: gövdesini C fazı doldurur (docs/data-schema.md "Kayıt göçü"); imza değişmez.
+static func migrate_v1(raw: Dictionary, _defs: Array) -> Dictionary:
+	return raw.duplicate(true)

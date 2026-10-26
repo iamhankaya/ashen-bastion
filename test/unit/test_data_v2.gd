@@ -50,12 +50,12 @@ func _codes(errs: PackedStringArray) -> Array[String]:
 	return out
 
 
-func test_stats_set_is_closed_and_has_20_names() -> void:
-	assert_eq(AchievementDef.STATS.size(), 20)
+func test_stats_set_is_closed_and_has_21_names() -> void:
+	assert_eq(AchievementDef.STATS.size(), 21)
 	var seen := {}
 	for s in AchievementDef.STATS:
 		seen[s] = true
-	assert_eq(seen.size(), 20, "yinelenen stat yok")
+	assert_eq(seen.size(), 21, "yinelenen stat yok")
 
 
 func test_scope_of_total_prefix_run_otherwise_unknown_empty() -> void:
@@ -267,15 +267,15 @@ func test_achievement_error_codes() -> void:
 		)
 
 
-func test_ach_count_boundaries_15_and_25() -> void:
-	for n in [14, 26]:
+func test_ach_count_boundaries_12_and_30() -> void:
+	for n in [11, 31]:
 		var errs := (
 			GameData
 			. load_dir(KitDev.data_dir_with({"achievements.json": _many(n)}))
 			. validate({}, true)
 		)
 		assert_true(_codes(errs).has("ach_count"), "%d: %s" % [n, errs])
-	for n in [15, 25]:
+	for n in [12, 30]:
 		var errs := (
 			GameData
 			. load_dir(KitDev.data_dir_with({"achievements.json": _many(n)}))

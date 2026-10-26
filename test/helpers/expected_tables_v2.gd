@@ -30,7 +30,7 @@ const ACHIEVEMENTS: Array = [
 ]
 const TIER_COUNTS: Array = [6, 9, 5, 2]  # kolay, orta, zor, cok_zor
 
-## Kapalı stat kümesi (20).
+## Kapalı stat kümesi (21; v2.0.3: total_boss_kills sona eklendi).
 const STATS: PackedStringArray = [
 	"total_kills",
 	"total_runs",
@@ -52,6 +52,7 @@ const STATS: PackedStringArray = [
 	"run_unlimited_kills",
 	"run_won",
 	"run_bomb_hits",
+	"total_boss_kills",
 ]
 
 const ELITE_KINDS: PackedStringArray = ["elit_piyade", "elit_sovalye", "elit_karga"]

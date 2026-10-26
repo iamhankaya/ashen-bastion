@@ -67,7 +67,7 @@ func test_b7_every_tier_present_with_6_9_5_2_distribution() -> void:
 
 
 func test_b7_stat_set_is_closed_at_20_and_matches_table() -> void:
-	assert_eq(AchievementDef.STATS.size(), 20)
+	assert_eq(AchievementDef.STATS.size(), 21)
 	for s in ExpectedTablesV2.STATS:
 		assert_true(AchievementDef.STATS.has(s), s)
 	for s in AchievementDef.STATS:

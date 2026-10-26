@@ -178,6 +178,11 @@ BAD = {
     "tier_missing": ach(lambda d: d.__delitem__(slice(20, None))),
     "scope_mismatch": ach(lambda d: d[0].update(scope="run")),
     "atlas_cells": atlas_enemies(),
+    # v2.0.3 aşamalı şema
+    "steps_invalid": ach(lambda d: (d[0].pop("target"), d[0].pop("tier"), d[0].update(steps=[10, 5], group="THE ROAD"))),
+    "legacy_unknown": ach(lambda d: (
+        d[0].pop("target"), d[0].pop("tier"),
+        d[0].update(steps=[1, 10], group="THE ROAD", legacy={"yok_boyle_eski": 1}))),
     "unknown_ref": {"characters/gunslinger.json": mut(
         "characters/gunslinger.json", lambda d: d.update(unlock={"achievement": "olmayan_basarim"}))},
     "rhythm_count": {
@@ -195,6 +200,7 @@ CHAR_BAD = {
     "unlock_key": lambda d: d.update(unlock={"achievement": "ilk_kan", "extra": 1}),
     "placeholder_type": lambda d: d.update(placeholder="evet"),
     "base_gun": lambda d: d.update(base_gun="cift_tabanca"),
+    "portrait_video_missing": lambda d: d.update(portrait_video="res://assets/video/portrait/yok_boyle_video.ogv"),
 }
 
 
