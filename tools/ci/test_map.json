@@ -49,6 +49,9 @@
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
+   "test/acceptance/test_acc_v203_orbs.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -112,6 +115,7 @@
   "scripts/audio/sfx.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -144,6 +148,9 @@
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
+   "test/acceptance/test_acc_v203_ach_progress.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_determinism.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_ach_screen.gd",
@@ -240,6 +247,9 @@
   "scripts/ctrl/achievement_tracker.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
+   "test/acceptance/test_acc_v203_ach_progress.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_determinism.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_ach_screen.gd",
@@ -281,6 +291,7 @@
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -448,6 +459,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/settings_flow.gd": [
+   "test/acceptance/test_acc_v203_screens.gd",
+   "test/acceptance/test_ver_v11_package.gd",
    "test/unit/test_v203_d_zz_contract.gd"
   ],
   "scripts/ctrl/v2_achievements.gd": [
@@ -730,6 +743,9 @@
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
+   "test/acceptance/test_acc_v203_ach_progress.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_determinism.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_ach_screen.gd",
@@ -778,6 +794,7 @@
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
+   "test/acceptance/test_acc_v203_ach_progress.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_ach_screen.gd",
    "test/acceptance/test_acc_v2_budget.gd",
@@ -856,6 +873,11 @@
    "test/acceptance/test_acc_v202_wind_pickups.gd",
    "test/acceptance/test_acc_v202_wind_skills.gd",
    "test/acceptance/test_acc_v202_wind_tables.gd",
+   "test/acceptance/test_acc_v203_ach_data.gd",
+   "test/acceptance/test_acc_v203_ach_progress.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
+   "test/acceptance/test_acc_v203_orbs.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_determinism.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_ach_screen.gd",
@@ -1036,6 +1058,7 @@
   "scripts/ui/achievement_icons.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
+   "test/acceptance/test_acc_v203_ach_progress.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_ach_screen.gd",
    "test/acceptance/test_acc_v2_ach_toast.gd",
@@ -1147,6 +1170,7 @@
   "scripts/ui/achievements_screen.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
+   "test/acceptance/test_acc_v203_ach_progress.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_ach_screen.gd",
    "test/acceptance/test_acc_v2_budget.gd",
@@ -1208,6 +1232,7 @@
   "scripts/ui/characters_screen.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -1391,6 +1416,7 @@
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -1581,6 +1607,7 @@
   "scripts/ui/settings_screen.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -1605,11 +1632,14 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/settings_sections.gd": [
+   "test/acceptance/test_acc_v203_screens.gd",
+   "test/acceptance/test_ver_v11_package.gd",
    "test/unit/test_v203_d_zz_contract.gd"
   ],
   "scripts/ui/showcase_motion.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -1715,6 +1745,9 @@
    "test/acceptance/test_acc_v11_ui.gd",
    "test/acceptance/test_acc_v11_ui_logic.gd",
    "test/acceptance/test_acc_v202_pool_ui.gd",
+   "test/acceptance/test_acc_v203_ach_progress.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_ach_screen.gd",
    "test/acceptance/test_acc_v2_ach_toast.gd",
@@ -1850,6 +1883,7 @@
    "test/acceptance/test_acc_v11_tables.gd",
    "test/acceptance/test_acc_v11_ui.gd",
    "test/acceptance/test_acc_v202_pool_ui.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -2231,6 +2265,7 @@
   "scripts/view/gem_renderer.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
+   "test/acceptance/test_acc_v203_orbs.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -2256,6 +2291,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/gem_tiers.gd": [
+   "test/acceptance/test_acc_v203_orbs.gd",
+   "test/acceptance/test_ver_v11_package.gd",
    "test/unit/test_v203_b_zz_contract.gd"
   ],
   "scripts/view/ground_view.gd": [
@@ -2380,6 +2417,7 @@
    "test/acceptance/test_acc_v11_tables.gd",
    "test/acceptance/test_acc_v11_ui.gd",
    "test/acceptance/test_acc_v202_pool_ui.gd",
+   "test/acceptance/test_acc_v203_orbs.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -2536,6 +2574,9 @@
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_tables.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
+   "test/acceptance/test_acc_v203_anim.gd",
+   "test/acceptance/test_acc_v203_orbs.gd",
+   "test/acceptance/test_acc_v203_screens.gd",
    "test/acceptance/test_acc_v2_ach_flow.gd",
    "test/acceptance/test_acc_v2_budget.gd",
    "test/acceptance/test_acc_v2_chars.gd",
@@ -2805,6 +2846,11 @@
   "test/acceptance/test_acc_v202_wind_pickups.gd",
   "test/acceptance/test_acc_v202_wind_skills.gd",
   "test/acceptance/test_acc_v202_wind_tables.gd",
+  "test/acceptance/test_acc_v203_ach_data.gd",
+  "test/acceptance/test_acc_v203_ach_progress.gd",
+  "test/acceptance/test_acc_v203_anim.gd",
+  "test/acceptance/test_acc_v203_orbs.gd",
+  "test/acceptance/test_acc_v203_screens.gd",
   "test/acceptance/test_acc_v2_ach_determinism.gd",
   "test/acceptance/test_acc_v2_ach_flow.gd",
   "test/acceptance/test_acc_v2_ach_screen.gd",
