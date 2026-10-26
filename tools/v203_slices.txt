@@ -9,8 +9,8 @@
 # Simge satırları arasındaki bu yorum satırları BİLİNÇLİDİR: dört faz paralel açınca bitişik satır çakışması çıkmasın.
 #A
 # -- B --
-#B
+B
 # -- C --
 #C
 # -- D --
-#D
+D
