@@ -15,5 +15,5 @@ void vertex() {
 }
 
 void fragment() {
-	COLOR = texture(TEXTURE, atlas_uv) * COLOR;
+	COLOR = texture(TEXTURE, atlas_uv);  // COLOR bu noktada zaten tüm atlas ile çarpılmış gelir; örnek rengi beyaz.
 }
