@@ -147,7 +147,7 @@ func test_b4_toast_node_ignores_mouse_including_children() -> void:
 		return
 	var t := AchievementToast.new()
 	add_child_autofree(t)
-	var d := GameData.load_default()
+	var d := AchKit.legacy_data()
 	t.show_def(d.get_achievement(&"ilk_kan"))
 	assert_eq(t.mouse_filter, Control.MOUSE_FILTER_IGNORE)
 	var n := _check_ignore(t)
@@ -171,7 +171,7 @@ func test_b4_toast_shows_name_of_definition() -> void:
 		return
 	var t := AchievementToast.new()
 	add_child_autofree(t)
-	var d := GameData.load_default()
+	var d := AchKit.legacy_data()
 	t.show_def(d.get_achievement(&"bes_dakika"))
 	assert_true(
 		AchKit.any_text_contains(t, UiKit.upper_tr("Beş Dakika")), "başarım adı bildirimde görünür"
@@ -183,7 +183,7 @@ func test_b4_toast_apply_state_changes_position_or_alpha() -> void:
 		return
 	var t := AchievementToast.new()
 	add_child_autofree(t)
-	t.show_def(GameData.load_default().get_achievement(&"ilk_kan"))
+	t.show_def(AchKit.legacy_data().get_achievement(&"ilk_kan"))
 	var q := ToastQueue.new()
 	q.push(&"ilk_kan")
 	t.apply_state(q)

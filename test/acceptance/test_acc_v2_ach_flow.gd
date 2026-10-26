@@ -57,7 +57,7 @@ func _gate() -> bool:
 func _controller(extra: Dictionary = {}) -> GameController:
 	var c := GameController.new()
 	c.process_mode = Node.PROCESS_MODE_DISABLED
-	var o := {"data": AchKit.data(), "achievements_path": _ach_path, "clock": AchKit.clock()}
+	var o := {"data": AchKit.legacy_data(), "achievements_path": _ach_path, "clock": AchKit.clock()}
 	o.merge(extra, true)
 	c.v2_opts = o
 	add_child(c)

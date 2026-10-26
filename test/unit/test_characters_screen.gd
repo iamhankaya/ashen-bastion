@@ -20,7 +20,7 @@ func _screen(
 
 ## Kilitli karakter: özel kopyada zyfen'ya kilit bağlanır (gerçek veri dosyası değişmez).
 func _lock_zyfen() -> void:
-	_data.get_character(&"zyfen").unlock_achievement = &"ilk_kan"
+	_data.get_character(&"zyfen").unlock_achievement = &"reaper"
 
 
 func test_open_focuses_selected_and_state_selected() -> void:
@@ -61,7 +61,7 @@ func test_k10_locked_character_cannot_be_selected() -> void:
 	assert_false(s.press_select())
 	assert_signal_not_emitted(s, "selected")
 	assert_eq(s.select_button.text, "KİLİTLİ")
-	assert_eq(s._reason.text, "İlk Kan başarımını aç")
+	assert_eq(s._reason.text, "Reaper başarımını aç")
 
 
 func test_k10_locked_when_store_corrupt() -> void:
