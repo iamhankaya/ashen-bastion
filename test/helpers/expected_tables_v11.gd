@@ -123,7 +123,7 @@ const STAMP_SEC := 1.25
 const BUTTONS_SEC := 1.3
 
 # --- Animasyon -----------------------------------------------------------------------------------------------
-const WALK_STRIDE := 136.0
+const WALK_STRIDE := 110.0  # v2.0.3 A: 136 -> 110 (Gunslinger yürüme kalite kapısı 8/8; test itirazı raporda)
 const FOOT_SHIFT_6 := 136.0 / 6.0
 ## Düşman anim tablosu (DESIGN §1.3; elit frekansı hz × √(h₀/h)). rot ve lean derece.
 const ENEMY_ANIM := {
