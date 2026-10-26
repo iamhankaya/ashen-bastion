@@ -71,6 +71,27 @@ def test_main_writes_outputs_and_exit_code(tmp_path):
     assert json.loads((tmp_path / "q.json").read_text())["pass"] is False
 
 
+def test_tool_is_character_independent(tmp_path):
+    """Başka kimlikli kaynak dizin (duruş `<kimlik>_idle.png`) Zyfen ile aynı çıktıyı verir; `--idle` ve `--display-height` geçerli."""
+    import shutil
+
+    other = tmp_path / "other"
+    shutil.copytree(SRC / "frames", other / "frames")
+    shutil.copy(SRC / "zyfen_idle.png", other / "other_idle.png")
+    out = lambda n: ["--out", str(tmp_path / f"{n}_s.png"), "--body-out", str(tmp_path / f"{n}_b.png"),
+                     "--manifest", str(tmp_path / f"{n}_m.json"), "--quality", str(tmp_path / f"{n}_q.json")]
+    assert mz.main(["--src", str(SRC)] + out("z")) == 0
+    assert mz.main(["--src", str(other)] + out("o")) == 0
+    assert (tmp_path / "z_s.png").read_bytes() == (tmp_path / "o_s.png").read_bytes()
+    assert json.loads((tmp_path / "z_m.json").read_text()) == json.loads((tmp_path / "o_m.json").read_text())
+    (other / "other_idle.png").rename(other / "duruş.png")
+    assert mz.main(["--src", str(other), "--idle", str(other / "duruş.png"), "--display-height", "200"] + out("i")) == 0
+    # çizim boyu ayak kayması ölçeğini değiştirir (dünya px = hücre px x display_height/320)
+    _, _, big = mz.build(other, None, 130.0, display_height=400.0, idle_path=other / "duruş.png")
+    _, _, ref = mz.build(other, None, 130.0, idle_path=other / "duruş.png")
+    assert big["foot_slide"]["pair_err_px"] != ref["foot_slide"]["pair_err_px"]
+
+
 def test_align_feet_removes_error_on_a_synthetic_walk():
     # Gövde sabit, basan ayak dünyada sabit: torso hizalı kareler ayak kaydırır, ayak çapası düzeltir.
     n, step = 4, 20.0

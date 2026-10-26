@@ -139,6 +139,9 @@ if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
     if grep -rnE --include='*.gd' "to_upper|to_lower" "${LINT_UP[@]}"; then fail "to_upper/to_lower yasak (Türkçe i/İ tuzağı)"; fi
   fi
 
+  step "3b. Yasaklı ad denetimi (public repo; desen GATE_FORBIDDEN_RE secret'ından)"
+  bash tools/ci/check_forbidden_names.sh || fail "yasaklı ad denetimi (tools/ci/check_forbidden_names.sh)"
+
   step "4. Veri doğrulama"
   [ -f tools/validate_data.gd ] || fail "tools/validate_data.gd yok"
   "$GODOT_BIN" --headless -s res://tools/validate_data.gd > .gate/validate.log 2>&1 || { cat .gate/validate.log >&2; fail "validate_data"; }

@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""Zyfen kolsuz rig şeridi (v2.0.2 U2): ayrı şeffaf kareler -> tek yatay şerit + manifest + kalite kapısı.
+"""Kolsuz (tek parça gövde, `rig.armless`) rig şeridi: ayrı şeffaf kareler -> tek yatay şerit + manifest + kalite kapısı.
+
+İlk karakter Zyfen'dir (v2.0.2 U2; dosya adı o dönemden kalmadır); araç karakterden bağımsızdır: karakter kimliği `--src` dizin adından,
+çizim boyu `--display-height` ile gelir.
 
 Kullanım:
   python tools/art/make_zyfen_strip.py --src art/source/zyfen --out assets/gfx/char/zyfen_strip.png \
          --body-out assets/gfx/char/zyfen_body.png --manifest art/source/zyfen/strip_manifest.json \
-         --quality art/source/zyfen/quality.json [--walk-cast 'glob'] [--stride 150] [--palm-px 444,132] [--preview]
+         --quality art/source/zyfen/quality.json [--display-height 200] [--idle <png>] [--walk-cast 'glob'] [--stride 150] [--palm-px 444,132] [--preview]
 
-Girdi: `<src>/frames/{walk,cast,gather}/*.png` (RGBA, alfa zaten silinmiş), `<src>/zyfen_idle.png` (duruş), isteğe bağlı
+Girdi: `<src>/frames/{walk,cast,gather}/*.png` (RGBA, alfa zaten silinmiş), `<src>/<src dizin adı>_idle.png` (duruş; `--idle` ile değişir), isteğe bağlı
 `--walk-cast <glob>` (yürürken savuruş seti). Hücre sırası (RigFrames ile aynı): yürüme 0..W-1, duruş W, cast, gather,
 walk_cast. Her klip kendi ortanca alfa boyuna göre 320 px yüksekliğe normalize edilir (ayak = hücre alt kenarı); hücre
 genişliği HESAPLANIR: tüm klip alfa kutularının en genişi + 2·PAD. Yatay hiza: yürüme/duruş gövde üst yarısının, cast/gather
-ayakların (planlı) ağırlık merkezi. `zyfen_body.png` (duruş) aynı piksel ölçeğinde (320 px boy) ayrıca yazılır.
+ayakların (planlı) ağırlık merkezi. `--body-out` (duruş gövdesi) aynı piksel ölçeğinde (320 px boy) ayrıca yazılır.
 Kalite kapısı (plan U2/2): foot_slide (yürüme, çift başına ≤3 px, ≥ N-2 çift), klip yükseklik sapması ≤ %6,
 toplam hücre × genişlik ≤ 8192.
 Manifest `palm` (--palm-px verilirse): atış karesindeki avuç, `cast_point` ile AYNI uzayda (dönüşüm: palm_to_cast_point). Kapı kırmızıysa çıkış kodu 1 ve `quality.json` `pass: false`; sessiz yedek yoktur.
@@ -35,7 +38,7 @@ PAD = 6
 MAX_STRIP_W = 8192
 HEIGHT_TOL_PCT = 6.0
 SLIDE_TOL_PX = 3.0
-DISPLAY_HEIGHT = 200.0  # zyfen.json rig.display_height
+DISPLAY_HEIGHT = 200.0  # varsayılan; karakter verisindeki rig.display_height (--display-height)
 
 
 def _load_rgba(p: str | Path) -> np.ndarray:
@@ -141,7 +144,8 @@ def palm_to_cast_point(palm_px: tuple[float, float], box: tuple[int, int, int, i
 
 
 def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "feet", palm_px: tuple[float, float] | None = None,
-          fire_frame: int = 3, native_facing: str = "right") -> tuple[np.ndarray, np.ndarray, dict]:
+          fire_frame: int = 3, native_facing: str = "right", display_height: float = DISPLAY_HEIGHT,
+          idle_path: Path | None = None) -> tuple[np.ndarray, np.ndarray, dict]:
     walk_files = sorted(glob.glob(str(src / "frames/walk/*.png")))
     cast_files = sorted(glob.glob(str(src / "frames/cast/*.png")))
     gather_files = sorted(glob.glob(str(src / "frames/gather/*.png")))
@@ -154,7 +158,7 @@ def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "f
     }
     if walk_cast:
         clips["walk_cast"] = Clip("walk_cast", sorted(walk_cast), "upper")
-    idle_raw = _trim(_load_rgba(src / "zyfen_idle.png"))
+    idle_raw = _trim(_load_rgba(idle_path or src / f"{src.name}_idle.png"))
     idle_scale = CELL_H / idle_raw.shape[0]
     idle = _scaled(idle_raw, idle_scale)
     order = ["walk", "idle", "cast", "gather"] + (["walk_cast"] if "walk_cast" in clips else [])
@@ -172,9 +176,9 @@ def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "f
         ims_w = [seq[i][1] for i in range(n_w)]
         cw0 = int(math.ceil(max(im.shape[1] for _, im, _ in seq) * 1.3))  # yalnız taban x hesabı için geçici genişlik
         base_x = [int(round(cw0 / 2.0 - ax[i])) for i in range(n_w)]
-        step_px = stride / n_w / (DISPLAY_HEIGHT / CELL_H)
+        step_px = stride / n_w / (display_height / CELL_H)
         # önce/sonra tablosu için torso hizalı ölçüm
-        manifest_pre = _slide(ims_w, base_x, [0] * n_w, cw0, stride)
+        manifest_pre = _slide(ims_w, base_x, [0] * n_w, cw0, stride, display_height)
         sh = align_feet(ims_w, base_x, step_px)
         shift[:n_w] = sh
         ax = [a - s for a, s in zip(ax, shift)]
@@ -198,7 +202,7 @@ def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "f
     res = ms.StripResult(
         strip[:, : n_walk * cw], {"cell": [cw, CELL_H], "frames": n_walk}, clips["walk"].scale, []
     )
-    wpp = DISPLAY_HEIGHT / CELL_H
+    wpp = display_height / CELL_H
     fs = ms.foot_slide(res, stride, wpp, SLIDE_TOL_PX)
     manifest = {
         "align": align,
@@ -228,7 +232,8 @@ def build(src: Path, walk_cast: list[str] | None, stride: float, align: str = "f
     return strip, body, manifest
 
 
-def _slide(imgs: list[np.ndarray], base_x: list[int], shift: list[int], cw: int, stride: float) -> dict:
+def _slide(imgs: list[np.ndarray], base_x: list[int], shift: list[int], cw: int, stride: float,
+           display_height: float = DISPLAY_HEIGHT) -> dict:
     w = max(base_x[i] + shift[i] + imgs[i].shape[1] for i in range(len(imgs))) + 40
     cw = max(cw, w + 40)
     st = np.zeros((CELL_H, cw * len(imgs), 4), np.uint8)
@@ -236,7 +241,7 @@ def _slide(imgs: list[np.ndarray], base_x: list[int], shift: list[int], cw: int,
         x = max(base_x[i] + shift[i], 0)
         st[CELL_H - im.shape[0]:, i * cw + x:i * cw + x + im.shape[1]] = im
     r = ms.StripResult(st, {"cell": [cw, CELL_H], "frames": len(imgs)}, 1.0, [])
-    f = ms.foot_slide(r, stride, DISPLAY_HEIGHT / CELL_H, SLIDE_TOL_PX)
+    f = ms.foot_slide(r, stride, display_height / CELL_H, SLIDE_TOL_PX)
     return {"ok_pairs": f["ok_pairs"], "total_pairs": f["total_pairs"], "pair_err_px": f["pair_err_px"]}
 
 
@@ -281,23 +286,26 @@ def write_preview(strip: np.ndarray, cw: int, labels: list[str], out: Path) -> N
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--src", default="art/source/zyfen")
+    ap.add_argument("--src", required=True, help="kaynak dizin art/source/<id> (kimlik = dizin adı)")
     ap.add_argument("--out", required=True, help="şerit PNG")
     ap.add_argument("--body-out", required=True, help="duruş gövdesi PNG (aynı piksel ölçeği)")
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--quality", required=True, help="kalite kapısı sonucu (quality.json)")
     ap.add_argument("--walk-cast", help="isteğe bağlı walk_cast kareleri (glob)")
-    ap.add_argument("--stride", type=float, default=130.0, help="yürüme çevrimi uzunluğu (dünya px; zyfen.json walk.stride). 150 ile ayak çapası 5/8, 130 ile 8/8 (videonun gerçek adım uzunluğu)")
+    ap.add_argument("--stride", type=float, default=130.0, help="yürüme çevrimi uzunluğu (dünya px; <id>.json walk.stride). 150 ile ayak çapası 5/8, 130 ile 8/8 (videonun gerçek adım uzunluğu)")
     ap.add_argument("--align", choices=["feet", "torso"], default="feet", help="yürüme hizası: basan ayak çapası (varsayılan) ya da üst gövde ağırlık merkezi")
     ap.add_argument("--palm-px", help="X,Y: cast karesinin (fire_frame) KAYNAK görselindeki avuç pikseli; manifest `palm` (cast_point uzayı) yazılır")
-    ap.add_argument("--fire-frame", type=int, default=3, help="atış karesi indeksi (zyfen.json cast.fire_frame)")
+    ap.add_argument("--fire-frame", type=int, default=3, help="atış karesi indeksi (<id>.json cast.fire_frame)")
+    ap.add_argument("--display-height", type=float, default=DISPLAY_HEIGHT, help="çizim boyu, dünya px (<id>.json rig.display_height)")
+    ap.add_argument("--idle", help="duruş PNG (varsayılan <src>/<kimlik>_idle.png)")
     ap.add_argument("--native-facing", choices=["right", "left"], default="right")
     ap.add_argument("--preview", action="store_true")
     ap.add_argument("--preview-dir", default=str(Path(__file__).resolve().parent / "_preview"))
     args = ap.parse_args(argv)
     wc = sorted(glob.glob(args.walk_cast)) if args.walk_cast else None
     palm = tuple(float(v) for v in args.palm_px.split(",")) if args.palm_px else None
-    strip, body, manifest = build(Path(args.src), wc, args.stride, args.align, palm, args.fire_frame, args.native_facing)
+    strip, body, manifest = build(Path(args.src), wc, args.stride, args.align, palm, args.fire_frame, args.native_facing,
+                                  args.display_height, Path(args.idle) if args.idle else None)
     q = gate(manifest)
     for p, data in ((args.manifest, manifest), (args.quality, q)):
         Path(p).parent.mkdir(parents=True, exist_ok=True)
@@ -309,7 +317,7 @@ def main(argv=None) -> int:
         labels = [f"w{i}" for i in range(manifest["walk"]["frames"])] + ["idle"]
         labels += [f"c{i}" for i in range(manifest["cast"]["frames"])] + [f"g{i}" for i in range(manifest["gather"]["frames"])]
         labels += [f"wc{i}" for i in range(manifest.get("walk_cast", {}).get("frames", 0))]
-        pv = Path(args.preview_dir) / "zyfen_strip_preview.png"
+        pv = Path(args.preview_dir) / f"{Path(args.src).name}_strip_preview.png"
         write_preview(strip, manifest["cell"][0], labels, pv)
         print("önizleme:", pv)
     fs = manifest["foot_slide"]
