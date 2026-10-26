@@ -7,14 +7,19 @@ extends GutTest
 const SETTINGS_TMP := "user://test_acc_v203_settings.cfg"
 
 var _saved_reduce: bool = false
+var _saved_store_path: String = ""
 
 
 func before_each() -> void:
 	_saved_reduce = Settings.hareket_azalt
+	# GERİ (SettingsScreen.close) varsayılan yola yazar; gerçek user://settings.cfg sızmasın.
+	_saved_store_path = Settings.store_path
+	Settings.store_path = SETTINGS_TMP
 
 
 func after_each() -> void:
 	Settings.hareket_azalt = _saved_reduce
+	Settings.store_path = _saved_store_path
 	for suffix in ["", ".tmp", ".bad"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS_TMP + suffix))
 
