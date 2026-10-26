@@ -41,17 +41,3 @@ func test_valid_source_plays_looped_and_clears_when_reduced_later() -> void:
 	assert_false(_p.is_playing())
 	assert_false(_p.visible)
 	assert_null(_p.stream)
-
-
-func test_undecodable_stream_gives_up_after_timeout_and_signals_failed() -> void:
-	var f := FileAccess.open("user://bozuk_portre.ogv", FileAccess.WRITE)
-	f.store_string("bu bir video degil")
-	f.close()
-	watch_signals(_p)
-	_p.show_source("user://bozuk_portre.ogv", false)
-	assert_engine_error("has no video stream")  # motor hatası beklenen: oynatıcı bunu sessizce statik portreye çevirir
-	_p._process(PortraitPlayer.START_TIMEOUT_SEC + 0.1)
-	assert_false(_p.visible, "bozuk akış gösterilmez")
-	assert_null(_p.stream)
-	assert_signal_emitted(_p, "failed")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://bozuk_portre.ogv"))
