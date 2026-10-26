@@ -11,6 +11,7 @@ signal back_requested
 signal sound_toggled(on: bool)
 signal vibration_toggled(on: bool)
 signal hareket_azalt_toggled(on: bool)
+signal buyuk_yazi_toggled(on: bool)
 
 const W := 936.0
 const TITLE_TOP := 96.0
@@ -24,11 +25,17 @@ const RAIL_H := 28
 const CARD_GAP := 30
 const PREVIEW_ID := &"shot_right"
 const SWITCH_SEC := 0.14
+const BIG_SCALE := 1.3  # font_scale bunun üstündeyse 2× düzen (DESIGN `02c`): etiket 72, açıklama 56, anahtar etiketin altında
 ## LİSANSLAR alt ekranı satırları: [başlık, açıklama] (kaynaklar: assets/fonts/LICENSE-*-OFL.txt, LICENSES-audio.md).
+## Dosya adı gösterilmez (cihazda açılamaz, ara denetim #8): atıf özeti ekranda.
 const LICENSE_ROWS := [
 	["CINZEL", "Yazı tipi · SIL Open Font License 1.1"],
 	["INTER", "Yazı tipi · SIL Open Font License 1.1"],
-	["SES VE MÜZİK", "Kaynaklar ve lisanslar: LICENSES-audio.md"],
+	["MÜZİK", "Suno Pro ile üretildi (kullanıcı üretimi, ticari kullanım hakkı Pro planda)."],
+	[
+		"SES EFEKTLERİ",
+		"ElevenLabs ücretli planıyla üretildi (kullanıcı üretimi, ticari kullanım hakkı planda)."
+	],
 ]
 const SECTION_TITLES := {
 	&"ses": "SES", &"dokunus": "DOKUNUŞ", &"gorunum": "GÖRÜNÜM", &"hakkinda": "HAKKINDA"
@@ -55,8 +62,11 @@ var _vibration_on: bool = true
 var _hareket_on: bool = false
 var _title_box: Control
 var _lic_title: Control
-var _lic_card: Control
+var _lic_card: ScrollContainer
 var _title_drop: float = 0.0
+var _big: bool = false
+var _speaker: UiKit.Glyph
+var buyuk_button: Button
 
 
 ## Anahtar çizimi: tasarımın kor mührü (anahtar-ac/kapali.svg); doku yoksa düz çizim. Sözcük AÇIK/KAPALI solda.
@@ -147,10 +157,7 @@ func _build() -> void:
 	column.add_theme_constant_override(&"separation", CARD_GAP)
 	scroll.add_child(column)
 
-	_build_ses()
-	_build_dokunus()
-	_build_gorunum()
-	_build_hakkinda()
+	_build_sections()
 
 	_title_box = PanelContainer.new()
 	_title_box.add_theme_stylebox_override(&"panel", UiKit.skin_box("lento", 60, UiKit.TAS_800))
@@ -185,15 +192,46 @@ func _build() -> void:
 	set_values(AudioMix.MAX_PCT, AudioMix.MAX_PCT, true)
 
 
+func _build_sections() -> void:
+	_build_ses()
+	_build_dokunus()
+	_build_gorunum()
+	_build_hakkinda()
+
+
+## 2× yazı düzeni (DESIGN `02c`, ara denetim #1): bölümler yeniden kurulur; GERİ sabit, liste kayar.
+func set_font_scale(f: float) -> void:
+	var big := f > BIG_SCALE
+	if big == _big or column == null:
+		return
+	_big = big
+	for c in column.get_children():
+		column.remove_child(c)
+		c.queue_free()
+	_build_sections()
+	set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on)
+
+
+func is_big() -> bool:
+	return _big
+
+
+## Etiket 36/açıklama 28/değer 40 -> 2×'te 72/56/80.
+func _fs(base: int) -> int:
+	return base * 2 if _big else base
+
+
 func _build_ses() -> void:
 	var card := _section(&"ses")
-	sound_button = _toggle_row(card, "TÜM SESLER", "")
+	_speaker = UiKit.Glyph.new(&"speaker", UiKit.BRONZ_300, 56.0)
+	_speaker.name = "Speaker"
+	sound_button = _toggle_row(card, "TÜM SESLER", "", _speaker)
 	sound_button.pressed.connect(_on_sound)
 	muted_note = UiKit.label(
-		"Ses kapalı. Bir kaydırıcıya dokunmak sesi açar.", &"", 28, UiKit.KEMIK_300
+		"Ses kapalı. Bir kaydırıcıya dokunmak sesi açar.", &"", _fs(28), UiKit.KEMIK_300
 	)
 	muted_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	muted_note.custom_minimum_size.y = 76.0
+	muted_note.custom_minimum_size.y = 76.0 * (2.0 if _big else 1.0)
 	card.add_child(muted_note)
 	music_slider = _slider_row(card, "MÜZİK")
 	music_value = music_slider.get_meta(&"value_label")
@@ -223,18 +261,24 @@ func _build_gorunum() -> void:
 		"Hareketli portreleri ve ekran efektlerini durdurur."
 	)
 	hareket_button.pressed.connect(_on_hareket)
+	buyuk_button = _toggle_row(
+		hareket_button.get_parent(),
+		"BÜYÜK YAZI",
+		"Yazıları iki kat büyütür; ana sayfa tek sütuna geçer."
+	)
+	buyuk_button.pressed.connect(_on_buyuk)
 
 
 func _build_hakkinda() -> void:
 	var card := _section(&"hakkinda")
 	var row := HBoxContainer.new()
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.custom_minimum_size.y = ROW_H
-	var l := UiKit.label("SÜRÜM", &"LabelAccent", 36)
+	row.custom_minimum_size.y = ROW_H * (1.5 if _big else 1.0)
+	var l := UiKit.label("SÜRÜM", &"LabelAccent", _fs(36))
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(l)
-	var v := UiKit.label(version_text(), &"", 36, UiKit.KEMIK_100)
+	var v := UiKit.label(version_text(), &"", _fs(36), UiKit.KEMIK_100)
 	v.name = "VersionValue"
 	v.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(v)
@@ -246,7 +290,7 @@ func _build_hakkinda() -> void:
 func _licenses_row() -> Button:
 	licenses_button = Button.new()
 	licenses_button.flat = true
-	licenses_button.custom_minimum_size = Vector2(0, ROW_H)
+	licenses_button.custom_minimum_size = Vector2(0, ROW_H * (2.0 if _big else 1.0))
 	licenses_button.accessibility_name = "Lisanslar"
 	licenses_button.add_theme_stylebox_override(
 		&"focus", UiKit.stylebox(Color(0, 0, 0, 0), UiKit.BRONZ_300, 6, 8)
@@ -258,10 +302,12 @@ func _licenses_row() -> Button:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_child(UiKit.label("LİSANSLAR", &"LabelAccent", 36))
-	v.add_child(UiKit.label("Yazı tipleri, ses ve müzik.", &"", 28, UiKit.KEMIK_300))
+	v.add_child(UiKit.label("LİSANSLAR", &"LabelAccent", _fs(36)))
+	var ld := UiKit.label("Yazı tipleri, ses ve müzik.", &"", _fs(28), UiKit.KEMIK_300)
+	ld.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(ld)
 	h.add_child(v)
-	var chevron := UiKit.label("›", &"LabelAccent", 56)
+	var chevron := UiKit.label("›", &"LabelAccent", _fs(56))
 	chevron.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	h.add_child(chevron)
 	licenses_button.add_child(h)
@@ -294,14 +340,21 @@ func _build_licenses() -> void:
 	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_lic_title.add_child(t)
 	licenses.add_child(_lic_title)
-	_lic_card = PanelContainer.new()
-	_lic_card.add_theme_stylebox_override(&"panel", UiKit.skin_box("levha", 40, UiKit.TAS_800))
-	_lic_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Kaydırılır (ara denetim #2): GERİ sabit, kart içeriği taşarsa kayar.
+	_lic_card = ScrollContainer.new()
+	_lic_card.name = "LicScroll"
+	_lic_card.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_lic_card.anchor_left = 0.5
 	_lic_card.anchor_right = 0.5
 	_lic_card.offset_left = -W * 0.5
 	_lic_card.offset_right = W * 0.5
 	_lic_card.offset_top = LIST_TOP + 10.0
+	_lic_card.offset_bottom = BACK_TOP - 24.0
+	UiKit.touch_scroll(_lic_card)
+	var lic_panel := PanelContainer.new()
+	lic_panel.add_theme_stylebox_override(&"panel", UiKit.skin_box("levha", 40, UiKit.TAS_800))
+	lic_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lic_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var rows := VBoxContainer.new()
 	rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rows.add_theme_constant_override(&"separation", 12)
@@ -313,7 +366,8 @@ func _build_licenses() -> void:
 		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(d)
 		rows.add_child(box)
-	_lic_card.add_child(rows)
+	lic_panel.add_child(rows)
+	_lic_card.add_child(lic_panel)
 	licenses.add_child(_lic_card)
 	lic_back_button = UiKit.button("GERİ", &"secondary", BACK_H)
 	lic_back_button.add_theme_font_size_override(&"font_size", 48)
@@ -353,7 +407,7 @@ func _section(id: StringName) -> VBoxContainer:
 	var head := HBoxContainer.new()
 	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	head.add_theme_constant_override(&"separation", 18)
-	var t := UiKit.label(SECTION_TITLES[id], &"LabelAccent", 34)
+	var t := UiKit.label(SECTION_TITLES[id], &"LabelAccent", _fs(34))
 	t.add_theme_constant_override(&"shadow_offset_y", 0)
 	head.add_child(t)
 	var line := ColorRect.new()
@@ -386,7 +440,7 @@ func _section(id: StringName) -> VBoxContainer:
 
 
 ## Tek dokunma hedefli anahtar satırı (≥132): etiket + açıklama solda, AÇIK/KAPALI sözcüğü + mühür sağda.
-func _toggle_row(parent: Control, caption: String, desc: String) -> Button:
+func _toggle_row(parent: Control, caption: String, desc: String, glyph: Control = null) -> Button:
 	var b := Button.new()
 	b.flat = true
 	b.focus_mode = Control.FOCUS_ALL
@@ -394,24 +448,45 @@ func _toggle_row(parent: Control, caption: String, desc: String) -> Button:
 	b.accessibility_name = caption
 	var focus := UiKit.stylebox(Color(0, 0, 0, 0), UiKit.BRONZ_300, 6, 8)
 	b.add_theme_stylebox_override(&"focus", focus)
-	var h := HBoxContainer.new()
-	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	UiKit.fill(h)
-	h.add_theme_constant_override(&"separation", 18)
 	var v := VBoxContainer.new()
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_child(UiKit.label(caption, &"LabelAccent", 36))
+	var cap := UiKit.label(caption, &"LabelAccent", _fs(36))
+	cap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if glyph != null:  # başlığın solunda simge (sessizde üzeri çizili hoparlör)
+		var cap_row := HBoxContainer.new()
+		cap_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cap_row.add_theme_constant_override(&"separation", 18)
+		cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL  # sarmada harf harf kırılmaz
+		cap_row.add_child(glyph)
+		cap_row.add_child(cap)
+		v.add_child(cap_row)
+	else:
+		v.add_child(cap)
 	if desc != "":
-		var d := UiKit.label(desc, &"", 28, UiKit.KEMIK_300)
+		var d := UiKit.label(desc, &"", _fs(28), UiKit.KEMIK_300)
 		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		v.add_child(d)
-	h.add_child(v)
 	var sw := Switch.new()
 	sw.name = "Switch"
-	h.add_child(sw)
-	b.add_child(h)
+	if _big:  # anahtar etiketin altına sarar, satır içeriğe göre uzar
+		v.add_child(sw)
+		v.add_theme_constant_override(&"separation", 8)
+		UiKit.fill(v)
+		v.minimum_size_changed.connect(
+			func() -> void:
+				b.custom_minimum_size.y = maxf(ROW_H, v.get_combined_minimum_size().y + 24.0)
+		)
+		b.add_child(v)
+	else:
+		var h := HBoxContainer.new()
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		UiKit.fill(h)
+		h.add_theme_constant_override(&"separation", 18)
+		h.add_child(v)
+		h.add_child(sw)
+		b.add_child(h)
 	b.set_meta(&"switch", sw)
 	parent.add_child(b)
 	return b
@@ -421,12 +496,12 @@ func _toggle_row(parent: Control, caption: String, desc: String) -> Button:
 func _slider_row(parent: Control, caption: String) -> HSlider:
 	var head := HBoxContainer.new()
 	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var name_label := UiKit.label(caption, &"LabelAccent", 36)
+	var name_label := UiKit.label(caption, &"LabelAccent", _fs(36))
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(name_label)
-	var val := UiKit.label("100%", &"LabelAccent", 40, UiKit.KEMIK_100)
+	var val := UiKit.label("100%", &"LabelAccent", _fs(40), UiKit.KEMIK_100)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	val.custom_minimum_size.x = 160.0
+	val.custom_minimum_size.x = 160.0 * (1.6 if _big else 1.0)
 	head.add_child(val)
 	parent.add_child(head)
 	var s := HSlider.new()
@@ -510,7 +585,10 @@ func set_values(music_pct: int, sfx_pct: int, vib: bool, animate: bool = false) 
 	_set_switch(sound_button, _sound_on, "Ses", animate)
 	_set_switch(vibration_button, vib, "Titreşim", animate)
 	_set_switch(hareket_button, _hareket_on, "Hareketi azalt", animate)
+	_set_switch(buyuk_button, st.buyuk_yazi, "Büyük yazı", animate)
 	muted_note.visible = not _sound_on
+	_speaker.kind = &"speaker" if _sound_on else &"speaker_muted"
+	_speaker.queue_redraw()
 	for s in [music_slider, sfx_slider]:
 		(s as Control).modulate = Color.WHITE if _sound_on else Color(1, 1, 1, 0.55)
 	music_slider.accessibility_name = "Müzik, yüzde %d" % music_pct
@@ -525,6 +603,7 @@ func _set_switch(b: Button, on: bool, spoken: String, animate: bool = false) -> 
 ## Kaydedilmiş değerlerle açar.
 func open() -> void:
 	var st := _settings()
+	set_font_scale(st.font_scale())
 	set_values(st.music_pct, st.sfx_pct, st.vibration_on)
 	scroll.scroll_vertical = 0
 	licenses.visible = false
@@ -566,6 +645,7 @@ func apply_safe_area(extra: Variant = null) -> void:
 	_lic_title.offset_top = TITLE_TOP + e.y
 	_lic_title.offset_bottom = TITLE_TOP + e.y + 120.0
 	_lic_card.offset_top = LIST_TOP + 10.0 + e.y
+	_lic_card.offset_bottom = BACK_TOP - e.w - 24.0
 	lic_back_button.offset_top = BACK_TOP - e.w
 	lic_back_button.offset_bottom = BACK_TOP - e.w + BACK_H
 	lic_back_button.offset_left = -W * 0.5 + shift
@@ -591,6 +671,13 @@ func _on_hareket() -> void:
 	_settings().set_hareket_azalt(not _hareket_on)
 	set_values(int(music_slider.value), int(sfx_slider.value), _vibration_on, true)
 	hareket_azalt_toggled.emit(_hareket_on)
+
+
+func _on_buyuk() -> void:
+	var st := _settings()
+	st.set_buyuk_yazi(not st.buyuk_yazi)
+	set_font_scale(st.font_scale())
+	buyuk_yazi_toggled.emit(st.buyuk_yazi)
 
 
 func _rail(skin: String) -> StyleBox:

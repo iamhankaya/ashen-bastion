@@ -151,7 +151,10 @@ func test_d9_licenses_row_opens_subscreen_and_back_returns_to_settings() -> void
 	assert_true(sc.licenses.visible)
 	for r in SettingsScreen.LICENSE_ROWS:
 		assert_true(AchKit.any_text_contains(sc.licenses, r[0]), r[0])
-	assert_true(AchKit.any_text_contains(sc.licenses, "LICENSES-audio.md"))
+	assert_false(
+		AchKit.any_text_contains(sc.licenses, "LICENSES-audio.md"),
+		"dosya adı kullanıcıya gösterilmez"
+	)
 	watch_signals(sc)
 	sc.close()  # Android geri: yalnız alt ekran kapanır
 	assert_false(sc.licenses.visible)

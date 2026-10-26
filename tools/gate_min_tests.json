@@ -219,6 +219,7 @@
   "test/unit/test_v203_c_tracker.gd": 10,
   "test/unit/test_v203_c_zz_schema.gd": 17,
   "test/unit/test_v203_c_zz_store.gd": 6,
+  "test/unit/test_v203_d_audit.gd": 7,
   "test/unit/test_v203_d_settings.gd": 12,
   "test/unit/test_v203_d_zz_contract.gd": 3,
   "test/unit/test_v2_achievements.gd": 21,
