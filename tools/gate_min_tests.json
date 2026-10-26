@@ -183,6 +183,7 @@
   "test/unit/test_v202_wind_zones.gd": 17,
   "test/unit/test_v202_zyfen_perf.gd": 3,
   "test/unit/test_v203_a_zz_contract.gd": 8,
+  "test/unit/test_v203_b_orbs.gd": 4,
   "test/unit/test_v203_b_zz_contract.gd": 4,
   "test/unit/test_v203_c_zz_schema.gd": 17,
   "test/unit/test_v203_c_zz_store.gd": 6,
