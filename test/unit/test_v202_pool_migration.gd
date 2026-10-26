@@ -76,9 +76,11 @@ func test_chars5_with_removed_character_is_kept_and_counts_two() -> void:
 	assert_true(st.load_file())
 	assert_false(st.corrupt)
 	assert_eq(Array(st.chars5), ["gunslinger", "barutcu"])
-	assert_eq(AchievementProgress.of(_data.get_achievement(&"cifte_yol"), st), 2)
+	assert_eq(AchievementProgress.of(_data.get_achievement(&"two_roads"), st), 2)
 	assert_true(st.save())
-	assert_eq(FileAccess.get_file_as_string(STORE_TMP), text, "chars5 bayt bayt aynı kalır")
+	# v2.0.3: sayaç sözlükleri yeni anahtarlar taşır; chars5 dizisi aynen korunur
+	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(STORE_TMP))
+	assert_eq(saved["chars5"], ["gunslinger", "barutcu"], "chars5 aynen kalır")
 
 
 func test_chars5_bad_shapes_load_without_crash_and_without_corrupt_flag() -> void:
