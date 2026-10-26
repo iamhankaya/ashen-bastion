@@ -33,7 +33,9 @@ func test_b1_buffer_carries_tier_and_pixel_size_per_gem() -> void:
 		assert_eq(buf[o + 12], float(tier), "taş %d tipi" % i)
 		assert_eq(buf[o], float(GemTiers.ORB_PX[tier]), "taş %d boyutu" % i)
 		assert_eq(buf[o + 14], float(GemTiers.ORB_PX[tier]), "taş %d boy verisi" % i)
-	var tiers := {buf[12], buf[GemRenderer.STRIDE + 12], buf[2 * GemRenderer.STRIDE + 12]}
+	var tiers := {}
+	for i in 3:
+		tiers[buf[i * GemRenderer.STRIDE + 12]] = true
 	assert_eq(tiers.size(), 3, "üç tip birbirinden ayrı")
 
 

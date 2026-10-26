@@ -49,7 +49,9 @@ static func atlas_texture() -> Texture2D:
 
 ## hareket_azalt AÇIKken küre süzülmesi durur.
 func apply_motion_setting() -> void:
-	(material as ShaderMaterial).set_shader_parameter("bob_scale", 0.0 if Settings.hareket_azalt else 1.0)
+	(material as ShaderMaterial).set_shader_parameter(
+		"bob_scale", 0.0 if Settings.hareket_azalt else 1.0
+	)
 
 
 ## Değer → ölçek (1 → 1.0, büyüdükçe log ile, en çok 2.2).
