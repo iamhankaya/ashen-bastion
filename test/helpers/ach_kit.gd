@@ -40,7 +40,7 @@ static func tmp_path(label: String = "s") -> String:
 ## tmp_path ile üretilen her yolun kendisini, `.tmp`, `.bad` yan dosyalarını (ve dizi olarak kurulduysa dizini) siler.
 static func cleanup() -> void:
 	for p in _made:
-		for suffix in ["", ".tmp", ".bad"]:
+		for suffix in ["", ".tmp", ".bad", AchievementStore.BACKUP_SUFFIX]:
 			_rm_any(ProjectSettings.globalize_path(p + suffix))
 	_made.clear()
 
@@ -77,8 +77,23 @@ static func clock(unix: int = FIXED_UNIX) -> Callable:
 	return func() -> int: return unix
 
 
+## v2.0 kabul/birim testleri 22 tek eşikli başarım varsayar: gerçek `data/` + `LEGACY_DIR` kayıtları (v2.0.3 aile verisi ayrı test edilir).
+const LEGACY_DIR := "res://test/fixtures/ach_v20"
+static var _legacy: GameData = null
+
+
 static func data() -> GameData:
-	return GameData.load_default()
+	return legacy_data()
+
+
+static func legacy_data() -> GameData:
+	if _legacy == null:
+		_legacy = GameData.load_dir("res://data")
+		_legacy.achievements.clear()
+		_legacy.achievement_ids.clear()
+		_legacy._achievements.clear()
+		DataV2.load_achievements(_legacy, LEGACY_DIR)
+	return _legacy
 
 
 static func store(path: String = "") -> AchievementStore:

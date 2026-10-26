@@ -58,6 +58,29 @@ const LEGACY_IDS: PackedStringArray = [
 	"kale_lordu_devrildi",
 	"bomba_ustasi",
 ]
+## stat -> depo alanı: `total_*` için `totals`, `run_*` için `best` (koşu en iyisi). Kaynağı olmayan stat bu tablolarda yoktur.
+const TOTAL_KEY := {
+	"total_kills": "kills",
+	"total_runs": "runs",
+	"total_wins": "wins",
+	"total_play_secs": "play_secs",
+	"total_boss_kills": "boss_kills",
+}
+const BEST_KEY := {
+	"run_time": "time",
+	"run_level": "level",
+	"run_score": "score",
+	"run_kills": "kills",
+	"run_reloads": "reloads",
+	"run_active_slots": "active_slots",
+	"run_best_mult": "mult",
+	"run_elite_kinds": "elite_kinds",
+	"run_pickups": "pickups",
+	"run_clean_secs": "clean_secs",
+	"run_evolutions": "evolutions",
+	"run_unlimited_kills": "unlimited_kills",
+	"run_bomb_hits": "bomb_hits",
+}
 const SCOPE_RUN := &"run"
 const SCOPE_TOTAL := &"total"
 

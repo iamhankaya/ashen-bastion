@@ -60,10 +60,11 @@ func test_b1_truncated_json_is_corrupt_and_saved_as_bad() -> void:
 func test_b1_wrong_version_is_rejected_and_state_reset() -> void:
 	if _gate():
 		return
-	var st := _raw(AchKit.tmp_path(), '{"v":2,"unlocked":{"ilk_kan":5},"totals":{"kills":9}}')
+	# v2.0.3: v2 artık geçerli sürüm; tanınmayan sürüm v3
+	var st := _raw(AchKit.tmp_path(), '{"v":3,"unlocked":{"ilk_kan":5},"totals":{"kills":9}}')
 	assert_false(st.load_file())
 	assert_false(st.is_unlocked(&"ilk_kan"))
-	_assert_clean(st, "v:2")
+	_assert_clean(st, "v:3")
 
 
 func test_b1_root_array_is_corrupt() -> void:
@@ -299,7 +300,7 @@ func test_b1_roundtrip_and_file_layout() -> void:
 	var j: Variant = JSON.parse_string(AchKit.read_text(p))
 	assert_true(j is Dictionary)
 	var d: Dictionary = j
-	assert_eq(int(d.get("v", 0)), AchievementStore.VERSION)
+	assert_eq(int(d.get("v", 0)), AchievementStore.VERSION_V2)
 	for k in ["unlocked", "totals", "best", "chars5"]:
 		assert_true(d.has(k), "kök anahtar " + k)
 	assert_eq(int(d["unlocked"].get("ilk_kan", 0)), 1700000005)

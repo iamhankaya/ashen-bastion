@@ -493,10 +493,9 @@ func test_b2_progress_mapping() -> void:
 	var d := AchKit.data()
 	AchKit.kills(r["bus"], 34)
 	assert_eq(tr.progress(d.get_achievement(&"kalabalik_kesici")), 34, "toplam: store + koşu")
-	assert_eq(
-		tr.progress(d.get_achievement(&"kirim")), -1, "koşu başarımı (best eşlemesi yok): TEK KOŞU"
-	)
-	assert_eq(tr.progress(d.get_achievement(&"ilk_evrim")), -1)
+	# v2.0.3: koşu en iyileri kalıcı (best.*): ilerleme 0'dan başlar; kaynağı olmayan stat'lar -1 kalır
+	assert_eq(tr.progress(d.get_achievement(&"kirim")), 34, "koşu başarımı: canlı koşu değeri")
+	assert_eq(tr.progress(d.get_achievement(&"ilk_evrim")), 0)
 	assert_eq(tr.progress(d.get_achievement(&"piyade_avcisi")), -1)
 
 

@@ -45,7 +45,7 @@ func _gate() -> bool:
 
 
 ## Gerçek data/ kopyası; zyfen'ya unlock eklenmiş (K10 sözleşme fixture'ı).
-func _locked_zyfen_data(achievement: String = "bes_dakika") -> GameData:
+func _locked_zyfen_data(achievement: String = "endure") -> GameData:
 	var dir := SimKit.copy_data(REAL, "k10")
 	var path := dir.path_join("characters/zyfen.json")
 	var j: Dictionary = SimKit.read_json(path)
@@ -71,7 +71,7 @@ func test_k1_resolve_locked_character_falls_back() -> void:
 	var d := _locked_zyfen_data()
 	var st := AchKit.fake_store()
 	assert_eq(CharacterRoster.resolve("zyfen", d, st), &"gunslinger", "kilitli -> varsayılan")
-	st.unlock(&"bes_dakika", 1700000000)
+	st.unlock(&"endure", 1700000000)
 	assert_eq(CharacterRoster.resolve("zyfen", d, st), &"zyfen", "kilit açıldı")
 	st.corrupt = true
 	assert_eq(
@@ -93,7 +93,7 @@ func test_k1_resolve_when_default_is_locked_picks_first_unlocked() -> void:
 	var dir := SimKit.copy_data(REAL, "k1firstfree")
 	var gp := dir.path_join("characters/gunslinger.json")
 	var g: Dictionary = SimKit.read_json(gp)
-	g["unlock"] = {"achievement": "bes_dakika"}
+	g["unlock"] = {"achievement": "endure"}
 	SimKit.write_json(gp, g)
 	var d := GameData.load_dir(dir)
 	assert_eq(
@@ -496,7 +496,7 @@ func test_k6_blurb_boundary_120_ok() -> void:
 
 
 func test_k7_every_real_character_runs_and_keeps_invariants() -> void:
-	var d := GameData.load_default()
+	var d := AchKit.legacy_data()
 	assert_gte(d.character_ids.size(), 2)
 	for id in d.character_ids:
 		var sim := SimKit.make(31, {"data_kind": "quiet", "character": id})
@@ -574,7 +574,7 @@ func test_k10_no_real_character_has_unlock() -> void:
 
 func test_k10_lock_reason_text_uses_achievement_name() -> void:
 	var d := _locked_zyfen_data()
-	assert_eq(CharacterRoster.lock_reason(d.get_character(&"zyfen"), d), "Beş Dakika başarımını aç")
+	assert_eq(CharacterRoster.lock_reason(d.get_character(&"zyfen"), d), "ENDURE başarımını aç")
 	assert_false(CharacterRoster.is_unlocked(d.get_character(&"zyfen"), AchKit.fake_store()))
 
 
@@ -592,7 +592,7 @@ func test_k10_locked_character_cannot_be_selected_on_screen() -> void:
 	assert_eq(s.select_button_state(), CharactersScreen.SelectState.LOCKED)
 	assert_false(s.press_select())
 	assert_signal_not_emitted(s, "selected")
-	assert_true(AchKit.any_text_contains(s, "Beş Dakika başarımını aç"), "kilit nedeni satırı")
+	assert_true(AchKit.any_text_contains(s, "ENDURE başarımını aç"), "kilit nedeni satırı")
 
 
 func test_k10_corrupt_store_keeps_locked_character_locked() -> void:
@@ -600,7 +600,7 @@ func test_k10_corrupt_store_keeps_locked_character_locked() -> void:
 		return
 	var d := _locked_zyfen_data()
 	var st := AchKit.fake_store()
-	st.unlock(&"bes_dakika", 1700000000)
+	st.unlock(&"endure", 1700000000)
 	st.corrupt = true
 	var s := CharactersScreen.new()
 	add_child_autofree(s)

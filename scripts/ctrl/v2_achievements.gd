@@ -25,7 +25,8 @@ func build_world(refs: Dictionary) -> void:
 	if _data == null:
 		_data = GameData.load_default()
 	store = AchievementStore.new(str(opts.get("achievements_path", AchievementStore.DEFAULT_PATH)))
-	store.load_file()
+	store.load_file(_data.achievements)  # v1 kaydı aile/kademeye göçer; sonra sayaçların hak ettiği kademeler sessizce verilir
+	AchievementMigration.reconcile(store, _data.achievements, _now())
 	refs["store"] = store  # V2Characters kilit denetimi için paylaşılan sözlükten tembel okur
 	_menu = refs.get("menu", null)
 	_result = refs.get("result_screen", null)
@@ -74,26 +75,39 @@ func update_views(view_dt: float) -> void:
 	if cur != _shown:
 		_shown = cur
 		if cur != &"":
-			toast.show_def(_data.get_achievement(cur))
+			toast.show_def(_data.get_achievement(cur), store.step_count(cur))
 	toast.apply_state(queue)
 
 
 ## Sıra (deterministik): tracker.finish → sonuç ekranına özet. Skor kaydı ve show_result controller'dadır; en sonda flush.
 func on_run_ended(won: bool, stats: Dictionary) -> void:
 	var names: Array[String] = []
+	var families := false
 	if tracker != null:
 		tracker.finish(won, stats)
 		for id in tracker.run_unlocked():
 			var d := _data.get_achievement(id)
-			if d != null:
-				names.append(d.display_name)
+			if d == null:
+				continue
+			var fam := not d.steps.is_empty()
+			families = families or fam
+			names.append(
+				(
+					"%s %s" % [d.display_name, AchievementStep.roman(store.step_count(id))]
+					if fam
+					else d.display_name
+				)
+			)
 	# Sonuç ekranı gelirse kuyruk atılır (özet sayar).
 	queue.clear()
 	_shown = &""
 	if toast != null:
 		toast.visible = false
 	if _result != null and _result.has_method("set_new_achievements"):
-		_result.call("set_new_achievements", names)
+		if families:
+			_result.call("set_new_achievements", names, tracker.run_new_steps())
+		else:
+			_result.call("set_new_achievements", names)
 
 
 func on_screen(next: int) -> void:
@@ -139,6 +153,11 @@ func open() -> void:
 		_set_screen.call(PauseLogic.Screen.ACHIEVEMENTS)
 
 
+func _now() -> int:
+	var clock: Callable = opts.get("clock", Callable())
+	return maxi(int(clock.call()) if clock.is_valid() else int(Time.get_unix_time_from_system()), 1)
+
+
 func _on_back() -> void:
 	if _set_screen.is_valid():
 		_set_screen.call(PauseLogic.Screen.MENU)
@@ -163,7 +182,7 @@ func _refresh_menu() -> void:
 		and _data != null
 		and _menu.has_method("set_achievement_count")
 	):
-		var known: Array[StringName] = []
+		var total := 0
 		for d in _data.achievements:
-			known.append(d.id)
-		_menu.call("set_achievement_count", store.count_unlocked(known), known.size())
+			total += AchievementStep.total(d)
+		_menu.call("set_achievement_count", store.count_steps(_data.achievements), total)

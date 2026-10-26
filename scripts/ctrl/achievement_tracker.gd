@@ -1,7 +1,7 @@
 class_name AchievementTracker
 extends RefCounted
 ## Başarım izleyici: SimBus sinyallerinden sayaç, eşikte `store.unlock`. Sim durumuna YAZMAZ, RNG kullanmaz, diske yazmaz,
-## `run_ended` dinlemez (controller `finish(won, stats)` çağırır). Olay yolunda tahsis yok: yalnız skaler sayaçlar.
+## `run_ended` dinlemez (controller `finish(won, stats)` çağırır). Aile/kademe (v2.0.3): `steps` eşiklerini geçince depoya kademe yazar. Olay yolunda tahsis yok: yalnız skaler sayaçlar.
 ## Dinlenen sinyaller (test_contract_sim imza testiyle sabit): enemy_killed, level_up, score_changed, reload_started,
 ## streak_changed, pickup_collected, player_damaged, evolution_gained, buff_started, buff_ended, bomb_hits.
 
@@ -65,6 +65,9 @@ var _unlimited_active: bool = false
 var _damaged: bool = false
 var _finished: bool = false
 var _run_unlocked: Array[StringName] = []
+var _run_steps: int = 0
+## [stat dizini, best anahtarı]: `finish` koşu en iyilerini depoya yazar.
+var _best_pairs: Array = []
 
 
 ## p_clock: () -> int unix (varsayılan Time.get_unix_time_from_system; testte enjekte; dönüş < 1 ise 1 kullanılır).
@@ -81,6 +84,8 @@ func _init(
 	_run.resize(AchievementDef.STATS.size())
 	for _i in AchievementDef.STATS.size():
 		_by_stat.append(PackedInt32Array())
+	for stat: String in AchievementDef.BEST_KEY:
+		_best_pairs.append([AchievementDef.STATS.find(stat), AchievementDef.BEST_KEY[stat]])
 	if data != null:
 		for i in data.achievements.size():
 			var si := AchievementDef.STATS.find(String(data.achievements[i].stat))
@@ -162,6 +167,8 @@ func finish(won: bool, stats: Dictionary) -> void:
 	store.add_total(&"play_secs", time)
 	_check(S_TOTAL_PLAY_SECS)
 	store.note_best(score, time, level)
+	for pair in _best_pairs:
+		store.note_best_key(pair[1], _run[pair[0]])
 	if time >= 300:
 		store.note_char5(char_id)
 		_check(S_TOTAL_CHARS5)
@@ -170,9 +177,14 @@ func finish(won: bool, stats: Dictionary) -> void:
 		_check(S_RUN_WON)
 
 
-## Bu koşuda açılanlar, açılış sırası.
+## Bu koşuda kademe kazanan aileler, ilk kazanış sırası (aile başına bir kez).
 func run_unlocked() -> Array[StringName]:
 	return _run_unlocked.duplicate()
+
+
+## Bu koşuda kazanılan toplam kademe (sonuç ekranı "YENİ KADEME · N").
+func run_new_steps() -> int:
+	return _run_steps
 
 
 ## Güncel sayaç (total: depo, run: koşu).
@@ -186,9 +198,9 @@ func progress(def: AchievementDef) -> int:
 	var base := AchievementProgress.of(def, store)
 	if base < 0:
 		return -1
-	var si := AchievementDef.STATS.find(String(def.stat))
-	if si == S_RUN_TIME or si == S_RUN_LEVEL or si == S_RUN_SCORE:
-		return maxi(base, _run[si])
+	var s := String(def.stat)
+	if AchievementDef.BEST_KEY.has(s):
+		return maxi(base, _run[AchievementDef.STATS.find(s)])
 	return base
 
 
@@ -211,6 +223,8 @@ func _on_enemy_killed(type_id: StringName, _pos: Vector2) -> void:
 	_check(S_RUN_KILLS)
 	var mask: int = ELITE_MASKS.get(type_id, 0)
 	if mask != 0:
+		store.add_total(&"boss_kills", 1)
+		_check(S_TOTAL_BOSS_KILLS)
 		if type_id == ELIT_PIYADE:
 			_run[S_RUN_ELIT_PIYADE] += 1
 			_check(S_RUN_ELIT_PIYADE)
@@ -286,7 +300,8 @@ func _raise(si: int, v: int) -> void:
 	_check(si)
 
 
-## Değeri değişen stat için: eşiği geçen ve henüz açılmamış tanımları açar.
+## Değeri değişen stat için: eşiği geçen ve henüz kayıtlı olmayan kademeleri açar. Aynı denetimde birden çok eşik
+## geçilirse tek `unlocked` yayınlanır (en yüksek kademe); kademe asla geri alınmaz.
 func _check(si: int) -> void:
 	var idxs := _by_stat[si]
 	if idxs.is_empty():
@@ -294,8 +309,12 @@ func _check(si: int) -> void:
 	var v := _value(si)
 	for i in idxs:
 		var def: AchievementDef = data.achievements[i]
-		if v >= def.target and store.unlock(def.id, _now()):
-			_run_unlocked.append(def.id)
+		var have := store.step_count(def.id)
+		var reached := mini(AchievementStep.reached(def, v), AchievementStep.total(def))
+		if reached > have and store.unlock_step(def.id, reached, _now()):
+			_run_steps += reached - have
+			if not _run_unlocked.has(def.id):
+				_run_unlocked.append(def.id)
 			unlocked.emit(def)
 
 
@@ -311,6 +330,8 @@ func _value(si: int) -> int:
 			return int(store.totals["play_secs"])
 		S_TOTAL_CHARS5:
 			return store.chars5.size()
+		S_TOTAL_BOSS_KILLS:
+			return int(store.totals["boss_kills"])
 	return _run[si]
 
 

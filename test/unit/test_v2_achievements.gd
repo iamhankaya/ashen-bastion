@@ -31,7 +31,9 @@ func _clean() -> void:
 
 func _ctrl(extra: Dictionary = {}) -> GameController:
 	var gc := GameController.new()
-	gc.v2_opts = {"achievements_path": PATH, "clock": func() -> int: return _now}
+	gc.v2_opts = {
+		"achievements_path": PATH, "clock": func() -> int: return _now, "data": AchKit.legacy_data()
+	}
 	gc.v2_opts.merge(extra, true)
 	add_child_autofree(gc)
 	gc.highscores = Highscores.new(HS_PATH)  # koşu sonu skor kaydı gerçek dosyaya yazmasın
@@ -261,7 +263,7 @@ func test_release_flushes_and_is_safe() -> void:
 
 func test_build_world_publishes_store_in_shared_refs() -> void:
 	var refs := {}
-	var a := V2Achievements.new({"achievements_path": PATH, "data": GameData.load_default()})
+	var a := V2Achievements.new({"achievements_path": PATH, "data": AchKit.legacy_data()})
 	a.build_world(refs)
 	assert_same(refs.get("store", null), a.store)
 	a.release()

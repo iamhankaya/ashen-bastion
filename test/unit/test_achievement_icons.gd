@@ -32,8 +32,28 @@ func test_tier_colors_are_distinct_per_family() -> void:
 	assert_eq(AchievementIcons.tier_color(&"zor"), AchievementIcons.tier_color(&"cok_zor"))
 
 
-func test_all_achievements_have_existing_own_png() -> void:
-	var g := GameData.load_default()
+func test_families_use_existing_icons_or_fall_back_by_stat() -> void:
+	var seen := 0
+	for a in GameData.load_default().achievements:
+		var d: AchievementDef = a
+		if d.icon != "":
+			assert_true(ResourceLoader.exists(d.icon), d.id)
+			assert_eq(AchievementIcons.path_for(d), d.icon, d.id)
+		else:
+			assert_ne(AchievementIcons.path_for(d), "", "%s: stat ailesine göre yedek ikon" % d.id)
+		seen += 1
+	assert_eq(seen, 19)
+
+
+func test_step_colors_distinct_and_locked_is_dim() -> void:
+	var cols := {}
+	for s in range(0, 5):
+		cols[AchievementIcons.step_color(s)] = true
+	assert_eq(cols.size(), 4, "0 kilitli, 1 demir, 2 bronz, 3-4 amber")
+
+
+func test_v20_achievements_have_existing_own_png() -> void:
+	var g := AchKit.legacy_data()
 	var seen := 0
 	for a in g.achievements:
 		var d: AchievementDef = a

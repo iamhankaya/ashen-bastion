@@ -47,6 +47,21 @@ static func path_for(def: AchievementDef) -> String:
 	return ""
 
 
+## Aile kademesi rengi (v2.0.3 tokens: tier_1 demir, tier_2 bronz_300, tier_3/4 amber); 0 = kilitli.
+const DEMIR := Color("#8c8379")
+
+
+static func step_color(step: int) -> Color:
+	if step <= 0:
+		return UiKit.KEMIK_500
+	match step:
+		1:
+			return DEMIR
+		2:
+			return UiKit.BRONZ_300
+	return UiKit.AMBER
+
+
 ## Kademe rengi (DESIGN §5.1.1): kolay/orta/zor/çok zor.
 static func tier_color(tier: StringName) -> Color:
 	match String(tier):

@@ -124,22 +124,38 @@ func _style(tier: StringName) -> void:
 	_box.add_theme_stylebox_override(&"panel", sb)
 
 
-func show_def(def: AchievementDef) -> void:
+## `step` > 0 ve aile kaydı (v2.0.3): "BAŞARIM AÇILDI · KADEME III" / "REAPER III", renk ve baklava kademeden gelir.
+func show_def(def: AchievementDef, step: int = 0) -> void:
 	_build()
 	if def == null:
 		visible = false
 		return
-	var tier_i := maxi(AchievementDef.tier_index(def.tier), 0)
-	name_label.text = UiKit.upper_tr(def.display_name)
+	var family := step > 0 and not def.steps.is_empty()
+	var roman := AchievementStep.roman(step)
+	var tier := StringName(def.tier)
+	var tier_i := maxi(AchievementDef.tier_index(tier), 0)
+	var col := AchievementIcons.tier_color(tier)
+	if family:
+		tier_i = mini(step, 4) - 1
+		col = AchievementIcons.step_color(step)
+		tier = &"zor" if step >= 3 else &"kolay"
+		tag_label.text = "BAŞARIM AÇILDI · KADEME %s" % roman
+		name_label.text = "%s %s" % [def.display_name, roman]
+	else:
+		tag_label.text = "BAŞARIM AÇILDI"
+		name_label.text = UiKit.upper_tr(def.display_name)
 	icon_rect.texture = UiKit.texture(AchievementIcons.path_for(def))
 	AchievementIcons.apply_state(icon_rect, false)
-	var col := AchievementIcons.tier_color(def.tier)
 	frame_rect.modulate = col
 	tier_marks.count = tier_i + 1
 	tier_marks.color = col
 	tier_marks.queue_redraw()
-	_style(def.tier)
-	accessibility_name = "Başarım açıldı: %s" % def.display_name
+	_style(tier)
+	accessibility_name = (
+		"Başarım açıldı: %s, kademe %d" % [def.display_name, step]
+		if family
+		else "Başarım açıldı: %s" % def.display_name
+	)
 
 
 ## Kuyruğun anlık durumunu (kimlik değişimi hariç) çizime uygular: konum kayması + alfa.

@@ -46,7 +46,7 @@ func test_half_json_is_corrupt_with_bad_backup() -> void:
 
 
 func test_wrong_version_is_corrupt() -> void:
-	var s := _loaded('{"v":2,"unlocked":{"ilk_kan":5}}')
+	var s := _loaded('{"v":3,"unlocked":{"ilk_kan":5}}')
 	assert_true(s.corrupt)
 	assert_false(s.is_unlocked(&"ilk_kan"))
 
@@ -187,7 +187,7 @@ func test_roundtrip_and_file_layout() -> void:
 	assert_true(s.save())
 	assert_false(s.dirty)
 	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(PATH))
-	assert_eq(int(d["v"]), 1)
+	assert_eq(int(d["v"]), AchievementStore.VERSION_V2)
 	assert_eq(int(d["unlocked"]["ilk_kan"]), 1761270000)
 	assert_eq(int(d["totals"]["kills"]), 12)
 	assert_eq(int(d["best"]["score"]), 100)
