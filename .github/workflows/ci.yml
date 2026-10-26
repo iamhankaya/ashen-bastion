@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 10
     env:
       ASHEN_EVIDENCE_DIR: /tmp/import-evidence
+      GATE_FORBIDDEN_RE: ${{ secrets.GATE_FORBIDDEN_RE }}  # yoksa denetim "atlandı" der
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
