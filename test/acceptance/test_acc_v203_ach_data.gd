@@ -67,6 +67,8 @@ func test_c1_steps_are_valid_and_total_stays_within_the_budget() -> void:
 	for a in _defs():
 		var s: Array[int] = a.steps
 		assert_between(s.size(), 1, AchievementDef.MAX_STEPS, "%s: 1..5 kademe" % a.id)
+		if s.is_empty():
+			continue
 		assert_gt(s[0], 0, a.id)
 		for i in range(1, s.size()):
 			assert_gt(s[i], s[i - 1], "%s: kesin artan" % a.id)
