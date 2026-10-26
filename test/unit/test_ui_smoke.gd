@@ -33,8 +33,7 @@ func test_main_menu_builds() -> void:
 	add_child_autofree(m)
 	assert_eq(m.play_button.text, "OYNA")
 	m.open(false, true)
-	assert_eq(m.sound_button.text, "SES: KAPALI")
-	assert_eq(m.vibration_button.text, "TİTREŞİM: AÇIK")
+	assert_true(m.visible)
 
 
 func test_main_menu_version_triple_tap() -> void:

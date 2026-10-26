@@ -18,7 +18,7 @@ func _gate() -> bool:
 
 ## Açılış sinyallerini günlüğe yazar.
 func _rig(char_id: StringName = &"gunslinger") -> Dictionary:
-	var r := AchKit.rig(char_id)
+	var r := AchKit.legacy_rig(char_id)
 	_unlock_log.clear()
 	var tr: AchievementTracker = r["tracker"]
 	tr.unlocked.connect(func(def: AchievementDef) -> void: _unlock_log.append(def.id))
@@ -123,16 +123,16 @@ func test_b2_total_chars5() -> void:
 		return
 	var st := AchKit.store()
 	var bus_a := SimBus.new()
-	var a := AchievementTracker.new(AchKit.data(), st, &"gunslinger", AchKit.clock())
+	var a := AchievementTracker.new(AchKit.legacy_data(), st, &"gunslinger", AchKit.clock())
 	a.attach(bus_a)
 	a.finish(false, _stats(299.0))
 	assert_eq(st.chars5.size(), 0, "299 sn: sayılmaz")
-	var a2 := AchievementTracker.new(AchKit.data(), st, &"gunslinger", AchKit.clock())
+	var a2 := AchievementTracker.new(AchKit.legacy_data(), st, &"gunslinger", AchKit.clock())
 	a2.attach(SimBus.new())
 	a2.finish(false, _stats(300.0))
 	assert_eq(Array(st.chars5), ["gunslinger"])
 	assert_false(st.is_unlocked(&"cifte_yol"), "tek karakter: açmaz")
-	var b := AchievementTracker.new(AchKit.data(), st, &"zyfen", AchKit.clock())
+	var b := AchievementTracker.new(AchKit.legacy_data(), st, &"zyfen", AchKit.clock())
 	b.attach(SimBus.new())
 	b.finish(false, _stats(300.0))
 	assert_eq(st.chars5.size(), 2)
@@ -490,13 +490,12 @@ func test_b2_progress_mapping() -> void:
 		return
 	var r := _rig()
 	var tr: AchievementTracker = r["tracker"]
-	var d := AchKit.data()
+	var d := AchKit.legacy_data()
 	AchKit.kills(r["bus"], 34)
 	assert_eq(tr.progress(d.get_achievement(&"kalabalik_kesici")), 34, "toplam: store + koşu")
-	assert_eq(
-		tr.progress(d.get_achievement(&"kirim")), -1, "koşu başarımı (best eşlemesi yok): TEK KOŞU"
-	)
-	assert_eq(tr.progress(d.get_achievement(&"ilk_evrim")), -1)
+	# v2.0.3: koşu en iyileri kalıcı (best.*): ilerleme 0'dan başlar; kaynağı olmayan stat'lar -1 kalır
+	assert_eq(tr.progress(d.get_achievement(&"kirim")), 34, "koşu başarımı: canlı koşu değeri")
+	assert_eq(tr.progress(d.get_achievement(&"ilk_evrim")), 0)
 	assert_eq(tr.progress(d.get_achievement(&"piyade_avcisi")), -1)
 
 
@@ -505,7 +504,7 @@ func test_b2_clock_zero_or_negative_falls_back_to_one() -> void:
 		return
 	for bad in [0, -5]:
 		var st := AchKit.store()
-		var tr := AchievementTracker.new(AchKit.data(), st, &"gunslinger", AchKit.clock(bad))
+		var tr := AchievementTracker.new(AchKit.legacy_data(), st, &"gunslinger", AchKit.clock(bad))
 		var bus := SimBus.new()
 		tr.attach(bus)
 		AchKit.kills(bus, 1)
@@ -516,7 +515,7 @@ func test_b2_clock_zero_or_negative_falls_back_to_one() -> void:
 func test_b2_unlock_uses_injected_clock() -> void:
 	if _gate():
 		return
-	var r := AchKit.rig(&"gunslinger", 1700012345)
+	var r := AchKit.legacy_rig(&"gunslinger", 1700012345)
 	AchKit.kills(r["bus"], 1)
 	assert_eq((r["store"] as AchievementStore).unlocked_at(&"ilk_kan"), 1700012345)
 
@@ -564,7 +563,7 @@ func test_b2_run_unlocked_keeps_unlock_order() -> void:
 func test_b2_all_22_real_defs_are_reachable_by_some_stat() -> void:
 	if _gate():
 		return
-	var d := AchKit.data()
+	var d := AchKit.legacy_data()
 	assert_eq(d.achievements.size(), 22)
 	for row in ExpectedTablesV2.ACHIEVEMENTS:
 		assert_not_null(d.get_achievement(StringName(row[0])), row[0])

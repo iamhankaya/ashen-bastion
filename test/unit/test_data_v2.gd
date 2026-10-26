@@ -50,12 +50,12 @@ func _codes(errs: PackedStringArray) -> Array[String]:
 	return out
 
 
-func test_stats_set_is_closed_and_has_20_names() -> void:
-	assert_eq(AchievementDef.STATS.size(), 20)
+func test_stats_set_is_closed_and_has_21_names() -> void:
+	assert_eq(AchievementDef.STATS.size(), 21)
 	var seen := {}
 	for s in AchievementDef.STATS:
 		seen[s] = true
-	assert_eq(seen.size(), 20, "yinelenen stat yok")
+	assert_eq(seen.size(), 21, "yinelenen stat yok")
 
 
 func test_scope_of_total_prefix_run_otherwise_unknown_empty() -> void:
@@ -73,8 +73,8 @@ func test_tier_index() -> void:
 	assert_eq(AchievementDef.tier_index(&"çok_zor"), -1, "JSON'da ASCII")
 
 
-func test_real_data_loads_22_achievements_matching_table() -> void:
-	var g := GameData.load_dir(REAL)
+func test_v20_data_loads_22_achievements_matching_table() -> void:
+	var g := AchKit.legacy_data()
 	assert_eq(g.achievements.size(), 22)
 	assert_eq(g.achievement_ids.size(), 22)
 	for id in TABLE:
@@ -91,8 +91,8 @@ func test_real_data_loads_22_achievements_matching_table() -> void:
 	assert_null(g.get_achievement(&"yok_boyle"))
 
 
-func test_real_data_tier_distribution_6_9_5_2() -> void:
-	var g := GameData.load_dir(REAL)
+func test_v20_data_tier_distribution_6_9_5_2() -> void:
+	var g := AchKit.legacy_data()
 	var n := [0, 0, 0, 0]
 	for a in g.achievements:
 		n[AchievementDef.tier_index(a.tier)] += 1
@@ -101,8 +101,9 @@ func test_real_data_tier_distribution_6_9_5_2() -> void:
 
 func test_real_data_file_order_is_array_order() -> void:
 	var g := GameData.load_dir(REAL)
-	assert_eq(g.achievement_ids[0], &"ilk_kan")
-	assert_eq(g.achievement_ids[21], &"bomba_ustasi")
+	assert_eq(g.achievement_ids[0], &"endure", "v2.0.3: ilk aile")
+	assert_eq(g.achievement_ids[18], &"two_roads")
+	assert_eq(AchKit.legacy_data().achievement_ids[21], &"bomba_ustasi")
 	for i in g.achievements.size():
 		assert_eq(g.achievements[i].id, g.achievement_ids[i])
 
@@ -267,15 +268,15 @@ func test_achievement_error_codes() -> void:
 		)
 
 
-func test_ach_count_boundaries_15_and_25() -> void:
-	for n in [14, 26]:
+func test_ach_count_boundaries_12_and_30() -> void:
+	for n in [11, 31]:
 		var errs := (
 			GameData
 			. load_dir(KitDev.data_dir_with({"achievements.json": _many(n)}))
 			. validate({}, true)
 		)
 		assert_true(_codes(errs).has("ach_count"), "%d: %s" % [n, errs])
-	for n in [15, 25]:
+	for n in [12, 30]:
 		var errs := (
 			GameData
 			. load_dir(KitDev.data_dir_with({"achievements.json": _many(n)}))

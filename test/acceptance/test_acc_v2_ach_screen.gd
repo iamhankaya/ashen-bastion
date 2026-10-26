@@ -1,6 +1,7 @@
 extends GutTest
 ## Kabul (v2.0 B6/B7/B9): Başarımlar ekranı, 22 kayıtlık veri, ödül/sim bağımsızlığı. Düzen sayıları: expected_layout_v2.gd
-## (kaynak DESIGN.md §5.1). Satır düğümü adları sözleşmede olmadığından satırlar BOYUTA göre bulunur (936×156).
+## (kaynak DESIGN.md §5.1). Satır düğümü adları sözleşmede olmadığından satırlar BOYUTA göre bulunur (v2.0.3: 936×150).
+## v2.0.3: ekran aile/kademe şemasına geçti; bu dosya 22 tek eşikli v2.0 kaydını (AchKit.legacy_data) ekrandan geçirir.
 ## B7/B9 sözleşmede gerçek olduğu için dilimsiz; ekran testleri dilim B ister.
 
 const TS := 1700049600  # 2023-11-15 12:00 UTC (saat dilimi payı: gün değişmez)
@@ -17,7 +18,7 @@ func _gate() -> bool:
 func _screen(st: AchievementStore, d: GameData = null) -> AchievementsScreen:
 	var s := AchievementsScreen.new()
 	add_child_autofree(s)
-	s.open(d if d != null else AchKit.data(), st)
+	s.open(d if d != null else AchKit.legacy_data(), st)
 	return s
 
 
@@ -25,6 +26,8 @@ func _rows(root: Node) -> Array[Control]:
 	var out: Array[Control] = []
 	for n in root.find_children("*", "Control", true, false):
 		var c := n as Control
+		if c is AchievementChronicle:
+			continue  # şerit de 936×150
 		var sz := c.size if c.size.x > 0.0 else c.custom_minimum_size
 		if (
 			absf(sz.x - ExpectedLayoutV2.ROW_SIZE.x) < 1.0
@@ -38,7 +41,7 @@ func _rows(root: Node) -> Array[Control]:
 
 
 func test_b7_real_data_matches_plan_table() -> void:
-	var d := GameData.load_default()
+	var d := AchKit.legacy_data()
 	assert_eq(d.achievements.size(), ExpectedTablesV2.ACHIEVEMENTS.size())
 	var seen := {}
 	for i in ExpectedTablesV2.ACHIEVEMENTS.size():
@@ -57,7 +60,7 @@ func test_b7_real_data_matches_plan_table() -> void:
 
 
 func test_b7_every_tier_present_with_6_9_5_2_distribution() -> void:
-	var d := GameData.load_default()
+	var d := AchKit.legacy_data()
 	var n := [0, 0, 0, 0]
 	for a in d.achievements:
 		n[AchievementDef.tier_index(a.tier)] += 1
@@ -67,7 +70,7 @@ func test_b7_every_tier_present_with_6_9_5_2_distribution() -> void:
 
 
 func test_b7_stat_set_is_closed_at_20_and_matches_table() -> void:
-	assert_eq(AchievementDef.STATS.size(), 20)
+	assert_eq(AchievementDef.STATS.size(), 21)
 	for s in ExpectedTablesV2.STATS:
 		assert_true(AchievementDef.STATS.has(s), s)
 	for s in AchievementDef.STATS:
@@ -75,7 +78,7 @@ func test_b7_stat_set_is_closed_at_20_and_matches_table() -> void:
 
 
 func test_b7_real_defs_obey_text_limits() -> void:
-	for a in GameData.load_default().achievements:
+	for a in AchKit.legacy_data().achievements:
 		assert_lte(a.display_name.length(), 22, a.id)
 		assert_lte(a.desc.length(), 60, a.id)
 		assert_ne(a.display_name, "")
@@ -85,7 +88,7 @@ func test_b7_real_defs_obey_text_limits() -> void:
 
 
 func test_b9_no_real_character_uses_unlock() -> void:
-	var d := GameData.load_default()
+	var d := AchKit.legacy_data()
 	for id in d.character_ids:
 		assert_eq(d.get_character(id).unlock_achievement, &"")
 
@@ -120,14 +123,14 @@ func test_b9_sim_has_no_unlock_or_reward_hooks() -> void:
 # --- B6: ekran ------------------------------------------------------------------------------------------------
 
 
-func test_b6_screen_has_22_rows_of_936x156_with_touch_height() -> void:
+func test_b6_screen_has_22_rows_of_936x150_with_touch_height() -> void:
 	if _gate():
 		return
 	var s := _screen(AchKit.store())
 	await get_tree().process_frame
 	assert_eq(s.row_count(), 22)
 	var rows := _rows(s)
-	assert_eq(rows.size(), 22, "936×156 satır sayısı")
+	assert_eq(rows.size(), 22, "936×150 satır sayısı")
 	for r in rows:
 		assert_gte(
 			maxf(r.size.y, r.custom_minimum_size.y),
@@ -172,12 +175,16 @@ func test_b6_progress_text_and_cap_at_target() -> void:
 	assert_false(AchKit.any_text_contains(s2, "25.000"), "ham aşan değer gösterilmez")
 
 
-func test_b6_run_scoped_without_progress_source_shows_single_run_label() -> void:
+func test_b6_run_scoped_families_show_best_progress_not_single_run_chip() -> void:
 	if _gate():
 		return
-	var s := _screen(AchKit.store())
-	assert_true(AchKit.any_text_contains(s, "TEK KOŞU"), "TEK KOŞU çipi")
-	assert_true(AchKit.any_text_contains(s, "Hedef 500"), "Hedef 500 (kırım)")
+	var st := AchKit.store()
+	st.note_best_key(&"kills", 120)
+	var s := _screen(st)
+	assert_false(
+		AchKit.any_text_contains(s, "TEK KOŞU"), "v2.0.3: koşu en iyileri kalıcı, çip kalktı"
+	)
+	assert_true(AchKit.any_text_contains(s, "120/500"), "kırım: en iyi 120 / 500")
 
 
 func test_b6_unlocked_row_shows_date_in_dd_mm_yyyy() -> void:
@@ -210,7 +217,7 @@ func test_b6_safe_area_keeps_content_inside() -> void:
 	add_child_autofree(host)
 	var s := AchievementsScreen.new()
 	host.add_child(s)
-	s.open(AchKit.data(), AchKit.store())
+	s.open(AchKit.legacy_data(), AchKit.store())
 	s.apply_safe_area(ExpectedLayoutV2.SAFE_NOTCH)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -254,7 +261,7 @@ func test_b6_progress_helper_maps_sources() -> void:
 	if _gate():
 		return
 	var st := AchKit.store()
-	var d := AchKit.data()
+	var d := AchKit.legacy_data()
 	st.totals["kills"] = 7
 	st.totals["runs"] = 3
 	st.best["time"] = 120
@@ -267,5 +274,12 @@ func test_b6_progress_helper_maps_sources() -> void:
 	assert_eq(AchievementProgress.of(d.get_achievement(&"seviye_10"), st), 4)
 	assert_eq(AchievementProgress.of(d.get_achievement(&"skor_100k"), st), 900)
 	assert_eq(AchievementProgress.of(d.get_achievement(&"cifte_yol"), st), 1)
-	assert_eq(AchievementProgress.of(d.get_achievement(&"kirim"), st), -1, "kaynağı olmayan: -1")
-	assert_eq(AchievementProgress.of(d.get_achievement(&"ilk_evrim"), st), -1)
+	assert_eq(AchievementProgress.of(d.get_achievement(&"kirim"), st), 0, "v2.0.3: best.kills")
+	assert_eq(
+		AchievementProgress.of(d.get_achievement(&"ilk_evrim"), st), 0, "v2.0.3: best.evolutions"
+	)
+	assert_eq(
+		AchievementProgress.of(d.get_achievement(&"kale_lordu_devrildi"), st),
+		-1,
+		"kaynağı olmayan: -1"
+	)

@@ -150,6 +150,7 @@ if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
   step "4b. Dilim işareti sözdizimi (tools/v2_slices.txt)"
   python3 tools/ci/check_slices.py tools/v2_slices.txt || fail "tools/v2_slices.txt (geçersiz simge / dosya yok)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt || fail "tools/v202_slices.txt (geçersiz simge / dosya yok)"
+  python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt || fail "tools/v203_slices.txt (geçersiz simge / dosya yok)"
 
   step "5. Python testleri"
   PYDIRS=""
@@ -212,6 +213,7 @@ if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then
   python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
   python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v202_slices.txt)"
+  python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v203_slices.txt)"
 elif [ $FAST -eq 1 ] && [ -n "$GUT_CONFIG" ]; then
   # Hızlı mod: asgari sayı yalnız seçilen dosyalar için; tek test süre sınırı aynı; dilim/pending denetimi tam JUnit ister
   # (yalnız tam gate'te koşar).

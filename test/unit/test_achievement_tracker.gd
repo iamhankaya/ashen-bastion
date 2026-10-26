@@ -14,7 +14,7 @@ var _now: int = T0
 
 
 func before_each() -> void:
-	_data = GameData.load_default()
+	_data = AchKit.legacy_data()
 	_store = AchievementStore.new(PATH)
 	_bus = SimBus.new()
 	_opened = []
@@ -88,6 +88,7 @@ func test_stat_index_constants_match_stats_order() -> void:
 		"run_unlimited_kills": AchievementTracker.S_RUN_UNLIMITED_KILLS,
 		"run_won": AchievementTracker.S_RUN_WON,
 		"run_bomb_hits": AchievementTracker.S_RUN_BOMB_HITS,
+		"total_boss_kills": AchievementTracker.S_TOTAL_BOSS_KILLS,
 	}
 	assert_eq(names.size(), AchievementDef.STATS.size())
 	for n in names:
@@ -468,15 +469,10 @@ func test_progress_mapping() -> void:
 	assert_eq(_tr.progress(_data.get_achievement(&"bes_dakika")), 120)
 	assert_eq(_tr.progress(_data.get_achievement(&"seviye_10")), 4)
 	assert_eq(_tr.progress(_data.get_achievement(&"skor_100k")), 900)
-	for id in [
-		&"kirim",
-		&"tambur_ustasi",
-		&"alti_silah",
-		&"seri_ustasi",
-		&"ilk_evrim",
-		&"kale_lordu_devrildi"
-	]:
-		assert_eq(_tr.progress(_data.get_achievement(id)), -1, String(id))
+	# v2.0.3: koşu en iyileri kalıcı (best.*) -> "TEK KOŞU" kalktı, ilerleme 0'dan başlar; kaynağı olmayan tek stat run_won
+	for id in [&"kirim", &"tambur_ustasi", &"alti_silah", &"seri_ustasi", &"ilk_evrim"]:
+		assert_eq(_tr.progress(_data.get_achievement(id)), 0, String(id))
+	assert_eq(_tr.progress(_data.get_achievement(&"kale_lordu_devrildi")), -1)
 
 
 func test_progress_includes_running_run_values() -> void:

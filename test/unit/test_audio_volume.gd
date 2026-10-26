@@ -219,13 +219,13 @@ func test_settings_screen_sliders_use_five_percent_steps_and_drive_buses() -> vo
 	assert_eq(sc.music_slider.step, 5.0)
 	assert_eq(sc.sfx_slider.step, 5.0)
 	assert_eq(sc.music_slider.max_value, 100.0)
-	assert_eq(sc.sfx_value.text, "70%")
+	assert_eq(sc.sfx_value.text, "%70")
 	sc.sfx_slider.value = 30
-	assert_eq(sc.sfx_value.text, "30%")
+	assert_eq(sc.sfx_value.text, "%30")
 	assert_eq(st.sfx_pct, 30)
 	assert_almost_eq(AudioServer.get_bus_volume_db(_idx(&"UI")), AudioMix.pct_to_db(30), 0.01)
 	sc.music_slider.value = 55
-	assert_eq(sc.music_value.text, "55%")
+	assert_eq(sc.music_value.text, "%55")
 	assert_almost_eq(AudioServer.get_bus_volume_db(_idx(&"Music")), AudioMix.pct_to_db(55), 0.01)
 
 

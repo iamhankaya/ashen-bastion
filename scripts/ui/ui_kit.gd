@@ -7,6 +7,7 @@ extends RefCounted
 const THEME_PATH := "res://themes/ashen-bastion-theme.tres"
 const ICON_DIR := "res://assets/ui/icons/"
 const FRAME_DIR := "res://assets/ui/frames/"
+const SKIN_DIR := "res://assets/ui/v203/"  # v2.0.3 9-slice SVG yüzeyleri (docs/design/v2.0.3/frames)
 const SAFE_EDGE := 36.0  # varsayılan yan/üst boşluk; çentik/yuvarlak köşe safe_extra ile eklenir
 const SIDE := 36.0
 const DEFAULT_TOP := 96.0  # DESIGN-UI §5: üst 96 / yan 36 / alt 72
@@ -17,6 +18,12 @@ const MOR_900 := Color("#171020")
 const MOR_800 := Color("#211832")
 const MOR_700 := Color("#2f2342")
 const MOR_500 := Color("#4d3a6b")
+# v2.0.3 sıcak taş yüzeyler (mor_* yüzeylerin yerine; tokens-v2.0.3.json)
+const TAS_900 := Color("#151110")
+const TAS_800 := Color("#1F1917")
+const TAS_700 := Color("#2D2422")
+const TAS_600 := Color("#3B302C")
+const DEMIR := Color("#8C8379")
 const BORDO_900 := Color("#2b0e14")
 const BORDO_700 := Color("#5c1d26")
 const BORDO_500 := Color("#8f2a36")
@@ -138,6 +145,33 @@ class Glyph:
 					w,
 					true
 				)
+			&"gear":
+				var cog := PackedVector2Array()
+				for i in 24:
+					var rad := r if (i / 2) % 2 == 0 else r * 0.78
+					cog.append(c + Vector2.from_angle(TAU * i / 24.0) * rad)
+				draw_colored_polygon(cog, color)
+				draw_circle(c, r * 0.34, UiKit.TAS_800)
+			&"speaker", &"speaker_muted":
+				var cone := PackedVector2Array(
+					[
+						c + Vector2(-r * 0.9, -r * 0.3),
+						c + Vector2(-r * 0.45, -r * 0.3),
+						c + Vector2(r * 0.15, -r * 0.8),
+						c + Vector2(r * 0.15, r * 0.8),
+						c + Vector2(-r * 0.45, r * 0.3),
+						c + Vector2(-r * 0.9, r * 0.3),
+					]
+				)
+				draw_colored_polygon(cone, color)
+				var sw := maxf(3.0, r * 0.16)
+				if kind == &"speaker":
+					draw_arc(c + Vector2(r * 0.1, 0.0), r * 0.55, -0.9, 0.9, 12, color, sw, true)
+				else:  # üzeri çizili: kırmızı çarpı (can_kritik)
+					var x0 := c + Vector2(r * 0.35, -r * 0.45)
+					var x1 := c + Vector2(r * 0.95, r * 0.45)
+					draw_line(x0, x1, UiKit.CAN_KRITIK, sw, true)
+					draw_line(Vector2(x0.x, x1.y), Vector2(x1.x, x0.y), UiKit.CAN_KRITIK, sw, true)
 			&"person":
 				draw_circle(c + Vector2(0.0, -r * 0.42), r * 0.34, color)
 				var body := PackedVector2Array()
@@ -263,6 +297,35 @@ static func button(text: String, kind: StringName = &"primary", height: float = 
 				d.border_color = BORDO_400
 				b.add_theme_stylebox_override(st, d)
 	return b
+
+
+## Tüm ekranlarda ortak GERİ düğmesi (taş levha; denetim v2.0.3-son #1).
+static func back_button(height: float = 132.0) -> Button:
+	var b := button("GERİ", &"secondary", height)
+	b.add_theme_font_size_override(&"font_size", 48)
+	for st in [&"normal", &"hover", &"focus"]:
+		b.add_theme_stylebox_override(st, skin_box("dugme-dolu"))
+	b.add_theme_stylebox_override(&"pressed", skin_box("dugme-basili"))
+	b.accessibility_name = "Geri"
+	return b
+
+
+## v2.0.3 9-slice yüzey (levha, dugme-*, lento); doku yoksa düz kutuya düşer (testte içe aktarma beklenmez).
+static func skin_box(skin_name: String, margin: int = 40, fallback: Color = KAHVE_900) -> StyleBox:
+	var t := texture(SKIN_DIR + skin_name + ".svg")
+	if t == null:
+		return stylebox(fallback, BRONZ_700, 3, 8)
+	var sb := StyleBoxTexture.new()
+	sb.texture = t
+	sb.texture_margin_left = margin
+	sb.texture_margin_right = margin
+	sb.texture_margin_top = margin
+	sb.texture_margin_bottom = margin
+	sb.content_margin_left = margin
+	sb.content_margin_right = margin
+	sb.content_margin_top = margin * 0.5
+	sb.content_margin_bottom = margin * 0.5
+	return sb
 
 
 static func stylebox(

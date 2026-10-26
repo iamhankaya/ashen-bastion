@@ -30,6 +30,8 @@ var sfx: Dictionary = {}
 ## v2.0 (hepsi isteğe bağlı): vitrin metni, portre yolu, kilit başarımı (yok = açık), yer tutucu görsel işareti.
 var blurb: String = ""
 var portrait: String = ""
+## v2.0.3: hareketli portre (`res://assets/video/portrait/<id>.ogv`); "" = yok (statik portre).
+var portrait_video: String = ""
 var unlock_achievement: StringName = &""
 var placeholder: bool = false
 ## v2.0 düzeltme payı: `display_upper` büyük harfli ad (özel adlarda upper_tr noktalı İ üretir, F-029); boşsa upper_tr.
@@ -70,6 +72,7 @@ static func from_dict(d: Dictionary) -> CharacterDef:
 	c.sfx = sf if sf is Dictionary else {}
 	c.blurb = _s(d.get("blurb", ""))
 	c.portrait = _s(d.get("portrait", ""))
+	c.portrait_video = _s(d.get("portrait_video", ""))
 	var u: Variant = d.get("unlock", null)
 	if u is Dictionary:
 		c.unlock_achievement = StringName(_s(u.get("achievement", "")))

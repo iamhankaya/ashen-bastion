@@ -18,7 +18,7 @@ const TOAST_AVOID: Array = [
 ]
 
 # --- Başarımlar ekranı (B6) ---
-const ROW_SIZE := Vector2(936.0, 156.0)
+const ROW_SIZE := Vector2(936.0, 150.0)  # v2.0.3 (DESIGN v2.0.3 §4.2); v2.0: 156
 const ROW_TOUCH_MIN := 132.0
 const ACH_TOP_MIN := 96.0  # + güvenli üst pay
 const ACH_BOTTOM_PAD := 72.0  # 2400 - 72 - güvenli alt pay

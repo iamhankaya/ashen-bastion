@@ -4,6 +4,7 @@ config_version=5
 [application]
 
 config/name="Ashen Bastion"
+config/version="2.0.3"
 run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60

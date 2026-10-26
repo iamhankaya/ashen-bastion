@@ -45,17 +45,18 @@
       "lag": 0.12
     },
     "walk": {
-      "frames": 0,
-      "stride": 136,
+      "frames": 8,
+      "stride": 110,
       "strip": "res://assets/gfx/char/gunslinger_body_walk.png",
       "cell": [
-        177,
+        202,
         320
       ],
       "shoulder_dev": []
     }
   },
   "portrait": "res://assets/ui/portre-seviye-atlama.png",
+  "portrait_video": "res://assets/video/portrait/gunslinger.ogv",
   "blurb": "Dengeli ve çevik; çift tabancasıyla sürüyü ateş altında tutar.",
   "display_upper": "GUNSLINGER",
   "order": 1,

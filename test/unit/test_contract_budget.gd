@@ -52,7 +52,7 @@ func test_controller_delegations_are_single_calls() -> void:
 
 func test_game_data_growth_is_bounded() -> void:
 	# v1.1 sonu 897 satır; v2.0 ek <= 40 (doğrulayıcılar data_v2.gd'de), gdlint tavanı 1000.
-	assert_lte(_lines(GAME_DATA), 897 + 40 + 4)  # v2.0.2: +4 (937 → 941; doğrulayıcılar data_v202_*.gd'de)
+	assert_lte(_lines(GAME_DATA), 897 + 40 + 4 + 4)  # v2.0.2: +4 (937 → 941; doğrulayıcılar data_v202_*.gd'de); v2.0.3: +4 (hata kodları + portrait_video anahtarı, 945)
 	assert_lt(_lines(GAME_DATA), 1000)
 
 

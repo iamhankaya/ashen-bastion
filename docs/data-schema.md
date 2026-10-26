@@ -99,15 +99,17 @@ Kök dizi; her kayıt `AchievementDef` (`scripts/sim/achievement_def.gd`). Doğr
 | `id` | `[a-z0-9_]{1,40}` | tekil (`dup_id`); ASCII |
 | `name` | metin ≤ 22 karakter | `out_of_range` |
 | `desc` | metin ≤ 60 karakter | iki satır sınırı |
-| `stat` | kapalı küme `AchievementDef.STATS` (20 ad) | bilinmeyen = `unknown_stat` |
+| `stat` | kapalı küme `AchievementDef.STATS` (21 ad; v2.0.3: `total_boss_kills` sona eklendi) | bilinmeyen = `unknown_stat` |
 | `target` | tamsayı 1..999 999 999 | |
 | `scope` | `run` \| `total` | `stat`'ın kapsamıyla AYNI olmalı (`scope_mismatch`); `total_*` = koşular arası, gerisi tek koşu |
 | `tier` | `kolay` \| `orta` \| `zor` \| `cok_zor` | ASCII |
 | `icon` | görsel yolu, isteğe bağlı | var olmalı (`asset_missing`); yoksa stat ailesine göre mevcut ikon |
 
-Bilinmeyen anahtar `unknown_key`. "İçerik tamamlandı" modunda dosya zorunlu (`missing_file`), adet 15..25 (`ach_count`),
-her kademede en az bir kayıt (`tier_missing`). Kayıt dosyası şeması (`user://achievements.json`) belge değil kod
+Bilinmeyen anahtar `unknown_key`. "İçerik tamamlandı" modunda dosya zorunlu (`missing_file`), kayıt (aile) adedi 12..30 (`ach_count`; v2.0.3, eskiden 15..25),
+eski şemada her zorlukta en az bir kayıt (`tier_missing`; aile kayıtları varsa aranmaz). Kayıt dosyası şeması (`user://achievements.json`) belge değil kod
 sözleşmesidir: `docs/plan/v2.0-plan.md` "Kayıt dosyası".
+
+Aşamalı (aile/kademe) şema için aşağıdaki "Başarım — aile/kademe (v2.0.3)" bölümüne bak.
 
 **Atlas sınırı (F-013):** düşman sayısı 16'yı aşarsa `atlas_cells` hatası (shader `cell_rect[16]`).
 
@@ -115,6 +117,107 @@ Yeni hata kodları (v2.0): `unknown_stat`, `ach_count`, `tier_missing`, `scope_m
 (her birinin `test/fixtures/data_bad_<kod>/` fixture'ı vardır). Karakter v2.0 alanı bindirmeleri
 `test/fixtures/char_bad_<durum>/` altındadır (`blurb_long`, `portrait_missing`, `unlock_unknown`, `unlock_key`,
 `placeholder_type`, `base_gun`); `tools/ci/gen_data_fixtures.py` hepsini üretir.
+
+## Başarım — aile/kademe (v2.0.3)
+
+SÖZLEŞME (T20261026-59). Bir kayıt = bir **aile**; `steps` ile 1..5 kademe taşır. `steps` yoksa kayıt v2.0 biçimindedir
+(`target` + `tier` = tek kademe, `AchievementDef.thresholds()` `[target]` döner); iki biçim aynı dosyada birlikte durabilir,
+böylece C fazı veriyi aileye bölerken oyun her an çalışır. Uygulama: `scripts/sim/achievement_def.gd`, doğrulama
+`scripts/sim/data_v2.gd` (`_validate_family`).
+
+| Alan | Tür / aralık | Not |
+|---|---|---|
+| `id`, `name` ≤ 22, `desc` ≤ 60, `stat`, `scope`, `icon` | v2.0 ile aynı | `id` aile kimliği (ör. `reaper`); `unlock.achievement` = aile, "kademe ≥ 1" |
+| `steps` | 1..5 elemanlı, kesin artan tamsayı dizisi (her biri 1..999 999 999) | aile kaydını belirler; dizi boş/artmayan/5'ten uzunsa `steps_invalid` |
+| `group` | `THE WATCH` \| `THE CULLING` \| `THE CROWNED` \| `THE ARMORY` \| `THE ROAD` | aile kaydında zorunlu (`missing_field`/`bad_type`); sabit büyük harf, `upper_tr` kullanılmaz |
+| `legacy` | `{eski_kimlik: kademe}`, isteğe bağlı | anahtar `AchievementDef.LEGACY_IDS`'ten (22 eski kimlik), değer 1..`steps` uzunluğu; aksi `legacy_unknown`; bir eski kimlik tek ailede geçer |
+| `target`, `tier` | — | `steps` varken YASAK (`steps_invalid`); `group`/`legacy` de `steps` olmadan yasak |
+
+Dosya düzeyi (tamamlandı modu): aile adedi 12..30 (`ach_count`), toplam kademe ≤ 80 (`steps_invalid`; eski biçimli kayıt 1 sayılır).
+Yeni stat yalnız `total_boss_kills` (indeks 20; tracker sabiti `S_TOTAL_BOSS_KILLS`). **Sayacı besleme (elit tür ölümünde
+`add_total`) ve depo alanı C fazının işidir; şu an bu stat'ı kullanan kayıt yoktur.**
+
+Yeni hata kodları: `steps_invalid`, `legacy_unknown` (fixture: `test/fixtures/data_bad_steps_invalid/`, `data_bad_legacy_unknown/`).
+
+### Kayıt göçü (imza)
+
+`user://achievements.json` v1 -> v2 (`AchievementStore.VERSION_V2`). Sözleşme yalnız imzaları koyar; okuma/yazma `VERSION = 1` ile
+sürer ve C fazı geçişi yapar:
+
+- `StoreIo.read_versioned_any(path, versions: PackedInt32Array)`: listedeki her `v` kabul; sonuca `version` eklenir; başka `v` bozuk (`.bad`).
+  `read_versioned(path, version)` aynen korunur.
+- `AchievementStore.migrate_v1(raw: Dictionary, defs: Array) -> Dictionary`: saf, idempotent, girdiyi değiştirmez. Şu an girdinin kopyasını döner
+  (taslak); C gövdeyi doldurur. Yedek: ilk v2 yazımından önce `<yol>.v1.bak` (`BACKUP_SUFFIX`).
+- DEĞİŞMEMESİ gerekenler: bu üç imza, `VERSION_V2 = 2`, `BACKUP_SUFFIX`, `MAX_UNLOCKED = 64`, 256 KB sınırı, `COUNTER_CAP`.
+
+### C fazı notları
+
+Gerçek veri (`data/achievements.json`): 19 aile, 53 kademe; kayıt sırası = ekran sırası (gruba göre). `name` İngilizce, sabit büyük harf
+(`upper_tr` kullanılmaz); `desc` Türkçe. Eşikler (kademe sırasıyla):
+
+| Grup | Aile (`id`) | stat | Eşikler | Eski kimlik -> kademe |
+|---|---|---|---|---|
+| THE WATCH | `endure` | run_time | 300 / 600 / 900 / 1200 | bes_dakika 1, on_dakika 2, on_bes_dakika 3 |
+| | `untouched` | run_clean_secs | 180 / 300 / 600 | dokunulmaz 1 |
+| | `vigil` | total_play_secs | 3600 / 18000 / 72000 | yok (yeni; ikon stat'a göre yedek) |
+| THE CULLING | `rampage` | run_kills | 500 / 1000 / 2000 / 3500 | kirim 1 |
+| | `reaper` | total_kills | 1 / 250 / 2500 / 10000 | ilk_kan 1, kalabalik_kesici 4 |
+| | `unbound` | run_unlimited_kills | 100 / 250 / 500 | sinirsiz_kirim 1 |
+| | `demolisher` | run_bomb_hits | 20 / 35 / 50 | bomba_ustasi 1 |
+| THE CROWNED | `bossbane` | total_boss_kills | 1 / 10 / 30 | piyade_avcisi 1 |
+| | `elite_trio` | run_elite_kinds | 3 | uc_elit 1 |
+| | `lordslayer` | total_wins | 1 / 5 / 25 | kale_lordu_devrildi 1 |
+| THE ARMORY | `ascendant` | run_level | 10 / 20 / 30 | seviye_10 1, seviye_20 2 |
+| | `ascension` | run_evolutions | 1 / 2 / 4 | ilk_evrim 1 |
+| | `quick_hands` | run_reloads | 100 / 250 / 500 | tambur_ustasi 1 |
+| | `unbroken` | run_best_mult | 5 / 8 | seri_ustasi 1 |
+| | `renown` | run_score | 100000 / 250000 / 500000 | skor_100k 1 |
+| | `scavenger` | run_pickups | 5 / 10 / 20 | eklenti_avcisi 1 |
+| | `full_arsenal` | run_active_slots | 6 | alti_silah 1 |
+| THE ROAD | `garrison` | total_runs | 10 / 50 / 250 | yerlesik 1 |
+| | `two_roads` | total_chars5 | 2 | cifte_yol 1 |
+
+22 eski kimliğin her biri tek (aile, kademe)'ye eşlenir ve kademe eşiği eski `target` ile birebirdir (`test_v203_c_steps.gd`).
+Eşikler öneridir (bot kalibrasyonu yok); değiştirmek veri işidir (kayıtlı kademe geri alınmaz, eşik düşerse açılışta sessizce verilir).
+
+**Kayıt (`user://achievements.json`, v2):** `{"v":2,"unlocked":{aile:unix},"steps":{aile:[unix,...]},"totals":{kills,runs,wins,play_secs,boss_kills},
+"best":{score,time,level,kills,reloads,active_slots,mult,elite_kinds,pickups,clean_secs,evolutions,unlimited_kills,bomb_hits},"chars5":[...]}`.
+`unlocked[aile]` = 1. kademenin tarihi (karakter kilidi "kademe ≥ 1"); `steps[aile][k-1]` = k. kademenin tarihi, yalnız 2. kademeden itibaren yazılır.
+`steps` en çok 5 elemanlı; `MAX_UNLOCKED = 64` aile sınırı aynı. `best.*` koşu en iyisidir (ekranda "TEK KOŞU" yerine `en iyi/hedef`).
+
+**Göç kuralları** (`AchievementMigration.migrate`, `AchievementStore.migrate_v1` bunu çağırır):
+1. `load_file(defs)` v1 dosyasını bellekte göçürür; `defs` verilmezse (ya da aile yoksa) kayıt v1 biçiminde kalır ve v1 yazılır (eşleme kaybolmaz).
+2. Eski kimlik `legacy` eşlemesiyle ailenin en yüksek kademesine taşınır; alt kademeler örtük açık (tarih: kendi eski kimliği, yoksa üstündeki en yakın kayıtlı kademe); eski kimlikler `unlocked`tan kalkar, eşlenmeyenler olduğu gibi kalır.
+3. Açılan kademenin eşiği ilgili sayaca alt sınır olarak tohumlanır (`kalabalik_kesici` -> `totals.kills ≥ 10000`); `total_chars5` tohumlanmaz.
+4. İlk v2 `save()` öncesi `<yol>.v1.bak` bir kez alınır (yedek varsa dokunulmaz; yedek alınamazsa kayıt yazılmaz, dirty kalır). Göç saf ve idempotenttir; v2 dosya yeniden yüklenince değişmez.
+5. Açılışta `AchievementMigration.reconcile` sayaçların hak ettiği kademeleri sessizce (bildirimsiz) verir; kademe asla geri alınmaz.
+6. Bozuk v1: `.bad`, boş durum. Tanınmayan `v` (≥3) bozuk sayılır.
+
+**Tracker:** kademe eşiği geçilince `unlock_step`; aynı denetimde birden çok eşik tek `unlocked` sinyali (en yüksek kademe). Elit türü her ölümde `totals.boss_kills`
+(`total_boss_kills`). `finish` koşu en iyilerini `best.*`'a yazar. Sonuç çipi: "YENİ KADEME · N", adlar "AİLE II".
+
+**Ekran (DESIGN v2.0.3 §4):** özet "31 / 53 kademe"; kroniği şeridi (5 grup mührü: tamam/ilerliyor/hiç yok; dokunma = gruba kay); grup başlıkları sticky;
+aile satırı 936×150 (plaka silüeti + Roma rozeti, sonraki hedef, değer/hedef, segmentli çubuk); dokunma = satır açılır (aynı anda 1; kademe yolu: tarih / değer-hedef / "Hedef N");
+tamamlanan aile "TAMAM". Açılma animasyonu yok (anlık). `group` alanı olmayan v2.0 kaydı "DİĞER" grubunda tek kademeli görünür.
+
+## Karakter ve ayar alanları (v2.0.3)
+
+| Alan | Tür / aralık | Not |
+|---|---|---|
+| `characters/<id>.json` `portrait_video` | `.ogv` yolu (`res://assets/video/portrait/<id>.ogv` ya da `placeholder:…`), isteğe bağlı | hareketli portre (yalnız karakter seçim ekranı); `.ogv` değilse `bad_type`, dosya yoksa `asset_missing`. Alan yoksa/yüklenemezse statik `portrait` (fixture: `test/fixtures/char_bad_portrait_video_missing/`) |
+| `user://settings.cfg` `hareket_azalt` | bool, varsayılan `false` | `Settings.hareket_azalt`; açıkken dekoratif hareket durur (hareketli portre, küre süzülmesi, ana sayfa kül/kor/meşale/sancak). Eski dosyada anahtar yoksa `false`. Ekran girişi (220 ms) kalır |
+| `GemTiers` (`scripts/view/gem_tiers.gd`) | sabitler | küre tipi: xp < 5 normal, 5..79 elit, ≥ 80 ara boss (`tier_of`); `TEXTURES` ve `ORB_PX` tip sırasıyla veri alanlarıdır. Sim ve hash değişmez |
+
+### A fazı notları
+
+- **Gunslinger yürüme (F-038, F-064):** bölünmüş rig (gövde yürür, tabancalı kol `gunslinger_arm.png` ayrı parça; `rig.armless` YOK).
+  `rig.walk{frames: 8, stride: 110, cell: [202, 320], strip: gunslinger_body_walk.png, shoulder_dev: []}`; şerit = 8 yürüme + 1 duruş hücresi
+  (`PlayerView` bölünmüş rig düzeni). Üretim: `tools/art/make_zyfen_strip.py` yalnız-yürüme kipi (cast/gather kare dizini yoksa); duruş
+  `gunslinger_body.png` AYNEN kalır (`--body-out` depoya yazılmaz). Kalite: `art/source/gunslinger/quality.json` `pass:true`
+  (foot_slide 8/8 çift ≤3 px, boy sapması %1,83, genişlik 1818). `stride` 136 → 110: videonun gerçek adımı; yalnız görünüm, sim değişmez.
+- **Hareketli portre:** `assets/video/portrait/<id>.ogv` (Theora, 576×864, 20 fps; Gunslinger ping-pong 7,95 sn, Zyfen 4 sn).
+  `PortraitPlayer` (`scripts/ui/portrait_player.gd`): hareket azalt açık / dosya yok / yüklenemez / 1,5 sn'de ilk kare yok → görünmez, statik portre kalır.
+  Kaynak, model ve istem: `art/source/<id>/README.md`.
 
 ## Beceri — `skills/<id>.json`
 

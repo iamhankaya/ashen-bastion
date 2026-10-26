@@ -1,0 +1,22 @@
+{
+  "pass": true,
+  "checks": {
+    "foot_slide": true,
+    "height_dev": true,
+    "strip_width": true
+  },
+  "foot_slide_ok_pairs": 8,
+  "foot_slide_total_pairs": 8,
+  "foot_slide_pair_err_px": [
+    0.3,
+    0.3,
+    0.3,
+    0.0,
+    0.0,
+    0.3,
+    1.6,
+    0.0
+  ],
+  "worst_height_dev_pct": 1.83,
+  "strip_width": 1818
+}

@@ -60,7 +60,7 @@ func test_tracker_attached_does_not_change_work_counters() -> void:
 	if V2Slice.require(self, "B"):
 		return
 	var st := AchKit.store()
-	var tr := AchievementTracker.new(AchKit.data(), st, &"gunslinger", AchKit.clock())
+	var tr := AchievementTracker.new(AchKit.legacy_data(), st, &"gunslinger", AchKit.clock())
 	var with_t := _stress(162, tr)
 	var without := _stress(162, null)
 	for k in GameSim.WORK_KEYS:

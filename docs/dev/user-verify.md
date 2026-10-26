@@ -329,3 +329,38 @@ Zyfen ile oyna; Gunslinger ile karşılaştır.
 #### Seviye ve ayar
 9. **Ayarlar ▸ EFEKT** kaydırıcısı Zyfen seslerini de ölçekler (0% sessiz, 100% tam); MÜZİK kaydırıcısı bu seslere etki etmez.
 10. Zyfen sesleri genel olarak Gunslinger seslerine göre çok yüksek/alçak mı (LUFS hedefleri `tools/audio/sfx_manifest.json`)?
+
+## M. v2.0.3 (bölüm dosyaları birleştirildi: A, B, C, D)
+
+Aynı kural: bulutta telefon yok; yalnız cihazda (Redmi Note 13 Pro, debug APK) doğrulanır. Bölüm kaynakları `docs/dev/user-verify/v2.0.3-{a,b,c,d}.md` (faz notu olarak kalır). Ara denetim bulguları: `docs/design/audit/v2.0.3-ara/FINDINGS.md`.
+
+### A — Gunslinger yürüme + hareketli portreler
+1. **Karakterler ekranı:** Gunslinger ve Zyfen portreleri döngüyle hareket eder (Gunslinger'da baş eğimi geçişinde sıçrama yok). İlk kare gelene kadar statik portre görünür, siyah çakma yok.
+2. **AYARLAR → HAREKETİ AZALT AÇIK:** iki portre de sabit kalır.
+3. **Oyunda Gunslinger yürürken:** ayak yerde kaymaz (hızlı yürüyüşte de); tabancalı kol omuzdan bağlı kalır (sapma varsa bildir: `walk.shoulder_dev` boş, ölçülmedi).
+4. APK boyut etkisi: ≈ +2,7 MB (iki `.ogv` + şerit).
+
+### B — Ruh küreleri
+- [ ] Normal düşman: küçük soluk camgöbeği ruh alevi (34 px).
+- [ ] Elit/şövalye hayaleti: büyük mor-eflatun ruh (48 px), hafif süzülür.
+- [ ] Ara boss (elit_* / Kale Lordu): büyük altın-kehribar, taçlı ruh (68 px), süzülür.
+- [ ] Üç küre zeminde bir bakışta ayırt edilir (boyut + taç silüeti).
+- [ ] HAREKETİ AZALT AÇIK: elit/boss küre süzülmesi durur.
+- [ ] Yoğun sahnede (≈300 küre) takılma yok.
+
+### C — Aşamalı başarımlar
+1. **Kayıt göçü (en önemlisi):** v2.0.2 APK'sı oynanmış cihazın üstüne kur. BAŞARIMLAR özeti "N / 53 kademe"; önceden açık başarımlar ilgili ailede kademe olarak görünür (ör. Kalabalık Kesici → REAPER IV). Çökme yok, ilk açılışta toast yağmuru yok.
+2. **Yedek (isteğe bağlı, adb):** `files/achievements.json.v1.bak` ilk oyun sonundan sonra oluşur.
+3. **Ekran:** kronik mühürlerine dokun (gruba kayar); satıra dokun (açılır, bir seferde 1; tekrar dokun kapanır); parmakla kaydırma satır üstünden de çalışır; çentik/alt pay.
+4. **Koşu içi:** eşikte "BAŞARIM AÇILDI · KADEME II" toast'u; koşu sonu "YENİ KADEME · N" çipi aynı kademeleri sayar.
+5. **Kademe ayrımı:** plaka silüetleri (yalın / perçin / köşebent / taç) renge bakmadan ayırt edilir.
+
+### D — Ana sayfa + ayarlar
+1. **Akıcılık:** kül/kor, sancak sallanması, karakter nefesi takılmadan (60 fps).
+2. **Çentik/alt çubuk:** başlık çentiğin altında; AYARLAR ve EN İYİ SKORLAR kesilmiyor.
+3. **AYARLAR → SES:** TÜM SESLER kapatınca "Ses kapalı…" satırı, kaydırıcı soluk; kaydırıcıya dokununca ses açılır. MÜZİK/EFEKT bırakınca kaydedilir (kapat/aç).
+4. **Kaydırırken kazara tetik:** listeyi kaydırırken anahtarlar tetiklenmemeli; kaydırıcı sürüklerken liste kaymamalı.
+5. **HAREKETİ AZALT AÇIK:** ana sayfada kül/kor yok, sancak/meşale/nefes durur; KAPALI → geri gelir.
+6. **TİTREŞİM** AÇIK/KAPALI ayara uyar (anahtar artık yalnız AYARLAR'da).
+7. **Duraklatmadan AYARLAR:** GERİ duraklatmaya döner.
+8. **Ara denetim (#65) açık bulguları cihazda gözle:** 2× yazı boyutunda ayarlar düzeni, lisans kartı kaydırma, sessizde çizili hoparlör, mini portre/halka (0/53), 2× tek sütunda ikon hizası.

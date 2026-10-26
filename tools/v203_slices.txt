@@ -1,0 +1,16 @@
+# v2.0.3 tamamlanan uygulama dilimi simgeleri (boşluk/satır ayraçlı; V203Slice ile aynı biçim). Geçerli simgeler:
+# A (animasyon), B (küreler), C (başarımlar), D (ana sayfa + ayarlar).
+# Simge YALNIZ ilgili fazın kendisi ya da doğrulama fazı tarafından eklenir: satırın başındaki '#' kaldırılır.
+# Açmanın önkoşulu: o dilimin kabul testleri (test/acceptance/test_acc_v203_*) gerçek kodda yeşil, sızıntı yok,
+# asgari test sayısı (tools/gate_min_tests.json) yükseltilmiş. Simgesi açılmamış dilimin kabul testleri
+# V203Slice.require ile pending döner. İşaretli dilimde pending ya da sıfır test gate'i KIRAR
+# (tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless).
+# Test adı öneki: test_a<N>_ (A), test_b<N>_ (B), test_c<N>_ (C), test_d<N>_ (D); dosyalar test_*_v203_*.
+# Simge satırları arasındaki bu yorum satırları BİLİNÇLİDİR: dört faz paralel açınca bitişik satır çakışması çıkmasın.
+A
+# -- B --
+B
+# -- C --
+C
+# -- D --
+D

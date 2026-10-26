@@ -54,6 +54,7 @@ var _focus: StringName = &""
 var _t: float = 0.0
 var _portrait: TextureRect
 var _ghost: TextureRect
+var _video: PortraitPlayer
 var _lock_ring: Control
 var _panel: PanelContainer
 var _stat_values: Array[Label] = []
@@ -86,7 +87,7 @@ func _ensure_built() -> void:
 
 func _build() -> void:
 	var bg := ColorRect.new()
-	bg.color = UiKit.VOID
+	bg.color = UiKit.TAS_900
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiKit.fill(bg)
 	add_child(bg)
@@ -101,6 +102,9 @@ func _build() -> void:
 	_portrait = _portrait_rect("Portrait")
 	stage.add_child(_ghost)
 	stage.add_child(_portrait)
+	_video = PortraitPlayer.new()  # statik portrenin çocuğu: nefes/sürüklenme/çapraz solma birlikte gelir
+	_video.size = Vector2(PORTRAIT_W, PORTRAIT_H)
+	_portrait.add_child(_video)
 	var shade := TextureRect.new()
 	shade.name = "Shade"
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -167,9 +171,8 @@ func _build() -> void:
 	_reason.size = Vector2(COL_W, 40)
 	_reason.position = Vector2(0, SELECT_H - 56.0)
 	select_button.add_child(_reason)
-	back_button = UiKit.button("GERİ", &"secondary", BACK_H)
+	back_button = UiKit.back_button(BACK_H)
 	back_button.name = "BackButton"
-	back_button.accessibility_name = "Geri"
 	back_button.pressed.connect(func() -> void: back_requested.emit())
 	add_child(back_button)
 	_placeholder_tag = UiKit.label("YER TUTUCU", &"", 26, UiKit.KEMIK_300)
@@ -253,14 +256,14 @@ func _bold_label(text: String, size: int, color: Color) -> Label:
 	return l
 
 
-static func _panel_style() -> StyleBoxFlat:
-	var sb := UiKit.stylebox(UiKit.MOR_700, UiKit.BRONZ_500, 4, 18, true)
+static func _panel_style() -> StyleBox:
+	var sb := UiKit.skin_box("levha", 40, UiKit.TAS_700)
 	sb.set_content_margin_all(24)
 	return sb
 
 
 static func _tile_style() -> StyleBoxFlat:
-	var sb := UiKit.stylebox(UiKit.MOR_900, UiKit.MOR_900, 0, 12)
+	var sb := UiKit.stylebox(UiKit.TAS_900, UiKit.TAS_900, 0, 4)
 	sb.content_margin_left = 16
 	sb.content_margin_right = 16
 	sb.content_margin_top = 6
@@ -383,9 +386,16 @@ func _place_name_chip() -> void:
 	chip_label.position = Vector2(MARGIN + name_label.get_minimum_size().x + 28.0, y + base)
 
 
+func _reduce_motion() -> bool:
+	var st := get_node_or_null(^"/root/Settings")
+	return st != null and st.hareket_azalt
+
+
 func _apply_running() -> void:
 	var on := is_visible_in_tree()
 	set_process(on)
+	if _video != null:
+		_video.paused = not on
 	if particles != null:
 		particles.emitting = on
 
@@ -508,6 +518,7 @@ func _refresh_info() -> void:
 	_ghost.texture = _portrait.texture
 	_portrait.texture = tex
 	_portrait.self_modulate = PLACEHOLDER_TINT if c.placeholder else Color.WHITE
+	_video.show_source("" if c.placeholder else c.portrait_video, _reduce_motion())
 	_stage_mono.text = UiKit.character_upper(c).substr(0, 1) if c.placeholder else ""
 	_placeholder_tag.visible = OS.is_debug_build() and c.placeholder
 	_place_name_chip.call_deferred()
@@ -572,7 +583,7 @@ func _style_chip(st: int) -> void:
 		_chip_lock.visible = false
 		return
 	var locked := st == SelectState.LOCKED
-	var sb := UiKit.stylebox(UiKit.MOR_800, UiKit.KAHVE_500 if locked else UiKit.AMBER, 3, 999)
+	var sb := UiKit.stylebox(UiKit.TAS_800, UiKit.KAHVE_500 if locked else UiKit.AMBER, 3, 6)
 	sb.content_margin_left = CHIP_PAD_X + (CHIP_LOCK_W + CHIP_LOCK_GAP if locked else 0.0)
 	sb.content_margin_right = CHIP_PAD_X
 	sb.content_margin_top = CHIP_PAD_Y
@@ -588,12 +599,12 @@ func _style_select(is_selected: bool, locked: bool) -> void:
 	var sb: StyleBoxFlat
 	var fg := UiKit.KEMIK_100
 	if is_selected:
-		sb = UiKit.stylebox(UiKit.MOR_700, UiKit.AMBER, 5, 18)
+		sb = UiKit.stylebox(UiKit.TAS_700, UiKit.AMBER, 5, 6)
 		sb.shadow_color = Color(UiKit.AMBER, 0.45)
 		sb.shadow_size = 22
 		fg = UiKit.AMBER
 	elif locked:
-		sb = UiKit.stylebox(UiKit.MOR_800, UiKit.KAHVE_500, 4, 18)
+		sb = UiKit.stylebox(UiKit.TAS_800, UiKit.KAHVE_500, 4, 6)
 		sb.content_margin_bottom = 56.0
 		fg = UiKit.KEMIK_300
 	else:
@@ -633,7 +644,7 @@ func _make_card(id: StringName) -> Button:
 	b.custom_minimum_size = Vector2(CARD_W, CARD_H)
 	b.focus_mode = Control.FOCUS_NONE
 	b.clip_contents = true
-	b.add_theme_stylebox_override(&"normal", UiKit.stylebox(UiKit.MOR_800, UiKit.BRONZ_700, 4, 18))
+	b.add_theme_stylebox_override(&"normal", UiKit.stylebox(UiKit.TAS_800, UiKit.BRONZ_700, 4, 6))
 	b.pressed.connect(set_focus_id.bind(id))
 	var tex := UiKit.texture(c.portrait) if c != null and c.portrait != "" else null
 	if tex == null:
@@ -697,7 +708,7 @@ func _refresh_cards() -> void:
 		var locked := c != null and not CharacterRoster.is_unlocked(c, _store)
 		var focus := id == _focus
 		var border := UiKit.BRONZ_300 if focus else (UiKit.KAHVE_500 if locked else UiKit.BRONZ_700)
-		var sb := UiKit.stylebox(Color(0, 0, 0, 0), border, 6 if focus else 4, 18)
+		var sb := UiKit.stylebox(Color(0, 0, 0, 0), border, 6 if focus else 4, 6)
 		if focus:
 			sb.shadow_color = Color(UiKit.AMBER, 0.4)
 			sb.shadow_size = 18
@@ -715,7 +726,7 @@ func _refresh_cards() -> void:
 			bg.get_child(0).position = Vector2(8, 8)
 			card.accessibility_name = "%s, seçili" % name_text
 		elif locked:
-			var bg := _BadgeDot.new(UiKit.MOR_900)
+			var bg := _BadgeDot.new(UiKit.TAS_900)
 			bg.position = Vector2(CARD_W - 68.0, 10.0)
 			badge.add_child(bg)
 			card.accessibility_name = (
@@ -811,7 +822,7 @@ class _LockGlyph:
 		var c := UiKit.BRONZ_300
 		draw_arc(Vector2(13, 11), 7.0, PI, TAU, 14, c, 3.0, true)
 		draw_rect(Rect2(3, 12, 20, 16), c)
-		draw_rect(Rect2(11, 17, 4, 6), UiKit.MOR_800)
+		draw_rect(Rect2(11, 17, 4, 6), UiKit.TAS_800)
 
 
 class _BadgeDot:
@@ -827,7 +838,7 @@ class _BadgeDot:
 	func _draw() -> void:
 		draw_circle(size * 0.5, 28.0, color)
 		draw_arc(size * 0.5, 28.0, 0.0, TAU, 32, UiKit.BRONZ_500, 3.0, true)
-		if color == UiKit.MOR_900:  # kilit rozeti
+		if color == UiKit.TAS_900:  # kilit rozeti
 			var c := size * 0.5
 			draw_rect(Rect2(c + Vector2(-11, -2), Vector2(22, 17)), UiKit.KEMIK_300)
 			draw_arc(c + Vector2(0, -2), 7.0, PI, TAU, 12, UiKit.KEMIK_300, 3.0, true)

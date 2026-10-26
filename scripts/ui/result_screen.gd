@@ -332,19 +332,27 @@ func _build_chip() -> void:
 
 ## Koşuda açılan başarımların görünen adları; `show_result`'tan ÖNCE çağrılır. Boş => v1.1 düzeni aynen.
 ## Çip: "YENİ BAŞARIM · N" + ilk iki ad ("+k" kalan); varken kombolar en çok 3 satır.
-func set_new_achievements(names: Array[String]) -> void:
+## `steps` >= 0 (aile/kademe kaydı, v2.0.3): başlık "YENİ KADEME · steps", adlar "AİLE II" biçiminde gelir.
+func set_new_achievements(names: Array[String], steps: int = -1) -> void:
 	_new_names = names.duplicate()
 	if achievement_chip == null:
 		return
 	var n := _new_names.size()
 	achievement_chip.visible = n > 0
 	if n > 0:
-		chip_title.text = "YENİ BAŞARIM · %d" % n
+		chip_title.text = "YENİ KADEME · %d" % steps if steps >= 0 else "YENİ BAŞARIM · %d" % n
 		var shown := ", ".join(_new_names.slice(0, 2))
 		if n > 2:
 			shown += " +%d" % (n - 2)
 		chip_names.text = shown
-		achievement_chip.accessibility_name = ("%d yeni başarım: %s" % [n, ", ".join(_new_names)])
+		achievement_chip.accessibility_name = (
+			"%d %s: %s"
+			% [
+				steps if steps >= 0 else n,
+				"yeni kademe" if steps >= 0 else "yeni başarım",
+				", ".join(_new_names)
+			]
+		)
 	if _shown_combos != _combo_cap():
 		_shown_combos = _combo_cap()
 		if combo_box != null:

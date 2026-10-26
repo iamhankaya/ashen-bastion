@@ -69,6 +69,7 @@ const CHARACTER_KEYS: PackedStringArray = [
 	"rig",
 	"blurb",
 	"portrait",
+	"portrait_video",
 	"unlock",
 	"placeholder",
 	"display_upper",
@@ -196,6 +197,9 @@ const ERROR_CODES: PackedStringArray = [
 	"scope_mismatch",
 	"atlas_cells",
 	"unknown_ref",
+	# v2.0.3
+	"steps_invalid",
+	"legacy_unknown",
 ]
 
 var root_dir: String = ""
