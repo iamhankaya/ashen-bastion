@@ -15,6 +15,9 @@ func set_font_scale(f: float) -> void:
 	_ghost_row.vertical = stacked
 	for b in [characters_button, achievements_button, scores_button, settings_button]:
 		(b as Button).custom_minimum_size.y = STACK_BTN_H if stacked else 132.0
+		_center_glyph(b)
+	# Zemin yaması düğme sütununun altına taşmasın (ara denetim #5): sahne sütun üstünde kırpılır.
+	_scene.offset_bottom = (STACK_COL_TOP - 8.0 if stacked else 0.0)
 	apply_safe_area(_safe_extra)
 
 
@@ -46,6 +49,8 @@ const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
 const STACK_FONT_SCALE := 1.3  # font_scale bunun üstündeyse yarım düğmeler tek sütuna düşer (DESIGN §2, 01d)
 const STACK_BTN_H := 168.0
+const MINI_PX := 68.0
+const MINI_CROP := Rect2(160.0, 80.0, 704.0, 704.0)  # 1024×1536 portrenin baş-omuz karesi
 const STACK_COL_TOP := -1099.0  # OYNA 180 + 4 × 168 + 5 × 27 + sürüm 40 = 1027 → y 1301
 const STACK_HERO_SCALE := 0.8
 const EMBER_MAX := 36  # tasarım tavanı 40
@@ -76,6 +81,8 @@ var _scene: Control
 var _banners: Array[TextureRect] = []
 var _torch: TextureRect
 var _ring: AchRing
+var _person: UiKit.Glyph
+var _mini: TextureRect
 var _characters_sub: Label
 var _achievements_sub: Label
 var _char_name: String = DEFAULT_CHARACTER
@@ -150,9 +157,11 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
 	_apply_motion_setting()
+	_apply_font_setting()
 	var ev := get_node_or_null(^"/root/Events")
 	if ev != null:
 		ev.settings_changed.connect(_apply_motion_setting)
+		ev.settings_changed.connect(_apply_font_setting)
 
 
 func _build() -> void:
@@ -216,7 +225,17 @@ func _build() -> void:
 	half.add_theme_constant_override(&"separation", 27)
 	characters_button = _half_button("KARAKTERLER", "CharactersButton")
 	characters_button.pressed.connect(func() -> void: characters_requested.emit())
-	characters_button.add_child(_glyph_at(UiKit.Glyph.new(&"person", UiKit.BRONZ_300, 52.0)))
+	_person = UiKit.Glyph.new(&"person", UiKit.BRONZ_300, 52.0)
+	characters_button.add_child(_glyph_at(_person))
+	_mini = TextureRect.new()  # seçili karakterin mini portresi (ara denetim #4); yoksa kişi ikonu
+	_mini.name = "MiniPortrait"
+	_mini.visible = false
+	_mini.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mini.custom_minimum_size = Vector2(MINI_PX, MINI_PX)
+	_mini.size = _mini.custom_minimum_size
+	_mini.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_mini.stretch_mode = TextureRect.STRETCH_SCALE
+	characters_button.add_child(_glyph_at(_mini))
 	achievements_button = _half_button("BAŞARIMLAR", "AchievementsButton")
 	achievements_button.pressed.connect(func() -> void: achievements_requested.emit())
 	_ring = AchRing.new()
@@ -451,6 +470,16 @@ func _glyph_at(g: Control) -> Control:
 	return g
 
 
+## Yarım düğme ikonu: 132 yükseklikte y 32; tek sütunda (168) başlık yazısıyla (alt satır payı 40 düşülmüş) dikey ortalanır.
+func _center_glyph(b: Button) -> void:
+	if b != characters_button and b != achievements_button:
+		return  # hayalet düğmelerin ikonu `_place_glyph` ile zaten ortalı
+	for c in b.get_children():
+		if c is UiKit.Glyph or c is AchRing or c.name == "MiniPortrait":
+			var g := c as Control
+			g.position.y = (STACK_BTN_H - 40.0 - g.size.y) * 0.5 if is_stacked() else 32.0
+
+
 ## Hayalet düğme (dolgusuz, bronz kenar): ikon 48 + Cinzel 32; ikon yazının soluna oturur.
 func _ghost_button(title: String, glyph: StringName, node_name: String) -> Button:
 	var b := UiKit.button(title, &"secondary")
@@ -471,6 +500,21 @@ func set_character_name(p_name: String) -> void:
 	if characters_button != null:
 		_characters_sub = characters_button.get_node("Sub") as Label
 		_characters_sub.text = clip_name(p_name)
+
+
+## KARAKTERLER mini portresi: baş-omuz kırpması; doku yoksa (null) kişi ikonu kalır.
+func set_character_portrait(tex: Texture2D) -> void:
+	if _mini == null:
+		return
+	if tex == null or tex.get_width() < MINI_CROP.end.x or tex.get_height() < MINI_CROP.end.y:
+		_mini.texture = null
+	else:
+		var at := AtlasTexture.new()
+		at.atlas = tex
+		at.region = MINI_CROP
+		_mini.texture = at
+	_mini.visible = _mini.texture != null
+	_person.visible = not _mini.visible
 
 
 ## BAŞARIMLAR alt satırı: "açılan/toplam" (örn. "8/22") ve ilerleme halkası.
@@ -560,6 +604,13 @@ func _apply_motion_setting() -> void:
 			b.rotation = 0.0
 		if hero != null:
 			hero.scale = Vector2.ONE
+
+
+## Oyun içi BÜYÜK YAZI ayarı yazı ölçeğinin kaynağıdır (ara denetim #1).
+func _apply_font_setting() -> void:
+	var st := get_node_or_null(^"/root/Settings")
+	if st != null:
+		set_font_scale(st.font_scale())
 
 
 func _reduce_motion() -> bool:

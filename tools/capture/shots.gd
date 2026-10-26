@@ -3,7 +3,7 @@ extends SceneTree
 ##   xvfb-run -a -s "-screen 0 1080x2400x24" godot --path . --rendering-driver opengl3 --resolution 1080x2400 \
 ##     -s res://tools/capture/shots.gd -- <çıktı_dizini> [senaryo,senaryo]
 ## Senaryolar: menu, game, crowd, boss, lord, levelup, pause, win, lose, contrast, ruins, stress,
-##   settings_menu / settings_pause / settings_reduce (ayarlar ekranı; sessiz + hareket azalt), menu_notch (ana sayfa çentik payı), menu_2x (yazı ölçeği 2×, tek sütun), licenses (LİSANSLAR alt ekranı), names (i içeren beceri adları kartta), winc3 / winc0 (kombolu/kombosuz sonuç), ruinwalk (çarpışma daireleri + yürüyüş)
+##   settings_menu / settings_pause / settings_reduce (ayarlar ekranı; sessiz + hareket azalt), menu_notch (ana sayfa çentik payı), menu_2x (yazı ölçeği 2×, tek sütun), settings_2x (ayarlar BÜYÜK YAZI), licenses (LİSANSLAR alt ekranı), names (i içeren beceri adları kartta), winc3 / winc0 (kombolu/kombosuz sonuç), ruinwalk (çarpışma daireleri + yürüyüş)
 
 var out_dir := "/tmp/shots/"
 var scenarios: PackedStringArray = ["menu", "game", "crowd"]
@@ -289,6 +289,14 @@ func _run() -> void:
 				await frames(5)
 				await shot("menu_2x")
 				c.menu.set_font_scale(1.0)
+			"settings_2x":
+				await frames(5)
+				var st2: Node = c.get_node("/root/Settings")
+				st2.set_buyuk_yazi(true)
+				c.open_settings()
+				await frames(10)
+				await shot("settings_2x")
+				st2.set_buyuk_yazi(false)
 			"licenses":
 				await frames(5)
 				c.open_settings()

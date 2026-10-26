@@ -74,6 +74,8 @@ func refresh_menu_label() -> void:
 		return
 	var c := _game_data().get_character(_current_id())
 	_menu.set_character_name(c.display_name if c != null else "")
+	if _menu.has_method(&"set_character_portrait"):
+		_menu.set_character_portrait(UiKit.texture(c.portrait) if c != null else null)
 
 
 func _current_id() -> StringName:

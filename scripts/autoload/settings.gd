@@ -18,6 +18,9 @@ var music_pct: int = MUSIC_DEFAULT
 var sfx_pct: int = SFX_DEFAULT
 ## v2.0.3: dekoratif hareketi durdurur (hareketli portre, küre süzülmesi, ana sayfa kül/kor/meşale/sancak). A okur, D arayüzü bağlar.
 var hareket_azalt: bool = false
+## v2.0.3 ara denetim #1: oyun içi BÜYÜK YAZI (Godot Android'de sistem yazı ölçeğini vermez); açıkken 2× düzen (ana sayfa tek sütun, ayarlar büyük yazı).
+const BIG_FONT_SCALE := 2.0
+var buyuk_yazi: bool = false
 ## AudioDirector'ın Music kanalına eklediği anlık pay (duraklatma/duck, dB); kullanıcı seviyesinin ÜSTÜNE eklenir.
 var music_extra_db: float = 0.0
 
@@ -45,6 +48,7 @@ func load_settings(path: String = "") -> void:
 	music_pct = _pct_from(d.get("muzik_yuzde"), MUSIC_DEFAULT)
 	sfx_pct = _pct_from(d.get("efekt_yuzde"), SFX_DEFAULT)
 	hareket_azalt = bool(d.get("hareket_azalt", false))
+	buyuk_yazi = bool(d.get("buyuk_yazi", false))
 	RenderFix.enabled = cull_fix
 
 
@@ -67,6 +71,7 @@ func save_settings(path: String = "") -> bool:
 						"muzik_yuzde": music_pct,
 						"efekt_yuzde": sfx_pct,
 						"hareket_azalt": hareket_azalt,
+						"buyuk_yazi": buyuk_yazi,
 					}
 				)
 			)
@@ -92,6 +97,16 @@ func set_hareket_azalt(on: bool) -> void:
 	hareket_azalt = on
 	save_settings()
 	Events.settings_changed.emit()
+
+
+func set_buyuk_yazi(on: bool) -> void:
+	buyuk_yazi = on
+	save_settings()
+	Events.settings_changed.emit()
+
+
+func font_scale() -> float:
+	return BIG_FONT_SCALE if buyuk_yazi else 1.0
 
 
 ## Sayı değilse/eksikse varsayılan; sayıysa 0-100'e sıkıştırılıp tamsayıya yuvarlanır.
