@@ -2,9 +2,9 @@ extends GutTest
 ## Kabul (v2.0.3 B): ruh küreleri — tip → görsel, üç tip ayırt edilir, sim değişmez, hareket azaltma.
 ## Kaynak: çatı kabul ölçütü #3, kullanıcı kararı (2026-10-26: normal–boss "ΔL* >= 15 VEYA boyut >= 1,8x + IoU <= 0,6" yeterli,
 ## boss koyultulmaz), DESIGN.md §5–6, sözleşme `GemTiers` (eşikler/doku yolları/ORB_PX değişmez).
-## Dilim B kapalıyken pending. Test adı öneki `test_orb<N>_`: v2.0 dilim denetimi (tools/v2_slices.txt, simge B) sınıf süzgeci olmadığı için `test_b<N>_` adlarını kendi B dilimi sayıp gate kırıyor (Açık nokta). Ölçüm kuralı sabittir: her küre ORB_PX boyutuna indirilip 68 px tuvale ortalanır; opak = alfa >= 0,5.
+## Dilim B kapalıyken pending. Test adı öneki `test_orb<N>_`: v2.0 dilim denetimi (tools/v2_slices.txt, simge B) sınıf süzgeci olmadığı için `test_b<N>_` adlarını kendi B dilimi sayıp gate kırıyor (Açık nokta). Ölçüm kuralı sabittir: her küre ORB_PX boyutuna indirilip 80 px tuvale ortalanır; opak = alfa >= 0,5.
 
-const CANVAS := 68
+const CANVAS := 80
 const DELTA_L_MIN := 15.0
 const SIZE_RATIO_MIN := 1.8
 const IOU_MAX := 0.6
@@ -29,7 +29,7 @@ func _image(tier: int) -> Image:
 	return tex.get_image() if tex != null else null
 
 
-## Küre tuvali: ORB_PX'e indirilmiş, 68x68 ortalı görüntü.
+## Küre tuvali: ORB_PX'e indirilmiş, 80x80 ortalı görüntü.
 func _canvas(tier: int) -> Image:
 	var img := _image(tier)
 	if img == null:
@@ -129,7 +129,7 @@ func test_orb2_every_pair_of_orb_types_is_distinguishable_by_the_agreed_rule() -
 func test_orb2_boss_orb_is_the_largest_and_orb_sizes_stay_the_contract_values() -> void:
 	if _gate():
 		return
-	assert_eq(GemTiers.ORB_PX, PackedInt32Array([44, 48, 68]))
+	assert_eq(GemTiers.ORB_PX, PackedInt32Array([44, 48, 80]))
 	assert_gte(
 		float(GemTiers.ORB_PX[GemTiers.BOSS]) / float(GemTiers.ORB_PX[GemTiers.NORMAL]),
 		SIZE_RATIO_MIN
