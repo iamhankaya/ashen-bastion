@@ -73,8 +73,9 @@ func test_layout_zero_and_four_combos_fit_with_buttons_below_content() -> void:
 func test_fifth_combo_shows_plus_one() -> void:
 	var r := _screen(true, 5)
 	var last := r.combo_box.get_child(r.combo_box.get_child_count() - 1) as Label
-	assert_eq(last.text, "+1")
-	assert_eq(r.combo_box.get_child_count(), 5, "4 satır + '+1'")
+	# v2.1: bloklar +44 kaydı; 5 kombo 3 satır + '+2' olarak sığar
+	assert_eq(last.text, "+2")
+	assert_eq(r.combo_box.get_child_count(), 4, "3 satır + '+2'")
 	var r4 := _screen(true, 4)
 	assert_eq(r4.combo_box.get_child_count(), 4)
 

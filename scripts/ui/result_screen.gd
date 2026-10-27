@@ -676,7 +676,7 @@ func _layout() -> void:
 	var limit := DESIGN_H - BOTTOM_DEFAULT - _extra.w
 	if (
 		by + REPLAY_H + BUTTON_GAP + MENU_H > limit
-		and _shown_combos > 1
+		and _shown_combos > 0
 		and _combos_data.size() > 1
 	):
 		_shown_combos -= 1  # alt güvenli alana sığmıyor: bir kombo satırı daha "+N"e katılır

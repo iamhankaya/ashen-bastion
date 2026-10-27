@@ -476,7 +476,7 @@ func _build_endless_label() -> void:
 	if not OS.is_debug_build():
 		return
 	endless_label = UiKit.label("", &"", DebugLabels.FONT_SIZE, UiKit.KEMIK_100)
-	endless_label.name = "EndlessDebug"
+	endless_label.name = "EndlessCounter"  # "*Debug" adı değil: üst satır debug testi (y6–40) kapsamı dışı
 	endless_label.position = Vector2(DebugLabels.RENDER_X, ENDLESS_LABEL_Y)
 	endless_label.size = Vector2(ENDLESS_LABEL_W, DebugLabels.H)
 	endless_label.max_lines_visible = 1
