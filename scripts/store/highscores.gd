@@ -1,11 +1,14 @@
 class_name Highscores
 extends RefCounted
 ## Yerel en iyi 10 (`user://highscores.json`). Autoload DEĞİL; yol enjekte edilebilir. İçerik güvenilmez sayılır (sanitize).
-## Şema: {"v":1,"entries":[{"score":int,"time":int,"won":bool,"level":int,"unix":int}]}. Sıralama: skor azalan, eşitlikte
+## Şema (v2.1): {"v":2,"lists":{"<mod>:<zorluk>":[{"score","time","won","level","unix","mode","diff"}]}}; liste anahtarı otoritedir
+## (giriş mode/diff'i anahtara göre yeniden yazılır), bilinmeyen anahtarlı listeler silinmeden saklanır. v1 ({"v":1,"entries":[]})
+## `normal:normal`'a göçer: önce `.v1.bak` yedeği, sonra v2 yazımı (docs/data-schema.md, K-C6). Sıralama: skor azalan, eşitlikte
 ## `unix` küçük (eski) önde, o da eşitse ekleme sırası. Yazma: .tmp + rename. Kurallar: docs/plan/v1.1-plan.md §D.
 ## Bozuk/eksik/yarım dosya oyunu durdurmaz: liste boş açılır, bozuk dosya `.bad` olarak saklanır, sonraki `save` onarır.
 
-const VERSION := 1
+const VERSION := 2
+const V1 := 1
 const MAX_ENTRIES := 10
 const DEFAULT_PATH := "user://highscores.json"
 const DEFAULT_KEY := "normal:normal"
@@ -16,8 +19,12 @@ const INT_LIMIT := 1.0e15
 
 ## v2.1: normal:normal listesinin görünümü (eski çağıranlar/testler için; `_lists["normal:normal"]` ile AYNI dizi).
 var entries: Array[Dictionary] = []
-## v2.1: "<mod>:<zorluk>" -> en iyi 10 listesi. Dosya biçimi (v2) ve göç U3'te; C fazında yalnız bellek içi iskelet.
+## v2.1: "<mod>:<zorluk>" -> en iyi 10 listesi (giriş alanları mode/diff içermez; yazarken anahtardan eklenir).
 var _lists: Dictionary = {}
+## Bilinmeyen anahtarlı listeler (ileri uyumluluk): ham değer, gösterilmez, `save` aynen geri yazar.
+var _unknown: Dictionary = {}
+## v1 yedeği alınamadı: göç iptal, v1 dosyası dokunulmaz, `save` v2 yazmaz (K-C6 2).
+var _write_blocked: bool = false
 ## Son load_file() bozuk dosya buldu mu (.bad olarak saklandı).
 var corrupt: bool = false
 
@@ -44,9 +51,12 @@ func list_for(mode: StringName, diff: StringName) -> Array[Dictionary]:
 
 
 ## false = dosya yok/bozuk (entries boş). Bozuk dosya `<yol>.bad` olarak saklanır; yarım `.tmp` hiç okunmaz.
+## v1 dosyası `normal:normal`'a göçer (`.v1.bak` yedeği + v2 yazımı); yedek alınamazsa v1 dokunulmaz, oturum bellekte sürer.
 func load_file() -> bool:
 	entries = []
 	_lists = {DEFAULT_KEY: entries}
+	_unknown = {}
+	_write_blocked = false
 	corrupt = false
 	if not FileAccess.file_exists(_path):
 		return false
@@ -57,8 +67,13 @@ func load_file() -> bool:
 		corrupt = true
 		_keep_bad(text)
 		return false
-	entries = sanitize(json.data)
-	_lists[DEFAULT_KEY] = entries
+	var root: Dictionary = json.data
+	if int(root["v"]) == V1:
+		_lists[DEFAULT_KEY] = sanitize(root)
+		_migrate_v1(text)
+	else:
+		_load_lists(root["lists"])
+	entries = _lists[DEFAULT_KEY]
 	return true
 
 
@@ -103,18 +118,18 @@ func submit(entry: Dictionary) -> Dictionary:
 
 
 ## .tmp'ye yaz, sonra rename: yarım yazma ana dosyayı bozmaz. Başarısızlık oyunu durdurmaz (false).
+## Göç iptal edildiyse (v1 yedeği yok) v2 yazılmaz: v1 dosyası olduğu gibi kalır.
 func save() -> bool:
-	var tmp := _path + ".tmp"
-	var f := FileAccess.open(tmp, FileAccess.WRITE)
-	if f == null:
+	if _write_blocked:
 		return false
-	var wrote := f.store_string(JSON.stringify({"v": VERSION, "entries": entries}))
-	f.close()
+	var lists := {}
+	for key: String in _lists:
+		var list: Array = _lists[key]
+		if not list.is_empty():
+			lists[key] = _with_names(key, list)
+	lists.merge(_unknown)
 	# Yazma ya da rename başarısızsa önceki geçerli dosya olduğu gibi kalır (silip yeniden denemek yok).
-	if not wrote or DirAccess.rename_absolute(tmp, _path) != OK:
-		DirAccess.remove_absolute(tmp)
-		return false
-	return true
+	return StoreIo.write_atomic(_path, JSON.stringify({"v": VERSION, "lists": lists}))
 
 
 ## Ham veriyi (tüm dosya sözlüğü ya da yalnız `entries` dizisi) temiz, sıralı, en çok 10 girişe indirir.
@@ -156,10 +171,30 @@ static func format_date(unix: int, tz_bias_min: int) -> String:
 static func _valid_root(data: Variant) -> bool:
 	if not (data is Dictionary):
 		return false
-	var v: Variant = (data as Dictionary).get("v", null)
-	if not (v is int or v is float) or float(v) != float(VERSION):
+	var d: Dictionary = data
+	var v: Variant = d.get("v", null)
+	if not (v is int or v is float) or float(v) != floorf(float(v)):
 		return false
-	return (data as Dictionary).get("entries", null) is Array
+	if int(v) == V1:
+		return d.get("entries", null) is Array
+	return int(v) == VERSION and d.get("lists", null) is Dictionary
+
+
+## Bilinen ("mod:zorluk") anahtarın listesi mi: {"mode","diff"} ya da boş sözlük.
+static func _split_key(key: String) -> Dictionary:
+	var parts := key.split(":")
+	if parts.size() == 2 and RunProfiles.MODES.has(parts[0]) and RunProfiles.DIFFS.has(parts[1]):
+		return {"mode": parts[0], "diff": parts[1]}
+	return {}
+
+
+## Anahtar otoritedir: girişlerdeki mode/diff anahtardan yazılır.
+static func _with_names(key: String, list: Array) -> Array:
+	var names := _split_key(key)
+	var out: Array = []
+	for e: Dictionary in list:
+		out.append(e.merged(names))
+	return out
 
 
 ## Yeni girişin ekleneceği indeks: kendinden kesin kötü olan ilk girişin önü (eşitler önde kalır).
@@ -216,6 +251,32 @@ static func _int_of(v: Variant, clamp_big: bool) -> Variant:
 			return int(INT_LIMIT) if (clamp_big and f > 0.0) else null
 		return int(f)
 	return null
+
+
+## v2 `lists`: bilinen anahtarlar temizlenir (dizi değilse boş), bilinmeyenler ham saklanır.
+func _load_lists(raw: Dictionary) -> void:
+	for key: String in raw:
+		if _split_key(key).is_empty():
+			_unknown[key] = raw[key]
+		else:
+			_lists[key] = sanitize(raw[key])
+
+
+## v1 baytlarını `.v1.bak`'a (varsa `.v1.<unix>[-n].bak`'a, mevcut yedeğin üzerine yazmadan) atomik yazar, sonra v2'yi yazar.
+## Yedek yoksa göç iptal. v2 yazımı başarısızsa v1 dosyası sağlam kalır, göç sonraki açılışta yeniden denenir.
+func _migrate_v1(v1_text: String) -> void:
+	var bak := _path + ".v1.bak"
+	if FileAccess.file_exists(bak):
+		var stamp := int(Time.get_unix_time_from_system())
+		bak = "%s.v1.%d.bak" % [_path, stamp]
+		var n := 0
+		while FileAccess.file_exists(bak):
+			n += 1
+			bak = "%s.v1.%d-%d.bak" % [_path, stamp, n]
+	if not StoreIo.write_atomic(bak, v1_text):
+		_write_blocked = true
+		return
+	save()
 
 
 ## Bozuk dosyanın içeriğini tek yedek olarak saklar (önceki .bad üzerine yazılır). Boş içerik saklanmaz.
