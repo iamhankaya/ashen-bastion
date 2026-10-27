@@ -180,7 +180,8 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	rng_pickup.seed = _stream_seed(&"pickup")
 	# opts.pickups=false: doğuş yok (boş yapılandırma). Varsayılan true.
 	var pk_cfg: Dictionary = data.pickup_cfg if bool(opts.get("pickups", true)) else {}
-	pickup_director = PickupDirector.new(pk_cfg, rng_pickup, V21Sim.time_scale(run_profile))
+	pickup_director = PickupDirector.new(pk_cfg, rng_pickup)
+	pickup_director.scale_interval(V21Sim.time_scale(run_profile))
 	score = ScoreKeeper.new(data.score_table)
 	score.gained.connect(_on_score_gained)
 	score.streak_changed.connect(_on_streak_changed)

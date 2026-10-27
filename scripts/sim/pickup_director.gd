@@ -22,7 +22,7 @@ var _expired: PackedInt32Array = PackedInt32Array()
 
 
 ## cfg = GameData.pickup_cfg ({spawn, kinds}; opts.pickups=false iken {}), rng = GameSim.rng_pickup.
-func _init(cfg: Dictionary, rng: RandomNumberGenerator, time_scale: float = 1.0) -> void:
+func _init(cfg: Dictionary, rng: RandomNumberGenerator) -> void:
 	_cfg = cfg
 	_rng = rng
 	var sp: Variant = cfg.get("spawn", null)
@@ -31,7 +31,7 @@ func _init(cfg: Dictionary, rng: RandomNumberGenerator, time_scale: float = 1.0)
 		return
 	var spawn: Dictionary = sp
 	_first = _pair(spawn.get("first"), Vector2(30.0, 45.0))
-	_interval = _pair(spawn.get("interval"), Vector2(45.0, 60.0)) * time_scale  # v2.1 Hızlı: aralık ölçeklenir
+	_interval = _pair(spawn.get("interval"), Vector2(45.0, 60.0))
 	_dist = _pair(spawn.get("dist"), Vector2(450.0, 700.0))
 	_clearance = float(spawn.get("clearance", 40.0))
 	_life_steps = roundi(float(spawn.get("life", 25.0)) * 60.0)
@@ -44,6 +44,11 @@ func _init(cfg: Dictionary, rng: RandomNumberGenerator, time_scale: float = 1.0)
 		return
 	armed = true
 	next_step = _draw_steps(_first)
+
+
+## v2.1 Hızlı: doğuş aralığı `time_scale` ile çarpılır (imza sözleşmesi _init(cfg, rng) sabit; `_first` ölçeklenmez).
+func scale_interval(time_scale: float) -> void:
+	_interval *= time_scale
 
 
 ## Ömür dolumu + doğuş (GameSim._phase_spawn).
