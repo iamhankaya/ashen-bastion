@@ -35,6 +35,14 @@ Not: `test_acc_v21_endless.gd` en düşük zaman 2000 yerine 1300 (1200 = ilk Lo
 `test/fixtures/profile_bad_*/run_profiles.json` `gen_profile_fixtures.py` ile yeniden üretildi (bozuk varyantlar gerçek dosyadan türer).
 `test/unit/test_v21_contract_profiles.gd` değişmedi (Zor ve aralık sabitleri etkilenmedi).
 
+## UI testi (VLAD yetkisi, 23:20)
+
+| Dosya:satır | Eski | Yeni |
+|---|---|---|
+| `test/unit/test_v21_a_run_ui.gd:90` | `["Düşman hasarı", "−%25"]` (Normal) | `"−%40"` |
+| `test/unit/test_v21_a_run_ui.gd:208` | `["−%15", "−%25", "−%15", "aynı"]` | `["−%15", "−%40", "−%15", "aynı"]` |
+| `test/unit/test_v21_a_run_ui.gd:211` | `["−%30", "−%45", "−%30", "+%25"]` (Kolay) | `["−%30", "−%60", "−%40", "+%25"]` |
+
 ## Yerelde koşulamayan
 
-Godot yok: değişen GUT testleri (`test_acc_v21_profile`, `test_v21_contract_sim`, `test_v21_s_sim`, `test_acc_v21_endless`) CI'da koşar. UI testi `test/unit/test_v21_a_run_ui.gd:90,208,211` JSON'dan türeyen ayrıntıları da sabitler (Normal hasar −%25 → −%40; Kolay hasar −%45 → −%60, Kolay sayı −%30 → −%40); dosya yetki listesinde olmadığı için DEĞİŞTİRİLMEDİ, VLAD'a soruldu.
+Godot yok: değişen GUT testleri (`test_acc_v21_profile`, `test_v21_contract_sim`, `test_v21_s_sim`, `test_acc_v21_endless`, `test_v21_a_run_ui`) CI'da koşar.

@@ -87,7 +87,7 @@ func test_a3_detail_rows_show_deltas_from_the_difficulty_table() -> void:
 		RunStrip.detail_rows(&"normal", cfg),
 		[
 			["Düşman canı", "−%15"],
-			["Düşman hasarı", "−%25"],
+			["Düşman hasarı", "−%40"],
 			["Düşman sayısı", "−%15"],
 			["Kazanılan XP", "aynı"]
 		]
@@ -205,10 +205,10 @@ func test_a12_selection_has_a_seal_and_a_spoken_state_not_just_a_colour() -> voi
 func test_a13_detail_and_rule_panels_follow_the_selection() -> void:
 	var s := _screen()
 	await _settle()
-	assert_eq(_detail_values(s), ["−%15", "−%25", "−%15", "aynı"], "varsayılan Normal/Normal")
+	assert_eq(_detail_values(s), ["−%15", "−%40", "−%15", "aynı"], "varsayılan Normal/Normal")
 	assert_eq(s.rules_panel.get_child(0).get_child_count(), 1, "yalnız nötr satır")
 	s.diff_buttons[&"easy"].pressed.emit()
-	assert_eq(_detail_values(s), ["−%30", "−%45", "−%30", "+%25"])
+	assert_eq(_detail_values(s), ["−%30", "−%60", "−%40", "+%25"])
 	assert_eq(s.rules_panel.get_child(0).get_child_count(), 2, "Kolay uyarısı eklendi")
 	assert_true(s.rules_panel.accessibility_name.contains("Uyarı: Kolay'da Lord başarımları"))
 	s.mode_buttons[&"endless"].pressed.emit()
