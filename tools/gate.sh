@@ -181,6 +181,7 @@ fi
 GUT_CONFIG="res://.gutconfig.json"; GUT_LOG=.gate/gut.log; JUNIT=.gate/junit.xml
 if [ "$PART" = "gut" ]; then
   GUT_CONFIG="res://.gate/gutconfig-$SHARD_K.json"; GUT_LOG=".gate/gut-$SHARD_K.log"; JUNIT=".gate/junit-$SHARD_K.xml"
+  python3 tools/ci/shard.py check-dirs || fail "[GUT ERROR] .gutconfig.json'da olmayan test dizini"
   python3 tools/ci/shard.py config "$SHARD_K" "$SHARD_N" ".gate/gutconfig-$SHARD_K.json" --junit "res://$JUNIT" || fail "shard.py config"
   echo "parça $SHARD_K/$SHARD_N: $(python3 tools/ci/shard.py assign "$SHARD_K" "$SHARD_N" | wc -l) test dosyası"
 elif [ $FAST -eq 1 ]; then

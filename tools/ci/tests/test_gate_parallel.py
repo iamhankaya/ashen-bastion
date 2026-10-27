@@ -126,3 +126,21 @@ def test_gate_sh_uses_parallel_runner_for_full_local_gate():
 def test_gate_jobs_validated():
     r = subprocess.run(["bash", "tools/gate.sh"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, GATE_JOBS="abc"))
     assert r.returncode == 2 and "GATE_JOBS" in r.stderr
+
+
+def test_check_dirs_rejects_missing_gutconfig_dir(tmp_path):
+    # selftest "GUT ERROR": .gutconfig.json'a olmayan dizin eklenir. Tek süreçte GUT [GUT ERROR] yazar; parçalı yolda dirs
+    # boşaltıldığı için o hata oluşmaz, bu yüzden parçalamadan önce açıkça denetlenir.
+    cfg = tmp_path / "gutconfig.json"
+    cfg.write_text(json.dumps({"dirs": ["res://test/unit", "res://test/yok_boyle_dizin"]}), encoding="utf-8")
+    tool = ROOT / "tools" / "ci" / "shard.py"
+    r = subprocess.run([sys.executable, str(tool), "check-dirs", str(cfg)], capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 1 and "yok_boyle_dizin" in r.stderr
+    cfg.write_text(json.dumps({"dirs": ["res://test/unit", "res://test/acceptance"]}), encoding="utf-8")
+    r = subprocess.run([sys.executable, str(tool), "check-dirs", str(cfg)], capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 0, r.stderr
+
+
+def test_runner_and_gut_part_check_dirs():
+    assert "shard.py check-dirs" in SCRIPT.read_text(encoding="utf-8")
+    assert "shard.py check-dirs" in GATE

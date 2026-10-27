@@ -6,6 +6,8 @@
   shard.py config K N ÇIKTI.json      .gutconfig.json'un kopyası: dirs boş, tests = K. parçanın dosyaları, junit yolu
                                       verilmişse (--junit res://...) o yola yazılır
   shard.py config-files LİSTE ÇIKTI.json  hızlı mod: LİSTE'deki dosyalar için aynı yapılandırma (junit yolu .gutconfig.json'dakidir)
+  shard.py check-dirs [CONFIG.json]   .gutconfig.json'daki her dizin var olmalı (parçalı yol dirs'i boşalttığı için GUT'un
+                                      "olmayan dizin" [GUT ERROR]'u oluşmaz; burada açıkça kırmızı, F-066)
   shard.py merge ÇIKTI.xml G1.xml...  parça JUnit dosyalarını tek dosyada birleştirir (testsuite'ler eklenir)
   shard.py check-merge [--require-all] K1.xml...
                                       her test dosyası en çok bir parçada, bilinmeyen dosya yok; --require-all ile ayrıca
@@ -102,6 +104,13 @@ def main(argv: list[str]) -> int:
         cfg["tests"] = ["res://" + f for f in Path(argv[2]).read_text(encoding="utf-8").split()]
         Path(argv[3]).write_text(json.dumps(cfg, indent=2), encoding="utf-8")
         return 0
+    if cmd == "check-dirs":
+        path = Path(argv[2]) if len(argv) > 2 else ROOT / ".gutconfig.json"
+        cfg = json.loads(path.read_text(encoding="utf-8"))
+        gone = [d for d in cfg["dirs"] if not (ROOT / d.removeprefix("res://")).is_dir()]
+        for d in gone:
+            print(f"SHARD_ERROR: .gutconfig.json dizini yok: {d}", file=sys.stderr)
+        return 1 if gone else 0
     if cmd == "merge":
         ET.ElementTree(merge(argv[3:])).write(argv[2], encoding="utf-8", xml_declaration=True)
         return 0

@@ -16,6 +16,8 @@ PY="${PYTHON:-python3}"
 GATE_DIR="${GATE_DIR:-.gate}"
 mkdir -p "$GATE_DIR"
 
+"$PY" tools/ci/shard.py check-dirs || { echo "GATE FAIL: [GUT ERROR] .gutconfig.json'da olmayan test dizini" >&2; exit 1; }
+
 pids=()
 for k in $(seq 1 "$N"); do
   "$PY" tools/ci/shard.py config "$k" "$N" "$GATE_DIR/gutconfig-$k.json" --junit "res://$GATE_DIR/junit-$k.xml" || { echo "GATE FAIL: shard.py config $k/$N" >&2; exit 1; }
