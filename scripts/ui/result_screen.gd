@@ -539,6 +539,7 @@ func _fill_record() -> void:
 	record_band.visible = record_kind == &"record"
 	record_pill.visible = record_kind == &"top10"
 	record_note.text = ""
+	record_note.accessibility_name = ""
 	match record_kind:
 		&"record":
 			var prev := int(last_record.get("previous_best", 0))

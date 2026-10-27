@@ -312,6 +312,7 @@ func _build() -> void:
 	boss_band.visible = false
 	add_child(boss_band)
 	milestone_band = MilestoneBand.new()
+	milestone_band.set_safe_top(_safe_top)
 	add_child(milestone_band)
 	_build_endless_label()
 
@@ -361,7 +362,8 @@ func apply_safe_area(extra: Variant = null) -> void:
 	safe.offset_bottom = -e.w
 	_safe_top = e.y
 	_shift_boss_band()
-	milestone_band.set_safe_top(e.y)
+	if milestone_band != null:
+		milestone_band.set_safe_top(e.y)
 	if endless_label != null:
 		endless_label.position.y = ENDLESS_LABEL_Y + e.y
 
