@@ -227,3 +227,30 @@ func test_a62_chips_keep_24_px_from_the_actions_at_1x_and_2x() -> void:
 		var limit := SCREEN.y - UiKit.DEFAULT_BOTTOM + 0.5
 		assert_lte(p.column.get_global_rect().end.y, limit, "büyük=%s: sütun ekrana sığar" % big)
 		assert_eq(p.gap.custom_minimum_size.y, PauseScreen.GAP_H, "pay 0: eylemler eski yerinde")
+
+
+# --- duraklatma: taş dil (U7) ------------------------------------------------------------------------------------
+
+
+func _is_purple(sb: StyleBox) -> bool:
+	return sb is StyleBoxFlat and (sb as StyleBoxFlat).bg_color.is_equal_approx(Color(0.1843, 0.1373, 0.2588, 1))
+
+
+# MOR_/PanelRaised kaynakta ya da beceri paneli/ikincil düğmelerde varken kırmızı.
+func test_a63_pause_uses_stone_not_purple() -> void:
+	var src := FileAccess.get_file_as_string("res://scripts/ui/pause_screen.gd")
+	assert_false(src.contains("MOR_"), "mor ailesi kalmamalı")
+	assert_false(src.contains("PanelRaised"), "mor PanelRaised kalmamalı")
+	var p := await _pause()
+	var panel := p.active_slots[0].get_parent().get_parent().get_parent() as PanelContainer
+	var psb := panel.get_theme_stylebox(&"panel") as StyleBoxFlat
+	assert_not_null(psb, "beceri paneli düz kutu")
+	assert_eq(psb.bg_color, UiKit.TAS_800, "beceri paneli taş")
+	assert_eq(psb.border_color, UiKit.BRONZ_700)
+	for b in [p.sound_button, p.vibration_button, p.settings_button, p.restart_button, p.menu_button]:
+		for st in [&"normal", &"hover", &"pressed"]:
+			assert_false(_is_purple(b.get_theme_stylebox(st)), "%s %s mor" % [b.name, st])
+			assert_true(b.has_theme_stylebox_override(st), "%s %s taş geçersiz kılma" % [b.name, st])
+	var dsb := p.dialog.get_child(1).get_theme_stylebox(&"panel") as StyleBoxFlat
+	assert_eq(dsb.bg_color, UiKit.TAS_800, "onay diyaloğu taş")
+	assert_true(p.resume_button.theme_type_variation != &"ButtonSecondary", "DEVAM ET birincil kalır")
