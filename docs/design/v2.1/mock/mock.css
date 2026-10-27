@@ -1,0 +1,28 @@
+@import url("../../v2.0.3/mock/mock.css");
+/* v2.1: koşu seçimi bileşenleri. Yüzey/renk token'ları v2.0.3 ile aynı; yeni token'lar tokens-v2.1.md. */
+.sel{border:solid transparent;border-width:28px;border-image:url(../../v2.0.3/frames/levha.svg) 40 fill/28px/0 stretch}
+.sel.on{border-image-source:url(../../v2.0.3/frames/dugme-birincil.svg)}
+.sel.lk{opacity:1}
+.sel .in2{margin:-12px;display:flex;align-items:center;gap:26px}
+.mrow .nm{font:700 44px/50px Cinzel;letter-spacing:.06em;color:var(--k1)}
+.mrow .ds{font:400 28px/34px Inter;color:var(--k3)}
+.mrow .du{margin-left:auto;text-align:right;font:700 38px Cinzel;color:var(--k1);flex:none;min-width:130px}
+.mrow .du small{display:block;font:600 26px Inter;color:var(--k3)}
+.dcard .nm{font:700 40px/46px Cinzel;letter-spacing:.06em;color:var(--k1)}
+.dcard .ds{font:400 26px/32px Inter;color:var(--k3)}
+.tag{position:absolute;right:-6px;top:-6px;width:56px;height:56px}
+.korline{position:absolute;left:14px;right:14px;bottom:10px;height:6px;background:var(--am)}
+.tabs{display:flex;gap:12px}
+.tab{flex:1;height:132px;position:relative;display:flex;align-items:center;justify-content:center;border:solid transparent;border-width:30px;border-image:url(../../v2.0.3/frames/dugme-dolu.svg) 40 fill/30px/0 stretch;font:700 34px Cinzel;letter-spacing:.08em;color:var(--k3);text-shadow:0 3px 0 #000}
+.tab.on{border-image-source:url(../../v2.0.3/frames/dugme-birincil.svg);color:var(--k1);font-weight:900}
+.tab .in3{margin:-16px;display:flex;align-items:center;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:12px;height:48px;padding:0 18px;border:3px solid var(--b5);background:rgba(12,9,8,.5);font:700 28px Inter;letter-spacing:.06em;color:var(--k1)}
+.rl{display:flex;gap:20px;align-items:flex-start}
+.hrow{position:absolute;left:72px;right:72px;height:146px}
+.hrow .sc{position:absolute;left:140px;top:14px;font:700 56px/64px Cinzel;color:var(--k1)}
+.hrow .mt{position:absolute;left:140px;top:84px;display:flex;gap:14px;align-items:center;font:600 26px Inter;color:var(--k3)}
+.hrow .dt{position:absolute;right:26px;top:54px;font:600 26px Inter;color:var(--k3);text-align:right}
+.hrow .rk{position:absolute;left:24px;top:31px;width:84px;height:84px;border-radius:50%;border:6px solid var(--b7);background:rgba(12,9,8,.7);font:700 44px/72px Cinzel;text-align:center}
+.stat{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px}
+.stat b{font:700 48px Cinzel;color:var(--k1)}.stat span{font:600 26px Inter;color:var(--k3)}
+.abs.b,.abs.tab,.abs.tabs{position:absolute}
