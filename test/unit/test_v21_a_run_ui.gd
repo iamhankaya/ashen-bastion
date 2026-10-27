@@ -242,7 +242,7 @@ func test_a15_big_font_stacks_cards_vertically_and_keeps_everything_inside() -> 
 	var prev := -1.0
 	for d in [&"easy", &"normal", &"hard"]:
 		var b: Button = s.diff_buttons[d]
-		assert_almost_eq(b.size.x, 936.0, 1.0, "kart tam genişlik")
+		assert_almost_eq(b.size.x, 936.0, 12.0, "kart tam genişlik (kaydırma çubuğu payı)")
 		assert_almost_eq(b.size.y, 260.0, 0.5)
 		assert_gt(b.global_position.y, prev, "dikey sıra")
 		prev = b.global_position.y

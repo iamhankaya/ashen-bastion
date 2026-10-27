@@ -31,6 +31,18 @@ const DETAIL_ROWS := [
 	["Düşman sayısı", "spawn_density"],
 	["Kazanılan XP", "xp"],
 ]
+## TalkBack için küçük harfli metinler (to_lower Türkçe i/İ tuzağı nedeniyle yasak).
+const DIFF_SPOKEN := {
+	&"easy": "daha az ve zayıf düşman",
+	&"normal": "dengeli koşu",
+	&"hard": "yoğun ve sert düşman",
+}
+const DETAIL_SPOKEN := {
+	"enemy_hp": "düşman canı",
+	"enemy_dmg": "düşman hasarı",
+	"spawn_density": "düşman sayısı",
+	"xp": "kazanılan XP",
+}
 const RULE_BASE := "Skorun bu mod ve zorluğun kendi listesine yazılır."
 const RULE_EASY := "Kolay'da Lord başarımları ve toplam sayaçlar ilerlemez."
 const RULE_ENDLESS := "İlk Lord'u devirmek zaferdir; koşu sen ölene kadar sürer."
@@ -334,7 +346,7 @@ static func diff_a11y(diff: StringName, selected: bool) -> String:
 		% [
 			DIFF_TITLES.get(diff, ""),
 			spoken(int(SHIELDS.get(diff, 0))),
-			str(DIFF_DESC.get(diff, "")).rstrip(".").to_lower(),
+			DIFF_SPOKEN.get(diff, ""),
 			"seçili" if selected else "seçili değil",
 		]
 	)
@@ -345,7 +357,7 @@ static func detail_a11y(diff: StringName, cfg: Dictionary) -> String:
 	var d: Dictionary = cfg.get("difficulties", {}).get(String(diff), {})
 	for r in DETAIL_ROWS:
 		var pct := roundi((float(d.get(r[1], 1.0)) - 1.0) * 100.0)
-		var what := String(r[0]).substr(0, 1).to_lower() + String(r[0]).substr(1)
+		var what: String = DETAIL_SPOKEN[r[1]]
 		if pct == 0:
 			parts.append("%s %s" % [what, "aynı" if r[1] == "xp" else "tam"])
 		else:
