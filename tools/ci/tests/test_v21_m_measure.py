@@ -156,3 +156,37 @@ def test_m16_balance_workflow_is_dispatch_only_and_splits_into_100_seed_jobs():
     wf = _src(".github/workflows/balance.yml")
     assert re.search(r"^on:\s*\n\s+workflow_dispatch:", wf, re.M) and "schedule:" not in wf and "push:" not in wf
     assert "merge_rows.py" in wf and "mid_all.sh" in wf
+
+
+# --- review düzeltmeleri ---
+
+
+def test_m17_endless_milestone_counts_as_win_in_reports():
+    rows = [dict(lord_row(1, True, mode="endless"), won=False, milestone_won=True), lord_row(2, False, mode="endless")]
+    assert mr.cell_stats(rows)["win_pct"] == 50.0
+    d = mr.diff_ci(rows[:1], rows[1:], mr.is_win, boot=50)
+    assert d["diff"] == 1.0
+
+
+def test_m18_level_ratio_ignores_quick_runs_that_died_before_the_lord():
+    quick = [row("quick", "normal", s, level_at_end=14, time=600.0) for s in range(1, 4)] + [
+        row("quick", "normal", 9, level_at_end=3, time=200.0)]
+    normal = [row("normal", "normal", s, level_at_1200=20) for s in range(1, 4)]
+    assert mr.level_ratio(quick, normal) == 0.7
+
+
+def test_m19_sanity_only_looks_at_strong_lord_rows():
+    rows = [lord_row(s, False, hp_end=0.2) for s in range(1, 6)] + [
+        dict(lord_row(s, False, hp_end=1.0), policy="kite") for s in range(6, 16)]
+    assert mr.sanity(rows)["pass"] is True
+
+
+def test_m20_compare_cli_reports_duplicate_seed_as_input_error(tmp_path, capsys):
+    f = tmp_path / "a.jsonl"
+    f.write_text(json.dumps(row(policy="strong", seed=1)) + "\n" + json.dumps(row(policy="strong", seed=1)) + "\n", encoding="utf-8")
+    assert cb.main([str(f), str(f)]) == 2
+
+
+def test_m21_mid_run_exits_nonzero_on_profile_error():
+    src = _src("tools/balance/mid_run.gd")
+    assert 'result.has("error")' in src and "quit(1)" in src

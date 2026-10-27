@@ -271,8 +271,12 @@ def main(argv=None) -> int:
     if not base or not new:
         print("girdi boş (karakter süzgeci?)", file=sys.stderr)
         return 2
-    res = compare(base, new, noise, nodyn, tuple(p for p in a.gate_policies.split(",") if p), tuple(p for p in a.info_policies.split(",") if p),
-                  a.boot, a.seed, a.band, a.noise_limit, base_cell, new_cell)
+    try:
+        res = compare(base, new, noise, nodyn, tuple(p for p in a.gate_policies.split(",") if p), tuple(p for p in a.info_policies.split(",") if p),
+                      a.boot, a.seed, a.band, a.noise_limit, base_cell, new_cell)
+    except ValueError as e:
+        print(f"girdi hatası: {e}", file=sys.stderr)
+        return 2
     md = render(res, os.path.basename(a.base.rstrip("/")), os.path.basename(a.new.rstrip("/")))
     print(md)
     if a.out:

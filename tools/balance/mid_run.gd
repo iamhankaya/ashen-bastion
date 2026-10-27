@@ -72,7 +72,12 @@ func _initialize() -> void:
 	var diff := String(args[6]) if args.size() > 6 else "normal"
 	var lines: PackedStringArray = []
 	for k in n:
-		lines.append(JSON.stringify(run_one(first + k, policy, character, mode, diff)))
+		var result := run_one(first + k, policy, character, mode, diff)
+		if result.has("error"):
+			printerr(result["error"])
+			quit(1)
+			return
+		lines.append(JSON.stringify(result))
 		print(lines[-1])
 	if out_path != "":
 		var f := FileAccess.open(out_path, FileAccess.WRITE)

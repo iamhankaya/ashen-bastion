@@ -35,6 +35,11 @@ def _boot_ci(vals: list[float], boot: int = 2000, seed: int = 1) -> tuple[float,
     return float(np.percentile(m, 2.5)), float(np.percentile(m, 97.5))
 
 
+def is_win(r: dict) -> float:
+    """Kazanma: sim WON ya da Sonsuz'da ilk Lord'un öldürülmesi (milestone_won; Sonsuz koşusu ölümle biter)."""
+    return 1.0 if r.get("won") or r.get("milestone_won") else 0.0
+
+
 def diff_ci(a: list[dict], b: list[dict], fn, boot: int = 2000, seed: int = 1) -> dict:
     """mean(fn(a)) - mean(fn(b)) ve bağımsız bootstrap %95 GA."""
     xa, xb = np.array([fn(r) for r in a], dtype=float), np.array([fn(r) for r in b], dtype=float)
@@ -48,7 +53,7 @@ def diff_ci(a: list[dict], b: list[dict], fn, boot: int = 2000, seed: int = 1) -
 def cell_stats(rows: list[dict]) -> dict:
     reached = [r for r in rows if r.get("reached_lord")]
     killed = [r for r in reached if r.get("lord_end") == "killed"]
-    won = [1.0 if r.get("won") else 0.0 for r in rows]
+    won = [is_win(r) for r in rows]
     return {
         "n": len(rows),
         "win_pct": 100.0 * sum(won) / len(rows) if rows else 0.0,
@@ -61,7 +66,8 @@ def cell_stats(rows: list[dict]) -> dict:
 
 
 def level_ratio(quick: list[dict], normal: list[dict]) -> float | None:
-    q = [r["level_at_end"] for r in quick if r.get("level_at_end", -1) >= 0]
+    # İki taraf da hedef süreye ulaşan koşular: erken ölenler medyanı aşağı çekip oranı yapay küçültmesin.
+    q = [r["level_at_end"] for r in quick if r.get("level_at_end", -1) >= 0 and r["time"] >= mid_rows.consts("quick")["cap"] - 1.0]
     n = [r["level_at_1200"] for r in normal if r.get("level_at_1200", -1) >= 0]
     if not q or not n:
         return None
@@ -70,7 +76,7 @@ def level_ratio(quick: list[dict], normal: list[dict]) -> float | None:
 
 def sanity(rows: list[dict]) -> dict:
     """Kolay'da Lord'a ulaşanların medyan lord_hp_frac_end <= 0,5 mi (strong_lord gerçekten vuruyor mu)."""
-    v = [r["lord_hp_frac_end"] for r in rows if r.get("reached_lord") and r.get("lord_hp_frac_end", -1.0) >= 0]
+    v = [r["lord_hp_frac_end"] for r in rows if r["policy"] == "strong_lord" and r.get("reached_lord") and r.get("lord_hp_frac_end", -1.0) >= 0]
     if not v:
         return {"pass": None, "median": None, "n": 0}
     med = st.median(v)
@@ -153,7 +159,7 @@ def main(argv=None) -> int:
         if not ra or not rb:
             print("fark: bir hücre boş", file=sys.stderr)
             return 2
-        for name, fn in (("kazanma", lambda r: 1.0 if r.get("won") else 0.0), ("Lord'a ulaşma", lambda r: 1.0 if r.get("reached_lord") else 0.0)):
+        for name, fn in (("kazanma", is_win), ("Lord'a ulaşma", lambda r: 1.0 if r.get("reached_lord") else 0.0)):
             d = diff_ci(ra, rb, fn)
             print(f"\nfark {a.diff[0]} - {a.diff[1]} {name}: {d['diff'] * 100:+.1f} puan (%95 GA {d['lo'] * 100:+.1f}…{d['hi'] * 100:+.1f})")
     if lr:

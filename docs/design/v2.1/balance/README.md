@@ -30,4 +30,6 @@ Actions → **balance** → *Run workflow* (varsayılan `first_seed=3001`, `poli
 sonra `merge` işi `baseline-jsonl` artifact'ını üretir (`baseline.jsonl`, `report.md`). `baseline.jsonl` bu dizine
 `baseline-lord-A400.jsonl` adıyla commit'lenir. Aynısı yerelde: `POLICIES=strong_lord CHARS=gunslinger bash tools/balance/mid_all.sh .balance/lord 3001 400`
 ardından `python3 tools/balance/merge_rows.py .balance/lord docs/design/v2.1/balance/baseline-lord-A400.jsonl`.
+**Uyarı:** Hızlı/Sonsuz sim davranışı U2'de açılır (C'de profil okunur ama uygulanmaz; Sonsuz'da Lord ancak U2 sonrası doğar). U2'den önce
+mod/zorluk matrisi koşulmaz (U1b U1a+U2 sonrasıdır). Sonsuz'da kazanma = `milestone_won` (ilk Lord ölümü), raporlar bunu sayar.
 Ham çıktı klasörü `.balance/` `.gitignore`'dadır. Matris (mod × zorluk × politika) U1b'dedir.
