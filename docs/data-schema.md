@@ -383,7 +383,19 @@ Tek kaynak: `data/run_profiles.json` (dosya yoksa HATA, yerleşik varsayılan yo
 
 ### Kayıt, skor ve başarım (U3)
 
-(U3 doldurur: `highscores.json` v2 biçimi ve göç, `.v1.bak`, `AchievementRules` enjeksiyonu.)
+- `highscores.json` v2: `{"v":2,"lists":{"<mod>:<zorluk>":[{"score","time","won","level","unix","mode","diff"}]}}`. Liste anahtarı
+  otoritedir (girişteki `mode`/`diff` anahtara göre yeniden yazılır); bilinmeyen anahtarlı listeler silinmeden saklanır, gösterilmez.
+  Bozuk dosya, `v` sayı değil/bilinmeyen, `lists` yok/sözlük değil: `.bad` kopyası + boş liste. Giriş sayıları `Highscores`
+  sınırlarıyla temizlenir; >10 giriş kırpılır, eşit skorda eski giriş önde.
+- v1 → v2 göçü (`load_file`): v1 girişleri `normal:normal`'a gider. Sıra: (1) v1 baytları `<yol>.v1.bak`'a atomik yazılır; varsa üzerine
+  yazılmaz, `<yol>.v1.<unix>[-n].bak` kullanılır; (2) yedek yazılamazsa göç İPTAL: v1 dosyası dokunulmaz, oturum bellekte sürer,
+  `save()` v2 yazmaz (oturum skorları kaybolabilir), sonraki açılışta göç yeniden denenir; (3) v2 `StoreIo.write_atomic` ile yazılır, hata
+  olursa v1 sağlam kalır ve göç sonraki açılışta tekrar denenir. `.bad`/`.tmp`/`.v1.bak` enjekte edilen yoldan türer. Eski APK v2 dosyasını
+  bozuk sayar (`.bad`); `.v1.bak` korunur (kabul edilen risk).
+- `AchievementRules` tracker'a kurulurken enjekte edilir (`AchievementTracker.new(..., rules, diff)`; `V21Runs.achievement_rules()` ve
+  `V21Runs.diff_of(sim)`). Kolay'da Lord'a bağlı kademeler (`lord_bound_tier_ids`) olay anında verilmez (kademeler ardışık verildiğinden
+  tracker ilk kapalı kademede durur); toplamlardan yalnız `runs`/`play_secs` artar (`wins`, `kills`, `boss_kills`, `chars5` artmaz).
+  Koşu içi en iyiler her zorlukta işler. Sonsuz'da yalnız ilk Lord ölümü `wins` sayar (`finish(won)` koşu başına bir kez).
 
 ### Arayüz (U4a/U4b)
 

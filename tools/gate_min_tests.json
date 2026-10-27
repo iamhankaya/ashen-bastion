@@ -228,6 +228,8 @@
   "test/unit/test_v21_contract_profiles.gd": 15,
   "test/unit/test_v21_contract_sim.gd": 21,
   "test/unit/test_v21_contract_store.gd": 18,
+  "test/unit/test_v21_k_achievements.gd": 9,
+  "test/unit/test_v21_k_highscores.gd": 17,
   "test/unit/test_v2_achievements.gd": 21,
   "test/unit/test_v2_characters.gd": 7,
   "test/unit/test_v2_flow.gd": 23,
