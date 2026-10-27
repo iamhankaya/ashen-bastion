@@ -145,8 +145,8 @@ func test_a6_talkback_names_match_the_design() -> void:
 	assert_eq(
 		RunStrip.detail_a11y(&"easy", cfg),
 		(
-			"Kolay zorluk ayrıntıları: düşman canı yüzde otuz az, düşman hasarı yüzde kırk beş az, "
-			+ "düşman sayısı yüzde otuz az, kazanılan XP yüzde yirmi beş fazla."
+			"Kolay zorluk ayrıntıları: düşman canı yüzde otuz az, düşman hasarı yüzde altmış az, "
+			+ "düşman sayısı yüzde kırk az, kazanılan XP yüzde yirmi beş fazla."
 		)
 	)
 

@@ -243,7 +243,7 @@ func test_s20_rate_row_scales_with_density() -> void:
 	)
 	# Kayan nokta birikimi bir doğuşu iki yana kaydırabilir: ±1 payı.
 	assert_between(_spawn_steps(_legacy(), w, 10), 9, 10)
-	assert_between(_spawn_steps(_sim(&"normal", &"easy"), w, 10), 6, 7, "0,70")
+	assert_between(_spawn_steps(_sim(&"normal", &"easy"), w, 10), 5, 6, "0,60")
 
 
 func test_s21_rate_mult_scales_only_rate_rows() -> void:
@@ -274,11 +274,11 @@ func test_s22_group_and_burst_counts_scale_and_never_drop_below_one() -> void:
 			}
 		]
 	)
-	assert_eq(_spawn_steps(_sim(&"normal", &"easy"), g, 1), 7)
+	assert_eq(_spawn_steps(_sim(&"normal", &"easy"), g, 1), 6)
 	var b := _rows(
 		[{"kind": "burst", "type": "curumus_piyade", "at": 0, "count": 10, "ring": true}]
 	)
-	assert_eq(_spawn_steps(_sim(&"normal", &"easy"), b, 1), 7)
+	assert_eq(_spawn_steps(_sim(&"normal", &"easy"), b, 1), 6)
 	var cfg := V21Kit.mutated(V21Kit.cfg(), "difficulties.easy.spawn_density", 0.1)
 	var tiny := _tough(
 		GameSim.new(

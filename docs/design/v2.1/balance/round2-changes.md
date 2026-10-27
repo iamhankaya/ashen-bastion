@@ -43,6 +43,15 @@ Not: `test_acc_v21_endless.gd` en düşük zaman 2000 yerine 1300 (1200 = ilk Lo
 | `test/unit/test_v21_a_run_ui.gd:208` | `["−%15", "−%25", "−%15", "aynı"]` | `["−%15", "−%40", "−%15", "aynı"]` |
 | `test/unit/test_v21_a_run_ui.gd:211` | `["−%30", "−%45", "−%30", "+%25"]` (Kolay) | `["−%30", "−%60", "−%40", "+%25"]` |
 
+## CI 40578014223 düzeltmesi (VLAD yetkisi, 23:50)
+
+| Dosya:satır | Eski | Yeni |
+|---|---|---|
+| `test/unit/test_v21_s_sim.gd:246` (`test_s20`) | `assert_between(..., 6, 7, "0,70")` | `5, 6, "0,60"` (60/dk x 10 sn x 0,60 = 6, ±1 payı) |
+| `test/unit/test_v21_s_sim.gd:277` (`test_s22`, grup) | `assert_eq(..., 7)` | `6` (10 x 0,60) |
+| `test/unit/test_v21_s_sim.gd:281` (`test_s22`, patlama) | `assert_eq(..., 7)` | `6` (10 x 0,60) |
+| `test/unit/test_v21_a_run_ui.gd:148-149` (`test_a6`) | Kolay TalkBack: hasar 'yüzde kırk beş az', sayı 'yüzde otuz az' | hasar 'yüzde altmış az', sayı 'yüzde kırk az' |
+
 ## Yerelde koşulamayan
 
 Godot yok: değişen GUT testleri (`test_acc_v21_profile`, `test_v21_contract_sim`, `test_v21_s_sim`, `test_acc_v21_endless`, `test_v21_a_run_ui`) CI'da koşar.
