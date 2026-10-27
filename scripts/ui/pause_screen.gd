@@ -87,6 +87,7 @@ func _build() -> void:
 
 	var panel := PanelContainer.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
 	var pv := VBoxContainer.new()
 	pv.add_theme_constant_override(&"separation", 18)
 	pv.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -111,11 +112,11 @@ func _build() -> void:
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override(&"separation", 27)
-	sound_button = UiKit.button("", &"secondary")
+	sound_button = _stone_button("")
 	sound_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sound_button.custom_minimum_size.x = 454.0
 	sound_button.pressed.connect(_on_sound)
-	vibration_button = UiKit.button("", &"secondary")
+	vibration_button = _stone_button("")
 	vibration_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vibration_button.custom_minimum_size.x = 454.0
 	vibration_button.pressed.connect(_on_vibration)
@@ -123,14 +124,14 @@ func _build() -> void:
 	row.add_child(vibration_button)
 	col.add_child(row)
 
-	settings_button = UiKit.button("AYARLAR", &"secondary")
+	settings_button = _stone_button("AYARLAR")
 	settings_button.pressed.connect(func() -> void: settings_requested.emit())
 	col.add_child(settings_button)
 
-	restart_button = UiKit.button("BAŞTAN BAŞLA", &"secondary")
+	restart_button = _stone_button("BAŞTAN BAŞLA")
 	restart_button.pressed.connect(open_confirm.bind(Confirm.RESTART))
 	col.add_child(restart_button)
-	menu_button = UiKit.button("ANA MENÜ", &"danger")
+	menu_button = _stone_button("ANA MENÜ", true)
 	menu_button.pressed.connect(open_confirm.bind(Confirm.MENU))
 	col.add_child(menu_button)
 
@@ -164,6 +165,25 @@ func apply_safe_area(extra: Variant = null) -> void:
 	)
 
 
+## İkincil düğme taş dilde (DESIGN v2.1, skor GERİ kalıbı): tema `ButtonSecondary` mordur, yalnız bu ekranda geçersiz kılınır.
+## Tehlikeli eylem (ANA MENÜ) taş zemin + bordo çerçeve.
+func _stone_button(text: String, danger: bool = false) -> Button:
+	var b := UiKit.button(text, &"secondary")
+	for st in [&"normal", &"hover"]:
+		b.add_theme_stylebox_override(st, _stone_style("dugme-dolu", danger))
+	b.add_theme_stylebox_override(&"pressed", _stone_style("dugme-basili", danger))
+	return b
+
+
+func _stone_style(skin: String, danger: bool) -> StyleBox:
+	if not danger:
+		return UiKit.skin_box(skin)
+	var sb := UiKit.stylebox(UiKit.TAS_600, UiKit.BORDO_400, 5, 18)
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		sb.set_content_margin(side, 20.0)
+	return sb
+
+
 func _build_dialog() -> void:
 	dialog = Control.new()
 	dialog.name = "Dialog"
@@ -175,7 +195,7 @@ func _build_dialog() -> void:
 	UiKit.fill(dim)
 	dialog.add_child(dim)
 	var panel := PanelContainer.new()
-	panel.theme_type_variation = &"PanelRaised"
+	panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
 	panel.anchor_left = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_top = 0.5
@@ -193,7 +213,7 @@ func _build_dialog() -> void:
 	dialog_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dialog_text.custom_minimum_size = Vector2(BTN_W - 90.0, 0)
 	v.add_child(dialog_text)
-	dialog_cancel = UiKit.button("VAZGEÇ", &"secondary")
+	dialog_cancel = _stone_button("VAZGEÇ")
 	dialog_cancel.pressed.connect(close_confirm)
 	v.add_child(dialog_cancel)
 	dialog_ok = UiKit.button("", &"primary")
