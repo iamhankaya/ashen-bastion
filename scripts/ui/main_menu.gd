@@ -576,7 +576,7 @@ func set_achievement_count(open_count: int, total: int) -> void:
 
 ## Tek sürüm kaynağı: project.godot `application/config/version` (karakter adı artık sürüm satırında yok).
 static func version_text() -> String:
-	return "Sürüm %s" % ProjectSettings.get_setting("application/config/version", "2.0.3")
+	return "Sürüm %s" % ProjectSettings.get_setting("application/config/version", "2.1.0")
 
 
 ## En çok NAME_MAX harf (birleştirici işaretler harf sayılmaz ve kendi harfinden ayrılmaz); fazlası "…" ile kesilir.
@@ -644,7 +644,8 @@ func open(sound: bool, vib: bool) -> void:
 	set_settings(sound, vib)
 	refresh_run()
 	visible = true
-	play_button.grab_focus.call_deferred()
+	if RunScreen.should_grab_focus(DisplayServer.is_touchscreen_available()):  # dokunmatikte kalıcı odak çerçevesi yok (#13)
+		play_button.grab_focus.call_deferred()
 
 
 ## Hareket azalt: kül/kor görünmez, meşale ve sancak sabit, karakter nefesi durur (DESIGN §6).
