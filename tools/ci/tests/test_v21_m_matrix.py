@@ -61,3 +61,28 @@ def test_m36_endless_long_test_exists_with_the_three_thresholds():
     assert "OBJECT_COUNT" in src and "alive_cap" in src and "P99_RATIO" in src
     assert "endless" in src and "2400" in src  # 40. dk
     assert "user://" not in src
+
+
+def _run_mid_all(tmp_path, env_extra):
+    fake = tmp_path / "godot.sh"
+    log = tmp_path / "calls.txt"
+    fake.write_text(f'#!/usr/bin/env bash\necho "$*" >> "{log.as_posix()}"\n', encoding="utf-8", newline="\n")
+    env = {"PATH": "/usr/bin:/bin:/mingw64/bin", "GODOT_BIN": fake.as_posix(), "POLICIES": "strong", "CHARS": "gunslinger", **env_extra}
+    r = subprocess.run(["bash", "tools/balance/mid_all.sh", (tmp_path / "out").as_posix(), "3001", "10", "1"],
+                       cwd=ROOT, capture_output=True, text=True, env=env)
+    assert r.returncode == 0, r.stderr
+    return sorted(log.read_text(encoding="utf-8").splitlines())
+
+
+def test_m37_mid_all_legacy_runs_every_job_without_mode_args(tmp_path):
+    calls = _run_mid_all(tmp_path, {})
+    assert len(calls) == 2  # 10 tohum / 5'lik parça: iş satırları birleşip kaybolmaz
+    assert all(len(c.split("--", 1)[1].split()) == 5 for c in calls), calls
+
+
+def test_m38_mid_all_cell_appends_mode_and_diff(tmp_path):
+    calls = _run_mid_all(tmp_path, {"CELLS": "quick:easy endless:normal"})
+    assert len(calls) == 4
+    tails = sorted(" ".join(c.split("--", 1)[1].split()[-2:]) for c in calls)
+    assert tails == ["endless normal"] * 2 + ["quick easy"] * 2
+    assert all("quick_easy_" in c or "endless_normal_" in c for c in calls)

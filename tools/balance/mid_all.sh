@@ -23,7 +23,7 @@ for cell in ${CELLS:-legacy}; do
     for ch in ${CHARS:-gunslinger zyfen}; do
       for ((s = FIRST; s < FIRST + N; s += CHUNK)); do
         n=$(( CHUNK < FIRST + N - s ? CHUNK : FIRST + N - s ))
-        echo "$pol $ch $s $n $OUT/${tag}${pol}_${ch}_${s}.jsonl $extra" >> "$jobs_file"
+        echo "$pol $ch $s $n $OUT/${tag}${pol}_${ch}_${s}.jsonl${extra:+ $extra}" >> "$jobs_file"
       done
     done
   done

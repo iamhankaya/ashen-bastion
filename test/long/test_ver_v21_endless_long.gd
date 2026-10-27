@@ -75,6 +75,11 @@ func _run(mode: StringName, diff: StringName, to_step: int, from_step: int) -> D
 func test_m1_endless_minute_40_stays_within_alive_cap_object_growth_and_step_time() -> void:
 	var normal := _run(&"normal", &"normal", MIN_20, MIN_20)
 	var endless := _run(&"endless", &"normal", MIN_40, MIN_30)
+	assert_eq(
+		int(normal["steps"]),
+		MIN_20,
+		"Normal 20 dk referansı tamamlandı (Lord ölümü koşuyu bitirmedi)"
+	)
 	assert_true(endless["endless"], "Sonsuz profili uygulandı")
 	assert_eq(int(endless["steps"]), MIN_40, "40 dk (2400 sn) tamamlandı")
 	assert_eq(endless["violations"], PackedStringArray(), "30-40 dk canlı düşman <= tavan")
