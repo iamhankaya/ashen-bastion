@@ -1,0 +1,84 @@
+name: balance
+# Yalnız elle (workflow_dispatch): bot denge ölçümü. v2.1 U1a: Lord'lu legacy (Zor) baseline `baseline-lord-A400.jsonl`
+# (strong_lord, Gunslinger, A400 = 3001-3400). 4 alt iş x 100 tohum; `merge` işi tek jsonl üretir ve artifact olarak yükler.
+# Çıktıyı docs/design/v2.1/balance/baseline-lord-A400.jsonl olarak commit'lemek VLAD/geliştiricinin işidir.
+# Ham çıktı klasörü .balance/ (.gitignore'da). Ölçüm kullanıcı veri dizinine yazmaz. U1b matrisi (mod x zorluk x politika) bu dosyayı genişletir.
+on:
+  workflow_dispatch:
+    inputs:
+      first_seed:
+        description: "İlk tohum (A400 = 3001)"
+        default: "3001"
+      policies:
+        description: "Politikalar (boşlukla)"
+        default: "strong_lord"
+      chars:
+        description: "Karakterler (boşlukla)"
+        default: "gunslinger"
+permissions:
+  contents: read
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ashen-bastion
+          key: godot-${{ hashFiles('.godot-version') }}
+      - uses: actions/cache@v4
+        with:
+          path: .godot
+          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+      - name: İçe aktar
+        run: |
+          export GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"
+          bash tools/ci/godot_import.sh /tmp/import.log
+      - name: Ölç (100 tohum)
+        env:
+          POLICIES: ${{ inputs.policies }}
+          CHARS: ${{ inputs.chars }}
+          FIRST: ${{ inputs.first_seed }}
+        run: |
+          export GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"
+          bash tools/balance/mid_all.sh ".balance/part${{ matrix.part }}" "$((FIRST + 100 * ${{ matrix.part }}))" 100
+      - uses: actions/upload-artifact@v4
+        with:
+          name: balance-part-${{ matrix.part }}
+          path: .balance/part${{ matrix.part }}
+          retention-days: 14
+          if-no-files-found: error
+  merge:
+    needs: run
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/ci/requirements-ci.txt
+      - run: pip install -r tools/ci/requirements-ci.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: balance-part-*
+          path: .balance/parts
+          merge-multiple: true
+      - name: Birleştir ve özetle
+        run: |
+          python3 tools/balance/merge_rows.py .balance/parts .balance/baseline.jsonl
+          python3 tools/balance/mid_report.py .balance/parts | tee .balance/report.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baseline-jsonl
+          path: |
+            .balance/baseline.jsonl
+            .balance/report.md
+          retention-days: 30
+          if-no-files-found: error
