@@ -88,8 +88,9 @@ var work: Dictionary = {}
 var spawn_dropped: int = 0
 ## Kale Lordu öldü (end_mode lord): _phase_status hp<=0'dan ÖNCE WON yapar.
 var lord_killed: bool = false
-## v2.1: koşu profili; opts önceliği: doğrudan end_*  > profil > varsayılan (null = bugünkü davranış); çarpanlar U2'de uygulanır. Sonsuz: ilk Lord öldü / Lord sayısı.
+## v2.1: koşu profili; opts önceliği: doğrudan end_* > profil > varsayılan (null = bugünkü davranış). Sonsuz: ilk Lord öldü / Lord sayısı.
 var run_profile: RunProfile = null
+var v21: V21Sim = null  # çarpan/Sonsuz durumu; legacy/profilsiz (Sonsuz dışı) null = sıfır ek iş
 var milestone_won: bool = false
 var lords_killed: int = 0
 ## Şu an hasar veren merminin bayrakları (on_kill kancaları kaynağı görebilsin diye); mermi dışı kaynak 0.
@@ -161,11 +162,12 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	_max_log = int(opts.get("max_log", DEFAULT_MAX_LOG))
 	var d: Variant = opts.get("data", null)
 	data = d if d is GameData else GameData.load_default()
+	v21 = V21Sim.create(self)
 	character = data.get_character(character_id)
 	enemies.bind(data)
 	for eid in data.enemy_ids:
 		_max_enemy_radius = maxf(_max_enemy_radius, data.get_enemy(eid).radius)
-	spawn_director = SpawnDirector.new(data.waves)
+	spawn_director = SpawnDirector.new(V21Sim.waves_for(data.waves, run_profile))
 	map = MapSim.new(_stream_seed(&"map"), data.ruins)
 	map.ensure(player_pos)
 	spawn_director.skip_to(time)
@@ -178,7 +180,7 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	rng_pickup.seed = _stream_seed(&"pickup")
 	# opts.pickups=false: doğuş yok (boş yapılandırma). Varsayılan true.
 	var pk_cfg: Dictionary = data.pickup_cfg if bool(opts.get("pickups", true)) else {}
-	pickup_director = PickupDirector.new(pk_cfg, rng_pickup)
+	pickup_director = PickupDirector.new(pk_cfg, rng_pickup, V21Sim.time_scale(run_profile))
 	score = ScoreKeeper.new(data.score_table)
 	score.gained.connect(_on_score_gained)
 	score.streak_changed.connect(_on_streak_changed)
@@ -347,13 +349,8 @@ func spawn_enemy(type_id: StringName, pos: Vector2, hp_mult_extra: float = 1.0) 
 	var def := data.get_enemy(type_id)
 	if def == null:
 		return -1
-	var scaled := def.scales_with_time
 	var id := enemies.spawn(
-		type_id,
-		pos,
-		(Difficulty.enemy_hp_mult(time) if scaled else 1.0) * hp_mult_extra,
-		1.0,  # temas çarpanı doğma anında değil tick anında uygulanır (DamageSystem.contact_tick)
-		Difficulty.enemy_speed_mult(time) if scaled else 1.0
+		type_id, pos, V21Sim.hp_mult(self, def) * hp_mult_extra, 1.0, V21Sim.speed_mult(self, def)  # temas çarpanı doğma anında değil tick anında uygulanır (DamageSystem.contact_tick)
 	)
 	if id < 0:
 		spawn_dropped += 1
@@ -409,6 +406,7 @@ func state_hash() -> int:
 	h.append(rng_combat.state)
 	h.append_array(V11State.hash_items(self))  # v1.1: sona eklenir, mevcut sıra değişmez
 	h.append_array(zones.hash_items())  # v2.0.2: bölge yokken boş (Gunslinger hash'i değişmez)
+	h.append_array(V21Sim.hash_items(self))  # v2.1: legacy/profilsizde boş
 	return hash(h)
 
 
@@ -832,6 +830,7 @@ func _phase_deaths_xp() -> void:
 func _phase_spawn() -> void:
 	_trace(8)
 	spawn_director.step(self)
+	V21Sim.step(self)
 	pickup_director.step(self)
 
 
@@ -874,11 +873,8 @@ func _end_run(won: bool) -> void:
 		"level": level,
 		"kills": kills,
 		"evolutions": evos,
-		"mode": String(run_profile.mode) if run_profile != null else "normal",
-		"diff": String(run_profile.diff) if run_profile != null else "hard",
-		"lords_killed": lords_killed,
-		"milestone_won": milestone_won,
 	}
+	result.merge(V21Sim.result_fields(self))  # mode, diff, lords_killed, milestone_won
 	result.merge(V11State.end_stats(self))  # score, score_parts, best_mult
 	bus.run_ended.emit(won, result)
 

@@ -379,7 +379,25 @@ Tek kaynak: `data/run_profiles.json` (dosya yoksa HATA, yerleşik varsayılan yo
 
 ### Sim ve veri (U2)
 
-(U2 doldurur: çarpanların uygulanması, Sonsuz doğuş eğrisi, Lord tekrarı, enrage, `WaveScaler` kapsamı.)
+Mantık `scripts/sim/v21_sim.gd` (`V21Sim`) içindedir; `GameSim.v21` yalnız **legacy olmayan profilde ya da `end_mode == endless`**
+iken kurulur, aksi halde `null` (her yardımcı eski değeri döndürür: RNG/karma baytı değişmez, K-C10).
+
+- **Süre ölçeği (`time_scale`):** `curve_t = t / time_scale` HP/hız/temas eğrilerini ve `alive_cap`'i okur;
+  `WaveScaler.scale` `SpawnDirector`'a verilen `waves` kopyasını ölçekler (`rate`/grup boyutu/burst adedi hariç);
+  `PickupDirector` yalnız `interval`'ı `time_scale` ile çarpar. Hızlı `end_time` 600 (`RunProfile.opts`).
+- **Çarpanlar:** `enemy_hp` yalnız `scales_with_time` düşmanlara; Lord HP = taban · `lord_hp` · `lord_hp_mult`
+  (· Lord tekrarı basamağı), zaman eğrisi/`enemy_hp` uygulanmaz. Temas: zaman eğrisi yalnız `scales_with_time`;
+  zorluk `enemy_dmg` ve enrage **koşulsuz tüm düşmanlara (Lord dahil)**. `spawn_density` · `rate_mult` `rate` birikimine;
+  `spawn_density` grup boyutuna ve `burst.count`'a (`maxi(1, roundi(...))`).
+- **XP:** `xp_carry += xp_değeri · xp_mult · xp`; taş değeri `floori(xp_carry)`, kalan taşınır (yuvarlama kaybı yok).
+- **Sonsuz:** `rate`/`group` satırları `to` sonrası son değerinde sürer, `after_lord` kapalı, `burst` tek seferlik; ilk Lord `waves`
+  satırından (1200). Lord ölümü: `lords_killed += 1`, `score.on_lord()`, `lord_slain(n)`, ilk ölümde `milestone_won` +
+  `milestone_reached`; `lord_killed` set edilmez, sim yalnız `hp <= 0` ile `LOST` olur. Tekrar: ölümden `lord_repeat_sec` sonra
+  (`warn` sn önce `boss_warning`), HP × `min(lord_repeat_hp_mult^n, lord_hp_cap_mult)`; doğuş başarısızsa her adım yeniden denenir,
+  süre yeniden başlamaz. Enrage: `t >= enrage_after_sec` sonrası temas × `1 + enrage_dmg_per_min · (t − enrage_after_sec) / 60`.
+- **Karma kapsamı:** `xp_carry` her legacy olmayan profilde, Sonsuz durumu (`repeat_n`, sonraki doğuş, uyarı, `lords_killed`,
+  `milestone_won`) yalnız Sonsuz'da `state_hash` sonuna eklenir; Lord/Zamanlayıcı modunda ve legacy'de baytlar değişmez.
+- `lords_killed`/`milestone_won` yalnız Sonsuz'da sayılır (Lord modunda kazanma `lord_killed` → `WON`).
 
 ### Kayıt, skor ve başarım (U3)
 
