@@ -77,12 +77,12 @@ def _run_mid_all(tmp_path, env_extra):
 def test_m37_mid_all_legacy_runs_every_job_without_mode_args(tmp_path):
     calls = _run_mid_all(tmp_path, {})
     assert len(calls) == 2  # 10 tohum / 5'lik parça: iş satırları birleşip kaybolmaz
-    assert all(len(c.split("--", 1)[1].split()) == 5 for c in calls), calls
+    assert all(len(c.split(" -- ", 1)[1].split()) == 5 for c in calls), calls
 
 
 def test_m38_mid_all_cell_appends_mode_and_diff(tmp_path):
     calls = _run_mid_all(tmp_path, {"CELLS": "quick:easy endless:normal"})
     assert len(calls) == 4
-    tails = sorted(" ".join(c.split("--", 1)[1].split()[-2:]) for c in calls)
+    tails = sorted(" ".join(c.split(" -- ", 1)[1].split()[-2:]) for c in calls)
     assert tails == ["endless normal"] * 2 + ["quick easy"] * 2
     assert all("quick_easy_" in c or "endless_normal_" in c for c in calls)
