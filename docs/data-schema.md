@@ -395,7 +395,7 @@ iken kurulur, aksi halde `null` (her yardımcı eski değeri döndürür: RNG/ka
   `milestone_reached`; `lord_killed` set edilmez, sim yalnız `hp <= 0` ile `LOST` olur. Tekrar: ölümden `lord_repeat_sec` sonra
   (`warn` sn önce `boss_warning`), HP × `min(lord_repeat_hp_mult^n, lord_hp_cap_mult)`; doğuş başarısızsa her adım yeniden denenir,
   süre yeniden başlamaz. Enrage: `t >= enrage_after_sec` sonrası temas × `1 + enrage_dmg_per_min · (t − enrage_after_sec) / 60`.
-- **Karma kapsamı:** `xp_carry` her legacy olmayan profilde, Sonsuz durumu (`repeat_n`, sonraki doğuş, uyarı, `lords_killed`,
+- **Karma kapsamı:** `xp_carry` her legacy olmayan profilde (profilsiz `end_mode=endless` testinde de), Sonsuz durumu (`repeat_n`, sonraki doğuş, uyarı, `lords_killed`,
   `milestone_won`) yalnız Sonsuz'da `state_hash` sonuna eklenir; Lord/Zamanlayıcı modunda ve legacy'de baytlar değişmez.
 - `lords_killed`/`milestone_won` yalnız Sonsuz'da sayılır (Lord modunda kazanma `lord_killed` → `WON`).
 

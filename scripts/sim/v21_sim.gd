@@ -54,11 +54,13 @@ static func curve_t(sim: GameSim) -> float:
 static func hp_mult(sim: GameSim, def: EnemyDef) -> float:
 	if sim.v21 == null:
 		return Difficulty.enemy_hp_mult(sim.time) if def.scales_with_time else 1.0
-	var p := sim.v21.p
+	var prof := sim.v21.p
 	if def.ai == &"lord":
-		return p.lord_hp * p.lord_hp_mult
+		return prof.lord_hp * prof.lord_hp_mult
 	return (
-		Difficulty.enemy_hp_mult(p.curve_t(sim.time)) * p.enemy_hp if def.scales_with_time else 1.0
+		Difficulty.enemy_hp_mult(prof.curve_t(sim.time)) * prof.enemy_hp
+		if def.scales_with_time
+		else 1.0
 	)
 
 
@@ -70,11 +72,11 @@ static func speed_mult(sim: GameSim, def: EnemyDef) -> float:
 static func contact_mult(sim: GameSim) -> float:
 	if sim.v21 == null:
 		return 1.0
-	var p := sim.v21.p
+	var prof := sim.v21.p
 	var enrage := 1.0
-	if p.enrage_after_sec > 0.0 and sim.time >= p.enrage_after_sec:
-		enrage += p.enrage_dmg_per_min * (sim.time - p.enrage_after_sec) / 60.0
-	return p.enemy_dmg * enrage
+	if prof.enrage_after_sec > 0.0 and sim.time >= prof.enrage_after_sec:
+		enrage += prof.enrage_dmg_per_min * (sim.time - prof.enrage_after_sec) / 60.0
+	return prof.enemy_dmg * enrage
 
 
 ## `rate` satırı birikim çarpanı: doğuş yoğunluğu × mod `rate_mult`.
