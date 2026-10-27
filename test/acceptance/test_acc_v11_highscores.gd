@@ -183,7 +183,9 @@ func test_h3_save_load_roundtrip_and_file_shape() -> void:
 	for e in list:
 		var keys: Array = e.keys()
 		keys.sort()
-		assert_eq(keys, ["diff", "level", "mode", "score", "time", "unix", "won"], "giriş alan kümesi")
+		assert_eq(
+			keys, ["diff", "level", "mode", "score", "time", "unix", "won"], "giriş alan kümesi"
+		)
 		assert_true(e["won"] is bool)
 	assert_lt(FileAccess.get_file_as_bytes(_path()).size(), 2048, "< 2 KB")
 	var back := Highscores.new(_path())
