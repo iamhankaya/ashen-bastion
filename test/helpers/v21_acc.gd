@@ -48,7 +48,7 @@ static func hp_of(sim: GameSim, id: int) -> float:
 ## 'resources still in use' hatası gate'i kırar (CI 40514013114, gut 2).
 static func watch(sim: GameSim) -> Dictionary:
 	var w := {"spawns": [], "warns": [], "slain": [], "milestone": [0]}
-	var wr := weakref(sim)
+	var wr: WeakRef = weakref(sim)
 	sim.bus.boss_spawned.connect(
 		func(t: StringName) -> void:
 			if t == LORD and wr.get_ref() != null:
