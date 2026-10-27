@@ -189,7 +189,7 @@ func test_scores_screen_flow_from_menu_and_back() -> void:
 	c.scores_screen.back_requested.emit()
 	assert_eq(c.screen, PauseLogic.Screen.MENU)
 	c.open_scores()
-	c.scores_screen.play_requested.emit()
+	c.scores_screen.play_with_requested.emit(&"normal", &"normal")
 	assert_eq(c.screen, PauseLogic.Screen.PLAYING)
 	assert_false(c.scores_screen.visible)
 

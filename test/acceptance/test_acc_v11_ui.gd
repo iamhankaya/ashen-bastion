@@ -713,14 +713,18 @@ func test_u10_empty_state_texts_play_button_and_default_focus() -> void:
 	assert_true(s.visible)
 	assert_true(_has_text(s, "EN İYİ SKORLAR"), "başlık")
 	assert_true(_has_text(s, "HENÜZ SKOR YOK"))
-	assert_true(_has_text(s, "İlk oyunundan sonra en iyi on sonucun burada listelenir."))
-	var play := _button(s, "OYNA")
+	assert_true(
+		_has_text(s, HighscoreScreen.empty_text_for(&"normal", &"normal")), "v2.1 boş sekme metni"
+	)
+	var play := _button(s, "BU AYARLA OYNA")
 	var back := _button(s, "GERİ")
-	assert_not_null(play, "boşken OYNA düğmesi")
+	assert_not_null(play, "boşken BU AYARLA OYNA düğmesi")
 	assert_not_null(back, "GERİ düğmesi")
 	if play != null:
-		assert_eq(get_viewport().gui_get_focus_owner(), play, "boş durumda varsayılan odak OYNA")
-		assert_almost_eq(play.get_global_rect().position.y, 1500.0, 2.0, "OYNA y 1500")
+		assert_eq(
+			get_viewport().gui_get_focus_owner(), play, "boş durumda varsayılan odak BU AYARLA OYNA"
+		)
+		assert_almost_eq(play.get_global_rect().position.y, 1500.0, 2.0, "BU AYARLA OYNA y 1500")
 
 
 func test_u10_three_entries_chips_times_dates_and_focus_on_back() -> void:
@@ -729,7 +733,7 @@ func test_u10_three_entries_chips_times_dates_and_focus_on_back() -> void:
 	var s := _scores_screen(3)
 	await _frames(3)
 	assert_false(_has_text(s, "HENÜZ SKOR YOK"))
-	assert_null(_button(s, "OYNA"), "dolu listede OYNA yok")
+	assert_null(_button(s, "BU AYARLA OYNA"), "dolu listede BU AYARLA OYNA yok")
 	var back := _button(s, "GERİ")
 	assert_not_null(back)
 	if back != null:
@@ -753,7 +757,7 @@ func test_u10_three_entries_chips_times_dates_and_focus_on_back() -> void:
 	assert_eq(maxi(dashes, faded), 7, "kalan 7 sıra boş yuva (— metni ya da soluk rozet)")
 
 
-func test_u10_ten_rows_stay_between_y_360_and_2028_and_show_rank_digits() -> void:
+func test_u10_ten_rows_stay_between_y_590_and_2172_and_show_rank_digits() -> void:
 	if V11Slice.require(self, "D3"):
 		return
 	var s := _scores_screen(10)
@@ -768,8 +772,8 @@ func test_u10_ten_rows_stay_between_y_360_and_2028_and_show_rank_digits() -> voi
 			var rect := lab.get_global_rect()
 			top = minf(top, rect.position.y)
 			bottom = maxf(bottom, rect.end.y)
-	assert_gte(top, 360.0 - 0.5, "ilk satır y >= 360")
-	assert_lte(bottom, 2028.5, "son satır y <= 2028")
+	assert_gte(top, 590.0 - 0.5, "ilk satır y >= 590 (v2.1: iki sıra sekme)")
+	assert_lte(bottom, 2172.5, "son satır y <= 2172")
 	var ranks := _ranks(s)
 	if ranks.is_empty():
 		for rank in range(1, 11):
@@ -786,7 +790,7 @@ func test_u10_back_and_play_signals() -> void:
 	await _frames(2)
 	watch_signals(s)
 	var back := _button(s, "GERİ")
-	var play := _button(s, "OYNA")
+	var play := _button(s, "BU AYARLA OYNA")
 	assert_not_null(back)
 	assert_not_null(play)
 	if back != null:

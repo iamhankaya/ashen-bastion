@@ -33,9 +33,9 @@ func test_empty_state_shows_texts_play_button_and_focus() -> void:
 	assert_true(s.empty)
 	assert_true(s.empty_box.visible)
 	assert_eq(s.empty_title.text, "HENÜZ SKOR YOK")
-	assert_eq(s.empty_text.text, "İlk oyunundan sonra en iyi on sonucun burada listelenir.")
+	assert_eq(s.empty_text.text, HighscoreScreen.empty_text_for(&"normal", &"normal"))
 	assert_true(s.play_button.visible)
-	assert_eq(s.play_button.text, "OYNA")
+	assert_eq(s.play_button.text, "BU AYARLA OYNA")
 	assert_eq(s.play_button.size.y, 180.0)
 	assert_eq(s.play_button.position.y, 1500.0)
 	for r in s.rows:
@@ -83,18 +83,17 @@ func test_row_parts_text_formats() -> void:
 	assert_false(chip1.won)
 
 
-func test_ten_rows_span_y_360_to_2028_and_back_below() -> void:
+func test_ten_rows_span_y_590_to_2172_and_back_below() -> void:
 	var s := _screen(_entries(10))
-	assert_eq(s.rows[0].position.y, 360.0)
-	assert_eq(s.rows[0].size, Vector2(936, 156))
-	assert_eq(s.rows[1].position.y, 360.0 + 168.0)
+	assert_eq(s.rows[0].position.y, 590.0)
+	assert_almost_eq(s.rows[0].size.y, 147.4, 0.01)
+	assert_almost_eq(s.rows[1].position.y, 590.0 + 159.4, 0.01)
 	var last := s.rows[9]
-	assert_almost_eq(last.position.y + last.size.y, 2028.0, 0.01)
+	assert_almost_eq(last.position.y + last.size.y, 2172.0, 0.01)
 	assert_eq(s.back_button.size, Vector2(936, 132))
 	assert_almost_eq(s.back_button.position.y + s.back_button.size.y, 2400.0 - 72.0, 0.01)
 	assert_gt(s.back_button.position.y, last.position.y + last.size.y)
 	assert_eq(s.title_label.text, "EN İYİ SKORLAR")
-	assert_eq(s.sub_label.text, "Bu cihazdaki en iyi 10 sonuç")
 
 
 func test_more_than_ten_entries_are_cut_to_ten() -> void:
@@ -133,8 +132,8 @@ func test_safe_area_extra_keeps_content_inside() -> void:
 		assert_lte(r.position.y + r.size.y, s.back_button.position.y, "satırlar GERİ'nin üstünde")
 		assert_gte(r.position.y, 96.0 + 100.0)
 	s.apply_safe_area(Vector4.ZERO)
-	assert_eq(s.rows[0].position.y, 360.0)
-	assert_eq(s.rows[0].size.y, 156.0)
+	assert_eq(s.rows[0].position.y, 590.0)
+	assert_almost_eq(s.rows[0].size.y, 147.4, 0.01)
 
 
 func test_empty_state_safe_area() -> void:

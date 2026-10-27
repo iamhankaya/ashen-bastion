@@ -224,6 +224,7 @@
   "test/unit/test_v203_d_settings.gd": 12,
   "test/unit/test_v203_d_zz_contract.gd": 3,
   "test/unit/test_v21_a_run_ui.gd": 22,
+  "test/unit/test_v21_b_ui.gd": 23,
   "test/unit/test_v21_contract_flow.gd": 15,
   "test/unit/test_v21_contract_profiles.gd": 15,
   "test/unit/test_v21_contract_sim.gd": 21,

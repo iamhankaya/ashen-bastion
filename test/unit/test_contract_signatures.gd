@@ -261,7 +261,7 @@ const METHODS := {
 	},
 	"HighscoreScreen":
 	{
-		"show_scores": ["entries,highlight_index", N],
+		"show_scores": ["entries,highlight_index,mode,diff", N],
 		"apply_safe_area": ["extra", N],
 	},
 	"ResultScreen":
@@ -330,7 +330,13 @@ const SIGNALS := {
 	},
 	"ScoreKeeper": {"gained": "gain,source", "streak_changed": "mult,left"},
 	"MainMenu": {"scores_requested": ""},
-	"HighscoreScreen": {"back_requested": "", "play_requested": ""},
+	"HighscoreScreen":
+	{
+		"back_requested": "",
+		"play_requested": "",
+		"play_with_requested": "mode,diff",
+		"tab_changed": "mode,diff",
+	},
 	"Magazine":
 	{
 		"changed": "count,cap",
