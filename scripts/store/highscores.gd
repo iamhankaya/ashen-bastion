@@ -63,18 +63,20 @@ func load_file() -> bool:
 
 
 ## {"rank": int (0 = dışarıda), "is_record": bool, "previous_best": int, "needed_for_top10": int, "index": int}.
-## v2.1: `entry` "mode" ve "diff" (RunProfiles adları) TAŞIMALI; yoksa/bilinmiyorsa hiçbir listeye yazılmaz ve sonuca
-## "error" ("mode_diff_required" | "mode_diff_unknown") eklenir (normal:normal'a sessiz yazma YOK; K-C6).
+## v2.1: `entry` "mode"/"diff" (RunProfiles adları) taşır; eksik olan eski çağıranlar için "normal" sayılır (ikisi de yoksa normal:normal)
+## (controller her zaman verir: test_v21_contract_flow). Bilinmeyen/dizge olmayan değer: yazılmaz, sonuca "error" ("mode_diff_unknown").
 func submit(entry: Dictionary) -> Dictionary:
 	var result := {
 		"rank": 0, "is_record": false, "previous_best": 0, "needed_for_top10": 0, "index": -1
 	}
-	var mode: Variant = entry.get("mode", null)
-	var diff: Variant = entry.get("diff", null)
-	if not (mode is String and diff is String):
-		result["error"] = "mode_diff_required"
-		return result
-	if not RunProfiles.MODES.has(mode) or not RunProfiles.DIFFS.has(diff):
+	var mode: Variant = entry.get("mode", "normal")
+	var diff: Variant = entry.get("diff", "normal")
+	if not (
+		mode is String
+		and diff is String
+		and RunProfiles.MODES.has(mode)
+		and RunProfiles.DIFFS.has(diff)
+	):
 		result["error"] = "mode_diff_unknown"
 		return result
 	var key := key_of(StringName(mode), StringName(diff))

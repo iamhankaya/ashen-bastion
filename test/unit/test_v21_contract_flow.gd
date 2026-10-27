@@ -96,6 +96,20 @@ func test_contract_controller_uses_v21_runs_at_every_touchpoint() -> void:
 	assert_false(text.contains("highscores.entries"), "controller eski görünümü kullanmaz")
 
 
+func test_contract_controller_never_submits_scores_without_mode_and_diff() -> void:
+	# Eski çağıranlar için submit mode/diff'siz çağrıyı normal:normal'a yazar; controller bunu SESSİZCE yanlış listeye yapmasın.
+	var text := FileAccess.get_file_as_string(CONTROLLER)
+	assert_false(text.contains(".submit({"), "controller yalnız V21Runs.score_fields ile gönderir")
+	var f := V21Runs.score_fields({"score": 5, "mode": "quick", "diff": "hard"}, false)
+	assert_true(RunProfiles.MODES.has(f["mode"]) and RunProfiles.DIFFS.has(f["diff"]))
+	V21Kit.use_fake_settings()
+	var g := V21Runs.score_fields({"score": 5}, false)
+	assert_true(
+		RunProfiles.MODES.has(g["mode"]) and RunProfiles.DIFFS.has(g["diff"]),
+		"stats'ta yoksa seçimden"
+	)
+
+
 func test_contract_controller_stays_within_the_line_ceiling() -> void:
 	var lines := FileAccess.get_file_as_string(CONTROLLER).split("\n").size() - 1
 	assert_lte(lines, CEILING, "game_controller.gd satır sayısı (tavan %d)" % CEILING)

@@ -46,19 +46,22 @@ func test_contract_entries_is_the_normal_normal_view() -> void:
 	assert_eq(h.list_for(&"normal", &"normal")[0]["score"], 300)
 
 
-func test_contract_submit_without_mode_or_diff_is_an_error_and_writes_nothing() -> void:
+func test_contract_submit_without_mode_and_diff_writes_to_normal_normal() -> void:
+	# Eski çağıranlar (v1.1 testleri) için uyum; controller her zaman mode/diff verir (test_v21_contract_flow).
 	var h := Highscores.new("user://yok_v21_hs.json")
-	var bare := {"score": 100, "time": 1, "won": false, "level": 1, "unix": 1}
-	var r := h.submit(bare)
-	assert_eq(r["error"], "mode_diff_required")
-	assert_eq(r["rank"], 0)
-	assert_eq(h.entries.size(), 0, "normal:normal'a sessiz yazma YOK")
-	var only_mode := bare.duplicate()
-	only_mode["mode"] = "normal"
-	assert_eq(h.submit(only_mode)["error"], "mode_diff_required")
-	var not_string := _e(100)
-	not_string["mode"] = 3
-	assert_eq(h.submit(not_string)["error"], "mode_diff_required")
+	var r := h.submit({"score": 100, "time": 1, "won": false, "level": 1, "unix": 1})
+	assert_false(r.has("error"))
+	assert_eq(r["rank"], 1)
+	assert_eq(h.entries.size(), 1)
+	assert_eq(h.list_for(&"normal", &"normal").size(), 1)
+	assert_eq(h.list_for(&"quick", &"easy").size(), 0)
+
+
+func test_contract_submit_with_non_string_names_is_an_error() -> void:
+	var h := Highscores.new("user://yok_v21_hs.json")
+	var bad := _e(100)
+	bad["mode"] = 3
+	assert_eq(h.submit(bad)["error"], "mode_diff_unknown")
 	assert_eq(h.entries.size(), 0)
 
 
