@@ -1,0 +1,79 @@
+{
+ "v": 1,
+ "default": {
+  "mode": "normal",
+  "diff": "normal"
+ },
+ "modes": {
+  "quick": {
+   "time_scale": 0.2,
+   "end_mode": "lord",
+   "xp_mult": 1.5,
+   "lord_hp_mult": 0.5,
+   "rate_mult": 1.0
+  },
+  "normal": {
+   "time_scale": 1.0,
+   "end_mode": "lord",
+   "xp_mult": 1.0,
+   "lord_hp_mult": 1.0,
+   "rate_mult": 1.0
+  },
+  "endless": {
+   "time_scale": 1.0,
+   "end_mode": "endless",
+   "xp_mult": 1.0,
+   "lord_hp_mult": 1.0,
+   "rate_mult": 1.0,
+   "lord_repeat_sec": 300,
+   "lord_repeat_hp_mult": 1.5,
+   "lord_hp_cap_mult": 8,
+   "enrage_after_sec": 2400,
+   "enrage_dmg_per_min": 0.1
+  }
+ },
+ "difficulties": {
+  "easy": {
+   "enemy_hp": 0.7,
+   "enemy_dmg": 0.55,
+   "spawn_density": 0.7,
+   "xp": 1.25,
+   "lord_hp": 0.7
+  },
+  "normal": {
+   "enemy_hp": 0.85,
+   "enemy_dmg": 0.75,
+   "spawn_density": 0.85,
+   "xp": 1.0,
+   "lord_hp": 0.85
+  },
+  "hard": {
+   "enemy_hp": 1.0,
+   "enemy_dmg": 1.0,
+   "spawn_density": 1.0,
+   "xp": 1.0,
+   "lord_hp": 1.0
+  }
+ },
+ "achievements": {
+  "lord_bound_tier_ids": [
+   "lordslayer:1",
+   "lordslayer:2",
+   "lordslayer:3",
+   "endure:4",
+   "ascension:3"
+  ],
+  "easy": {
+   "block_lord_bound": true,
+   "totals": "runs_playsecs_only"
+  },
+  "normal": {
+   "block_lord_bound": false,
+   "totals": "all"
+  },
+  "hard": {
+   "block_lord_bound": false,
+   "totals": "all"
+  }
+ }
+}

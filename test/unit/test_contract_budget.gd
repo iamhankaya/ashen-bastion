@@ -4,7 +4,7 @@ extends GutTest
 
 const CONTROLLER := "res://scripts/ctrl/game_controller.gd"
 const CEILING := 960
-const S3_CEILING := 946
+const S3_CEILING := 960  # v2.1 C fazı: 946 + 7 (V21Runs delegasyonu, KOSU ekranı, open_scores parametreleri); kalan pay 7
 const GAME_DATA := "res://scripts/sim/game_data.gd"
 const GAME_SIM := "res://scripts/sim/game_sim.gd"
 

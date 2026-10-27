@@ -9,6 +9,8 @@ enum State { RUNNING, LEVEL_UP, WON, LOST }
 const STEP := 1.0 / 60.0
 const END_MODE_LORD := "lord"
 const END_MODE_TIMER := "timer"
+## v2.1 Sonsuz: yalnız hp<=0 ile biter; ilk Lord ölümü milestone_won yapar (U2).
+const END_MODE_ENDLESS := "endless"
 const DEFAULT_END_TIME := 1200.0
 const DEFAULT_MAX_LOG := 200000
 const HASH_QUANT := 64.0  # konumlar 1/64 px nicemlenir
@@ -86,6 +88,10 @@ var work: Dictionary = {}
 var spawn_dropped: int = 0
 ## Kale Lordu öldü (end_mode lord): _phase_status hp<=0'dan ÖNCE WON yapar.
 var lord_killed: bool = false
+## v2.1: koşu profili; opts önceliği: doğrudan end_*  > profil > varsayılan (null = bugünkü davranış); çarpanlar U2'de uygulanır. Sonsuz: ilk Lord öldü / Lord sayısı.
+var run_profile: RunProfile = null
+var milestone_won: bool = false
+var lords_killed: int = 0
 ## Şu an hasar veren merminin bayrakları (on_kill kancaları kaynağı görebilsin diye); mermi dışı kaynak 0.
 var kill_source_flags: int = 0
 
@@ -142,8 +148,12 @@ var _last_score: int = 0
 
 func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void:
 	_seed = p_seed
-	end_mode = str(opts.get("end_mode", END_MODE_LORD))
-	end_time = float(opts.get("end_time", DEFAULT_END_TIME))
+	var prof_opts: Dictionary = {}
+	if opts.get("run_profile", null) is RunProfile:
+		run_profile = opts["run_profile"]
+		prof_opts = run_profile.opts()
+	end_mode = str(opts.get("end_mode", prof_opts.get("end_mode", END_MODE_LORD)))
+	end_time = float(opts.get("end_time", prof_opts.get("end_time", DEFAULT_END_TIME)))
 	time = float(opts.get("start_time", 0.0))
 	_last_time = time
 	_log_events = bool(opts.get("log_events", false))
@@ -326,8 +336,14 @@ func pick_highest_hp(from: Vector2, range_px: float) -> int:
 	return best
 
 
+## Lord doğan mod (Lord, Sonsuz).
+func lord_mode() -> bool:
+	return end_mode == END_MODE_LORD or end_mode == END_MODE_ENDLESS
+
+
 ## Düşman doğurur (zamana bağlı çarpanlarla); id ya da havuz doluysa -1 (spawn_dropped++).
-func spawn_enemy(type_id: StringName, pos: Vector2) -> int:
+## `hp_mult_extra` (v2.1): Lord tekrarı HP basamağı; 1.0 = eski davranış bayt bayt.
+func spawn_enemy(type_id: StringName, pos: Vector2, hp_mult_extra: float = 1.0) -> int:
 	var def := data.get_enemy(type_id)
 	if def == null:
 		return -1
@@ -335,7 +351,7 @@ func spawn_enemy(type_id: StringName, pos: Vector2) -> int:
 	var id := enemies.spawn(
 		type_id,
 		pos,
-		Difficulty.enemy_hp_mult(time) if scaled else 1.0,
+		(Difficulty.enemy_hp_mult(time) if scaled else 1.0) * hp_mult_extra,
 		1.0,  # temas çarpanı doğma anında değil tick anında uygulanır (DamageSystem.contact_tick)
 		Difficulty.enemy_speed_mult(time) if scaled else 1.0
 	)
@@ -853,7 +869,16 @@ func _end_run(won: bool) -> void:
 	var evos: Array = []
 	for e in evolved_log:
 		evos.append(e)
-	var result := {"time": time, "level": level, "kills": kills, "evolutions": evos}
+	var result := {
+		"time": time,
+		"level": level,
+		"kills": kills,
+		"evolutions": evos,
+		"mode": String(run_profile.mode) if run_profile != null else "normal",
+		"diff": String(run_profile.diff) if run_profile != null else "hard",
+		"lords_killed": lords_killed,
+		"milestone_won": milestone_won,
+	}
 	result.merge(V11State.end_stats(self))  # score, score_parts, best_mult
 	bus.run_ended.emit(won, result)
 

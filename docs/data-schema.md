@@ -358,3 +358,33 @@ düzenlemeyin: `python3 tools/art/ruin_collision.py` (kural: görsel yüksekliğ
 parçalar dekordur; bkz. `docs/dev/ruins.md`). Dosya yoksa harita
 boştur. Doğrulama: `scripts/sim/ruins_validator.gd`; sprite ve ölçüler `tools/art/process_art.py` çıktısından
 (`assets/gfx/map/ruins_manifest.json`) üretilir.
+
+## Koşu profilleri — `run_profiles.json` (v2.1)
+
+Tek kaynak: `data/run_profiles.json` (dosya yoksa HATA, yerleşik varsayılan yok). Okuyucu/doğrulayıcı `scripts/sim/run_profiles.gd`
+(`RunProfiles`; `GameData`'dan bağımsız; `tools/validate_data.gd` çağırır). Satır başına bir anahtar (birleştirilebilir). Kimlikler
+İngilizce küçük harf: modlar `quick|normal|endless`, zorluklar `easy|normal|hard`. Hata satırı `[kod] bağlam: açıklama`.
+
+- Kök: `v` (=1), `default {mode, diff}` (tanımlı adlar), `modes`, `difficulties`, `achievements`; başka anahtar `profile_unknown_key`.
+- `modes.<ad>` (hepsi zorunlu): `time_scale` 0,25..4; `end_mode` `lord|endless`; `xp_mult` 1..5; `lord_hp_mult` 0,1..5; `rate_mult` 0,25..4.
+  Yalnız `end_mode=endless`: `lord_repeat_sec` 60..1800, `lord_repeat_hp_mult` 1..5, `lord_hp_cap_mult` 1..20, `enrage_after_sec` 1200..7200,
+  `enrage_dmg_per_min` 0..1 (Sonsuz'da zorunlu, diğer modlarda yasak: `profile_cross`).
+- `difficulties.<ad>` (hepsi zorunlu): `enemy_hp`, `enemy_dmg`, `spawn_density`, `lord_hp` 0,1..5; `xp` 1..5.
+- `achievements`: `lord_bound_tier_ids` (`"<aile>:<1 tabanlı kademe>"` dizisi, örn. `endure:4`) ve her zorluk için `{block_lord_bound: bool,
+  totals: runs_playsecs_only|all}`; her zorluk için kural zorunlu (`profile_cross`).
+- Hata kodları: `profile_file_missing`, `profile_range`, `profile_type`, `profile_missing_key`, `profile_unknown_key`, `profile_default`,
+  `profile_cross`. Her kod için `test/fixtures/profile_bad_<kod>/run_profiles.json` (üretici `tools/ci/gen_profile_fixtures.py`;
+  `data_bad_` öneki DEĞİL: `test_game_data.gd` o önekli dizinleri `GameData` hata kodu sayar).
+- Sayılar TAHMİNDİR; U5 ayar turunda yalnız sayı satırları değişir (şema/doğrulayıcı C'nindir).
+
+### Sim ve veri (U2)
+
+(U2 doldurur: çarpanların uygulanması, Sonsuz doğuş eğrisi, Lord tekrarı, enrage, `WaveScaler` kapsamı.)
+
+### Kayıt, skor ve başarım (U3)
+
+(U3 doldurur: `highscores.json` v2 biçimi ve göç, `.v1.bak`, `AchievementRules` enjeksiyonu.)
+
+### Arayüz (U4a/U4b)
+
+(U4a/U4b doldurur: KOŞU ekranı, skor sekmeleri, sonuç çipleri; sayılar `RunProfiles`'tan okunur.)

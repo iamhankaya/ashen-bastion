@@ -8,12 +8,16 @@ extends RefCounted
 const VERSION := 1
 const MAX_ENTRIES := 10
 const DEFAULT_PATH := "user://highscores.json"
+const DEFAULT_KEY := "normal:normal"
 ## Skor tavanı (ScoreTable.display_cap ile aynı varsayılan); dosyadaki aşırı değerler buna kırpılır.
 const SCORE_CAP := 99999999
 ## Tamsayıya çevrilen kayan nokta değerleri için üst sınır (taşma/NaN koruması).
 const INT_LIMIT := 1.0e15
 
+## v2.1: normal:normal listesinin görünümü (eski çağıranlar/testler için; `_lists["normal:normal"]` ile AYNI dizi).
 var entries: Array[Dictionary] = []
+## v2.1: "<mod>:<zorluk>" -> en iyi 10 listesi. Dosya biçimi (v2) ve göç U3'te; C fazında yalnız bellek içi iskelet.
+var _lists: Dictionary = {}
 ## Son load_file() bozuk dosya buldu mu (.bad olarak saklandı).
 var corrupt: bool = false
 
@@ -22,11 +26,27 @@ var _path: String = DEFAULT_PATH
 
 func _init(p_path: String = DEFAULT_PATH) -> void:
 	_path = p_path
+	_lists[DEFAULT_KEY] = entries
+
+
+## Liste anahtarı: "<mod>:<zorluk>" (örn. "normal:hard").
+static func key_of(mode: StringName, diff: StringName) -> String:
+	return "%s:%s" % [mode, diff]
+
+
+## (mod, zorluk) listesi (sıralı, en çok 10). Bilinmeyen/boş çift için boş dizi; dönen dizi değiştirilmemeli.
+func list_for(mode: StringName, diff: StringName) -> Array[Dictionary]:
+	var list: Variant = _lists.get(key_of(mode, diff), null)
+	var out: Array[Dictionary] = []
+	if list is Array:
+		out.assign(list)
+	return out
 
 
 ## false = dosya yok/bozuk (entries boş). Bozuk dosya `<yol>.bad` olarak saklanır; yarım `.tmp` hiç okunmaz.
 func load_file() -> bool:
 	entries = []
+	_lists = {DEFAULT_KEY: entries}
 	corrupt = false
 	if not FileAccess.file_exists(_path):
 		return false
@@ -38,27 +58,44 @@ func load_file() -> bool:
 		_keep_bad(text)
 		return false
 	entries = sanitize(json.data)
+	_lists[DEFAULT_KEY] = entries
 	return true
 
 
-## {"rank": int (0 = dışarıda), "is_record": bool, "previous_best": int, "needed_for_top10": int, "index": int}
+## {"rank": int (0 = dışarıda), "is_record": bool, "previous_best": int, "needed_for_top10": int, "index": int}.
+## v2.1: `entry` "mode"/"diff" (RunProfiles adları) taşır; eksik olan eski çağıranlar için "normal" sayılır (ikisi de yoksa normal:normal)
+## (controller her zaman verir: test_v21_contract_flow). Bilinmeyen/dizge olmayan değer: yazılmaz, sonuca "error" ("mode_diff_unknown").
 func submit(entry: Dictionary) -> Dictionary:
 	var result := {
 		"rank": 0, "is_record": false, "previous_best": 0, "needed_for_top10": 0, "index": -1
 	}
-	if not entries.is_empty():
-		result["previous_best"] = int(entries[0]["score"])
-	if entries.size() >= MAX_ENTRIES:
-		result["needed_for_top10"] = int(entries[MAX_ENTRIES - 1]["score"])
+	var mode: Variant = entry.get("mode", "normal")
+	var diff: Variant = entry.get("diff", "normal")
+	if not (
+		mode is String
+		and diff is String
+		and RunProfiles.MODES.has(mode)
+		and RunProfiles.DIFFS.has(diff)
+	):
+		result["error"] = "mode_diff_unknown"
+		return result
+	var key := key_of(StringName(mode), StringName(diff))
+	if not _lists.has(key):
+		_lists[key] = [] as Array[Dictionary]
+	var list: Array[Dictionary] = _lists[key]
+	if not list.is_empty():
+		result["previous_best"] = int(list[0]["score"])
+	if list.size() >= MAX_ENTRIES:
+		result["needed_for_top10"] = int(list[MAX_ENTRIES - 1]["score"])
 	var e := _normalize(entry, false)
 	if e.is_empty():
 		return result
-	var pos := _insert_pos(entries, e)
+	var pos := _insert_pos(list, e)
 	if pos >= MAX_ENTRIES:
 		return result
-	entries.insert(pos, e)
-	if entries.size() > MAX_ENTRIES:
-		entries.resize(MAX_ENTRIES)
+	list.insert(pos, e)
+	if list.size() > MAX_ENTRIES:
+		list.resize(MAX_ENTRIES)
 	result["rank"] = pos + 1
 	result["index"] = pos
 	result["is_record"] = pos == 0

@@ -3,10 +3,17 @@ extends GutTest
 
 const DIR := "user://hs_ctrl_test"
 
+var _restore: Callable
+
 
 func before_each() -> void:
 	DirAccess.make_dir_recursive_absolute(DIR)
 	_clean()
+	_restore = V21Kit.pin_selection("normal", "normal")  # skor listesi normal:normal; kullanıcı ayarından bağımsız
+
+
+func after_each() -> void:
+	_restore.call()
 
 
 func after_all() -> void:

@@ -12,7 +12,17 @@ static func run(g: GameData, out: PackedStringArray) -> void:
 	if not (g._raw_waves is Dictionary):
 		GameData._err(out, "not_object", "waves.json", "kök nesne olmalı")
 		return
-	var w: Dictionary = g._raw_waves
+	_root(g, out, g._raw_waves)
+
+
+## v2.1: ölçeklenmiş (WaveScaler) ya da türetilmiş waves sözlüğünü aynı kurallarla doğrular; boş dizi = geçerli.
+static func validate_dict(waves: Dictionary, g: GameData) -> Array:
+	var out := PackedStringArray()
+	_root(g, out, waves)
+	return Array(out)
+
+
+static func _root(g: GameData, out: PackedStringArray, w: Dictionary) -> void:
 	for k in w.keys():
 		if not ["rows", "after_lord", "end_time"].has(k):
 			GameData._err(out, "wave_unknown_key", "waves.json", "bilinmeyen anahtar '%s'" % k)
