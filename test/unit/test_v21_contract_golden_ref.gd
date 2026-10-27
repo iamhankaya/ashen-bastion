@@ -31,9 +31,8 @@ func test_contract_ref_fixture_scenarios_cover_the_lord_and_contact_damage() -> 
 			pending("ref.json üretilmedi")
 			return
 		assert_gt(int(rec["steps"]), 0)
-		# Üretilen kayıtta 1190 senaryosunda oyuncu Lord'dan (1200) önce ölüyor (steps 460, lord_spawns 0): Lord kapsamı
-		# bu fixture'da yok, Lord'lu karma Sonsuz/ölçüm testlerinde (test_v21_s_sim, U1a baseline) sınanır.
 		if float(c[1]) >= 1190.0:
+			assert_gt(int(rec["lord_spawns"]), 0, "1190'dan başlayan senaryoda Lord doğar")
 			assert_gt(int(rec["damage_q"]), 0, "1190'dan başlayan senaryoda temas hasarı alınır")
 
 

@@ -1,6 +1,6 @@
 class_name V21RefKit
 extends RefCounted
-## v2.1 K-C10 (b): geç oyun referans karmaları. Senaryo = start_time'dan başlayan sabit hareket betiği; Lord doğuşu (1200) ve
+## v2.1 K-C10 (b): geç oyun referans karmaları. Senaryo = start_time'dan başlayan sabit hareket betiği, ölmez oyuncu; Lord doğuşu (1200) ve
 ## Lord ile temas hasarı kapsanır. Kayıt DEĞİŞMEMİŞ (v2.0.4) kodda tools/golden/gen_v21_ref.gd ile üretilir
 ## (.github/workflows/golden_ref.yml); U2 sonrası aynı karmalar korunmalıdır. Bu dosya ve gen_v21_ref.gd yalnız GameSim/GoldenKit'e bağlıdır.
 
@@ -34,6 +34,10 @@ static func run_late(
 		if sim.state == GameSim.State.LEVEL_UP:
 			sim.choose(0)
 			continue
+		# Ölmez oyuncu: bot Lord'a (1200) varmadan ölüyordu (ilk kayıt: 1190 senaryosu 460. adımda LOST, Lord doğmadı).
+		# Seviye seçimi _refresh_stats ile canı kırpar, bu yüzden her adım önce yenilenir.
+		sim.max_hp = 1.0e9
+		sim.hp = 1.0e9
 		sim.step(GoldenKit.move_at(n))
 		n += 1
 	return {
