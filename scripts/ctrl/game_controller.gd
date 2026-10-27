@@ -17,7 +17,7 @@ const BOMB_SHAKE := 18.0
 
 var screen: int = PauseLogic.Screen.MENU
 var sim: GameSim = null
-## v2.1 KOŞU ekranı (U4a kurar; null iken ekran boş). Controller C sonrası değişmez.
+## v2.1 KOŞU ekranı (U4a kurar; testler yerine sahte Control koyabilir).
 var run_screen: Control = null
 var gate: InputGate = InputGate.new()
 
@@ -487,6 +487,11 @@ func _v11_build_world() -> void:
 	ui.add_child(scores_screen)
 	scores_screen.back_requested.connect(go_menu)
 	scores_screen.play_requested.connect(start_run)
+	run_screen = RunScreen.new()  # v2.1 KOŞU ekranı (U4a)
+	run_screen.name = "RunScreen"
+	ui.add_child(run_screen)
+	run_screen.back_requested.connect(go_menu)
+	menu.run_requested.connect(open_run_screen)
 	menu.scores_requested.connect(open_scores)
 	menu.characters_requested.connect(open_characters)
 	menu.achievements_requested.connect(open_achievements)
@@ -525,6 +530,8 @@ func _apply_safe_areas() -> void:
 	settings_screen.apply_safe_area()
 	result_screen.apply_safe_area()
 	scores_screen.apply_safe_area()
+	if run_screen is RunScreen:  # testler sahte Control koyabilir
+		run_screen.apply_safe_area()
 	v2.apply_safe_areas()
 
 

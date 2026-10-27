@@ -214,7 +214,7 @@ func test_d12_big_font_scale_stacks_half_buttons_in_one_column_without_clipping(
 	assert_lte(m.version_label.get_global_rect().end.y, 2400.0 - 72.0 + 0.5)
 	if m.hero != null:
 		var hr := m.hero.get_global_rect()
-		assert_almost_eq(hr.size.x, 512.0, 1.0, "karakter %80")
+		assert_almost_eq(hr.size.x, 320.0, 1.0, "karakter %50 (v2.1 DESIGN §2: şerit için küçülür)")
 		assert_lte(hr.end.y, m.play_button.get_global_rect().position.y)
 		assert_gte(hr.position.y, m._head.get_global_rect().position.y + 300.0, "başlığın altında")
 	m.set_font_scale(1.0)
