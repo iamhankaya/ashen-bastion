@@ -74,12 +74,12 @@ func test_b4_chip_geometry_between_strip_and_combos() -> void:
 	assert_eq(r.achievement_chip.mouse_filter, Control.MOUSE_FILTER_IGNORE)
 
 
-func test_b4_combo_lines_at_most_three_with_chip_and_plus_n() -> void:
+func test_b4_combo_lines_at_most_four_with_chip_and_plus_n() -> void:
 	var r := _screen()
 	r.set_new_achievements(_names(1))
 	r.show_result(false, STATS, _combos(5))
-	# v2.1 U6: satır azaltılmaz; "+N" satırı çocuk sayısına girer (3 satır + "+2" = 4 çocuk)
-	assert_lte(r.combo_box.get_child_count(), 4, "özet varken kombo bloğu en çok 3 satır + '+N'")
+	# v2.1 U6 (kullanıcı kararı b): çipte de en çok 4 satır + "+N" (5 çocuk)
+	assert_lte(r.combo_box.get_child_count(), 5, "özet varken kombo bloğu en çok 4 satır + '+N'")
 	var rows := 0
 	var plus := ""
 	for c in r.combo_box.get_children():
@@ -87,7 +87,7 @@ func test_b4_combo_lines_at_most_three_with_chip_and_plus_n() -> void:
 			rows += 1
 		elif c is Label and (c as Label).text.begins_with("+"):
 			plus = (c as Label).text
-	assert_lte(rows, 3, "özet varken en çok 3 kombo satırı")
+	assert_lte(rows, 4, "özet varken en çok 4 kombo satırı")
 	assert_eq(plus, "+%d" % (5 - rows), "taşan kombolar '+N' olur")
 	# 3 kombo özetle birlikte sığıyorsa hepsi görünür.
 	var r3 := _screen()

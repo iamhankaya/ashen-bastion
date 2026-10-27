@@ -644,7 +644,7 @@ func open(sound: bool, vib: bool) -> void:
 	set_settings(sound, vib)
 	refresh_run()
 	visible = true
-	if RunScreen.should_grab_focus(DisplayServer.is_touchscreen_available()):  # dokunmatikte kalıcı odak çerçevesi yok (#13)
+	if RunScreen.should_grab_focus(RunScreen.touch_only()):  # dokunmatikte kalıcı odak çerçevesi yok (#13)
 		play_button.grab_focus.call_deferred()
 
 

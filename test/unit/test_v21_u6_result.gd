@@ -74,9 +74,12 @@ func _limit(extra: Vector4) -> float:
 	return 2400.0 - ResultScreen.BOTTOM_DEFAULT - extra.w
 
 
-## Aritmetiği imkânsız en kötü durumlar (rapor): Kolay + çentik + (çipsiz 5+ kombo | çipli 4+ kombo). Gerisi sığmak zorunda.
+## Aritmetiği imkânsız en kötü durumlar: Kolay + çip (+N satırıyla n >= 5; çentikte n >= 4) ya da çentik + (Kolay | çip) + n >= 5.
+## Gerisi sığmak zorunda (çip tavanı artık çipsizle aynı: 4 satır + "+N").
 func _must_fit(easy: bool, chip: bool, notch: bool, n: int) -> bool:
-	return not (notch and easy and ((chip and n >= 4) or (not chip and n >= 5)))
+	if easy and chip and (n >= 5 or (notch and n >= 4)):
+		return false
+	return not (notch and (easy or chip) and n >= 5)
 
 
 func _assert_no_overlap(r: ResultScreen, tag: String) -> void:
@@ -110,7 +113,7 @@ func test_b60_state_matrix_never_cuts_rows_and_never_overlaps() -> void:
 				for n in [0, 1, 4, 5, 8]:
 					var tag := "easy=%s chip=%s extra=%s n=%d" % [easy, chip, extra, n]
 					var r := _make(n, easy, chip, extra)
-					var cap := 3 if chip else 4
+					var cap := 4
 					assert_eq(_rows(r), mini(n, cap), tag + ": satır sayısı hedefte (azaltma yok)")
 					assert_eq(
 						_plus_text(r), "+%d" % (n - cap) if n > cap else "", tag + ": '+N' korunur"
@@ -154,14 +157,16 @@ func test_b62_five_combos_use_spacing_then_button_tiers_not_rows() -> void:
 		"panel→düğme 24"
 	)
 	var chip := _make(5, false, true)
-	assert_eq([_rows(chip), _plus_text(chip)], [3, "+2"], "çipli: 3 satır + '+2'")
+	assert_eq(
+		[_rows(chip), _plus_text(chip)], [4, "+1"], "çipli de 4 satır + '+1' (kullanıcı kararı b)"
+	)
 
 
 # Kırmızı olur: eski kod bu kombinasyonda satırı 0'a kadar indiriyordu.
 func test_b63_infeasible_worst_case_keeps_rows_and_reports_overflow() -> void:
 	var r := _make(8, true, true, NOTCH)
-	assert_eq(_rows(r), 3, "Kolay + çip + çentik: 3 satır kalır (0'a inmez)")
-	assert_eq(_plus_text(r), "+5")
+	assert_eq(_rows(r), 4, "Kolay + çip + çentik: 4 satır kalır (0'a inmez)")
+	assert_eq(_plus_text(r), "+4")
 	assert_eq(r._tier, LAST_TIER)
 	_assert_no_overlap(r, "en kötü")
 	var big_inset := _make(4, false, false, Vector4(0, 100, 0, 150))
@@ -323,7 +328,7 @@ func test_b70_big_text_matrix_has_no_overlap_and_scrolls_when_it_cannot_fit() ->
 				var tag := "2x easy=%s chip=%s n=%d" % [easy, chip, n]
 				var r := _make(n, easy, chip, NOTCH)
 				r.set_font_scale(2.0)
-				var cap := 3 if chip else 4
+				var cap := 4
 				assert_eq(_rows(r), mini(n, cap), tag + ": satır azaltma yok")
 				_assert_no_overlap(r, tag)
 				var bottom := r.content_bottom()
@@ -349,3 +354,22 @@ func test_b70_big_text_matrix_has_no_overlap_and_scrolls_when_it_cannot_fit() ->
 						),
 						tag + ": sığıyorsa kaydırma kapalı"
 					)
+
+
+# --- CI görüntü bulguları (run 40522756345) -----------------------------------------------------------------------
+
+
+# Kırmızı olur: paneller tema PanelRaised (mor) idi; Kolay notu etiketinin sarma genişliği taban değildi (not boş görünüyordu).
+func test_b71_panels_are_stone_and_easy_note_text_has_a_wrap_width() -> void:
+	var r := _make(2, true, false)
+	for p: PanelContainer in [r.breakdown_panel, r.strip_panel, r.combo_panel]:
+		var sb := p.get_theme_stylebox(&"panel") as StyleBoxFlat
+		assert_not_null(sb, p.name + ": düz taş kutusu")
+		assert_eq(sb.bg_color, UiKit.TAS_800, p.name + ": taş dolgu (mor değil)")
+	var text := r.easy_note.get_node("Text") as Label
+	assert_gte(
+		text.custom_minimum_size.x,
+		600.0,
+		"sarma genişliği taban: dar genişlikte min yükseklik şişmez"
+	)
+	assert_lte(text.get_combined_minimum_size().y, r.easy_note.size.y, "metin not şeridine sığar")

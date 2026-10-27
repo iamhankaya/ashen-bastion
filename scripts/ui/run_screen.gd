@@ -462,15 +462,20 @@ func _on_visibility() -> void:
 
 
 ## Açılış odağı yalnız klavye/kumandada anlamlı: dokunmatikte amber 6 px çerçeve kalıcı görünürdü (denetim #13).
-## Projede "son girdi" bilgisi yok; en küçük çözüm dokunmatik ekran varlığıdır.
+## Projede "son girdi" bilgisi yok; en küçük çözüm mobil cihazdaki dokunmatik ekrandır (masaüstü/CI'da `emulate_touch_from_mouse`
+## dokunmatiği hep "var" gösterir, orada odak verilir).
 static func should_grab_focus(touch: bool) -> bool:
 	return not touch
+
+
+static func touch_only() -> bool:
+	return OS.has_feature("mobile") and DisplayServer.is_touchscreen_available()
 
 
 func _focus_selected() -> void:
 	var b: Button = mode_buttons.get(_mode, back_button)
 	scroll.ensure_control_visible(b)
-	if should_grab_focus(DisplayServer.is_touchscreen_available()):
+	if should_grab_focus(touch_only()):
 		b.grab_focus()
 
 

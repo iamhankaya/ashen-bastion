@@ -56,6 +56,27 @@ static func fit_note(note: Label, width: float, big: bool, avail_h: float) -> fl
 	return maxf(40.0, ceilf(font.get_height(fs)))
 
 
+## Taş/kahve yüzey (DESIGN v2.1 §5: `levha` rengi): tema `PanelRaised` mordur (v2.0.3 kalıntısı); iç boşluklar temadan alınır.
+static func stone_box() -> StyleBox:
+	var theme_sb := UiKit.theme().get_stylebox(&"panel", &"PanelRaised")
+	var sb := UiKit.stylebox(UiKit.TAS_800, UiKit.BRONZ_700, 3, 14)
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		sb.set_content_margin(side, theme_sb.get_content_margin(side))
+	return sb
+
+
+## Kolay notu metni: autowrap'lı Label'ın en küçük yüksekliği dar genişlikte (1 px) hesaplanıp metni panel dışına itiyordu
+## (CI görüntüsü: not boş görünüyordu); sarma genişliği taban olarak verilir.
+static func size_note_text(text: Label, width: float, height: float) -> void:
+	text.custom_minimum_size = Vector2(width - 92.0 - 28.0, 0.0)
+	text.size = Vector2(width - 92.0 - 28.0, height)
+
+
+## Çip giriş kayması blok arası boşluktan (sıkı kademelerde <24) büyük olamaz; yoksa çip kombo paneline biner.
+static func chip_slide(tier: int, slide: float) -> float:
+	return minf(slide, float(TIERS[tier][T_GB]))
+
+
 ## Başarım çipinin iç parçaları çip yüksekliğine (96 / en sıkı kademede 88) göre dizilir; adlar çip genişliğine kırpılır.
 static func place_chip_parts(
 	star: Control, title: Control, names: Control, width: float, height: float

@@ -39,6 +39,8 @@ var column: VBoxContainer
 var gap: Control
 var chips_slot: Control
 var chips: HBoxContainer
+## 2×: çipler bu dikey kapta (HBoxContainer.vertical sabittir); 1×'te null.
+var chips_v: VBoxContainer = null
 
 var _sound_on: bool = true
 var _vibration_on: bool = true
@@ -221,8 +223,13 @@ func open(actives: Array[SkillState], passives: Array[SkillState], sound: bool, 
 func refresh_chips() -> void:
 	if chips_slot == null:
 		return
-	if chips != null:
+	if chips_v != null:
+		chips_slot.remove_child(chips_v)
+		chips_v.queue_free()
+		chips_v = null
+	elif chips != null:
 		chips_slot.remove_child(chips)
+	if chips != null:
 		chips.queue_free()
 	var sel := V21Runs.selection()
 	chips = RunStrip.make_chips(sel["mode"], sel["diff"], V21Runs.profiles())
@@ -251,12 +258,25 @@ func _layout_chips() -> void:
 	chips_slot.custom_minimum_size.y = CHIP_H * 2.0 + CHIP_ROW_GAP if _big else CHIP_H
 	if chips == null:
 		return
-	chips.vertical = _big
-	chips.add_theme_constant_override(&"separation", int(CHIP_ROW_GAP) if _big else 16)
-	for c in chips.get_children():
-		(c as Control).size_flags_horizontal = (
-			Control.SIZE_SHRINK_CENTER if _big else Control.SIZE_FILL
-		)
+	if _big and chips_v == null:
+		chips_v = VBoxContainer.new()
+		chips_v.add_theme_constant_override(&"separation", int(CHIP_ROW_GAP))
+		UiKit.fill(chips_v)
+		for c in chips.get_children():
+			chips.remove_child(c)
+			(c as Control).size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			chips_v.add_child(c)
+		chips_slot.remove_child(chips)
+		chips_slot.add_child(chips_v)
+	elif not _big and chips_v != null:
+		for c in chips_v.get_children():
+			chips_v.remove_child(c)
+			(c as Control).size_flags_horizontal = Control.SIZE_FILL
+			chips.add_child(c)
+		chips_slot.remove_child(chips_v)
+		chips_v.queue_free()
+		chips_v = null
+		chips_slot.add_child(chips)
 
 
 func set_settings(sound: bool, vib: bool) -> void:

@@ -44,7 +44,7 @@ const CHIP_H := 96.0
 const CHIP_AT := 1.1
 const CHIP_IN := 0.2
 const CHIP_SLIDE := 24.0
-const CHIP_MAX_COMBOS := 3
+const CHIP_MAX_COMBOS := 4
 ## v2.1 Kolay notu: şerit ile kombolar arası 96 yüksek satır, amber 6 px sol çizgi.
 const NOTE_H := 96.0
 const EASY_NOTE := "Kolay: bu koşu Lord başarımlarına ve toplam sayaçlara yazılmadı."
@@ -183,7 +183,7 @@ func _build() -> void:
 	combo_panel.theme_type_variation = &"PanelRaised"
 	combo_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# kademeler panel üst/alt boşluğunu değiştirir: tema kutusunun kopyası (kenar/renk aynı)
-	_panel_sb = UiKit.theme().get_stylebox(&"panel", &"PanelRaised").duplicate() as StyleBox
+	_panel_sb = ResultFit.stone_box()
 	combo_panel.add_theme_stylebox_override(&"panel", _panel_sb)
 	var cv := VBoxContainer.new()
 	combo_cv = cv
@@ -260,7 +260,7 @@ func _draw_band() -> void:
 
 func _build_breakdown() -> void:
 	breakdown_panel = PanelContainer.new()
-	breakdown_panel.theme_type_variation = &"PanelRaised"
+	breakdown_panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
 	breakdown_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(breakdown_panel)
 	var defs := [
@@ -306,7 +306,7 @@ func _build_breakdown() -> void:
 
 func _build_strip() -> void:
 	strip_panel = PanelContainer.new()
-	strip_panel.theme_type_variation = &"PanelRaised"
+	strip_panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
 	strip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(strip_panel)
 	var defs := [["hud-sure", "Süre"], ["hud-xp", "Seviye"], ["hud-oldurme", "Öldürme"]]
@@ -737,8 +737,7 @@ func _layout_tail() -> float:
 		var bar := easy_note.get_child(0) as Control
 		bar.size = Vector2(6.0, note_h)
 		(easy_note.get_child(1) as Control).position.y = (note_h - 40.0) * 0.5
-		var note_text := easy_note.get_node("Text") as Label
-		note_text.size = Vector2(_w - 92.0 - 28.0, note_h)
+		ResultFit.size_note_text(easy_note.get_node("Text") as Label, _w, note_h)
 		combos_y += note_h + gb
 	_chip_y = combos_y
 	if not _new_names.is_empty():
@@ -931,7 +930,9 @@ func _apply_chip(t: float, done: bool) -> void:
 		return
 	var k := 1.0 if done else ResultTimeline.cubic_out(clampf((t - CHIP_AT) / CHIP_IN, 0.0, 1.0))
 	achievement_chip.modulate.a = k
-	achievement_chip.position.y = _chip_y + _dy + _bdy + (1.0 - k) * CHIP_SLIDE
+	achievement_chip.position.y = (
+		_chip_y + _dy + _bdy + (1.0 - k) * ResultFit.chip_slide(_tier, CHIP_SLIDE)
+	)
 
 
 func _apply_stamp(t: float, done: bool) -> void:
