@@ -24,7 +24,7 @@ func test_contract_make_reads_mode_and_difficulty_fields() -> void:
 	assert_eq(e.end_mode, "endless")
 	assert_eq(e.lord_repeat_sec, 300.0)
 	assert_eq(e.lord_hp_cap_mult, 8.0)
-	assert_eq(e.enrage_after_sec, 1500.0)
+	assert_eq(e.enrage_after_sec, 1200.0)
 
 
 func test_contract_make_unknown_names_give_null() -> void:
