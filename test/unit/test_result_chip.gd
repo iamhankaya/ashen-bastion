@@ -78,7 +78,8 @@ func test_b4_combo_lines_at_most_three_with_chip_and_plus_n() -> void:
 	var r := _screen()
 	r.set_new_achievements(_names(1))
 	r.show_result(false, STATS, _combos(5))
-	assert_lte(r.combo_box.get_child_count(), 3, "özet varken kombo bloğu en çok 3 satır")
+	# v2.1 U6: satır azaltılmaz; "+N" satırı çocuk sayısına girer (3 satır + "+2" = 4 çocuk)
+	assert_lte(r.combo_box.get_child_count(), 4, "özet varken kombo bloğu en çok 3 satır + '+N'")
 	var rows := 0
 	var plus := ""
 	for c in r.combo_box.get_children():
@@ -86,6 +87,7 @@ func test_b4_combo_lines_at_most_three_with_chip_and_plus_n() -> void:
 			rows += 1
 		elif c is Label and (c as Label).text.begins_with("+"):
 			plus = (c as Label).text
+	assert_lte(rows, 3, "özet varken en çok 3 kombo satırı")
 	assert_eq(plus, "+%d" % (5 - rows), "taşan kombolar '+N' olur")
 	# 3 kombo özetle birlikte sığıyorsa hepsi görünür.
 	var r3 := _screen()
@@ -106,8 +108,9 @@ func test_m5_buttons_fit_with_chip_and_safe_area() -> void:
 	var r := _screen()
 	r.set_new_achievements(_names(2))
 	r.show_result(false, STATS, _combos(4))
-	r.apply_safe_area(Vector4(0, 100, 0, 150))
-	assert_lte(r.content_bottom(), 2400.0 - 72.0 - 150.0)
+	# v2.1 U6: satır azaltma kalktı; çentik payı (üst 60, alt 40) kademelerle sığar (aşırı 100/150 payı sığmaz)
+	r.apply_safe_area(Vector4(0, 60, 0, 40))
+	assert_lte(r.content_bottom(), 2400.0 - 72.0 - 40.0)
 
 
 func test_m5_detail_text_is_at_least_26() -> void:

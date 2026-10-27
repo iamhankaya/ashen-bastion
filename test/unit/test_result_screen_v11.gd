@@ -73,9 +73,9 @@ func test_layout_zero_and_four_combos_fit_with_buttons_below_content() -> void:
 func test_fifth_combo_shows_plus_one() -> void:
 	var r := _screen(true, 5)
 	var last := r.combo_box.get_child(r.combo_box.get_child_count() - 1) as Label
-	# v2.1: bloklar +44 kaydı; 5 kombo 3 satır + '+2' olarak sığar
-	assert_eq(last.text, "+2")
-	assert_eq(r.combo_box.get_child_count(), 4, "3 satır + '+2'")
+	# v2.1 U6: 5 kombo 4 satır + '+1' olarak sığar (satır azaltılmaz, kademeler)
+	assert_eq(last.text, "+1")
+	assert_eq(r.combo_box.get_child_count(), 5, "4 satır + '+1'")
 	var r4 := _screen(true, 4)
 	assert_eq(r4.combo_box.get_child_count(), 4)
 
@@ -237,15 +237,16 @@ func test_second_finish_does_not_extend_lock() -> void:
 	assert_true(r.buttons_enabled(), "ilk atlama t'si korunur")
 
 
-func test_four_combos_with_big_safe_area_shrink_rows_instead_of_overflowing() -> void:
+func test_four_combos_with_notch_safe_area_keep_rows_and_tighten_spacing() -> void:
+	# v2.1 U6 (kullanıcı kararı b): satır azaltılmaz; çentik payında (üst 100, alt 40) kademelerle sığar
 	var r := _screen(true, 4)
-	r.apply_safe_area(Vector4(0, 100, 0, 150))
-	var limit := 2400.0 - 72.0 - 150.0
+	r.apply_safe_area(Vector4(0, 100, 0, 40))
+	var limit := 2400.0 - 72.0 - 40.0
 	assert_lte(r.menu_button.position.y + r.menu_button.size.y, limit)
-	var last := r.combo_box.get_child(r.combo_box.get_child_count() - 1) as Label
-	assert_true(last is Label and last.text.begins_with("+"), "taşan kombolar +N olur")
+	assert_eq(r.combo_box.get_child_count(), 4, "4 satır korunur")
 	r.apply_safe_area(Vector4.ZERO)
-	assert_eq(r.combo_box.get_child_count(), 4, "güvenli alan kalkınca 4 satır geri gelir")
+	assert_eq(r.combo_box.get_child_count(), 4)
+	assert_eq(r.replay_button.size.y, ResultScreen.REPLAY_H, "pay kalkınca tasarım ölçüleri döner")
 
 
 func test_hero_score_is_capped_at_display_cap() -> void:
