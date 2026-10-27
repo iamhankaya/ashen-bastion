@@ -1,7 +1,7 @@
 class_name StoreIo
 extends RefCounted
-## Sürümlü yerel kayıt dosyası G/Ç yardımcıları (v2.0). Başarım deposu kullanır; `Highscores`'a DOKUNULMAZ (H* testleri
-## korunur). Başarım bilmez.
+## Sürümlü yerel kayıt dosyası G/Ç yardımcıları (v2.0). Başarım deposu ve (v2.1) `Highscores` kullanır (`write_atomic`).
+## Başarım bilmez.
 
 const MAX_BYTES := 262144
 ## Tamsayıya çevrilen kayan nokta değerleri için üst sınır (taşma/NaN koruması; Highscores.INT_LIMIT ile aynı).

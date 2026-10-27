@@ -54,6 +54,10 @@ var data: GameData
 var store: AchievementStore
 var char_id: StringName = &""
 var clock: Callable = Callable()
+## v2.1 (K-C5): zorluğa bağlı kural; null = kısıt yok. Kolay'da Lord'a bağlı kademeler olay anında verilmez, toplamlardan
+## yalnız runs/play_secs artar (sonradan geri alma yok). Tek kademe verme noktası `_check`, toplamlar `_add_total`.
+var rules: AchievementRules = null
+var diff: StringName = &"hard"
 
 ## Koşu sayaçları (stat dizini -> değer); total_* değerleri depodadır.
 var _run: PackedInt32Array = PackedInt32Array()
@@ -71,16 +75,21 @@ var _best_pairs: Array = []
 
 
 ## p_clock: () -> int unix (varsayılan Time.get_unix_time_from_system; testte enjekte; dönüş < 1 ise 1 kullanılır).
+## p_rules/p_diff: v2.1 zorluk kuralı (V21Runs.achievement_rules / diff_of); verilmezse kısıt yok.
 func _init(
 	p_data: GameData,
 	p_store: AchievementStore,
 	p_char_id: StringName,
-	p_clock: Callable = Callable()
+	p_clock: Callable = Callable(),
+	p_rules: AchievementRules = null,
+	p_diff: StringName = &"hard"
 ) -> void:
 	data = p_data
 	store = p_store
 	char_id = p_char_id
 	clock = p_clock
+	rules = p_rules
+	diff = p_diff
 	_run.resize(AchievementDef.STATS.size())
 	for _i in AchievementDef.STATS.size():
 		_by_stat.append(PackedInt32Array())
@@ -162,14 +171,14 @@ func finish(won: bool, stats: Dictionary) -> void:
 	store.add_total(&"runs", 1)
 	_check(S_TOTAL_RUNS)
 	if won:
-		store.add_total(&"wins", 1)
+		_add_total(&"wins", 1)
 		_check(S_TOTAL_WINS)
 	store.add_total(&"play_secs", time)
 	_check(S_TOTAL_PLAY_SECS)
 	store.note_best(score, time, level)
 	for pair in _best_pairs:
 		store.note_best_key(pair[1], _run[pair[0]])
-	if time >= 300:
+	if time >= 300 and _counts(&"chars5"):
 		store.note_char5(char_id)
 		_check(S_TOTAL_CHARS5)
 	if won:
@@ -217,13 +226,13 @@ func flush() -> bool:
 func _on_enemy_killed(type_id: StringName, _pos: Vector2) -> void:
 	if _finished:
 		return
-	store.add_total(&"kills", 1)
+	_add_total(&"kills", 1)
 	_check(S_TOTAL_KILLS)
 	_run[S_RUN_KILLS] += 1
 	_check(S_RUN_KILLS)
 	var mask: int = ELITE_MASKS.get(type_id, 0)
 	if mask != 0:
-		store.add_total(&"boss_kills", 1)
+		_add_total(&"boss_kills", 1)
 		_check(S_TOTAL_BOSS_KILLS)
 		if type_id == ELIT_PIYADE:
 			_run[S_RUN_ELIT_PIYADE] += 1
@@ -311,11 +320,30 @@ func _check(si: int) -> void:
 		var def: AchievementDef = data.achievements[i]
 		var have := store.step_count(def.id)
 		var reached := mini(AchievementStep.reached(def, v), AchievementStep.total(def))
+		if reached > have and rules != null:
+			reached = _allowed_upto(def.id, have, reached)
 		if reached > have and store.unlock_step(def.id, reached, _now()):
 			_run_steps += reached - have
 			if not _run_unlocked.has(def.id):
 				_run_unlocked.append(def.id)
 			unlocked.emit(def)
+
+
+## Kademeler ardışık verilir: (have, reached] içinde zorlukta kapalı ilk kademeden önceki sayı.
+func _allowed_upto(id: StringName, have: int, reached: int) -> int:
+	for k in range(have + 1, reached + 1):
+		if not rules.allows(AchievementRules.tier_id(id, k), diff):
+			return k - 1
+	return reached
+
+
+func _counts(key: StringName) -> bool:
+	return rules == null or rules.counts_total(key, diff)
+
+
+func _add_total(key: StringName, n: int) -> void:
+	if _counts(key):
+		store.add_total(key, n)
 
 
 func _value(si: int) -> int:

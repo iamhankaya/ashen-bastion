@@ -435,7 +435,7 @@ func test_v11_constants_and_limits() -> void:
 	assert_eq(AshGhostRenderer.LOD_ALIVE, 150)
 	assert_eq(EnemyAnim.LUT_SIZE, 256)
 	assert_eq(HitStop.MAX_SEC, 0.15)
-	assert_eq(Highscores.VERSION, 1)
+	assert_eq(Highscores.VERSION, 2, "v2.1 K-C6: kayıt biçimi v2")
 	assert_eq(Highscores.MAX_ENTRIES, 10)
 	assert_eq(Highscores.DEFAULT_PATH, "user://highscores.json")
 	assert_eq(PauseLogic.LEVEL_UP_PREROLL, 0.18)
