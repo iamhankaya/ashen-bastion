@@ -55,6 +55,18 @@ func test_contract_run_screen_is_appended_and_goes_back_to_the_menu() -> void:
 	assert_eq(PauseLogic.back_action(PauseLogic.Screen.MENU), PauseLogic.Back.QUIT)
 
 
+func test_contract_hud_is_hidden_on_menu_result_scores_and_run_screens() -> void:
+	for sc in [
+		PauseLogic.Screen.MENU,
+		PauseLogic.Screen.RESULT,
+		PauseLogic.Screen.SCORES,
+		PauseLogic.Screen.RUN
+	]:
+		assert_false(PauseLogic.hud_allowed(sc), str(sc))
+	for sc in [PauseLogic.Screen.PLAYING, PauseLogic.Screen.PAUSED, PauseLogic.Screen.LEVEL_UP]:
+		assert_true(PauseLogic.hud_allowed(sc), str(sc))
+
+
 func test_contract_run_screen_never_steps_the_sim_or_auto_pauses() -> void:
 	assert_false(PauseLogic.sim_should_step(PauseLogic.Screen.RUN, GameSim.State.RUNNING))
 	assert_false(
@@ -164,6 +176,7 @@ func test_contract_scores_open_from_menu_and_result_with_a_pair() -> void:
 	assert_eq(c.screen, PauseLogic.Screen.RESULT)
 	c.open_scores(&"quick", &"easy")
 	assert_eq(c.screen, PauseLogic.Screen.SCORES)
+	assert_false(c.hud.visible, "sim bağlıyken de HUD skor ekranında gizli")
 	c._on_back()
 	assert_eq(c.screen, PauseLogic.Screen.MENU)
 	c.open_scores()
