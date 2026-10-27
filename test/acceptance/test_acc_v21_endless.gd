@@ -28,6 +28,10 @@ func _to_first_kill(s: GameSim) -> Dictionary:
 	return w
 
 
+func after_all() -> void:
+	V21Acc.release()
+
+
 func test_e1_endless_profile_sets_the_end_rules() -> void:
 	var s := GameSim.new(5, &"gunslinger", {"run_profile": V21Kit.profile(&"endless", &"normal")})
 	assert_eq(s.end_mode, GameSim.END_MODE_ENDLESS)

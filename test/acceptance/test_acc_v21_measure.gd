@@ -61,6 +61,8 @@ func test_u1b_the_balance_workflow_covers_the_mode_difficulty_matrix() -> void:
 		assert_true(text.contains(token), "matriste: %s" % token)
 
 
+## Oyuncu duruyor (IDLE): kaçan bot birkaç temas tick'i ile gürültülü toplam üretir (CI 40504491590: Normal 110 > Zor 109),
+## duran oyuncuda temas her tick'te doyar ve toplam yalnız yoğunluk × enemy_dmg çarpanını yansıtır.
 func _damage_taken(diff: StringName) -> float:
 	var total := 0.0
 	for seed_value in [3, 8, 15]:
@@ -80,7 +82,7 @@ func _damage_taken(diff: StringName) -> float:
 		s.max_hp = 1.0e9
 		s.hp = 1.0e9
 		var rng := Bots.make_rng(seed_value)
-		Bots.play(s, &"kite", 60 * 40, rng)
+		Bots.play(s, Bots.IDLE, 60 * 40, rng)
 		total += 1.0e9 - s.hp
 	return total
 

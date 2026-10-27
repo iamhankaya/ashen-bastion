@@ -19,6 +19,10 @@ func _rows(sim: GameSim, kind: String) -> Array:
 	return out
 
 
+func after_all() -> void:
+	V21Acc.release()
+
+
 func test_q1_run_length_rules_come_from_the_profile() -> void:
 	var s := _quick()
 	assert_eq(s.end_mode, "lord")

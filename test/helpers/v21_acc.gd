@@ -26,6 +26,12 @@ static func lord_only_data() -> GameData:
 	return d
 
 
+## Önbelleği bırakır: statik değişken GameData kaynaklarını tuttuğundan, çıkışta 'resources still in use' hatasını
+## (gate: günlükte hata satırı) önlemek için kullanan her kabul dosyası after_all'da çağırır.
+static func release() -> void:
+	_lord_only = null
+
+
 static func lord_id(sim: GameSim) -> int:
 	for id in sim.alive_ids():
 		if sim.enemies.type_id_of(EnemyPool.index_of(id)) == LORD:

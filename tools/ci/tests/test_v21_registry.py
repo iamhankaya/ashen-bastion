@@ -19,7 +19,7 @@ def test_slice_file_parses_and_has_separated_closed_symbol_lines():
     text = _read("tools/v21_slices.txt")
     ok, marks, errors = check_slices.parse(text, check_slices.V21_SYMBOLS)
     assert ok, errors
-    assert marks == [], "C fazında hiçbir dilim açık değil (açmak ilgili dilimin/T-turunun işi)"
+    assert marks == ["M", "S", "K", "A"], "T-tur 1: M S K A açık, B (U4b) U4b girince ayrı turda açılır"
     lines = text.splitlines()
     idx = [i for i, ln in enumerate(lines) if re.fullmatch(r"#?[MSKAB]", ln.strip())]
     assert len(idx) == 5, "her dilim için bir simge satırı"
