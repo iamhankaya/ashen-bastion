@@ -179,13 +179,16 @@ func test_focus_order_follows_tree_order() -> void:
 	var col := m.play_button.get_parent() as Control
 	var tree_order: Array[Node] = col.find_children("*", "Button", true, false)
 	var want: Array[Node] = [
+		m.run_button,
 		m.play_button,
 		m.characters_button,
 		m.achievements_button,
 		m.scores_button,
 		m.settings_button
 	]
-	assert_eq(tree_order, want, "OYNA → KARAKTERLER → BAŞARIMLAR → EN İYİ SKORLAR → AYARLAR")
+	assert_eq(
+		tree_order, want, "şerit → OYNA → KARAKTERLER → BAŞARIMLAR → EN İYİ SKORLAR → AYARLAR"
+	)
 	for c in want:
 		assert_eq((c as Control).focus_mode, Control.FOCUS_ALL, c.name)
 
