@@ -112,7 +112,7 @@ Satıra dokun = tek nesne büyür: `levha-yuksek` içinde başlık satırı + **
 Varsayılan · **boş/hepsi kilitli (`03b`)**: `0 / 53`, mühürler sönük, 108 yüksek panel "Henüz kademe açılmadı. Bir koşuya başla.", hata iletisi yok · **hepsi açık (`03c`)**: `53 / 53` amber, mühürler dolu, panel "Tüm başarımlar açıldı." · satır açık · koşu içi bildirim ("BAŞARIM AÇILDI · KADEME III / ÖLDÜRME III", `04`) ve sonuç özeti ("YENİ KADEME · 2") **aynı kaynak**: bildirim çıktıysa liste aynı karede açık (test) · bilinmeyen kimlik gösterilmez, silinmez · çoklu eşik = tek bildirim, en yüksek kademe.
 
 ## 5. Ruh küreleri
-İlk tur brifi geçerlidir (kaynaklar `art/source/gem-orbs/`, 34/48/68 px, ölçüm: normal–elit ΔL* ≥41, elit–boss ≥33, normal–boss 4,9; IoU 0,37/0,46/0,51). Bu turda eklenenler: görsel yön `mock/05-kure-gorsel-yonu` yeni palet üzerinde yeniden çizildi; elit sınıfı mor kimliği XP çubuğuyla tutarlı (`xp` mor korunur). **`hareket_azalt` AÇIKken küre süzülmesi durur** (kullanıcı kararı). Normal–boss kriteri için karar önerisi hâlâ açık (§9-1).
+İlk tur brifi geçerlidir (kaynaklar `art/source/gem-orbs/`, 44/48/80 px, ölçüm: normal–elit ΔL* ≥41, elit–boss ≥33, normal–boss 4,9; IoU 0,37/0,46/0,51). Bu turda eklenenler: görsel yön `mock/05-kure-gorsel-yonu` yeni palet üzerinde yeniden çizildi; elit sınıfı mor kimliği XP çubuğuyla tutarlı (`xp` mor korunur). **`hareket_azalt` AÇIKken küre süzülmesi durur** (kullanıcı kararı). Normal–boss kriteri için karar önerisi hâlâ açık (§9-1).
 
 ## 6. `hareket_azalt` kapsamı (kullanıcı kararı: hepsi durur)
 | Hareket | Açıkken |

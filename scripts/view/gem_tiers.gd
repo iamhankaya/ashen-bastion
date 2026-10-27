@@ -15,7 +15,7 @@ const TEXTURES: PackedStringArray = [
 	"res://assets/gfx/fx/gems/ara_boss.png",
 ]
 ## Tip sırasıyla oyun içi küre boyutu (px; docs/design/v2.0.3).
-const ORB_PX: PackedInt32Array = [44, 48, 68]
+const ORB_PX: PackedInt32Array = [44, 48, 80]
 
 
 static func tier_of(value: int) -> int:
