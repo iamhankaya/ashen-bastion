@@ -43,15 +43,17 @@ V21_SYMBOLS = ("M", "S", "K", "A", "B")
 class Profile:
     """Bir dilim ailesinin ayarları (simgeler, test adı deseni, zorlama değişkeni, sınıf süzgeci, dilimsiz istisnası)."""
 
-    def __init__(self, symbols=SYMBOLS, force_env=FORCE_ENV, classname_re=None, sliceless=SLICELESS):
+    def __init__(self, symbols=SYMBOLS, force_env=FORCE_ENV, classname_re=None, sliceless=SLICELESS, exclude_re=None):
         self.symbols = tuple(symbols)
+        self.exclude_re = re.compile(exclude_re) if exclude_re else None
         self.force_env = force_env
         self.classname_re = re.compile(classname_re) if classname_re else None
         self.sliceless = set(sliceless)
         self.test_re = re.compile(r"^test_([%s])(\d+)_" % "".join(t.lower() for t in self.symbols))
 
 
-V2 = Profile()
+# v2.1 K/M/B testleri de test_k/m/b<N>_ adlıdır; v2.0 kapısı v21 sınıflarını saymaz (tek adlandırma kuralı, T-tur 1).
+V2 = Profile(exclude_re=r"v21(?![0-9])")
 V202 = Profile(V202_SYMBOLS, "V202_SLICES_FORCE", "v202", ())
 V21 = Profile(V21_SYMBOLS, "V21_SLICES_FORCE", "v21", ())
 
@@ -90,6 +92,8 @@ def check_junit(junit: Path, marks: list[str], profile: Profile = V2) -> list[st
     counts = {s: {"real": 0, "pending": []} for s in marks}
     for case in ET.parse(junit).getroot().iter("testcase"):
         if profile.classname_re and not profile.classname_re.search(case.get("classname", "")):
+            continue
+        if profile.exclude_re and profile.exclude_re.search(case.get("classname", "")):
             continue
         s = slice_of(case.get("name", ""), profile)
         if s not in counts:
@@ -134,6 +138,7 @@ def parse_args(argv: list[str]) -> tuple[Profile, Path | None, Path | None] | No
         str(opts.get("--force-env", base.force_env)),
         str(opts["--classname-re"]) if "--classname-re" in opts else (base.classname_re.pattern if base.classname_re else None),
         () if (opts.get("--no-sliceless") or opts.get("--v21")) else base.sliceless,
+        base.exclude_re.pattern if base.exclude_re and "--classname-re" not in opts else None,
     )
     file_arg = str(opts["--file"]) if "--file" in opts else (pos.pop(0) if pos else None)
     if file_arg is None or len(pos) > 1:

@@ -9,12 +9,12 @@
 # Dilim -> kabul dosyası: M test_acc_v21_measure; S test_acc_v21_profile/_quick/_endless; K test_acc_v21_highscores/_ach;
 #   A test_acc_v21_run_screen; B test_acc_v21_scores_result.
 # Her simge ayrı satırdır: dört faz paralel açınca bitişik satır çakışması çıkmasın.
-#M
+M
 # -- S --
-#S
+S
 # -- K --
-#K
+K
 # -- A --
-#A
+A
 # -- B --
-#B
+B

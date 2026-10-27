@@ -2,7 +2,7 @@ extends GutTest
 ## Kabul (v2.1 B): skor ekranı sekmeleri ve sonuç ekranı koşu bilgisi (spec UI maddesi, DESIGN.md §5-6). Davranış sözleşmesi:
 ## skor ekranı iki sıra üçlü sekme (MOD 3 + ZORLUK 3 = 9 liste) sunar, açılan liste istenen çifttir; sonuç ekranı mod/zorluğu
 ## söyler, Sonsuz'da Lord sayısı, yalnız Kolay'da kural notu. Yerleşim/çakışma `test_b<N>_` birim testleri + görüntülerdir.
-## V21Slice "B" açılana dek pending.
+## V21Slice "B" açılana dek pending. Metinler gerçek ekranlardan (RunStrip.MODE_NAMES/DIFF_NAMES, ResultScreen.EASY_NOTE) doğrulandı.
 
 const DIR := "user://v21_scores_acc"
 
@@ -47,14 +47,29 @@ func _finish(c: GameController) -> void:
 	c.flush_delay()
 
 
+## Yalnız GÖRÜNÜR metinler: Kolay notu paneli ve LORD çipi gizliyken de ağaçta durur (AchKit.texts görünürlüğe bakmaz),
+## "yok" iddiaları (b4, b5) görünürlüğe göre sınanır.
+func _visible_texts(n: Node, out: PackedStringArray) -> void:
+	if n is CanvasItem and not (n as CanvasItem).visible:
+		return
+	if n is Label:
+		out.append((n as Label).text)
+	elif n is Button:
+		out.append((n as Button).text)
+	for c in n.get_children():
+		_visible_texts(c, out)
+
+
 func _upper(root: Node) -> String:
+	var texts := PackedStringArray()
+	_visible_texts(root, texts)
 	var out := ""
-	for t in AchKit.texts(root):
+	for t in texts:
 		out += t.to_upper() + "\n"
 	return out
 
 
-func test_v21b1_the_scores_screen_offers_three_modes_and_three_difficulties() -> void:
+func test_b1_the_scores_screen_offers_three_modes_and_three_difficulties() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	V21Kit.use_fake_settings()
@@ -68,7 +83,7 @@ func test_v21b1_the_scores_screen_offers_three_modes_and_three_difficulties() ->
 	assert_gte(text.count("NORMAL"), 2, "NORMAL hem MOD hem ZORLUK sırasında")
 
 
-func test_v21b2_the_requested_pair_is_the_one_shown() -> void:
+func test_b2_the_requested_pair_is_the_one_shown() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	V21Kit.use_fake_settings()
@@ -102,7 +117,7 @@ func test_v21b2_the_requested_pair_is_the_one_shown() -> void:
 	assert_false(text.contains("9191") or text.contains("9.191") or text.contains("9,191"))
 
 
-func test_v21b3_the_result_screen_names_the_mode_and_difficulty_of_the_finished_run() -> void:
+func test_b3_the_result_screen_names_the_mode_and_difficulty_of_the_finished_run() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	var fake := V21Kit.use_fake_settings()
@@ -116,7 +131,7 @@ func test_v21b3_the_result_screen_names_the_mode_and_difficulty_of_the_finished_
 	assert_true(text.contains("ZOR"), "zorluk çipi")
 
 
-func test_v21b4_endless_result_shows_the_lord_count_only_in_endless() -> void:
+func test_b4_endless_result_shows_the_lord_count_only_in_endless() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	var fake := V21Kit.use_fake_settings()
@@ -133,7 +148,7 @@ func test_v21b4_endless_result_shows_the_lord_count_only_in_endless() -> void:
 	assert_false(_upper(c2.result_screen).contains("LORD ×"), "Normal'de Lord sayısı çipi yok")
 
 
-func test_v21b5_the_easy_rule_note_appears_on_easy_results_only() -> void:
+func test_b5_the_easy_rule_note_appears_on_easy_results_only() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	var fake := V21Kit.use_fake_settings()

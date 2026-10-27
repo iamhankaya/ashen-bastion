@@ -44,7 +44,7 @@ def test_v21_symbols_constant():
 def test_repo_file_is_valid_and_all_closed():
     r = _run(["--v21", str(HERE.parents[1] / "v21_slices.txt")])
     assert r.returncode == 0, r.stderr
-    assert "(yok)" in r.stdout  # C fazında hiçbir dilim açık değil
+    assert "M S K A B" in r.stdout  # T-tur 1: tüm dilimler açık
 
 
 def test_all_symbols_accepted(tmp_path):
@@ -108,3 +108,61 @@ def test_multiple_open_slices_all_checked(tmp_path):
     r = _go(tmp_path, "S K\n", _junit(_case("test_s1_a"), _case("test_k1_a", "pending")))
     assert r.returncode == 1
     assert "K:" in r.stderr and "S:" not in r.stderr
+
+
+# --- T-tur 1: adlandırma kuralı (tek kural: v2.1 K/M/B testleri de test_<simge><N>_; v2.0 profili v21 sınıflarını saymaz) ---
+
+V2_SYMBOLS_FILE = "K\nM\nB\n"
+
+
+def _go_v2(tmp_path, junit):
+    sl = tmp_path / "v2_slices.txt"
+    sl.write_text(V2_SYMBOLS_FILE, encoding="utf-8")
+    (tmp_path / "junit.xml").write_text(junit, encoding="utf-8")
+    return _run([str(sl), str(tmp_path / "junit.xml")])
+
+
+def test_v2_profile_ignores_pending_in_v21_classes(tmp_path):
+    # v2.1 sınıfındaki pending test_k/m/b<N>_ v2.0 kapısını kırmamalı (K/M/B v2.0'da işaretli)
+    cls = "test/acceptance/test_acc_v21_highscores.gd"
+    v2_real = [_case(f"test_{s}2_x", cls="test/acceptance/test_acc_v2_ach_flow.gd") for s in "kmb"]  # M1 dilimsiz
+    pend = [_case(f"test_{s}1_y", "pending", cls=cls) for s in "kmb"]
+    r = _go_v2(tmp_path, _junit(*v2_real, *pend))
+    assert r.returncode == 0, r.stderr
+
+
+def test_v2_profile_still_counts_pending_in_v2_classes(tmp_path):
+    # süzgeç yalnız v21 sınıflarını dışlar: v2.0 sınıfındaki pending hâlâ kırar (sahte yeşil olmasın)
+    cls = "test/acceptance/test_acc_v2_ach_flow.gd"
+    r = _go_v2(tmp_path, _junit(_case("test_k1_a", cls=cls), _case("test_k2_b", "pending", cls=cls),
+                                _case("test_m2_a", cls=cls), _case("test_b2_a", cls=cls)))
+    assert r.returncode == 1
+    assert "K:" in r.stderr
+
+
+def test_v21_profile_counts_k_m_b_plain_names(tmp_path):
+    cls = "test/acceptance/test_acc_v21_highscores.gd"
+    ok = _go(tmp_path, "K\n", _junit(_case("test_k1_a", cls=cls)))
+    assert ok.returncode == 0, ok.stderr
+    bad = _go(tmp_path, "K\n", _junit(_case("test_k1_a", cls=cls), _case("test_k2_b", "pending", cls=cls)))
+    assert bad.returncode == 1
+
+
+def test_v21_profile_does_not_count_legacy_v21_prefixed_names(tmp_path):
+    # eski ad test_v21k<N>_ tek kural dışıdır: işaretli K diliminde sayılmaz (yeniden adlandırma unutulursa kapı kırılır)
+    cls = "test/acceptance/test_acc_v21_highscores.gd"
+    r = _go(tmp_path, "K\n", _junit(_case("test_v21k1_a", cls=cls)))
+    assert r.returncode == 1
+    assert "hiç test yok" in r.stderr
+
+
+def test_no_legacy_v21_prefixed_test_names_in_repo():
+    # kural tek: depoda test_v21<k|m|b><N>_ adlı test kalmamalı
+    import re
+    pat = re.compile(r"func\s+test_v21[a-z]\d+_")
+    hits = []
+    for p in (HERE.parents[2] / "test").rglob("*.gd"):
+        for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            if pat.search(line):
+                hits.append(f"{p.name}:{n}")
+    assert not hits, hits[:5]

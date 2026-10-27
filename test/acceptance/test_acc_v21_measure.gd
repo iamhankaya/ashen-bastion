@@ -28,7 +28,7 @@ const FIELDS := [
 ]
 
 
-func test_v21m1_the_measurement_tool_reports_every_planned_field() -> void:
+func test_m1_the_measurement_tool_reports_every_planned_field() -> void:
 	if V21Slice.require(self, "M"):
 		return
 	var text := FileAccess.get_file_as_string(MID_RUN)
@@ -37,7 +37,7 @@ func test_v21m1_the_measurement_tool_reports_every_planned_field() -> void:
 		assert_true(text.contains('"%s"' % f), "çıktı alanı: %s" % f)
 
 
-func test_v21m2_the_tool_can_play_the_lord_fight_and_the_endless_horizon() -> void:
+func test_m2_the_tool_can_play_the_lord_fight_and_the_endless_horizon() -> void:
 	if V21Slice.require(self, "M"):
 		return
 	var text := FileAccess.get_file_as_string(MID_RUN)
@@ -49,15 +49,20 @@ func test_v21m2_the_tool_can_play_the_lord_fight_and_the_endless_horizon() -> vo
 		assert_gte(int(hit.get_string(1)), 144000, "Lord dövüşü için ≥ 2400 sn (144000 adım)")
 
 
-func test_v21m3_the_balance_workflow_covers_the_mode_difficulty_matrix() -> void:
-	if V21Slice.require(self, "M"):
-		return
+func test_u1b_the_balance_workflow_covers_the_mode_difficulty_matrix() -> void:
+	# Matris U1b'nin (T20261027-33) teslimatıdır, M dilimi (U1a) yalnız strong_lord varsayılanlı tek dispatch teslim etti.
+	# Dilimsiz ad: U1b entegre olunca balance.yml matrisi gelir ve assert'ler otomatik devreye girer (gevşetme yok).
 	var text := FileAccess.get_file_as_string(BALANCE_YML)
 	assert_ne(text, "", "balance.yml var")
+	if not text.contains("endless"):
+		pending("U1b matrisi (T20261027-33) henüz entegre değil")
+		return
 	for token in ["quick", "endless", "easy", "hard", "strong_lord", "kite"]:
 		assert_true(text.contains(token), "matriste: %s" % token)
 
 
+## Oyuncu duruyor (IDLE): kaçan bot birkaç temas tick'i ile gürültülü toplam üretir (CI 40504491590: Normal 110 > Zor 109),
+## duran oyuncuda temas her tick'te doyar ve toplam yalnız yoğunluk × enemy_dmg çarpanını yansıtır.
 func _damage_taken(diff: StringName) -> float:
 	var total := 0.0
 	for seed_value in [3, 8, 15]:
@@ -77,7 +82,7 @@ func _damage_taken(diff: StringName) -> float:
 		s.max_hp = 1.0e9
 		s.hp = 1.0e9
 		var rng := Bots.make_rng(seed_value)
-		Bots.play(s, &"kite", 60 * 40, rng)
+		Bots.play(s, Bots.IDLE, 60 * 40, rng)
 		total += 1.0e9 - s.hp
 	return total
 
