@@ -17,6 +17,8 @@ const BOMB_SHAKE := 18.0
 
 var screen: int = PauseLogic.Screen.MENU
 var sim: GameSim = null
+## v2.1 KOŞU ekranı (U4a kurar; null iken ekran boş). Controller C sonrası değişmez.
+var run_screen: Control = null
 var gate: InputGate = InputGate.new()
 
 var world: Node2D
@@ -227,7 +229,7 @@ func go_menu() -> void:
 ## Yeni oyun (menüden OYNA, Baştan Başla, Tekrar Oyna).
 func start_run() -> void:
 	_stop_stress()
-	_bind(GameSim.new(randi(), v2.selected_character(), RUN_OPTS))
+	_bind(GameSim.new(randi(), v2.selected_character(), V21Runs.run_opts()))
 	world.visible = true
 	atmosphere.visible = true
 	_update_views(0.0)
@@ -385,7 +387,7 @@ func _update_music() -> void:
 	audio.update_music(
 		s.time if s != null else 0.0,
 		screen == PauseLogic.Screen.MENU,
-		s != null and s.state == GameSim.State.WON,
+		V21Runs.run_won(s),
 		s != null and s.state == GameSim.State.LOST,
 		screen == PauseLogic.Screen.PAUSED
 	)
@@ -448,7 +450,7 @@ func _show_result() -> void:
 	if stats.is_empty():
 		stats = {"time": sim.time, "level": sim.level, "kills": sim.kills, "evolutions": []}
 		stats.merge(V11State.end_stats(sim))
-		_run_won = sim.state == GameSim.State.WON
+		_run_won = V21Runs.run_won(sim)
 	var combos := UiKit.combo_rows(
 		stats.get("evolutions", []), sim.data, sim.character.id if sim.character != null else &""
 	)
@@ -529,11 +531,24 @@ func _apply_safe_areas() -> void:
 
 
 ## Ana menüden En İyi Skorlar ekranı (vurgu yok: sonuçtan sıralamaya bağlantı v1.1 dışı).
-func open_scores() -> void:
-	if screen != PauseLogic.Screen.MENU:
+## v2.1: boş (mod, zorluk) = geçerli seçim; sonuç ekranından biten koşunun çifti verilir.
+func open_scores(p_mode: StringName = &"", p_diff: StringName = &"") -> void:
+	if screen != PauseLogic.Screen.MENU and screen != PauseLogic.Screen.RESULT:
 		return
-	scores_screen.show_scores(highscores.entries, -1)
+	var key := V21Runs.scores_key(p_mode, p_diff)
+	scores_screen.show_scores(highscores.list_for(key["mode"], key["diff"]), -1)
 	_set_screen(PauseLogic.Screen.SCORES)
+
+
+## KOŞU ekranı (U4a doldurur; C'de boş) ve "BU AYARLA OYNA".
+func open_run_screen() -> void:
+	if screen == PauseLogic.Screen.MENU:
+		_set_screen(PauseLogic.Screen.RUN)
+
+
+func play_with(p_mode: StringName, p_diff: StringName) -> void:
+	V21Runs.set_selection(p_mode, p_diff)
+	start_run()
 
 
 func open_characters() -> void:
@@ -766,18 +781,7 @@ func _save_score(won: bool, stats: Dictionary) -> void:
 	if _run_saved:
 		return
 	_run_saved = true
-	_result_record = (
-		highscores
-		. submit(
-			{
-				"score": int(stats.get("score", 0)),
-				"time": floori(float(stats.get("time", 0.0))),
-				"won": won,
-				"level": int(stats.get("level", 1)),
-				"unix": int(Time.get_unix_time_from_system()),
-			}
-		)
-	)
+	_result_record = highscores.submit(V21Runs.score_fields(stats, won))
 	if int(_result_record.get("rank", 0)) > 0:
 		highscores.save()
 
@@ -789,6 +793,8 @@ func _on_record_stamped() -> void:
 ## `_set_screen` sonunda (next = PauseLogic.Screen). D3: SCORES ekranı, sonuç ekranı gecikmesi.
 func _v11_on_screen(next: int) -> void:
 	scores_screen.visible = next == PauseLogic.Screen.SCORES
+	if run_screen != null:
+		run_screen.visible = next == PauseLogic.Screen.RUN
 	v2.on_screen(next)
 
 
@@ -922,7 +928,8 @@ func _events():
 # --- sim olayları ve ayarlar ----------------------------------------------------------------
 
 
-func _on_run_ended(won: bool, stats: Dictionary) -> void:
+func _on_run_ended(emitted_won: bool, stats: Dictionary) -> void:
+	var won := emitted_won or V21Runs.run_won(sim)  # Sonsuz: sim LOST ama kilometre taşı kazanıldı
 	_run_won = won
 	_run_stats = stats
 	v2.on_run_ended(won, stats)  # tracker.finish: sonuç ekranından ve skor kaydından ÖNCE

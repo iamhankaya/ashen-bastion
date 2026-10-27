@@ -168,7 +168,9 @@ func _run() -> void:
 							"time": 1200 - (246350 - sco) / 300,
 							"won": sco > 150000,
 							"level": 9,
-							"unix": t
+							"unix": t,
+							"mode": "normal",
+							"diff": "normal"
 						}
 					)
 					t -= 86400

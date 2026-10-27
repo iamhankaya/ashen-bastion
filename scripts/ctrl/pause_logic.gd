@@ -4,7 +4,9 @@ extends RefCounted
 ## Kurallar: LEVEL_UP'ta sim donuk; arka plana alınınca/odak kaybında oyun otomatik duraklar;
 ## Android geri tuşu: oyunda duraklat, duraklatmada devam, diyalogda vazgeç, sonuçta/listelerde ana menü, menüde çık.
 
-enum Screen { MENU, PLAYING, LEVEL_UP, PAUSED, CONFIRM, RESULT, SCORES, CHARACTERS, ACHIEVEMENTS }
+enum Screen {
+	MENU, PLAYING, LEVEL_UP, PAUSED, CONFIRM, RESULT, SCORES, CHARACTERS, ACHIEVEMENTS, RUN
+}
 enum Back { NONE, PAUSE, RESUME, CANCEL_CONFIRM, TO_MENU, QUIT }
 
 const MAX_STEPS_PER_FRAME := 3
@@ -31,7 +33,7 @@ static func back_action(screen: int) -> int:
 			return Back.RESUME
 		Screen.CONFIRM:
 			return Back.CANCEL_CONFIRM
-		Screen.RESULT, Screen.SCORES, Screen.CHARACTERS, Screen.ACHIEVEMENTS:
+		Screen.RESULT, Screen.SCORES, Screen.CHARACTERS, Screen.ACHIEVEMENTS, Screen.RUN:
 			return Back.TO_MENU
 		Screen.MENU:
 			return Back.QUIT

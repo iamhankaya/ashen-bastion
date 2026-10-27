@@ -97,7 +97,9 @@ func _fresh_scores(filled: bool) -> void:
 					"time": 1200 - (246350 - sc) / 300,
 					"won": sc > 150000,
 					"level": 9,
-					"unix": t
+					"unix": t,
+					"mode": "normal",
+					"diff": "normal"
 				}
 			)
 			t -= 86400
