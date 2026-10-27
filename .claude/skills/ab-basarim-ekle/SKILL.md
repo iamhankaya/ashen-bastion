@@ -15,6 +15,9 @@ Bir kayıt = bir **aile**; `steps` ile 1..5 kademe taşır ("10/50/250 düşman 
 5. **Karakter kilidi:** karakter JSON'unda `unlock: {"achievement": "<aile>"}` (kademe ≥ 1 açar; `ab-karakter-ekle`).
 6. **Testler:** `test/unit/test_v203_c_*` (adım aritmetiği + veri tablosu, göç, tracker, ekran), `test_achievement_icons.gd`; yeni dosya eklersen `ab-test-ve-kapi` kayıtları. v2.0 tek eşikli kayıt testleri `AchKit.legacy_data()` (`test/fixtures/ach_v20/`) üzerinde koşar; gerçek veriye bağlama.
 7. **Kuru deneme:** sahte bir aile ekleyip ekran/tracker/gate'i koş (mevcut testlerin sabit listeleri burada çıkar: aile/kademe sayıları `test_v203_c_steps.gd`, `docs/data-schema.md` tablosu).
+   Yeni aile eklenince aile/kademe sayısına bağlı sabit listeler kırılır (kaynak: `docs/dev/v2.0.3-verification.md`, kuru deneme 1); bu 7 dosyayı baştan güncelle:
+   `test_achievements_screen.gd` (aile sayısı, `0 / 53` toplamı, grup toplamı), `test_v203_c_tracker.gd`, `test_v203_c_steps.gd`, `test_acc_v203_ach_data.gd`, `test_v203_c_migration.gd`, `test_achievement_icons.gd`, `test_acc_v2_isolation.gd`.
+   **Yeni aile ayrı stat kullanır:** mevcut bir stat'ı (ör. `total_kills`) paylaşan aile `reaper` tracker testlerini de kirletir; yeni aileye yeni stat aç (adım 3).
 8. `bash tools/gate.sh`.
 
 ## Dokunulan dosyalar

@@ -124,7 +124,7 @@ func test_default_sublines_and_version() -> void:
 	var m := _menu()
 	await _settle()
 	assert_eq((m.characters_button.get_node("Sub") as Label).text, "Gunslinger")
-	assert_eq((m.achievements_button.get_node("Sub") as Label).text, "0/22")
+	assert_eq((m.achievements_button.get_node("Sub") as Label).text, "0/53")
 	assert_eq(m.version_label.text, "Sürüm 2.0.3")
 
 
@@ -137,10 +137,10 @@ func test_set_character_name_updates_sub_and_version() -> void:
 
 func test_set_achievement_count() -> void:
 	var m := _menu()
-	m.set_achievement_count(8, 22)
-	assert_eq((m.achievements_button.get_node("Sub") as Label).text, "8/22")
-	m.set_achievement_count(0, 22)
-	assert_eq((m.achievements_button.get_node("Sub") as Label).text, "0/22")
+	m.set_achievement_count(8, 53)
+	assert_eq((m.achievements_button.get_node("Sub") as Label).text, "8/53")
+	m.set_achievement_count(0, 53)
+	assert_eq((m.achievements_button.get_node("Sub") as Label).text, "0/53")
 
 
 func test_clip_name_limits_to_24_letters_with_ellipsis() -> void:
