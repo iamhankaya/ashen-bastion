@@ -19,18 +19,21 @@ const WON_SUB := "Düşmüş Kale Lordu devrildi."
 const SIDE_MIN := 72.0
 const Y_TITLE := 170.0
 const Y_SUB := 300.0
-const Y_DIV := 380.0
-const Y_HERO := 404.0
-const Y_HERO_VALUE := 440.0
-const Y_RECORD := 590.0
+## v2.1: koşu çipleri y352'de (48 yüksek); altındaki tüm bloklar +44 kaydı (DESIGN v2.1 §5).
+const Y_CHIPS := 352.0
+const CHIP_ROW_H := 48.0
+const Y_DIV := 424.0
+const Y_HERO := 448.0
+const Y_HERO_VALUE := 484.0
+const Y_RECORD := 634.0
 const BAND_H := 96.0
 const RECORD_BLOCK_H := 150.0
-const Y_BREAKDOWN := 760.0
+const Y_BREAKDOWN := 804.0
 const ROW_H := 84.0
 const BREAKDOWN_PAD := 12.0
-const Y_STRIP := 1228.0
+const Y_STRIP := 1272.0
 const STRIP_H := 170.0
-const Y_COMBOS := 1422.0
+const Y_COMBOS := 1466.0
 const GAP := 24.0
 const BUTTONS_MIN_Y := 1500.0
 const REPLAY_H := 156.0
@@ -42,6 +45,9 @@ const CHIP_AT := 1.1
 const CHIP_IN := 0.2
 const CHIP_SLIDE := 24.0
 const CHIP_MAX_COMBOS := 3
+## v2.1 Kolay notu: şerit ile kombolar arası 96 yüksek satır, amber 6 px sol çizgi.
+const NOTE_H := 96.0
+const EASY_NOTE := "Kolay: bu koşu Lord başarımlarına ve toplam sayaçlara yazılmadı."
 const DETAIL_FONT := 26
 const EMPTY_ROW_ALPHA := 0.35
 const STAMP_SEC := 0.28
@@ -85,6 +91,11 @@ var achievement_chip: Panel
 var chip_title: Label
 var chip_names: Label
 var chip_star: Control
+## v2.1 (U4b): koşu çipleri (mod, zorluk, Sonsuz'da LORD ×N) ve Kolay notu. Mod/zorluk sonuç sözlüğünden (stats.mode/diff).
+var chip_holder: Control
+var easy_note: Panel
+var run_mode: StringName = &""
+var run_diff: StringName = &""
 
 var _t: float = 0.0
 var _skip_t: float = -1.0
@@ -104,6 +115,8 @@ var _hero_total: int = 0
 var _combos_data: Array[Dictionary] = []
 var _shown_combos: int = MAX_COMBOS
 var _new_names: Array[String] = []
+var _chip_y: float = Y_COMBOS
+var _run_chips: Control = null
 
 
 func _ready() -> void:
@@ -149,6 +162,7 @@ func _build() -> void:
 	_build_breakdown()
 	_build_strip()
 	_build_chip()
+	_build_run_info()
 
 	combo_panel = PanelContainer.new()
 	combo_panel.theme_type_variation = &"PanelRaised"
@@ -330,6 +344,83 @@ func _build_chip() -> void:
 	achievement_chip.add_child(chip_names)
 
 
+func _build_run_info() -> void:
+	chip_holder = Control.new()
+	chip_holder.name = "RunChips"
+	chip_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chip_holder.visible = false
+	add_child(chip_holder)
+	easy_note = Panel.new()
+	easy_note.name = "EasyNote"
+	easy_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	easy_note.add_theme_stylebox_override(
+		&"panel", UiKit.stylebox(Color(UiKit.VOID, 0.5), UiKit.BRONZ_700, 2, 6)
+	)
+	easy_note.visible = false
+	add_child(easy_note)
+	var bar := ColorRect.new()
+	bar.color = UiKit.AMBER
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.position = Vector2.ZERO
+	bar.size = Vector2(6.0, NOTE_H)
+	easy_note.add_child(bar)
+	var warn := RunStrip.WarnGlyph.new(40.0)
+	warn.position = Vector2(30.0, (NOTE_H - 40.0) * 0.5)
+	easy_note.add_child(warn)
+	var l := UiKit.label(EASY_NOTE, &"", 28, UiKit.KEMIK_100)
+	l.name = "Text"
+	l.add_theme_font_override(&"font", UiKit.font_semibold())
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.position = Vector2(92.0, 0.0)
+	easy_note.add_child(l)
+	easy_note.accessibility_name = "Uyarı: " + EASY_NOTE
+
+
+## Koşu çipleri ve Kolay notu `stats.mode/diff/lords_killed`'dan; bilinmiyorsa (eski çağrılar) ikisi de gizli.
+func _fill_run() -> void:
+	run_mode = StringName(str(stats.get("mode", "")))
+	run_diff = StringName(str(stats.get("diff", "")))
+	var known := RunStrip.MODE_ORDER.has(run_mode) and RunStrip.DIFF_ORDER.has(run_diff)
+	if _run_chips != null:
+		chip_holder.remove_child(_run_chips)
+		_run_chips.queue_free()
+		_run_chips = null
+	chip_holder.visible = known
+	easy_note.visible = known and run_diff == &"easy"
+	if not known:
+		return
+	var row := RunStrip.make_chips(run_mode, run_diff, V21Runs.profiles())
+	var lords := int(stats.get("lords_killed", 0))
+	if run_mode == &"endless" and lords > 0:
+		var lord_chip := RunStrip.make_chip(
+			UiKit.Glyph.new(&"star", UiKit.AMBER, 30.0), "LORD ×%d" % lords
+		)
+		lord_chip.name = "LordChip"
+		lord_chip.accessibility_name = "%d Lord devrildi." % lords
+		row.add_child(lord_chip)
+	chip_holder.add_child(row)
+	row.size = Vector2(_w, CHIP_ROW_H)
+	_run_chips = row
+
+
+## Sıra satırı: "Normal · Zor listesinde 3. sıra" (Mod · Zorluk); mod/zorluk bilinmiyorsa boş.
+static func rank_line(mode: StringName, diff: StringName, rank: int) -> String:
+	if rank <= 0 or not RunStrip.MODE_TITLES.has(mode) or not RunStrip.DIFF_TITLES.has(diff):
+		return ""
+	return (
+		"%s · %s listesinde %d. sıra"
+		% [RunStrip.MODE_TITLES[mode], RunStrip.DIFF_TITLES[diff], rank]
+	)
+
+
+## Sonsuz zaferinde alt başlık: "Lord'u devirdin; sonra 7:48 daha dayandın."; kilometre taşı yoksa boş.
+static func endless_sub(time: float, milestone_t: float) -> String:
+	if milestone_t < 0.0 or time < milestone_t:
+		return ""
+	return "Lord'u devirdin; sonra %s daha dayandın." % MilestoneBand.mss(time - milestone_t)
+
+
 ## Koşuda açılan başarımların görünen adları; `show_result`'tan ÖNCE çağrılır. Boş => v1.1 düzeni aynen.
 ## Çip: "YENİ BAŞARIM · N" + ilk iki ad ("+k" kalan); varken kombolar en çok 3 satır.
 ## `steps` >= 0 (aile/kademe kaydı, v2.0.3): başlık "YENİ KADEME · steps", adlar "AİLE II" biçiminde gelir.
@@ -384,9 +475,15 @@ func show_result(
 	title_label.text = "KAZANDIN" if won else "OYUN BİTTİ"
 	title_label.add_theme_color_override(&"font_color", UiKit.AMBER if won else UiKit.KEMIK_100)
 	sub_label.text = subtitle if subtitle != "" else (WON_SUB if won else LOST_SUB)
+	if won and str(stats.get("mode", "")) == "endless":
+		var endless := endless_sub(
+			float(stats.get("time", 0.0)), float(stats.get("milestone_t", -1.0))
+		)
+		sub_label.text = endless if endless != "" else sub_label.text
 	glow.texture = _glow_texture(UiKit.AMBER if won else UiKit.BORDO_500)
 	_shown_combos = _combo_cap()
 	_fill_combos(combos)
+	_fill_run()
 	_fill_record()
 	_fill_rows()
 	_hero_total = clampi(int(stats.get("score", 0)), 0, DISPLAY_CAP)
@@ -448,13 +545,27 @@ func _fill_record() -> void:
 			record_note.text = (
 				"Önceki en iyi: %s" % UiKit.format_thousands(prev) if prev > 0 else ""
 			)
+			_prefix_rank_line(rank)
 		&"top10":
 			record_pill.text = "EN İYİ 10'A GİRDİN · %d. SIRA" % rank
+			_prefix_rank_line(rank)
 		&"outside":
 			record_note.text = (
 				"10. sıra için gereken: %s"
 				% UiKit.format_thousands(int(last_record.get("needed_for_top10", 0)))
 			)
+
+
+## v2.1: not satırının başına "Mod · Zorluk listesinde N. sıra" eklenir (varsa eski metin " · " ile sürer).
+func _prefix_rank_line(rank: int) -> void:
+	var line := rank_line(run_mode, run_diff, rank)
+	if line == "":
+		return
+	record_note.text = line if record_note.text == "" else line + " · " + record_note.text
+	record_note.accessibility_name = (
+		"%s modda, %s listesinde %d. sıra."
+		% [RunStrip.MODE_TITLES[run_mode], RunStrip.DIFF_TITLES[run_diff], rank]
+	)
 
 
 func _fill_rows() -> void:
@@ -498,6 +609,9 @@ func _layout() -> void:
 	title_label.position.x = 0.0
 	_put(sub_label, 0.0, Y_SUB, 1080.0, 50.0)
 	sub_label.position.x = 0.0
+	_put(chip_holder, _x0, Y_CHIPS, _w, CHIP_ROW_H)
+	if _run_chips != null:
+		_run_chips.size = Vector2(_w, CHIP_ROW_H)
 	_put(divider, _x0, Y_DIV, _w, 20.0)
 	_put(score_caption, 0.0, Y_HERO, 1080.0, 44.0)
 	_put(score_value, 0.0, Y_HERO_VALUE, 1080.0, 130.0)
@@ -515,7 +629,7 @@ func _layout() -> void:
 	_put(
 		record_note,
 		_x0,
-		Y_RECORD + BAND_H + 8.0 if record_kind == &"record" else Y_RECORD + 54.0,
+		Y_RECORD + BAND_H + 8.0 if record_kind in [&"record", &"top10"] else Y_RECORD + 54.0,
 		_w,
 		40.0
 	)
@@ -543,8 +657,14 @@ func _layout() -> void:
 		(col.get_node("Caption") as Control).position = Vector2(0, 126.0)
 		(col.get_node("Caption") as Control).size = Vector2(cw, 34.0)
 	var combos_y := Y_COMBOS
+	if easy_note.visible:
+		_put(easy_note, _x0, combos_y, _w, NOTE_H)
+		var note_text := easy_note.get_node("Text") as Label
+		note_text.size = Vector2(_w - 92.0 - 28.0, NOTE_H)
+		combos_y += NOTE_H + GAP
+	_chip_y = combos_y
 	if not _new_names.is_empty():
-		_put(achievement_chip, _x0, Y_COMBOS, _w, CHIP_H)
+		_put(achievement_chip, _x0, combos_y, _w, CHIP_H)
 		chip_names.size = Vector2(_w - 92.0 - 28.0, 40.0)
 		combos_y += CHIP_H + GAP
 	combo_panel.custom_minimum_size = Vector2(_w, 0)
@@ -666,7 +786,7 @@ func _apply_chip(t: float, done: bool) -> void:
 		return
 	var k := 1.0 if done else ResultTimeline.cubic_out(clampf((t - CHIP_AT) / CHIP_IN, 0.0, 1.0))
 	achievement_chip.modulate.a = k
-	achievement_chip.position.y = Y_COMBOS + _dy + (1.0 - k) * CHIP_SLIDE
+	achievement_chip.position.y = _chip_y + _dy + (1.0 - k) * CHIP_SLIDE
 
 
 func _apply_stamp(t: float, done: bool) -> void:

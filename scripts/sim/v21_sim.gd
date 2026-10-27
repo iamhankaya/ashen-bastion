@@ -13,6 +13,8 @@ var repeat_n: int = 0
 ## Sonraki Lord doğuş zamanı (önceki Lord ölümü + lord_repeat_sec); -1 = bekleyen yok.
 var next_lord_t: float = -1.0
 var warned: bool = false
+## İlk Lord ölümünün sim zamanı (Sonsuz kilometre taşı; sonuç ekranı "sonra M:SS dayandın"); -1 = henüz yok.
+var milestone_t: float = -1.0
 var lord_type: StringName = &"kale_lordu"
 var lord_warn: float = 5.0
 
@@ -109,6 +111,7 @@ static func on_lord_killed(sim: GameSim) -> void:
 	sim.score.on_lord()
 	if not sim.milestone_won:
 		sim.milestone_won = true
+		v.milestone_t = sim.time
 		sim.bus.milestone_reached.emit()
 	sim.bus.lord_slain.emit(sim.lords_killed)
 	if v.p.lord_repeat_sec > 0.0:
@@ -165,4 +168,5 @@ static func result_fields(sim: GameSim) -> Dictionary:
 		"diff": String(prof.diff) if prof != null else "hard",
 		"lords_killed": sim.lords_killed,
 		"milestone_won": sim.milestone_won,
+		"milestone_t": sim.v21.milestone_t if sim.v21 != null else -1.0,
 	}
