@@ -67,7 +67,8 @@ def _run_mid_all(tmp_path, env_extra):
     fake = tmp_path / "godot.sh"
     log = tmp_path / "calls.txt"
     fake.write_text(f'#!/usr/bin/env bash\necho "$*" >> "{log.as_posix()}"\n', encoding="utf-8", newline="\n")
-    env = {"PATH": "/usr/bin:/bin:/mingw64/bin", "GODOT_BIN": fake.as_posix(), "POLICIES": "strong", "CHARS": "gunslinger", **env_extra}
+    fake.chmod(0o755)  # Linux'ta çalıştırma biti şart: xargs altında "$0" olarak çağrılır
+    env ={"PATH": "/usr/bin:/bin:/mingw64/bin", "GODOT_BIN": fake.as_posix(), "POLICIES": "strong", "CHARS": "gunslinger", **env_extra}
     r = subprocess.run(["bash", "tools/balance/mid_all.sh", (tmp_path / "out").as_posix(), "3001", "10", "1"],
                        cwd=ROOT, capture_output=True, text=True, env=env)
     assert r.returncode == 0, r.stderr
