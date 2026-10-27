@@ -3,7 +3,7 @@ extends Control
 
 
 ## Ana sayfa v2.0.3 (docs/design/v2.0.3/DESIGN.md §2): "kapıdan bakış" sahnesi (kemer/kule/sur/sancak/meşale, zemin yaması,
-## kül/kor), OYNA (birincil, 180 px), KARAKTERLER | BAŞARIMLAR (dolu), EN İYİ SKORLAR | AYARLAR (hayalet), sürüm satırı.
+## kül/kor), koşu şeridi (v2.1, 132 px; KOŞU ekranını açar), OYNA (birincil, 180 px), KARAKTERLER | BAŞARIMLAR (dolu), EN İYİ SKORLAR | AYARLAR (hayalet), sürüm satırı.
 ## Yazı ölçeği (Android erişilebilirlik 2×): > 1,3 iken KARAKTERLER/BAŞARIMLAR ve SKORLAR/AYARLAR tek sütuna düşer,
 ## düğmeler 168 px olur; hiçbir şey kesilmez. Kaynak: çağıran (Godot yazı ölçeğini kendiliğinden vermez).
 func set_font_scale(f: float) -> void:
@@ -11,6 +11,8 @@ func set_font_scale(f: float) -> void:
 	if _col == null:
 		return
 	var stacked := is_stacked()
+	run_button.set_big(stacked)
+	refresh_run()
 	_half_row.vertical = stacked
 	_ghost_row.vertical = stacked
 	for b in [characters_button, achievements_button, scores_button, settings_button]:
@@ -29,6 +31,7 @@ func is_stacked() -> bool:
 ## Sürüm etiketine 3 dokunuş: yalnız debug derlemede `debug_stress_requested` (stres koşusu, U1-10).
 
 signal play_requested
+signal run_requested
 signal scores_requested
 signal characters_requested
 signal achievements_requested
@@ -52,18 +55,21 @@ const STACK_BTN_H := 168.0
 const MINI_PX := 68.0
 const MINI_GAP := 40.0  # mini portre ile başlık arası ek sol iç boşluk
 const MINI_CROP := Rect2(160.0, 80.0, 704.0, 704.0)  # 1024×1536 portrenin baş-omuz karesi
-const STACK_COL_TOP := -1099.0  # OYNA 180 + 4 × 168 + 5 × 27 + sürüm 40 = 1027 → y 1301
-const STACK_HERO_SCALE := 0.8
+const STACK_COL_TOP := -1294.0  # şerit 168 + OYNA 180 + 4 × 168 + 6 × 27 + sürüm 40 = 1222 → y 1106 (v2.1 DESIGN §2)
+const STACK_HERO_SCALE := 0.5  # tek sütunda karakter 320×466: başlık ile şerit arasında (y 634-1100)
+const STACK_HERO_TOP := -566.0
+const STACK_HERO_BOTTOM := -100.0
 const EMBER_MAX := 36  # tasarım tavanı 40
 const FLOOR_RECT := Rect2(40.0, 1322.0, 1000.0, 400.0)
 
-const COL_TOP := -637.0  # düğme sütunu üstü (alttan): y 1763; OYNA 180 + 3 satır
+const COL_TOP := -796.0  # düğme sütunu üstü (alttan): y 1604; koşu şeridi 132 + 27 + OYNA (y 1763, değişmez) + 3 satır
 const COL_BOTTOM := -72.0  # sürüm satırı alt kenarı y 2328 (alt güvenli alan 72)
 const HERO_TOP := -600.0  # karakter 640×932, y 600-1532
 const HERO_BOTTOM := 332.0
 const HEAD_TOP := 128.0
 const TOP_DEFAULT := 96.0
 
+var run_button: RunStrip
 var play_button: Button
 var scores_button: Button
 ## KARAKTERLER | BAŞARIMLAR yarım düğmeleri (454×132, OYNA'nın altında); alt satırlar bilgi taşır.
@@ -220,6 +226,10 @@ func _build() -> void:
 	col.offset_right = W * 0.5
 	col.offset_top = COL_TOP
 	col.offset_bottom = COL_BOTTOM
+	run_button = RunStrip.new()
+	run_button.pressed.connect(func() -> void: run_requested.emit())
+	col.add_child(run_button)
+	refresh_run()
 	play_button = UiKit.button("OYNA", &"primary", 180.0)
 	play_button.add_theme_font_size_override(&"font_size", 68)
 	_skin_button(play_button, "dugme-birincil", 42)
@@ -610,13 +620,19 @@ func apply_safe_area(extra: Variant = null) -> void:
 	_col.offset_right = W * 0.5 + shift
 	if hero != null:
 		# K-01: başlık üst paya göre inince karakterin üstü de aynı farkla iner; alt kenar alt paya göre yukarı çıkar.
-		# Tek sütunda karakter %80'e küçülür (y 500-1246, başlık ile OYNA arasında).
-		hero.offset_top = (-700.0 if stacked else HERO_TOP) + head_drop
-		hero.offset_bottom = (46.0 if stacked else HERO_BOTTOM) - up
+		# Tek sütunda karakter %50'ye küçülür (y 634-1100, başlık ile koşu şeridi arasında).
+		hero.offset_top = (STACK_HERO_TOP if stacked else HERO_TOP) + head_drop
+		hero.offset_bottom = (STACK_HERO_BOTTOM if stacked else HERO_BOTTOM) - up
 		hero.offset_left = -320.0 * (STACK_HERO_SCALE if stacked else 1.0)
 		hero.offset_right = 320.0 * (STACK_HERO_SCALE if stacked else 1.0)
 	emblem.offset_top = -380.0 + head_drop
 	emblem.offset_bottom = 280.0 - up
+
+
+## Koşu şeridini kaydedilmiş (mod, zorluk) seçimine göre yeniler (KOŞU ekranından dönüşte ve açılışta).
+func refresh_run() -> void:
+	var sel := V21Runs.selection()
+	run_button.show_selection(sel["mode"], sel["diff"], V21Runs.profiles())
 
 
 ## Ses/titreşim anahtarları AYARLAR'a taşındı; çağrılar uyumluluk için kalır (menüde gösterilecek durum yok).
@@ -626,6 +642,7 @@ func set_settings(_sound: bool, _vib: bool) -> void:
 
 func open(sound: bool, vib: bool) -> void:
 	set_settings(sound, vib)
+	refresh_run()
 	visible = true
 	play_button.grab_focus.call_deferred()
 

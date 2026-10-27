@@ -15,8 +15,9 @@ enum Confirm { NONE, RESTART, MENU }
 
 const BTN_W := 936.0
 const COL_TOP := 380.0
-const GAP_H := 170.0
+const GAP_H := 95.0  # v2.1: koşu çipleri (48 + 27) eklendi; eylem düğmeleri eski yerinde kalır (170 - 75)
 const GAP_MIN := 40.0
+const CHIP_H := 48.0
 
 var resume_button: Button
 var sound_button: Button
@@ -33,6 +34,8 @@ var dialog_ok: Button
 var confirm_kind: int = Confirm.NONE
 var column: VBoxContainer
 var gap: Control
+var chips_slot: Control
+var chips: HBoxContainer
 
 var _sound_on: bool = true
 var _vibration_on: bool = true
@@ -69,6 +72,11 @@ func _build() -> void:
 	title.add_theme_constant_override(&"shadow_offset_y", 5)
 	col.add_child(title)
 	col.add_child(UiKit.divider())
+	chips_slot = Control.new()  # v2.1 koşu çipleri (mod + zorluk), salt bilgi; open() doldurur
+	chips_slot.name = "ChipsSlot"
+	chips_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chips_slot.custom_minimum_size = Vector2(0, CHIP_H)
+	col.add_child(chips_slot)
 
 	var panel := PanelContainer.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -192,9 +200,23 @@ func open(actives: Array[SkillState], passives: Array[SkillState], sound: bool, 
 	_fill(active_slots, actives)
 	_fill(passive_slots, passives)
 	set_settings(sound, vib)
+	refresh_chips()
 	close_confirm()
 	visible = true
 	resume_button.grab_focus.call_deferred()
+
+
+## Koşu çipleri (DESIGN §5 Pause): geçerli (mod, zorluk); koşu içinde değiştirilemez, bu yüzden kayıtlı seçim koşununkidir.
+func refresh_chips() -> void:
+	if chips_slot == null:
+		return
+	if chips != null:
+		chips_slot.remove_child(chips)
+		chips.queue_free()
+	var sel := V21Runs.selection()
+	chips = RunStrip.make_chips(sel["mode"], sel["diff"], V21Runs.profiles())
+	UiKit.fill(chips)
+	chips_slot.add_child(chips)
 
 
 func set_settings(sound: bool, vib: bool) -> void:
