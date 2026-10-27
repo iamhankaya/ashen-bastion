@@ -1,0 +1,44 @@
+name: golden-ref
+# Yalnız elle: v2.1 K-C10 (b) referans karmalarını DEĞİŞMEMİŞ koddan (base_ref) üretir; ref.json artifact'ını
+# test/fixtures/golden_v20_ref/ref.json olarak commit'lemek VLAD/geliştiricinin işidir. Push/PR'da koşmaz.
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: "Değişmemiş sim kodunun dalı/etiketi/karması"
+        default: main
+permissions:
+  contents: read
+jobs:
+  ref:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: head
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base_ref }}
+          path: base
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ashen-bastion
+          key: godot-${{ hashFiles('base/.godot-version') }}
+      - name: Üretici ve yardımcıyı değişmemiş koda ekle
+        run: |
+          cp head/tools/golden/gen_v21_ref.gd base/tools/golden/
+          cp head/test/helpers/v21_ref_kit.gd base/test/helpers/
+          mkdir -p base/test/fixtures/golden_v20_ref
+      - name: İçe aktar ve üret
+        working-directory: base
+        run: |
+          export GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"
+          bash tools/ci/godot_import.sh /tmp/import.log
+          "$GODOT_BIN" --headless -s res://tools/golden/gen_v21_ref.gd -- --write --base "$(git rev-parse HEAD)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: golden-v20-ref
+          path: base/test/fixtures/golden_v20_ref/ref.json
+          if-no-files-found: error
+          retention-days: 14
