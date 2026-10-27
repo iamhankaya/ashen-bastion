@@ -85,11 +85,11 @@ func test_m5_mode_and_diff_arguments_select_the_profile_and_unknown_names_return
 
 
 func test_m6_lord_tracker_records_spawn_hits_and_death_of_the_first_lord() -> void:
-	var sim := SimKit.make(301, {"data_kind": "real", "start_time": 1186.0})
+	var sim := SimKit.make(301, {"data_kind": "real", "start_time": 1196.0})
 	SimKit.godmode(sim)
 	var st: Dictionary = mid.make_lord_tracker(sim)
 	var guard := 0
-	while st["n"] == 0 and guard < 60 * 10:
+	while st["n"] == 0 and guard < 60 * 30:
 		guard += 1
 		if sim.state == GameSim.State.LEVEL_UP:
 			sim.choose(0)
@@ -97,10 +97,10 @@ func test_m6_lord_tracker_records_spawn_hits_and_death_of_the_first_lord() -> vo
 		SimKit.godmode(sim)
 		sim.step(Vector2.ZERO)
 		mid._track_lord(sim, st)
-	assert_eq(st["n"], 1, "Lord 1190. sn'de doğar")
+	assert_eq(st["n"], 1, "Lord 1200. sn'de doğar")
 	if st["n"] != 1:
 		return
-	assert_gte(st["spawn_t"], 1190.0)
+	assert_gte(st["spawn_t"], 1200.0)
 	assert_eq(mid.lord_id(sim), st["id"])
 	var i := EnemyPool.index_of(st["id"])
 	sim.enemies.hp[i] -= 10.0

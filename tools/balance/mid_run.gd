@@ -10,7 +10,7 @@ extends SceneTree
 ## lord_hp_frac_end, lord_hit_frac (Lord'un can kaybettiği adımların, Lord'un yaşadığı adımlara oranı; ilk Lord),
 ## lords_killed, post_lord_secs (ilk Lord ölümünden sona), level_at_1200, level_at_end. Yalnız stdout ve <çıktı.jsonl> yazılır.
 
-const MAX_STEPS := 144000  # 2400 sn: Lord dövüşü (1190. sn'den sonra) dahil
+const MAX_STEPS := 144000  # 2400 sn: Lord dövüşü (Lord 1200. sn'de doğar) dahil
 const MAX_STEPS_ENDLESS := 216000  # 3600 sn
 const LORD_BAND_MIN := 250.0
 const LORD_BAND_MAX := 400.0

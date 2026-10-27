@@ -4,7 +4,7 @@ extends SceneTree
 ## politika: idle | kite | greedy. Her koşu: sonuç, süre, seviye, en çok eşzamanlı düşman, en düşük can oranı.
 ## test/helpers/bots.gd botlarını kullanır (kendi RNG'si; sim akışlarına dokunmaz).
 
-const MAX_STEPS := 144000  # 2400 sn: Lord (1190) dövüşü de ölçülür (mid_run.gd ile aynı)
+const MAX_STEPS := 144000  # 2400 sn: Lord (1200) dövüşü de ölçülür (mid_run.gd ile aynı)
 
 
 func _initialize() -> void:
