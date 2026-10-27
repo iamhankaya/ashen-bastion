@@ -46,6 +46,11 @@ func _init(cfg: Dictionary, rng: RandomNumberGenerator) -> void:
 	next_step = _draw_steps(_first)
 
 
+## v2.1 Hızlı: doğuş aralığı `time_scale` ile çarpılır (imza sözleşmesi _init(cfg, rng) sabit; `_first` ölçeklenmez).
+func scale_interval(time_scale: float) -> void:
+	_interval *= time_scale
+
+
 ## Ömür dolumu + doğuş (GameSim._phase_spawn).
 func step(sim: GameSim) -> void:
 	if not armed:

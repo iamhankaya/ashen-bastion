@@ -56,11 +56,14 @@ func _kill(sim: GameSim, id: int, i: int) -> void:
 	if is_lord and sim.end_mode == GameSim.END_MODE_LORD:
 		sim.lord_killed = true
 		sim.score.on_lord()
+	elif is_lord and sim.end_mode == GameSim.END_MODE_ENDLESS:
+		V21Sim.on_lord_killed(sim)
 	if xp_value > 0:
 		# Harabe içinde ölen düşmanın (elit/uçan/hayalet muaf) taşı dışarı alınır: katı yapının içinde toplanamaz.
-		sim.gems.drop(sim.map.resolve(p, GEM_CLEARANCE), xp_value)
+		var gem_value := V21Sim.xp_value(sim, xp_value)  # v2.1 birikimli kesir; profilsizde xp_value
+		sim.gems.drop(sim.map.resolve(p, GEM_CLEARANCE), gem_value)
 		if sim.logging():
-			sim.log_event(SimEvents.GEM_DROPPED, {"value": xp_value})
+			sim.log_event(SimEvents.GEM_DROPPED, {"value": gem_value})
 	sim.bus.enemy_killed.emit(type_id, p)
 	for st in sim.loadout.actives():
 		if st.behavior != null:
@@ -76,7 +79,8 @@ func contact_tick(sim: GameSim, dt: float) -> float:
 	sim.grid.query_circle(sim.player_pos, pr + CONTACT_QUERY_PAD, _scratch)
 	var total := 0.0
 	var touching := 0
-	var dmg_mult := Difficulty.enemy_dmg_mult(sim.time)
+	var dmg_mult := Difficulty.enemy_dmg_mult(V21Sim.curve_t(sim))
+	var extra := V21Sim.contact_mult(sim)  # v2.1: zorluk enemy_dmg × enrage (Lord dahil); profilsizde 1
 	for id in _scratch:
 		if not sim.enemies.is_alive(id):
 			continue
@@ -88,6 +92,7 @@ func contact_tick(sim: GameSim, dt: float) -> float:
 			total += (
 				sim.enemies.contact[i]
 				* (dmg_mult if sim.enemies.def_of(i).scales_with_time else 1.0)
+				* extra
 			)
 			touching += 1
 			if touching >= MAX_CONTACTS_PER_TICK:
