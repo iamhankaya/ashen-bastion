@@ -77,3 +77,16 @@ static func _settings() -> Object:
 		return settings_override
 	var tree := Engine.get_main_loop() as SceneTree
 	return tree.root.get_node_or_null("Settings") if tree != null else null
+
+
+# --- U3 (kayıt/başarım) ----------------------------------------------------------------------
+
+
+## Zorluğa bağlı başarım kuralı (run_profiles.json "achievements"); profil dosyası hatalıysa kısıtsız.
+static func achievement_rules() -> AchievementRules:
+	return AchievementRules.new(profiles())
+
+
+## Sim'in koşu zorluğu; profilsiz sim = Zor (sonuç sözlüğüyle aynı varsayılan).
+static func diff_of(sim: GameSim) -> StringName:
+	return sim.run_profile.diff if sim != null and sim.run_profile != null else &"hard"

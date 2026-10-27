@@ -143,11 +143,12 @@ func test_save_load_roundtrip_and_file_shape() -> void:
 	h.submit(_e(300, 1_700_000_100, false, 90, 4))
 	assert_true(h.save())
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(_path()))
-	assert_eq(int(raw["v"]), 1)
-	assert_eq((raw["entries"] as Array).size(), 2)
-	var first: Dictionary = raw["entries"][0]
-	assert_eq(first.keys().size(), 5)
-	for k in ["score", "time", "won", "level", "unix"]:
+	assert_eq(int(raw["v"]), 2)
+	var list: Array = raw["lists"]["normal:normal"]
+	assert_eq(list.size(), 2)
+	var first: Dictionary = list[0]
+	assert_eq(first.keys().size(), 7)
+	for k in ["score", "time", "won", "level", "unix", "mode", "diff"]:
 		assert_true(first.has(k), k)
 	var h2 := Highscores.new(_path())
 	assert_true(h2.load_file())

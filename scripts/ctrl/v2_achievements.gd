@@ -59,7 +59,9 @@ func bind(sim: GameSim) -> void:
 		return  # tanım yoksa tracker kurulmaz; oyun etkilenmez
 	var clock: Callable = opts.get("clock", Callable())
 	var cid: StringName = sim.character.id if sim.character != null else &""
-	tracker = AchievementTracker.new(_data, store, cid, clock)
+	tracker = AchievementTracker.new(
+		_data, store, cid, clock, V21Runs.achievement_rules(), V21Runs.diff_of(sim)
+	)
 	tracker.unlocked.connect(_on_unlocked)
 	tracker.attach(sim.bus)
 

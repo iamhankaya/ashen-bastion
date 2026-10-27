@@ -379,11 +379,41 @@ Tek kaynak: `data/run_profiles.json` (dosya yoksa HATA, yerleşik varsayılan yo
 
 ### Sim ve veri (U2)
 
-(U2 doldurur: çarpanların uygulanması, Sonsuz doğuş eğrisi, Lord tekrarı, enrage, `WaveScaler` kapsamı.)
+Mantık `scripts/sim/v21_sim.gd` (`V21Sim`) içindedir; `GameSim.v21` yalnız **legacy olmayan profilde ya da `end_mode == endless`**
+iken kurulur, aksi halde `null` (her yardımcı eski değeri döndürür: RNG/karma baytı değişmez, K-C10).
+
+- **Süre ölçeği (`time_scale`):** `curve_t = t / time_scale` HP/hız/temas eğrilerini ve `alive_cap`'i okur;
+  `WaveScaler.scale` `SpawnDirector`'a verilen `waves` kopyasını ölçekler (`rate`/grup boyutu/burst adedi hariç);
+  `PickupDirector` yalnız `interval`'ı `time_scale` ile çarpar. Hızlı `end_time` 600 (`RunProfile.opts`).
+- **Çarpanlar:** `enemy_hp` yalnız `scales_with_time` düşmanlara; Lord HP = taban · `lord_hp` · `lord_hp_mult`
+  (· Lord tekrarı basamağı), zaman eğrisi/`enemy_hp` uygulanmaz. Temas: zaman eğrisi yalnız `scales_with_time`;
+  zorluk `enemy_dmg` ve enrage **koşulsuz tüm düşmanlara (Lord dahil)**. `spawn_density` · `rate_mult` `rate` birikimine;
+  `spawn_density` grup boyutuna ve `burst.count`'a (`maxi(1, roundi(...))`).
+- **XP:** `xp_carry += xp_değeri · xp_mult · xp`; taş değeri `floori(xp_carry)`, kalan taşınır (yuvarlama kaybı yok).
+- **Sonsuz:** `rate`/`group` satırları `to` sonrası son değerinde sürer, `after_lord` kapalı, `burst` tek seferlik; ilk Lord `waves`
+  satırından (1200). Lord ölümü: `lords_killed += 1`, `score.on_lord()`, `lord_slain(n)`, ilk ölümde `milestone_won` +
+  `milestone_reached`; `lord_killed` set edilmez, sim yalnız `hp <= 0` ile `LOST` olur. Tekrar: ölümden `lord_repeat_sec` sonra
+  (`warn` sn önce `boss_warning`), HP × `min(lord_repeat_hp_mult^n, lord_hp_cap_mult)`; doğuş başarısızsa her adım yeniden denenir,
+  süre yeniden başlamaz. Enrage: `t >= enrage_after_sec` sonrası temas × `1 + enrage_dmg_per_min · (t − enrage_after_sec) / 60`.
+- **Karma kapsamı:** `xp_carry` her legacy olmayan profilde (profilsiz `end_mode=endless` testinde de), Sonsuz durumu (`repeat_n`, sonraki doğuş, uyarı, `lords_killed`,
+  `milestone_won`) yalnız Sonsuz'da `state_hash` sonuna eklenir; Lord/Zamanlayıcı modunda ve legacy'de baytlar değişmez.
+- `lords_killed`/`milestone_won` yalnız Sonsuz'da sayılır (Lord modunda kazanma `lord_killed` → `WON`).
 
 ### Kayıt, skor ve başarım (U3)
 
-(U3 doldurur: `highscores.json` v2 biçimi ve göç, `.v1.bak`, `AchievementRules` enjeksiyonu.)
+- `highscores.json` v2: `{"v":2,"lists":{"<mod>:<zorluk>":[{"score","time","won","level","unix","mode","diff"}]}}`. Liste anahtarı
+  otoritedir (girişteki `mode`/`diff` anahtara göre yeniden yazılır); bilinmeyen anahtarlı listeler silinmeden saklanır, gösterilmez.
+  Bozuk dosya, `v` sayı değil/bilinmeyen, `lists` yok/sözlük değil: `.bad` kopyası + boş liste. Giriş sayıları `Highscores`
+  sınırlarıyla temizlenir; >10 giriş kırpılır, eşit skorda eski giriş önde.
+- v1 → v2 göçü (`load_file`): v1 girişleri `normal:normal`'a gider. Sıra: (1) v1 baytları `<yol>.v1.bak`'a atomik yazılır; varsa üzerine
+  yazılmaz, `<yol>.v1.<unix>[-n].bak` kullanılır; (2) yedek yazılamazsa göç İPTAL: v1 dosyası dokunulmaz, oturum bellekte sürer,
+  `save()` v2 yazmaz (oturum skorları kaybolabilir), sonraki açılışta göç yeniden denenir; (3) v2 `StoreIo.write_atomic` ile yazılır, hata
+  olursa v1 sağlam kalır ve göç sonraki açılışta tekrar denenir. `.bad`/`.tmp`/`.v1.bak` enjekte edilen yoldan türer. Eski APK v2 dosyasını
+  bozuk sayar (`.bad`); `.v1.bak` korunur (kabul edilen risk).
+- `AchievementRules` tracker'a kurulurken enjekte edilir (`AchievementTracker.new(..., rules, diff)`; `V21Runs.achievement_rules()` ve
+  `V21Runs.diff_of(sim)`). Kolay'da Lord'a bağlı kademeler (`lord_bound_tier_ids`) olay anında verilmez (kademeler ardışık verildiğinden
+  tracker ilk kapalı kademede durur); toplamlardan yalnız `runs`/`play_secs` artar (`wins`, `kills`, `boss_kills`, `chars5` artmaz).
+  Koşu içi en iyiler her zorlukta işler. Sonsuz'da yalnız ilk Lord ölümü `wins` sayar (`finish(won)` koşu başına bir kez).
 
 ### Arayüz (U4a/U4b)
 
