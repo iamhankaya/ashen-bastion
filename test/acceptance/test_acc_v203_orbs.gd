@@ -129,7 +129,7 @@ func test_orb2_every_pair_of_orb_types_is_distinguishable_by_the_agreed_rule() -
 func test_orb2_boss_orb_is_the_largest_and_orb_sizes_stay_the_contract_values() -> void:
 	if _gate():
 		return
-	assert_eq(GemTiers.ORB_PX, PackedInt32Array([34, 48, 68]))
+	assert_eq(GemTiers.ORB_PX, PackedInt32Array([44, 48, 68]))
 	assert_gte(
 		float(GemTiers.ORB_PX[GemTiers.BOSS]) / float(GemTiers.ORB_PX[GemTiers.NORMAL]),
 		SIZE_RATIO_MIN

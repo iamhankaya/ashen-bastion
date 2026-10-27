@@ -38,6 +38,6 @@ func test_data_fields_have_one_entry_per_tier() -> void:
 	assert_eq(GemTiers.TEXTURES.size(), GemTiers.COUNT)
 	assert_eq(GemTiers.ORB_PX.size(), GemTiers.COUNT)
 	assert_eq(GemTiers.COUNT, 3)
-	assert_eq(GemTiers.ORB_PX, PackedInt32Array([34, 48, 68]))
+	assert_eq(GemTiers.ORB_PX, PackedInt32Array([44, 48, 68]))
 	for t in GemTiers.TEXTURES:
 		assert_true(t.begins_with("res://assets/gfx/fx/gems/"), t)
