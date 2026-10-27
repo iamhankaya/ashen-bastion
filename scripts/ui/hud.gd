@@ -463,7 +463,19 @@ func _refresh_v21(dt: float) -> void:
 ## Kilometre taşı (ilk Lord ölümü): bant, 3,2 sn. Tekrar süresi Sonsuz profilinden (yoksa ipucu satırı yok).
 func _on_milestone() -> void:
 	var repeat := _sim.v21.p.lord_repeat_sec if _sim != null and _sim.v21 != null else 0.0
+	var st := get_node_or_null(^"/root/Settings")
+	if st != null:
+		set_font_scale(st.font_scale())  # 2× yazı: ayar bant her göründüğünde okunur
 	milestone_band.show_band(repeat, _reduce_motion())
+
+
+## 2× yazı (`f > 1,3`): v2.1 ile eklenen tek ölçeklenir öğe Sonsuz bandıdır (debug sayacı yalnız debug derlemede, 1×).
+func set_font_scale(f: float) -> void:
+	milestone_band.set_font_scale(f)
+
+
+func is_big() -> bool:
+	return milestone_band.is_big()
 
 
 func _reduce_motion() -> bool:
