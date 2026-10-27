@@ -54,7 +54,7 @@ func _upper(root: Node) -> String:
 	return out
 
 
-func test_v21b1_the_scores_screen_offers_three_modes_and_three_difficulties() -> void:
+func test_b1_the_scores_screen_offers_three_modes_and_three_difficulties() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	V21Kit.use_fake_settings()
@@ -68,7 +68,7 @@ func test_v21b1_the_scores_screen_offers_three_modes_and_three_difficulties() ->
 	assert_gte(text.count("NORMAL"), 2, "NORMAL hem MOD hem ZORLUK sırasında")
 
 
-func test_v21b2_the_requested_pair_is_the_one_shown() -> void:
+func test_b2_the_requested_pair_is_the_one_shown() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	V21Kit.use_fake_settings()
@@ -102,7 +102,7 @@ func test_v21b2_the_requested_pair_is_the_one_shown() -> void:
 	assert_false(text.contains("9191") or text.contains("9.191") or text.contains("9,191"))
 
 
-func test_v21b3_the_result_screen_names_the_mode_and_difficulty_of_the_finished_run() -> void:
+func test_b3_the_result_screen_names_the_mode_and_difficulty_of_the_finished_run() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	var fake := V21Kit.use_fake_settings()
@@ -116,7 +116,7 @@ func test_v21b3_the_result_screen_names_the_mode_and_difficulty_of_the_finished_
 	assert_true(text.contains("ZOR"), "zorluk çipi")
 
 
-func test_v21b4_endless_result_shows_the_lord_count_only_in_endless() -> void:
+func test_b4_endless_result_shows_the_lord_count_only_in_endless() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	var fake := V21Kit.use_fake_settings()
@@ -133,7 +133,7 @@ func test_v21b4_endless_result_shows_the_lord_count_only_in_endless() -> void:
 	assert_false(_upper(c2.result_screen).contains("LORD ×"), "Normal'de Lord sayısı çipi yok")
 
 
-func test_v21b5_the_easy_rule_note_appears_on_easy_results_only() -> void:
+func test_b5_the_easy_rule_note_appears_on_easy_results_only() -> void:
 	if V21Slice.require(self, "B"):
 		return
 	var fake := V21Kit.use_fake_settings()

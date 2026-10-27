@@ -87,7 +87,7 @@ func test_r2_rules_block_exactly_the_lord_bound_tiers_on_easy() -> void:
 # --- Tracker (K dilimi) ------------------------------------------------------------------------
 
 
-func test_v21k21_easy_win_counts_only_runs_and_play_secs() -> void:
+func test_k21_easy_win_counts_only_runs_and_play_secs() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var r := _rig(&"easy")
@@ -102,7 +102,7 @@ func test_v21k21_easy_win_counts_only_runs_and_play_secs() -> void:
 	assert_eq(st.step_count(&"lordslayer"), 0, "lordslayer:1 açılmadı")
 
 
-func test_v21k22_normal_and_hard_wins_count_and_unlock_lordslayer() -> void:
+func test_k22_normal_and_hard_wins_count_and_unlock_lordslayer() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	for diff in [&"normal", &"hard"]:
@@ -115,7 +115,7 @@ func test_v21k22_normal_and_hard_wins_count_and_unlock_lordslayer() -> void:
 		assert_eq(r["store"].step_count(&"lordslayer"), 1, str(diff))
 
 
-func test_v21k23_easy_still_records_run_bests_and_non_lord_tiers() -> void:
+func test_k23_easy_still_records_run_bests_and_non_lord_tiers() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var r := _rig(&"easy")
@@ -132,7 +132,7 @@ func test_v21k23_easy_still_records_run_bests_and_non_lord_tiers() -> void:
 	assert_eq(int(st.best.get("level", 0)), 25, "koşu en iyisi her zorlukta işler")
 
 
-func test_v21k24_easy_never_grants_endure_1200() -> void:
+func test_k24_easy_never_grants_endure_1200() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var easy := _rig(&"easy")
@@ -146,7 +146,7 @@ func test_v21k24_easy_never_grants_endure_1200() -> void:
 	assert_eq(normal["store"].step_count(&"endure"), 4)
 
 
-func test_v21k25_easy_never_grants_ascension_4() -> void:
+func test_k25_easy_never_grants_ascension_4() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var easy := _rig(&"easy")
@@ -162,7 +162,7 @@ func test_v21k25_easy_never_grants_ascension_4() -> void:
 	assert_eq(normal["store"].step_count(&"ascension"), 3)
 
 
-func test_v21k26_easy_then_normal_on_the_same_save_unlocks_in_order() -> void:
+func test_k26_easy_then_normal_on_the_same_save_unlocks_in_order() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var path := AchKit.tmp_path("seq")
@@ -181,7 +181,7 @@ func test_v21k26_easy_then_normal_on_the_same_save_unlocks_in_order() -> void:
 	assert_eq(_total(second["store"], "runs"), 2, "iki koşu da sayıldı")
 
 
-func test_v21k27_a_later_easy_run_never_rolls_back_a_normal_unlock() -> void:
+func test_k27_a_later_easy_run_never_rolls_back_a_normal_unlock() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var path := AchKit.tmp_path("noroll")
@@ -199,7 +199,7 @@ func test_v21k27_a_later_easy_run_never_rolls_back_a_normal_unlock() -> void:
 	assert_eq(_total(easy["store"], "wins"), 1, "Kolay kazanma eklenmedi")
 
 
-func test_v21k28_endless_counts_one_win_however_many_lords_fall() -> void:
+func test_k28_endless_counts_one_win_however_many_lords_fall() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var r := _rig(&"normal")

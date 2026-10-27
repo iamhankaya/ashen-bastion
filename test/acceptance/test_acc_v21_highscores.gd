@@ -143,7 +143,7 @@ func test_sep2_a_finished_run_lands_in_the_list_of_its_own_mode_and_difficulty()
 	assert_eq(c.highscores.list_for(&"normal", &"hard").size(), 0)
 
 
-func test_v21k20_the_saved_entry_carries_its_mode_and_difficulty() -> void:
+func test_k20_the_saved_entry_carries_its_mode_and_difficulty() -> void:
 	if V21Slice.require(self, "K"):  # giriş alanları v2 biçimiyle (U3) kalıcı olur
 		return
 	var c := _controller("quick", "easy")
@@ -172,7 +172,7 @@ func test_sep4_open_scores_shows_the_pair_it_is_asked_for() -> void:
 # --- Kayıt göçü (K dilimi) ---------------------------------------------------------------------
 
 
-func test_v21k1_v1_entries_become_the_normal_normal_list() -> void:
+func test_k1_v1_entries_become_the_normal_normal_list() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	_install("v1_full.json")
@@ -190,7 +190,7 @@ func test_v21k1_v1_entries_become_the_normal_normal_list() -> void:
 		assert_eq(h.list_for(other[0], other[1]).size(), 0, "%s:%s boş" % other)
 
 
-func test_v21k2_migration_writes_the_v2_format_to_disk() -> void:
+func test_k2_migration_writes_the_v2_format_to_disk() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	_install("v1_full.json")
@@ -203,7 +203,7 @@ func test_v21k2_migration_writes_the_v2_format_to_disk() -> void:
 	assert_false(FileAccess.file_exists(_path() + ".tmp"), "yarım .tmp kalmadı")
 
 
-func test_v21k3_the_v1_file_is_backed_up_byte_for_byte() -> void:
+func test_k3_the_v1_file_is_backed_up_byte_for_byte() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var original := _install("v1_full.json")
@@ -212,7 +212,7 @@ func test_v21k3_the_v1_file_is_backed_up_byte_for_byte() -> void:
 	assert_eq(_read(_path() + ".v1.bak"), original, "v1 baytları aynen")
 
 
-func test_v21k4_an_existing_backup_is_never_overwritten() -> void:
+func test_k4_an_existing_backup_is_never_overwritten() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var original := _install("v1_full.json")
@@ -225,7 +225,7 @@ func test_v21k4_an_existing_backup_is_never_overwritten() -> void:
 		assert_eq(_read(_dir.path_join(extra[0])), original)
 
 
-func test_v21k5_migration_is_idempotent_and_does_not_rebackup() -> void:
+func test_k5_migration_is_idempotent_and_does_not_rebackup() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	_install("v1_full.json")
@@ -237,7 +237,7 @@ func test_v21k5_migration_is_idempotent_and_does_not_rebackup() -> void:
 	assert_eq(_bak_files().size(), 0, "yeniden yedek alınmaz")
 
 
-func test_v21k6_mixed_v1_keeps_the_valid_entries_and_drops_the_rest() -> void:
+func test_k6_mixed_v1_keeps_the_valid_entries_and_drops_the_rest() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	_install("v1_mixed.json")
@@ -247,7 +247,7 @@ func test_v21k6_mixed_v1_keeps_the_valid_entries_and_drops_the_rest() -> void:
 	assert_eq(list[2]["unix"], UNIX)
 
 
-func test_v21k7_empty_and_missing_v1_files_do_not_crash() -> void:
+func test_k7_empty_and_missing_v1_files_do_not_crash() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	_install("v1_empty.json")
@@ -259,7 +259,7 @@ func test_v21k7_empty_and_missing_v1_files_do_not_crash() -> void:
 	assert_eq(fresh.list_for(&"quick", &"easy").size(), 0)
 
 
-func test_v21k8_v2_roundtrip_keeps_every_list_apart() -> void:
+func test_k8_v2_roundtrip_keeps_every_list_apart() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var h := Highscores.new(_path())
@@ -277,7 +277,7 @@ func test_v21k8_v2_roundtrip_keeps_every_list_apart() -> void:
 	assert_eq(back.entries.size(), 1, "entries = normal:normal görünümü")
 
 
-func test_v21k9_the_list_key_is_authoritative_over_entry_fields() -> void:
+func test_k9_the_list_key_is_authoritative_over_entry_fields() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var doc := {
@@ -309,7 +309,7 @@ func test_v21k9_the_list_key_is_authoritative_over_entry_fields() -> void:
 	assert_eq(hs.list_for(&"endless", &"hard").size(), 0, "giriş alanı listeyi değiştirmez")
 
 
-func test_v21k10_unknown_list_keys_are_preserved_for_forward_compat() -> void:
+func test_k10_unknown_list_keys_are_preserved_for_forward_compat() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var doc := {
@@ -331,7 +331,7 @@ func test_v21k10_unknown_list_keys_are_preserved_for_forward_compat() -> void:
 	assert_eq(_scores(h.list_for(&"normal", &"normal")), [20, 10])
 
 
-func test_v21k11_corrupt_v2_files_open_empty_and_keep_a_bad_copy() -> void:
+func test_k11_corrupt_v2_files_open_empty_and_keep_a_bad_copy() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var bodies := [
@@ -353,7 +353,7 @@ func test_v21k11_corrupt_v2_files_open_empty_and_keep_a_bad_copy() -> void:
 		assert_true(h.save(), "sonraki kayıt dosyayı onarır")
 
 
-func test_v21k12_oversized_and_dirty_lists_are_cleaned() -> void:
+func test_k12_oversized_and_dirty_lists_are_cleaned() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	var rows: Array = []
@@ -376,7 +376,7 @@ func test_v21k12_oversized_and_dirty_lists_are_cleaned() -> void:
 		assert_gte(int(e["time"]), 0, "negatif süre girişi atıldı")
 
 
-func test_v21k13_all_helper_files_derive_from_the_injected_path() -> void:
+func test_k13_all_helper_files_derive_from_the_injected_path() -> void:
 	if V21Slice.require(self, "K"):
 		return
 	_install("v1_full.json")
