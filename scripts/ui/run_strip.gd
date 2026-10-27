@@ -31,7 +31,7 @@ const DETAIL_ROWS := [
 	["Düşman sayısı", "spawn_density"],
 	["Kazanılan XP", "xp"],
 ]
-## TalkBack için küçük harfli metinler (to_lower Türkçe i/İ tuzağı nedeniyle yasak).
+## TalkBack için küçük harfli metinler (Türkçe i/İ tuzağı: dönüşüm işlevi kullanılmaz).
 const DIFF_SPOKEN := {
 	&"easy": "daha az ve zayıf düşman",
 	&"normal": "dengeli koşu",
