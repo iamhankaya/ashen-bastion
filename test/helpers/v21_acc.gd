@@ -44,17 +44,20 @@ static func hp_of(sim: GameSim, id: int) -> float:
 
 
 ## Sim olaylarını toplar: {"spawns": [zaman], "warns": [zaman], "slain": [n], "milestone": [sayı]}.
+## Lambdalar sim'i ZAYIF tutar: sim.bus -> lambda -> sim döngüsü sim'i (ve GameData kaynaklarını) sızdırır; çıkışta
+## 'resources still in use' hatası gate'i kırar (CI 40514013114, gut 2).
 static func watch(sim: GameSim) -> Dictionary:
 	var w := {"spawns": [], "warns": [], "slain": [], "milestone": [0]}
+	var wr := weakref(sim)
 	sim.bus.boss_spawned.connect(
 		func(t: StringName) -> void:
-			if t == LORD:
-				w["spawns"].append(sim.time)
+			if t == LORD and wr.get_ref() != null:
+				w["spawns"].append((wr.get_ref() as GameSim).time)
 	)
 	sim.bus.boss_warning.connect(
 		func(t: StringName) -> void:
-			if t == LORD:
-				w["warns"].append(sim.time)
+			if t == LORD and wr.get_ref() != null:
+				w["warns"].append((wr.get_ref() as GameSim).time)
 	)
 	sim.bus.lord_slain.connect(func(n: int) -> void: w["slain"].append(n))
 	sim.bus.milestone_reached.connect(func() -> void: w["milestone"][0] += 1)
