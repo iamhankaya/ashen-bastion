@@ -61,7 +61,7 @@
   "test/acceptance/test_acc_v21_profile.gd": 11,
   "test/acceptance/test_acc_v21_quick.gd": 6,
   "test/acceptance/test_acc_v21_run_screen.gd": 5,
-  "test/acceptance/test_acc_v21_scores_result.gd": 0,
+  "test/acceptance/test_acc_v21_scores_result.gd": 5,
   "test/acceptance/test_acc_v2_ach_determinism.gd": 6,
   "test/acceptance/test_acc_v2_ach_flow.gd": 14,
   "test/acceptance/test_acc_v2_ach_screen.gd": 18,

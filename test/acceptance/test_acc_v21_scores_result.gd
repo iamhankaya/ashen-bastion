@@ -2,7 +2,7 @@ extends GutTest
 ## Kabul (v2.1 B): skor ekranı sekmeleri ve sonuç ekranı koşu bilgisi (spec UI maddesi, DESIGN.md §5-6). Davranış sözleşmesi:
 ## skor ekranı iki sıra üçlü sekme (MOD 3 + ZORLUK 3 = 9 liste) sunar, açılan liste istenen çifttir; sonuç ekranı mod/zorluğu
 ## söyler, Sonsuz'da Lord sayısı, yalnız Kolay'da kural notu. Yerleşim/çakışma `test_b<N>_` birim testleri + görüntülerdir.
-## V21Slice "B" açılana dek pending.
+## V21Slice "B" açılana dek pending. Metinler gerçek ekranlardan (RunStrip.MODE_NAMES/DIFF_NAMES, ResultScreen.EASY_NOTE) doğrulandı.
 
 const DIR := "user://v21_scores_acc"
 
@@ -47,10 +47,26 @@ func _finish(c: GameController) -> void:
 	c.flush_delay()
 
 
+## Yalnız GÖRÜNÜR metinler: Kolay notu paneli ve LORD çipi gizliyken de ağaçta durur (AchKit.texts görünürlüğe bakmaz),
+## "yok" iddiaları (b4, b5) görünürlüğe göre sınanır.
+func _visible_texts(n: Node, out: PackedStringArray) -> void:
+	if n is CanvasItem and not (n as CanvasItem).visible:
+		return
+	if n is Label:
+		out.append((n as Label).text)
+	elif n is Button:
+		out.append((n as Button).text)
+	for c in n.get_children():
+		_visible_texts(c, out)
+
+
 func _upper(root: Node) -> String:
+	var texts := PackedStringArray()
+	_visible_texts(root, texts)
 	var out := ""
-	for t in AchKit.texts(root):
-		out += t.to_upper() + "\n"
+	for t in texts:
+		out += t.to_upper() + "
+"
 	return out
 
 

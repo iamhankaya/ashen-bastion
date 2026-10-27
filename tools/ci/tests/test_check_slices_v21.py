@@ -44,7 +44,7 @@ def test_v21_symbols_constant():
 def test_repo_file_is_valid_and_all_closed():
     r = _run(["--v21", str(HERE.parents[1] / "v21_slices.txt")])
     assert r.returncode == 0, r.stderr
-    assert "M S K A" in r.stdout  # T-tur 1: M S K A açık, B (U4b) kapalı
+    assert "M S K A B" in r.stdout  # T-tur 1: tüm dilimler açık
 
 
 def test_all_symbols_accepted(tmp_path):
