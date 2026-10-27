@@ -65,8 +65,7 @@ func _upper(root: Node) -> String:
 	_visible_texts(root, texts)
 	var out := ""
 	for t in texts:
-		out += t.to_upper() + "
-"
+		out += t.to_upper() + "\n"
 	return out
 
 
