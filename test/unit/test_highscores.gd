@@ -32,7 +32,15 @@ func _write(text: String, path: String = "") -> void:
 func _e(
 	score: int, unix: int = 1000, won: bool = false, time: int = 60, level: int = 3
 ) -> Dictionary:
-	return {"score": score, "time": time, "won": won, "level": level, "unix": unix}
+	return {
+		"score": score,
+		"time": time,
+		"won": won,
+		"level": level,
+		"unix": unix,
+		"mode": "normal",
+		"diff": "normal",
+	}
 
 
 func test_missing_file_gives_empty_list_and_false() -> void:

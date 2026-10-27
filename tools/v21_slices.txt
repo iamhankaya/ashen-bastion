@@ -1,0 +1,20 @@
+# v2.1 tamamlanan uygulama dilimi simgeleri (boşluk/satır ayraçlı; V21Slice ile aynı biçim). Geçerli simgeler:
+# M (ölçüm aracı, U1), S (sim ve veri, U2), K (kayıt/skor/başarım, U3), A (UI seçim, U4a), B (UI skor/sonuç, U4b).
+# Simge YALNIZ ilgili dilimin kendisi ya da tester T-turu tarafından eklenir: satırın başındaki '#' kaldırılır.
+# Açmanın önkoşulu: o dilimin kabul testleri (test/acceptance/test_acc_v21_*) gerçek kodda yeşil, sızıntı yok,
+# asgari test sayısı (tools/gate_min_tests.json) yükseltilmiş. Simgesi açılmamış dilimin kabul testleri
+# V21Slice.require ile pending döner. İşaretli dilimde pending ya da sıfır test gate'i KIRAR
+# (tools/ci/check_slices.py --v21 tools/v21_slices.txt [junit]).
+# Test adı öneki: test_m<N>_ (M), test_s<N>_ (S), test_k<N>_ (K), test_a<N>_ (A), test_b<N>_ (B); sınıf yolu 'v21' içerir.
+# Dilim -> kabul dosyası: M test_acc_v21_measure; S test_acc_v21_profile/_quick/_endless; K test_acc_v21_highscores/_ach;
+#   A test_acc_v21_run_screen; B test_acc_v21_scores_result.
+# Her simge ayrı satırdır: dört faz paralel açınca bitişik satır çakışması çıkmasın.
+#M
+# -- S --
+#S
+# -- K --
+#K
+# -- A --
+#A
+# -- B --
+#B

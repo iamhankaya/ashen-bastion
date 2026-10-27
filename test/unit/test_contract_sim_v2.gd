@@ -75,13 +75,19 @@ func test_existing_bomb_exploded_signature_unchanged() -> void:
 	fail_test("bomb_exploded yok")
 
 
-func test_enemy_hit_follows_bomb_hits_as_the_last_signal_declared_in_source() -> void:
-	# Yeni sinyal SONA eklenir (mevcut sinyallerin sırası/imzası değişmez): kaynakta son `signal` satırı enemy_hit (v2.0.1; bomb_hits ondan hemen önce).
-	var last := ""
+func test_new_signals_are_appended_at_the_end_in_source_order() -> void:
+	# Yeni sinyal SONA eklenir (mevcut sinyallerin sırası/imzası değişmez): ... bomb_hits, enemy_hit (v2.0.1),
+	# milestone_reached, lord_slain (v2.1). Sondan dördü sırayla sabit.
+	var sigs: Array[String] = []
 	for line in FileAccess.get_file_as_string("res://scripts/sim/sim_bus.gd").split("\n"):
 		if line.begins_with("signal "):
-			last = line
-	assert_true(last.begins_with("signal enemy_hit("), last)  # v2.0.1: bomb_hits'ten sonra eklenen tek sinyal
+			sigs.append(line)
+	assert_true(sigs.size() >= 4)
+	var tail := sigs.slice(sigs.size() - 4)
+	assert_true(tail[0].begins_with("signal bomb_hits("), tail[0])
+	assert_true(tail[1].begins_with("signal enemy_hit("), tail[1])
+	assert_true(tail[2].begins_with("signal milestone_reached"), tail[2])
+	assert_true(tail[3].begins_with("signal lord_slain("), tail[3])
 
 
 func test_tracker_listened_signals_exist_with_exact_signatures() -> void:

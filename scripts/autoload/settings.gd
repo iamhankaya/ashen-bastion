@@ -21,6 +21,9 @@ var hareket_azalt: bool = false
 ## v2.0.3 ara denetim #1: oyun içi BÜYÜK YAZI (Godot Android'de sistem yazı ölçeğini vermez); açıkken 2× düzen (ana sayfa tek sütun, ayarlar büyük yazı).
 const BIG_FONT_SCALE := 2.0
 var buyuk_yazi: bool = false
+## v2.1: seçili koşu modu/zorluğu (RunProfiles adları; taze kurulum Normal/Normal). Bilinmeyen ad yükte varsayılana döner.
+var run_mode: String = "normal"
+var run_diff: String = "normal"
 ## AudioDirector'ın Music kanalına eklediği anlık pay (duraklatma/duck, dB); kullanıcı seviyesinin ÜSTÜNE eklenir.
 var music_extra_db: float = 0.0
 
@@ -49,6 +52,10 @@ func load_settings(path: String = "") -> void:
 	sfx_pct = _pct_from(d.get("efekt_yuzde"), SFX_DEFAULT)
 	hareket_azalt = bool(d.get("hareket_azalt", false))
 	buyuk_yazi = bool(d.get("buyuk_yazi", false))
+	var rm: Variant = d.get("kosu_modu", "normal")
+	run_mode = rm if rm is String and RunProfiles.MODES.has(rm) else "normal"
+	var rd: Variant = d.get("kosu_zorluk", "normal")
+	run_diff = rd if rd is String and RunProfiles.DIFFS.has(rd) else "normal"
 	RenderFix.enabled = cull_fix
 
 
@@ -72,6 +79,8 @@ func save_settings(path: String = "") -> bool:
 						"efekt_yuzde": sfx_pct,
 						"hareket_azalt": hareket_azalt,
 						"buyuk_yazi": buyuk_yazi,
+						"kosu_modu": run_mode,
+						"kosu_zorluk": run_diff,
 					}
 				)
 			)
