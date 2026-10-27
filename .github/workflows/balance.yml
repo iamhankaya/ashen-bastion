@@ -1,17 +1,22 @@
 name: balance
-# Yalnız elle (workflow_dispatch): bot denge ölçümü. v2.1 U1a: Lord'lu legacy (Zor) baseline `baseline-lord-A400.jsonl`
-# (strong_lord, Gunslinger, A400 = 3001-3400). 4 alt iş x 100 tohum; `merge` işi tek jsonl üretir ve artifact olarak yükler.
-# Çıktıyı docs/design/v2.1/balance/baseline-lord-A400.jsonl olarak commit'lemek VLAD/geliştiricinin işidir.
-# Ham çıktı klasörü .balance/ (.gitignore'da). Ölçüm kullanıcı veri dizinine yazmaz. U1b matrisi (mod x zorluk x politika) bu dosyayı genişletir.
+# Yalnız elle (workflow_dispatch): bot denge ölçümü.
+# v2.1 U1b matrisi: hücre = mod x zorluk x politika (14): Normal ve Hızlı için Kolay/Normal/Zor x {strong_lord, kite} (12),
+# Sonsuz için Kolay+Normal x strong_lord (2; Zor'da Lord'a ulaşan az). Her hücre 4 alt iş x 100 tohum (400 tohum);
+# ilk tohum 3001 = A400 (ayar), 3401 = B400 yalnız V fazında. `merge` işi tek jsonl üretir, hücre/fark/seviye-oranı/sağlama
+# tablolarını report.md'ye yazar ve artifact olarak yükler. Lord'lu legacy (Zor) baseline `baseline-lord-A400.jsonl` da bu
+# hücrelerden normal:hard:strong_lord'dur (docs/design/v2.1/balance/ altına commit'lemek VLAD/geliştiricinin işidir).
+# İlk dispatch'te seeds_per_job=100 ile süre ölçülür: her alt iş `timing_<hücre>_<parça>.txt` yazar (saniye), merge işi
+# `timing.md` özetler; iş 6 saatlik sınırın %50'sini (180 dk) aşmamalı. Sonuçları docs/design/v2.1/balance/ altına yazmak
+# VLAD/geliştiricinin işidir. Ham çıktı klasörü .balance/ (.gitignore'da). Ölçüm kullanıcı veri dizinine yazmaz.
 on:
   workflow_dispatch:
     inputs:
       first_seed:
-        description: "İlk tohum (A400 = 3001)"
+        description: "İlk tohum (A400 = 3001, B400 = 3401)"
         default: "3001"
-      policies:
-        description: "Politikalar (boşlukla)"
-        default: "strong_lord"
+      seeds_per_job:
+        description: "Alt iş başına tohum (4 alt iş; 100 = hücre başına 400)"
+        default: "100"
       chars:
         description: "Karakterler (boşlukla)"
         default: "gunslinger"
@@ -20,10 +25,27 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
+        cell:
+          [
+            normal:easy:strong_lord,
+            normal:easy:kite,
+            normal:normal:strong_lord,
+            normal:normal:kite,
+            normal:hard:strong_lord,
+            normal:hard:kite,
+            quick:easy:strong_lord,
+            quick:easy:kite,
+            quick:normal:strong_lord,
+            quick:normal:kite,
+            quick:hard:strong_lord,
+            quick:hard:kite,
+            endless:easy:strong_lord,
+            endless:normal:strong_lord,
+          ]
         part: [0, 1, 2, 3]
     steps:
       - uses: actions/checkout@v4
@@ -39,18 +61,25 @@ jobs:
         run: |
           export GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"
           bash tools/ci/godot_import.sh /tmp/import.log
-      - name: Ölç (100 tohum)
+      - name: Ölç
         env:
-          POLICIES: ${{ inputs.policies }}
           CHARS: ${{ inputs.chars }}
           FIRST: ${{ inputs.first_seed }}
+          N: ${{ inputs.seeds_per_job }}
+          CELL: ${{ matrix.cell }}
+          PART: ${{ matrix.part }}
         run: |
           export GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"
-          bash tools/balance/mid_all.sh ".balance/part${{ matrix.part }}" "$((FIRST + 100 * ${{ matrix.part }}))" 100
+          IFS=: read -r MODE DIFF POL <<< "$CELL"
+          OUT=".balance/part"
+          mkdir -p "$OUT"
+          t0=$(date +%s)
+          POLICIES="$POL" CELLS="$MODE:$DIFF" bash tools/balance/mid_all.sh "$OUT" "$((FIRST + N * PART))" "$N"
+          echo "$(( $(date +%s) - t0 ))" > "$OUT/timing_${MODE}_${DIFF}_${POL}_${PART}.txt"
       - uses: actions/upload-artifact@v4
         with:
-          name: balance-part-${{ matrix.part }}
-          path: .balance/part${{ matrix.part }}
+          name: balance-part-${{ strategy.job-index }}
+          path: .balance/part
           retention-days: 14
           if-no-files-found: error
   merge:
@@ -73,12 +102,30 @@ jobs:
       - name: Birleştir ve özetle
         run: |
           python3 tools/balance/merge_rows.py .balance/parts .balance/baseline.jsonl
-          python3 tools/balance/mid_report.py .balance/parts | tee .balance/report.md
+          {
+            echo "### Süre (saniye, alt iş başına)"; echo
+            echo "| alt iş | sn |"; echo "|---|---|"
+            for f in .balance/parts/timing_*.txt; do echo "| $(basename "$f" .txt | sed 's/^timing_//') | $(cat "$f") |"; done
+            echo; echo "En yavaş alt iş: $(cat .balance/parts/timing_*.txt | sort -n | tail -1) sn (sınır: 6 saatin %50'si = 10800 sn)"
+          } > .balance/timing.md
+          set +e
+          {
+            python3 tools/balance/mid_report.py .balance/parts
+            echo; echo "### Hızlı seviye ölçümü (strong_lord)"
+            python3 tools/balance/mid_report.py .balance/parts --policy strong_lord --level-ratio quick:normal normal:normal | tail -2
+            echo; echo "### Hızlı - Normal farkı (strong_lord)"
+            python3 tools/balance/mid_report.py .balance/parts --policy strong_lord --diff quick:normal normal:normal | tail -3
+            echo; echo "### Kolay - Normal farkı (strong_lord)"
+            python3 tools/balance/mid_report.py .balance/parts --policy strong_lord --diff normal:easy normal:normal | tail -3
+            echo; echo "### strong_lord sağlama (Kolay)"
+            python3 tools/balance/mid_report.py .balance/parts --policy strong_lord --sanity --cell normal:easy | tail -2
+          } | tee .balance/report.md
       - uses: actions/upload-artifact@v4
         with:
           name: baseline-jsonl
           path: |
             .balance/baseline.jsonl
             .balance/report.md
+            .balance/timing.md
           retention-days: 30
           if-no-files-found: error
