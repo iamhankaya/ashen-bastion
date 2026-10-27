@@ -44,16 +44,28 @@ func test_r1_profileless_equals_legacy_profile_state_hash() -> void:
 	assert_eq(a.rng_spawn.state, b.rng_spawn.state)
 
 
+func _late(seed_value: int, start: float, profile: RunProfile) -> Array:
+	# Ölümsüz oyuncu: Lord doğuşu (1200) ve Lord temas hasarı yolu kesin koşar.
+	var o := {"data": GameData.load_default(), "start_time": start}
+	if profile != null:
+		o["run_profile"] = profile
+	var s := GameSim.new(seed_value, &"gunslinger", o)
+	s.max_hp = 1.0e9
+	s.hp = 1.0e9
+	var lords := [0]
+	s.bus.boss_spawned.connect(func(_t: StringName) -> void: lords[0] += 1)
+	_run_steps(s, 1800)
+	return [s.state_hash(), s.rng_combat.state, 1.0e9 - s.hp, lords[0]]
+
+
 func test_r2_file_normal_hard_is_legacy_equivalent_in_a_late_game_hash() -> void:
-	var cases := [[11, 600.0], [23, 1190.0]]
-	for c in cases:
-		var bare := V21RefKit.run_late(c[0], c[1], 1800)
-		var prof := V21RefKit.run_late(
-			c[0], c[1], 1800, {"run_profile": V21Kit.profile(&"normal", &"hard")}
-		)
-		assert_eq(prof["hash"], bare["hash"], "tohum %s, başlangıç %s" % [c[0], c[1]])
-		assert_eq(prof["rng_combat"], bare["rng_combat"])
-		assert_eq(prof["damage_q"], bare["damage_q"], "temas hasarı birebir")
+	for c in [[11, 600.0], [23, 1190.0]]:
+		var bare := _late(c[0], c[1], null)
+		var prof := _late(c[0], c[1], V21Kit.profile(&"normal", &"hard"))
+		assert_eq(prof, bare, "tohum %s, başlangıç %s" % [c[0], c[1]])
+	var lord_run := _late(23, 1190.0, null)
+	assert_gt(lord_run[3], 0, "1190'dan başlayan senaryoda Lord doğar (kurulum)")
+	assert_gt(lord_run[2], 0.0, "temas hasarı alındı (kurulum)")
 
 
 func test_r3_default_selection_is_normal_normal_and_not_legacy() -> void:

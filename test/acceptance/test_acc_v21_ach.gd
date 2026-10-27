@@ -7,6 +7,7 @@ extends GutTest
 ## (rules: AchievementRules, diff: StringName) alır ya da `set_rules(rules, diff)` sunar. İkisi de yoksa `_tracker` testi
 ## pending bırakır (T-turu bu tek yardımcıyı gerçek imzaya uyarlar).
 
+const TRACKER := "res://scripts/ctrl/achievement_tracker.gd"
 const TIME := 1300
 const LORD_BOUND := ["lordslayer:1", "lordslayer:2", "lordslayer:3", "endure:4", "ascension:3"]
 
@@ -16,7 +17,7 @@ func after_each() -> void:
 
 
 func _init_arg_count() -> int:
-	for m: Dictionary in AchievementTracker.get_script_method_list():
+	for m: Dictionary in (load(TRACKER) as GDScript).get_script_method_list():
 		if m["name"] == "_init":
 			return (m["args"] as Array).size()
 	return 0
@@ -27,9 +28,10 @@ func _rig(diff: StringName, store: AchievementStore = null) -> Dictionary:
 	var st := store if store != null else AchKit.store()
 	var rules := AchievementRules.new(V21Kit.cfg())
 	var data := AchKit.data()
+	var script: GDScript = load(TRACKER)
 	var tr: AchievementTracker = null
 	if _init_arg_count() >= 6:
-		tr = AchievementTracker.new(data, st, &"gunslinger", AchKit.clock(), rules, diff)
+		tr = script.new(data, st, &"gunslinger", AchKit.clock(), rules, diff)
 	else:
 		tr = AchievementTracker.new(data, st, &"gunslinger", AchKit.clock())
 		if tr.has_method("set_rules"):
