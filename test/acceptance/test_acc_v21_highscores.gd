@@ -1,9 +1,11 @@
 extends GutTest
 ## Kabul (v2.1 K): highscore ayrımı ve kayıt göçü (spec senaryo 9, K5-A, plan K-C6). (mod, zorluk) başına ayrı en iyi 10;
 ## v1 dosyası -> v2 (`{"v":2,"lists":{"<mod>:<zorluk>":[...]}}`), v1 girişleri `normal:normal`; `.v1.bak` + atomik yazım;
-## bozuk v2 dosyası çökertmez. Ayrım testleri (sep*) controller'a kadar C'den beri koşar; göç testleri (v21k1-v21k13, v21k20) V21Slice "K" açılana
-## dek pending. VARSAYIM: göç `load_file()` sırasında (ya da en geç sonraki `save()`'de) yapılır; testler ikisini de
-## karşılamak için göçten sonra `save()` çağırır. Yalnız geçici yollar (user:// sızıntısı yok; after_all siler).
+## bozuk v2 dosyası çökertmez. Ayrım testleri (sep*) C'den beri koşar; göç testleri (k1-k13, k20) V21Slice "K" açılana
+## dek pending. Gerçek kod (T-turu): göç `load_file()` sırasında yapılır (yedek + v2 yazımı); testler yine de göçten sonra
+## `save()` çağırır (idempotent). Bellekteki giriş sözlükleri mode/diff TAŞIMAZ (liste anahtarı bunu söyler); alanlar yalnız
+## diskteki v2 dosyasında bulunur, bu yüzden etiket denetimleri dosyayı okur. Yalnız geçici yollar (user:// sızıntısı yok;
+## after_all siler).
 
 const ROOT := "user://v21_hs_acc"
 const FIX := "res://test/fixtures/hs_v1/"
@@ -88,6 +90,16 @@ func _bak_files() -> Array[String]:
 	return out
 
 
+## Diskteki v2 dosyasının "<mod>:<zorluk>" listesi (ayrıştırılamazsa boş dizi).
+func _disk_list(key: String) -> Array:
+	var doc: Variant = JSON.parse_string(_read(_path()))
+	if doc is Dictionary and (doc as Dictionary).get("lists", null) is Dictionary:
+		var lists: Dictionary = doc["lists"]
+		if lists.get(key, null) is Array:
+			return lists[key]
+	return []
+
+
 func _migrate() -> Highscores:
 	var h := Highscores.new(_path())
 	h.load_file()
@@ -148,9 +160,11 @@ func test_k20_the_saved_entry_carries_its_mode_and_difficulty() -> void:
 		return
 	var c := _controller("quick", "easy")
 	_die(c)
-	var e: Dictionary = c.highscores.list_for(&"quick", &"easy")[0]
-	assert_eq(e["mode"], "quick")
-	assert_eq(e["diff"], "easy")
+	var rows := _disk_list("quick:easy")
+	assert_eq(rows.size(), 1, "kayıt diske yazıldı")
+	if rows.size() == 1:
+		assert_eq(rows[0]["mode"], "quick")
+		assert_eq(rows[0]["diff"], "easy")
 
 
 func test_sep3_changing_the_selection_mid_run_does_not_move_the_score() -> void:
@@ -184,8 +198,10 @@ func test_k1_v1_entries_become_the_normal_normal_list() -> void:
 		_scores(list), [100000, 93000, 86000, 79000, 72000, 65000, 58000, 51000, 44000, 37000]
 	)
 	assert_true(list[0]["won"])
-	for e in list:
-		assert_eq([e["mode"], e["diff"]], ["normal", "normal"], "giriş etiketi")
+	var rows := _disk_list("normal:normal")
+	assert_eq(rows.size(), 10, "diskteki v2 listesi")
+	for e: Dictionary in rows:
+		assert_eq([e["mode"], e["diff"]], ["normal", "normal"], "giriş etiketi (disk)")
 	for other in [[&"quick", &"easy"], [&"normal", &"hard"], [&"endless", &"normal"]]:
 		assert_eq(h.list_for(other[0], other[1]).size(), 0, "%s:%s boş" % other)
 
@@ -304,9 +320,13 @@ func test_k9_the_list_key_is_authoritative_over_entry_fields() -> void:
 	hs.load_file()
 	var got := hs.list_for(&"quick", &"easy")
 	assert_eq(got.size(), 2)
-	for e in got:
-		assert_eq([e["mode"], e["diff"]], ["quick", "easy"], "anahtara göre yeniden yazıldı")
 	assert_eq(hs.list_for(&"endless", &"hard").size(), 0, "giriş alanı listeyi değiştirmez")
+	assert_true(hs.save())
+	var rows := _disk_list("quick:easy")
+	assert_eq(rows.size(), 2)
+	for e: Dictionary in rows:
+		assert_eq([e["mode"], e["diff"]], ["quick", "easy"], "anahtara göre yeniden yazıldı")
+	assert_eq(_disk_list("endless:hard").size(), 0, "diskte de giriş alanından liste doğmadı")
 
 
 func test_k10_unknown_list_keys_are_preserved_for_forward_compat() -> void:
@@ -343,7 +363,8 @@ func test_k11_corrupt_v2_files_open_empty_and_keep_a_bad_copy() -> void:
 	]
 	for body: String in bodies:
 		_write(_path(), body)
-		DirAccess.remove_absolute(_path() + ".bad")
+		if FileAccess.file_exists(_path() + ".bad"):
+			DirAccess.remove_absolute(_path() + ".bad")
 		var h := Highscores.new(_path())
 		h.load_file()
 		assert_true(h.corrupt, "bozuk sayıldı: %s" % body)

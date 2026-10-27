@@ -5,10 +5,16 @@ extends RefCounted
 
 const LORD := &"kale_lordu"
 
+static var _lord_only: GameData = null
+
 
 ## Gerçek veri; dalga çizelgesinde yalnız Lord satırı kalır (kalabalıksız, hızlı Lord testleri).
+## Taze `load_dir` örneği (`load_default` önbelleği paylaşılır: `waves` değişirse tüm testler bozulur);
+## süreç boyu bir kez kurulur, sim veriyi değiştirmez.
 static func lord_only_data() -> GameData:
-	var d := GameData.load_default()
+	if _lord_only != null:
+		return _lord_only
+	var d := GameData.load_dir("res://data")
 	var w: Dictionary = d.waves.duplicate(true)
 	var rows: Array = []
 	for r: Dictionary in w["rows"]:
@@ -16,6 +22,7 @@ static func lord_only_data() -> GameData:
 			rows.append(r)
 	w["rows"] = rows
 	d.waves = w
+	_lord_only = d
 	return d
 
 

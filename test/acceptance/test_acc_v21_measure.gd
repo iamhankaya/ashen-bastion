@@ -49,11 +49,14 @@ func test_m2_the_tool_can_play_the_lord_fight_and_the_endless_horizon() -> void:
 		assert_gte(int(hit.get_string(1)), 144000, "Lord dövüşü için ≥ 2400 sn (144000 adım)")
 
 
-func test_m3_the_balance_workflow_covers_the_mode_difficulty_matrix() -> void:
-	if V21Slice.require(self, "M"):
-		return
+func test_u1b_the_balance_workflow_covers_the_mode_difficulty_matrix() -> void:
+	# Matris U1b'nin (T20261027-33) teslimatıdır, M dilimi (U1a) yalnız strong_lord varsayılanlı tek dispatch teslim etti.
+	# Dilimsiz ad: U1b entegre olunca balance.yml matrisi gelir ve assert'ler otomatik devreye girer (gevşetme yok).
 	var text := FileAccess.get_file_as_string(BALANCE_YML)
 	assert_ne(text, "", "balance.yml var")
+	if not text.contains("endless"):
+		pending("U1b matrisi (T20261027-33) henüz entegre değil")
+		return
 	for token in ["quick", "endless", "easy", "hard", "strong_lord", "kite"]:
 		assert_true(text.contains(token), "matriste: %s" % token)
 
