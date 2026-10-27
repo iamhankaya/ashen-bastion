@@ -48,7 +48,7 @@ const METHODS := {
 	},
 	"AchievementTracker":
 	{
-		"_init": ["p_data,p_store,p_char_id,p_clock", O],
+		"_init": ["p_data,p_store,p_char_id,p_clock,p_rules,p_diff", O],
 		"attach": ["bus", N],
 		"detach": ["", N],
 		"poll": ["sim", N],

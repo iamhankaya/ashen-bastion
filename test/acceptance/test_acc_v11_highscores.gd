@@ -62,7 +62,7 @@ func _parse(path: String) -> Variant:
 
 func _valid_file(path: String) -> bool:
 	var v: Variant = _parse(path)
-	return v is Dictionary and int(v.get("v", 0)) == 1 and v.get("entries") is Array
+	return v is Dictionary and int(v.get("v", 0)) == 2 and v.get("lists") is Dictionary
 
 
 # --- H1 ------------------------------------------------------------------------------------------------------
@@ -177,12 +177,15 @@ func test_h3_save_load_roundtrip_and_file_shape() -> void:
 	assert_true(raw is Dictionary)
 	if not raw is Dictionary:
 		return
-	assert_eq(int(raw["v"]), 1)
-	assert_eq((raw["entries"] as Array).size(), 3)
-	for e in raw["entries"]:
+	assert_eq(int(raw["v"]), 2)
+	var list: Array = raw["lists"]["normal:normal"]
+	assert_eq(list.size(), 3)
+	for e in list:
 		var keys: Array = e.keys()
 		keys.sort()
-		assert_eq(keys, ["level", "score", "time", "unix", "won"], "giriş alan kümesi")
+		assert_eq(
+			keys, ["diff", "level", "mode", "score", "time", "unix", "won"], "giriş alan kümesi"
+		)
 		assert_true(e["won"] is bool)
 	assert_lt(FileAccess.get_file_as_bytes(_path()).size(), 2048, "< 2 KB")
 	var back := Highscores.new(_path())

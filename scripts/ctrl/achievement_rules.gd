@@ -2,7 +2,7 @@ class_name AchievementRules
 extends RefCounted
 ## v2.1 zorluğa bağlı başarım kuralı (K-C5). Veri run_profiles.json "achievements" bölümünden gelir; kural DÜZEYİ kademedir:
 ## tracker her kademe verme noktasında `allows`, her toplam sayaç artışında `counts_total` sorar (olay anında; sonradan geri alma yok).
-## C fazında yalnız kural nesnesi vardır; tracker'a enjeksiyon (constructor parametresi) U3'tedir.
+## Tracker kurulurken enjekte edilir (V21Runs.achievement_rules + diff_of; constructor parametreleri).
 
 var _lord_bound: PackedStringArray = PackedStringArray()
 var _by_diff: Dictionary = {}
