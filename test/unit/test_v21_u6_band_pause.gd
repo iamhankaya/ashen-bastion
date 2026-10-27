@@ -57,16 +57,16 @@ func _gaps(b: MilestoneBand) -> Array:
 
 func test_b60_band_is_a_polite_live_region_only_while_shown() -> void:
 	var b := _band()
-	assert_eq(b.accessibility_live, DisplayServer.LIVE_OFF, "gizliyken canlı bölge kapalı")
+	assert_eq(b.accessibility_live, AccessibilityServer.LIVE_OFF, "gizliyken canlı bölge kapalı")
 	b.show_band(300.0, false)
-	assert_eq(b.accessibility_live, DisplayServer.LIVE_POLITE, "nazik, kesmeden")
+	assert_eq(b.accessibility_live, AccessibilityServer.LIVE_POLITE, "nazik, kesmeden")
 	b.advance(3.3)
 	assert_false(b.visible)
-	assert_eq(b.accessibility_live, DisplayServer.LIVE_OFF, "süre bitince kapanır")
+	assert_eq(b.accessibility_live, AccessibilityServer.LIVE_OFF, "süre bitince kapanır")
 	b.show_band(0.0, true)
-	assert_eq(b.accessibility_live, DisplayServer.LIVE_POLITE)
+	assert_eq(b.accessibility_live, AccessibilityServer.LIVE_POLITE)
 	b.hide_band()
-	assert_eq(b.accessibility_live, DisplayServer.LIVE_OFF)
+	assert_eq(b.accessibility_live, AccessibilityServer.LIVE_OFF)
 
 
 # --- #4 duyurulan metin ipucunu da okur (a11y_text yoksa kırmızı) ---------------------------------------------

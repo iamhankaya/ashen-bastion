@@ -190,7 +190,7 @@ func _relayout() -> void:
 
 
 func _set_live(on: bool) -> void:
-	var mode := DisplayServer.LIVE_POLITE if on else DisplayServer.LIVE_OFF
+	var mode := AccessibilityServer.LIVE_POLITE if on else AccessibilityServer.LIVE_OFF
 	if accessibility_live != mode:
 		accessibility_live = mode
 
