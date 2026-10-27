@@ -561,9 +561,10 @@ func test_b4_m5_result_with_chip_keeps_layout_and_at_most_three_combo_rows() -> 
 	await get_tree().process_frame
 	var shown := 0
 	for c in r.combo_box.get_children():
-		if (c as Control).visible:
+		# v2.1 U6 (#5, kullanıcı kararı b): "+N" etiketi kombo satırı değildir (satırlar HBoxContainer)
+		if c is HBoxContainer and (c as Control).visible:
 			shown += 1
-	assert_lte(shown, 3, "çip varken kombolar <= 3 satır")
+	assert_lte(shown, 4, "çip varken kombolar <= 4 satır (+N etiketi ayrı)")
 	assert_gte(
 		r.replay_button.get_global_rect().position.y, ExpectedLayoutV2.RESULT_BUTTONS_Y.x - 2.0
 	)

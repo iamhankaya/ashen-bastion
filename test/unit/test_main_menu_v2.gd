@@ -125,14 +125,14 @@ func test_default_sublines_and_version() -> void:
 	await _settle()
 	assert_eq((m.characters_button.get_node("Sub") as Label).text, "Gunslinger")
 	assert_eq((m.achievements_button.get_node("Sub") as Label).text, "0/53")
-	assert_eq(m.version_label.text, "Sürüm 2.0.3")
+	assert_eq(m.version_label.text, "Sürüm 2.1.0")
 
 
 func test_set_character_name_updates_sub_and_version() -> void:
 	var m := _menu()
 	m.set_character_name("Barutçu")
 	assert_eq((m.characters_button.get_node("Sub") as Label).text, "Barutçu")
-	assert_eq(m.version_label.text, "Sürüm 2.0.3", "karakter adı sürüm satırında yok")
+	assert_eq(m.version_label.text, "Sürüm 2.1.0", "karakter adı sürüm satırında yok")
 
 
 func test_set_achievement_count() -> void:

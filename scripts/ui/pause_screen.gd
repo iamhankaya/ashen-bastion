@@ -18,6 +18,9 @@ const COL_TOP := 380.0
 const GAP_H := 95.0  # v2.1: koşu çipleri (48 + 27) eklendi; eylem düğmeleri eski yerinde kalır (170 - 75)
 const GAP_MIN := 40.0
 const CHIP_H := 48.0
+const CHIP_ROW_GAP := 8.0  # 2×: çipler iki satıra sarar; slot 48 -> 104 (satır +56, DESIGN §5)
+const CHIP_ACTION_MIN := 24.0  # çip ile eylem düğmeleri arası en az (U6 #17); GAP_MIN bunun altına inmez
+const BIG_SCALE := 1.3
 
 var resume_button: Button
 var sound_button: Button
@@ -36,9 +39,13 @@ var column: VBoxContainer
 var gap: Control
 var chips_slot: Control
 var chips: HBoxContainer
+## 2×: çipler bu dikey kapta (HBoxContainer.vertical sabittir); 1×'te null.
+var chips_v: VBoxContainer = null
 
 var _sound_on: bool = true
 var _vibration_on: bool = true
+var _big: bool = false
+var _safe_extra: Variant = null
 
 
 func _ready() -> void:
@@ -137,6 +144,7 @@ func apply_safe_area(extra: Variant = null) -> void:
 	var view := Vector2(1080.0, 2400.0)
 	if is_inside_tree() and size.y > 0.0:
 		view = size
+	_safe_extra = extra
 	var e: Vector4
 	if extra is Vector4:
 		e = extra
@@ -151,7 +159,9 @@ func apply_safe_area(extra: Variant = null) -> void:
 	gap.custom_minimum_size.y = GAP_H
 	var bottom_limit := view.y - UiKit.DEFAULT_BOTTOM - e.w
 	var over := column.offset_top + column.get_combined_minimum_size().y - bottom_limit
-	gap.custom_minimum_size.y = clampf(GAP_H - maxf(over, 0.0), GAP_MIN, GAP_H)
+	gap.custom_minimum_size.y = clampf(
+		GAP_H - maxf(over, 0.0), maxf(GAP_MIN, CHIP_ACTION_MIN), GAP_H
+	)
 
 
 func _build_dialog() -> void:
@@ -200,6 +210,9 @@ func open(actives: Array[SkillState], passives: Array[SkillState], sound: bool, 
 	_fill(active_slots, actives)
 	_fill(passive_slots, passives)
 	set_settings(sound, vib)
+	var st := get_node_or_null(^"/root/Settings") if is_inside_tree() else null
+	if st != null:
+		set_font_scale(st.font_scale())  # 2× yazı: ayar ekran her açıldığında okunur
 	refresh_chips()
 	close_confirm()
 	visible = true
@@ -210,13 +223,60 @@ func open(actives: Array[SkillState], passives: Array[SkillState], sound: bool, 
 func refresh_chips() -> void:
 	if chips_slot == null:
 		return
-	if chips != null:
+	if chips_v != null:
+		chips_slot.remove_child(chips_v)
+		chips_v.queue_free()
+		chips_v = null
+	elif chips != null:
 		chips_slot.remove_child(chips)
+	if chips != null:
 		chips.queue_free()
 	var sel := V21Runs.selection()
 	chips = RunStrip.make_chips(sel["mode"], sel["diff"], V21Runs.profiles())
 	UiKit.fill(chips)
 	chips_slot.add_child(chips)
+	_layout_chips()
+
+
+## 2× yazı (`f > 1,3`): çipler iki satıra sarar (slot +56); güvenli alan sıkıştırması yeni yükseklikle yeniden hesaplanır.
+func set_font_scale(f: float) -> void:
+	var big := f > BIG_SCALE
+	var changed := big != _big
+	_big = big
+	_layout_chips()
+	if changed and column != null:
+		apply_safe_area(_safe_extra)
+
+
+func is_big() -> bool:
+	return _big
+
+
+func _layout_chips() -> void:
+	if chips_slot == null:
+		return
+	chips_slot.custom_minimum_size.y = CHIP_H * 2.0 + CHIP_ROW_GAP if _big else CHIP_H
+	if chips == null:
+		return
+	if _big and chips_v == null:
+		chips_v = VBoxContainer.new()
+		chips_v.add_theme_constant_override(&"separation", int(CHIP_ROW_GAP))
+		UiKit.fill(chips_v)
+		for c in chips.get_children():
+			chips.remove_child(c)
+			(c as Control).size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			chips_v.add_child(c)
+		chips_slot.remove_child(chips)
+		chips_slot.add_child(chips_v)
+	elif not _big and chips_v != null:
+		for c in chips_v.get_children():
+			chips_v.remove_child(c)
+			(c as Control).size_flags_horizontal = Control.SIZE_FILL
+			chips.add_child(c)
+		chips_slot.remove_child(chips_v)
+		chips_v.queue_free()
+		chips_v = null
+		chips_slot.add_child(chips)
 
 
 func set_settings(sound: bool, vib: bool) -> void:

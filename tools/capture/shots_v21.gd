@@ -2,7 +2,7 @@ extends SceneTree
 ## v2.1 U4a ekran görüntüsü öz-kontrolü (koşu şeridi, KOŞU ekranı, duraklatma çipleri; çıktı commit'lenmez). Kullanım:
 ##   xvfb-run -a -s "-screen 0 1080x2400x24" godot --path . --rendering-driver opengl3 --resolution 1080x2400 \
 ##     -s res://tools/capture/shots_v21.gd -- <çıktı_dizini> [senaryo,senaryo]
-## Senaryolar: menu, menu_quick_easy, menu_endless_hard, menu_2x, run, run_quick_easy, run_endless_hard, run_2x, pause.
+## Senaryolar: menu, menu_quick_easy, menu_endless_hard, menu_2x, run, run_quick_easy, run_endless_hard, run_2x, pause, pause_2x.
 ## ÖNCE/SONRA: aynı betik iki kaynakta koşulur. `RunScreen` yoksa (taban commit) run_* senaryoları atlanır; menu*/pause
 ## senaryoları iki kaynakta da koşar, böylece ana sayfa (şerit yok -> var) ve duraklatma (çip yok -> var) kıyaslanır.
 ## Seçim Settings düğümüne bellek içi yazılır (diske kaydedilmez).
@@ -19,7 +19,8 @@ var scenarios: PackedStringArray = [
 	"run_quick_easy",
 	"run_endless_hard",
 	"run_2x",
-	"pause"
+	"pause",
+	"pause_2x"
 ]
 
 
@@ -106,11 +107,14 @@ func _run() -> void:
 				_pick("endless", "easy")
 				if not _run_screen(2.0):
 					continue
-			"pause":
+			"pause", "pause_2x":
 				_pick("quick", "hard")
 				var p := PauseScreen.new()
 				root.add_child(p)
 				p.open([] as Array[SkillState], [] as Array[SkillState], true, true)
+				# taban commit'te set_font_scale yok: 2× görüntü yazının büyümediğini (denetim #2) gösterir
+				if sc == "pause_2x" and p.has_method(&"set_font_scale"):
+					p.call(&"set_font_scale", 2.0)
 			_:
 				continue
 		await _shot(sc)

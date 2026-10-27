@@ -24,6 +24,8 @@ const CARD_H_BIG := 260.0
 const BIG_SCALE := 1.3
 const FADE_SEC := 0.14
 const SECTION_GAP := 30
+## Mühür üst payı: 1× süre yazısı (38 px, satır 184'te ortalı) y≈67'den başlar; 14 px'te mühür (14-70) örtüşürdü, 6 px'te 62'de biter.
+const MARK_TOP := 6.0
 
 var title_label: Label
 var back_button: Button
@@ -41,6 +43,7 @@ var _big: bool = false
 var _title_box: Control
 var _fades: Dictionary = {}  # Control -> Tween
 var _seals: Dictionary = {}  # Button -> Seal
+var _glyphs: Dictionary = {}  # mod kimliği -> ModeGlyph (seçili bronz_300, değilse bronz_500; DESIGN §4)
 var _detail_rows: VBoxContainer
 var _rule_rows: VBoxContainer
 
@@ -143,6 +146,7 @@ func _build_list() -> void:
 	mode_buttons = {}
 	diff_buttons = {}
 	_seals = {}
+	_glyphs = {}
 	column.add_child(_section("MOD"))
 	var modes := VBoxContainer.new()
 	modes.name = "Modes"
@@ -222,8 +226,8 @@ func _seal_for(b: Button) -> void:
 	s.anchor_right = 1.0
 	s.offset_left = -72.0
 	s.offset_right = -16.0
-	s.offset_top = 14.0
-	s.offset_bottom = 70.0
+	s.offset_top = MARK_TOP
+	s.offset_bottom = MARK_TOP + 56.0
 	s.visible = false  # _apply_selection yalnız seçiliyi açar
 	b.add_child(s)
 	_seals[b] = s
@@ -241,7 +245,8 @@ func _mode_row(m: StringName) -> Button:
 	UiKit.fill(h)
 	h.offset_left = 28.0
 	h.offset_right = -28.0
-	var g := RunStrip.ModeGlyph.new(m, UiKit.BRONZ_300, 84.0 * (1.5 if _big else 1.0))
+	var g := RunStrip.ModeGlyph.new(m, UiKit.BRONZ_500, 84.0 * (1.5 if _big else 1.0))
+	_glyphs[m] = g
 	g.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(g)
 	var v := VBoxContainer.new()
@@ -361,6 +366,9 @@ func _apply_selection(animate: bool) -> void:
 		var on: bool = m == _mode
 		_skin(b, on)
 		(_seals[b] as Control).visible = on
+		var g: RunStrip.ModeGlyph = _glyphs[m]
+		g.color = UiKit.BRONZ_300 if on else UiKit.BRONZ_500
+		g.queue_redraw()
 		b.accessibility_name = RunStrip.mode_a11y(m, cfg, on)
 	for d in diff_buttons:
 		var b: Button = diff_buttons[d]
@@ -453,10 +461,22 @@ func _on_visibility() -> void:
 	_focus_selected.call_deferred()
 
 
+## Açılış odağı yalnız klavye/kumandada anlamlı: dokunmatikte amber 6 px çerçeve kalıcı görünürdü (denetim #13).
+## Projede "son girdi" bilgisi yok; en küçük çözüm mobil cihazdaki dokunmatik ekrandır (masaüstü/CI'da `emulate_touch_from_mouse`
+## dokunmatiği hep "var" gösterir, orada odak verilir).
+static func should_grab_focus(touch: bool) -> bool:
+	return not touch
+
+
+static func touch_only() -> bool:
+	return OS.has_feature("mobile") and DisplayServer.is_touchscreen_available()
+
+
 func _focus_selected() -> void:
 	var b: Button = mode_buttons.get(_mode, back_button)
 	scroll.ensure_control_visible(b)
-	b.grab_focus()
+	if should_grab_focus(touch_only()):
+		b.grab_focus()
 
 
 ## GERİ ya da Android geri: ekran kapanır, back_requested yayılır (controller menüye döner).

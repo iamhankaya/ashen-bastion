@@ -585,13 +585,13 @@ func test_u7_fifth_combo_collapses_into_plus_one_row() -> void:
 		return
 	var r := _result(true, 5, _record(1, 1))
 	await _frames()
-	# v2.1: sonuç blokları +44 px kaydı; 5 kombo 3 satır + '+2' olarak taşmadan sığar
-	assert_true(_has_text(r, "+2"), "4. ve 5. kombo yerine '+2'")
+	# v2.1 U6: +44 kaymaya rağmen 5 kombo 4 satır + '+1' olarak sığar (kademeler; kullanıcı kararı b)
+	assert_true(_has_text(r, "+1"), "5. kombo yerine '+1'")
 	var names := 0
 	for t in _texts(r):
 		if t == "KIYAMET MERMİSİ":
 			names += 1
-	assert_eq(names, 3, "en çok 3 kombo satırı")
+	assert_eq(names, 4, "en çok 4 kombo satırı")
 
 
 func test_u8_buttons_ready_time_rules_and_timeline_constants() -> void:
