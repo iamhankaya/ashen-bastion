@@ -19,15 +19,13 @@ Run 40577026397 (`balance.yml`, ref `vlad/T20261027-35` = 4efe562, A400 = 3001�
 | 5 | Sıralama (süre medyanı, strong) | Kolay > Normal > Zor | ✓ | 1239 > 931 > 689 | ✓ |
 | 6 | Hızlı − Normal kazanma | ±10 puan | −8,8 | −7,7 (−13,0…−2,5) | ✓ |
 | 6 | Hızlı seviye oranı | ≥ 0,70 | 0,946 | 0,946 | ✓ |
-| 6 | Hızlı toplam süre | ≤ 11 dk | 656 sn | süre medyanları ≤ 611 sn (Kolay) | ✓ |
+| 6 | Hızlı toplam süre | ≤ 11 dk | 656 sn | maks 653 sn (Hızlı Normal strong) | ✓ |
 | 7 | Lord dövüşü Normal | 3–6 dk | 49,7 sn | 50,2 sn | ✗ (yapısal) |
 | 7 | Lord dövüşü Hızlı | 1,5–3 dk | 25,2 sn | 25,7 sn | ✗ (yapısal) |
 | 8 | Sonsuz Lord sonrası medyan ömür | ≥ 3 dk | 349 / 334 sn | 344 sn (Kolay n=152), 329 sn (Normal n=30) | ✓ |
 | 8 | Sonsuz Lord sonrası 5 dk içinde ölüm | ≥ %90 | %0 | %0 (hepsi ≥ 300 sn) | ✗ |
 | 8 | Sonsuz 40. dk kare/bellek | sınırı geçer | ölçülmedi | ölçülmedi (nightly) | — |
 | 1 | Regresyon | değişmez | — | gate/CI'a bağlı | — |
-
-Not: "Hızlı toplam süre" için bu turda baseline.jsonl'den maksimum hesaplanmadı; Hızlı Lord 600. sn sabit ve Hızlı Kolay süre medyanı 611 sn. Tur 1 değeri (656 sn) referans.
 
 ## Çıkarımlar
 
