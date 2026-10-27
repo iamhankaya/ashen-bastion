@@ -5,6 +5,7 @@ extends Button
 ## sayılar ve süreler `data/run_profiles.json`'dan (V21Runs.profiles) gelir, burada sabit sayı yoktur.
 
 const H := 132.0
+const NO_DATA := -2  # profil dosyası okunamadı: süre/Lord dakikası yazılmaz
 const H_BIG := 168.0
 const MODE_ORDER: Array[StringName] = [&"quick", &"normal", &"endless"]
 const DIFF_ORDER: Array[StringName] = [&"easy", &"normal", &"hard"]
@@ -167,6 +168,7 @@ func _init() -> void:
 	add_child(row)
 	_glyph_slot = Control.new()
 	_glyph_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_glyph_slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_glyph_slot)
 	var text := VBoxContainer.new()
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -227,7 +229,9 @@ func show_selection(mode: StringName, diff: StringName, cfg: Dictionary) -> void
 ## Mod süresi dakika: Sonsuz için -1 (süresiz), diğerleri 20 dk × time_scale.
 static func minutes(mode: StringName, cfg: Dictionary) -> int:
 	var m: Dictionary = cfg.get("modes", {}).get(String(mode), {})
-	if m.is_empty() or str(m.get("end_mode", "")) == "endless":
+	if m.is_empty():
+		return NO_DATA
+	if str(m.get("end_mode", "")) == "endless":
 		return -1
 	return roundi(GameSim.DEFAULT_END_TIME * float(m.get("time_scale", 1.0)) / 60.0)
 
@@ -235,6 +239,8 @@ static func minutes(mode: StringName, cfg: Dictionary) -> int:
 ## "10 DK" / "20 DK" / "∞".
 static func duration_text(mode: StringName, cfg: Dictionary) -> String:
 	var mins := minutes(mode, cfg)
+	if mins == NO_DATA:
+		return ""
 	return "∞" if mins < 0 else "%d DK" % mins
 
 
@@ -248,7 +254,10 @@ static func title_text(mode: StringName, cfg: Dictionary) -> String:
 ## Mod açıklaması (Hızlı/Normal'de Lord dakikası profildeki süreden).
 static func mode_desc(mode: StringName, cfg: Dictionary) -> String:
 	var d: String = MODE_DESC.get(mode, "")
-	return d % minutes(mode, cfg) if d.contains("%d") else d
+	if not d.contains("%d"):
+		return d
+	var mins := minutes(mode, cfg)
+	return d.get_slice(".", 0) + "." if mins == NO_DATA else d % mins
 
 
 ## Ayrıntı satırı değeri: çarpan -> "−%30" / "+%25"; 1,0 -> Zor satırlarında "tam", XP'de "aynı".
@@ -306,6 +315,8 @@ static func strip_a11y(mode: StringName, diff: StringName, cfg: Dictionary) -> S
 static func mode_a11y(mode: StringName, cfg: Dictionary, selected: bool) -> String:
 	var state := "seçili" if selected else "seçili değil"
 	var mins := minutes(mode, cfg)
+	if mins == NO_DATA:
+		return "%s mod, %s" % [MODE_TITLES.get(mode, ""), state]
 	if mins < 0:
 		return (
 			"%s mod, Lord devrilince koşu sürer, ölene kadar, %s"
@@ -358,6 +369,7 @@ static func make_chip(glyph: Control, text: String) -> PanelContainer:
 	var h := HBoxContainer.new()
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_theme_constant_override(&"separation", 12)
+	glyph.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(glyph)
 	var l := UiKit.label(text, &"", 28, UiKit.KEMIK_100)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

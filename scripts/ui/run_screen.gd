@@ -39,6 +39,7 @@ var _mode: StringName = &"normal"
 var _diff: StringName = &"normal"
 var _big: bool = false
 var _title_box: Control
+var _fades: Dictionary = {}  # Control -> Tween
 var _seals: Dictionary = {}  # Button -> Seal
 var _detail_rows: VBoxContainer
 var _rule_rows: VBoxContainer
@@ -289,6 +290,7 @@ func _diff_card(d: StringName) -> Button:
 	box.offset_top = 16.0
 	box.offset_bottom = -16.0
 	shields.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	shields.size_flags_horizontal = Control.SIZE_SHRINK_CENTER  # VBox: çapraz eksen yatay
 	box.add_child(shields)
 	if _big:
 		var tv := VBoxContainer.new()
@@ -426,8 +428,12 @@ func _clear(box: Container) -> void:
 func _fade(c: Control) -> void:
 	if _reduce_motion() or not is_inside_tree():
 		return
+	if _fades.has(c) and _fades[c].is_valid():
+		_fades[c].kill()
 	c.modulate.a = 0.0
-	create_tween().tween_property(c, "modulate:a", 1.0, FADE_SEC)
+	var tw := create_tween()
+	tw.tween_property(c, "modulate:a", 1.0, FADE_SEC)
+	_fades[c] = tw
 
 
 func _reduce_motion() -> bool:

@@ -3,14 +3,24 @@ extends GutTest
 ## seçim V21Runs üzerinden sahte Settings'e yazılır (gerçek user://settings.cfg'ye dokunulmaz). Godot yerelde koşmaz: CI.
 
 var fake: V21Kit.FakeSettings
+var _saved: Array = []
 
 
 func before_each() -> void:
 	fake = V21Kit.use_fake_settings()
+	var st := get_node_or_null(^"/root/Settings")
+	if st != null:  # RunScreen yazı ölçeği/hareket ayarını gerçek Settings'ten okur: testten önce sabitle, sonra geri al
+		_saved = [st.buyuk_yazi, st.hareket_azalt]
+		st.buyuk_yazi = false
+		st.hareket_azalt = false
 
 
 func after_each() -> void:
 	V21Kit.clear_fake_settings()
+	var st := get_node_or_null(^"/root/Settings")
+	if st != null and _saved.size() == 2:
+		st.buyuk_yazi = _saved[0]
+		st.hareket_azalt = _saved[1]
 
 
 func _host() -> Control:
@@ -56,6 +66,12 @@ func test_a1_durations_come_from_the_profile_file() -> void:
 	var tuned := V21Kit.mutated(cfg, "modes.quick.time_scale", 0.75)
 	assert_eq(RunStrip.duration_text(&"quick", tuned), "15 DK", "süre time_scale'den, sabit değil")
 	assert_eq(RunStrip.mode_desc(&"quick", tuned), "Kısa koşu. Lord 15. dakikada gelir.")
+
+
+func test_a2b_missing_profile_data_never_prints_fake_durations() -> void:
+	assert_eq(RunStrip.duration_text(&"normal", {}), "")
+	assert_eq(RunStrip.mode_desc(&"quick", {}), "Kısa koşu.")
+	assert_eq(RunStrip.title_text(&"normal", {}), "NORMAL")
 
 
 func test_a2_strip_title_has_no_duration_for_endless() -> void:

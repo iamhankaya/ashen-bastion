@@ -620,7 +620,7 @@ func apply_safe_area(extra: Variant = null) -> void:
 	_col.offset_right = W * 0.5 + shift
 	if hero != null:
 		# K-01: başlık üst paya göre inince karakterin üstü de aynı farkla iner; alt kenar alt paya göre yukarı çıkar.
-		# Tek sütunda karakter %80'e küçülür (y 500-1246, başlık ile OYNA arasında).
+		# Tek sütunda karakter %50'ye küçülür (y 634-1100, başlık ile koşu şeridi arasında).
 		hero.offset_top = (STACK_HERO_TOP if stacked else HERO_TOP) + head_drop
 		hero.offset_bottom = (STACK_HERO_BOTTOM if stacked else HERO_BOTTOM) - up
 		hero.offset_left = -320.0 * (STACK_HERO_SCALE if stacked else 1.0)

@@ -19,9 +19,9 @@ func test_button_order_play_half_row_scores_toggles() -> void:
 	assert_eq(m.scores_button.text, "EN İYİ SKORLAR")
 	var col := m.play_button.get_parent() as Control
 	assert_eq(m.scores_button.get_parent().get_parent(), col)
-	assert_eq(m.play_button.get_index(), 0)
-	assert_eq(m.characters_button.get_parent().get_index(), 1, "v2.0: KARAKTERLER | BAŞARIMLAR 2.")
-	assert_eq(m.scores_button.get_parent().get_index(), 2, "v2.0.3: EN İYİ SKORLAR | AYARLAR 3.")
+	assert_eq(m.play_button.get_index(), 1, "v2.1: koşu şeridi 0.")
+	assert_eq(m.characters_button.get_parent().get_index(), 2, "v2.0: KARAKTERLER | BAŞARIMLAR 2.")
+	assert_eq(m.scores_button.get_parent().get_index(), 3, "v2.0.3: EN İYİ SKORLAR | AYARLAR 3.")
 	assert_eq(m.settings_button.get_parent(), m.scores_button.get_parent())
 	assert_lt(m.play_button.global_position.y, m.scores_button.global_position.y)
 	assert_eq(m.scores_button.size.y, 132.0)
@@ -34,7 +34,8 @@ func test_column_top_at_least_1556_and_gap_27() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var col := m.play_button.get_parent() as Control
-	assert_gte(col.global_position.y, 1763.0 - 0.01)
+	assert_gte(col.global_position.y, 1604.0 - 0.01, "v2.1: sütun şeritle başlar")
+	assert_gte(m.play_button.global_position.y, 1763.0 - 0.01)
 	var gap := m.characters_button.global_position.y - (m.play_button.global_position.y + 180.0)
 	assert_almost_eq(gap, 27.0, 0.5)
 
