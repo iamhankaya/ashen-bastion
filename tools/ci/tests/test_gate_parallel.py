@@ -144,3 +144,16 @@ def test_check_dirs_rejects_missing_gutconfig_dir(tmp_path):
 def test_runner_and_gut_part_check_dirs():
     assert "shard.py check-dirs" in SCRIPT.read_text(encoding="utf-8")
     assert "shard.py check-dirs" in GATE
+
+
+def test_duration_check_is_contended_only_after_parallel_run():
+    # T20261027-12: paralel GUT'ta JUnit süreleri CPU çekişmesiyle şişer -> yalnız o koşunun süre denetimi --contended alır.
+    lines = GATE.splitlines()
+    parallel = next(i for i, l in enumerate(lines) if l.lstrip().startswith("bash tools/ci/run_gut_parallel.sh"))
+    assert any('DUR_FLAGS="--contended"' in l for l in lines[parallel - 3 : parallel + 4])
+    assert 'DUR_FLAGS=""' in GATE  # varsayılan: çekişmesiz (CI parçaları/verify, GATE_JOBS=1, hızlı mod) sert denetim
+    calls = [l for l in lines if "check_durations.py" in l and "python3" in l]
+    assert len(calls) == 2
+    full, fast = calls
+    assert "$DUR_FLAGS" in full  # tam gate adım 7 (PART=all|verify)
+    assert "$DUR_FLAGS" not in fast  # hızlı mod tek süreç: sert
