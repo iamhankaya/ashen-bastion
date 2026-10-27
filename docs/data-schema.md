@@ -422,3 +422,5 @@ iken kurulur, aksi halde `null` (her yardımcı eski değeri döndürür: RNG/ka
 - Ayrıntı levhası: `difficulties.<zorluk>.{enemy_hp, enemy_dmg, spawn_density, xp}` çarpanı -> `(çarpan − 1) × 100` yuvarlanır ("−%30", "+%25"); sıfır ise XP satırında "aynı", diğerlerinde "tam" (Zor).
 - Kural levhası: her zaman skor-listesi satırı; zorluk `easy` ise Kolay uyarısı; mod `endless` ise Sonsuz uyarısı. Başarım kuralı metni `achievements.<zorluk>.block_lord_bound` ile aynı olgudur (metin sabit, kural JSON'da).
 - Seçim: `Settings.run_mode/run_diff` (`kosu_modu`/`kosu_zorluk`); dokunma `V21Runs.set_selection` ile anında kaydeder. U4b (skor sekmeleri, sonuç çipleri) bu başlığa kendi satırlarını ekler.
+
+**U4b (skor/sonuç/bant):** sonuç sözlüğüne `milestone_t` (Sonsuz'da ilk Lord ölümünün sim zamanı, yoksa -1) eklendi; sonuç ekranı `mode/diff/lords_killed/milestone_t` alanlarını `stats`'tan okur (alan yoksa çip/not gizli). `Highscores.list_for(mode,diff)` sekme listelerini besler; bant ipucu süresi `modes.endless.lord_repeat_sec`'ten. Sonsuz'da koşu bitince `milestone_won` ise kazanma müziği (`V21Runs.music_won`).

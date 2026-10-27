@@ -385,8 +385,8 @@ func _update_music() -> void:
 	audio.update_music(
 		s.time if s != null else 0.0,
 		screen == PauseLogic.Screen.MENU,
-		s != null and s.state == GameSim.State.WON,
-		s != null and s.state == GameSim.State.LOST,
+		V21Runs.music_won(s),
+		V21Runs.music_lost(s),
 		screen == PauseLogic.Screen.PAUSED
 	)
 
@@ -486,7 +486,8 @@ func _v11_build_world() -> void:
 	scores_screen.name = "Scores"
 	ui.add_child(scores_screen)
 	scores_screen.back_requested.connect(go_menu)
-	scores_screen.play_requested.connect(start_run)
+	scores_screen.store = highscores
+	scores_screen.play_with_requested.connect(play_with)
 	run_screen = RunScreen.new()  # v2.1 KOŞU ekranı (U4a)
 	run_screen.name = "RunScreen"
 	ui.add_child(run_screen)
@@ -540,8 +541,8 @@ func _apply_safe_areas() -> void:
 func open_scores(p_mode: StringName = &"", p_diff: StringName = &"") -> void:
 	if screen != PauseLogic.Screen.MENU and screen != PauseLogic.Screen.RESULT:
 		return
-	var key := V21Runs.scores_key(p_mode, p_diff)
-	scores_screen.show_scores(highscores.list_for(key["mode"], key["diff"]), -1)
+	var k := V21Runs.scores_key(p_mode, p_diff)
+	scores_screen.show_scores(highscores.list_for(k["mode"], k["diff"]), -1, k["mode"], k["diff"])
 	_set_screen(PauseLogic.Screen.SCORES)
 
 

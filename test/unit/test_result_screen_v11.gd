@@ -73,21 +73,22 @@ func test_layout_zero_and_four_combos_fit_with_buttons_below_content() -> void:
 func test_fifth_combo_shows_plus_one() -> void:
 	var r := _screen(true, 5)
 	var last := r.combo_box.get_child(r.combo_box.get_child_count() - 1) as Label
-	assert_eq(last.text, "+1")
-	assert_eq(r.combo_box.get_child_count(), 5, "4 satır + '+1'")
+	# v2.1: bloklar +44 kaydı; 5 kombo 3 satır + '+2' olarak sığar
+	assert_eq(last.text, "+2")
+	assert_eq(r.combo_box.get_child_count(), 4, "3 satır + '+2'")
 	var r4 := _screen(true, 4)
 	assert_eq(r4.combo_box.get_child_count(), 4)
 
 
 func test_block_order_matches_design_y_values() -> void:
 	var r := _screen(true, 2)
-	assert_eq(r.score_caption.position.y, 404.0)
-	assert_eq(r.record_band.position.y, 590.0)
-	assert_eq(r.breakdown_panel.position.y, 760.0)
+	assert_eq(r.score_caption.position.y, ResultScreen.Y_HERO)
+	assert_eq(r.record_band.position.y, ResultScreen.Y_RECORD)
+	assert_eq(r.breakdown_panel.position.y, ResultScreen.Y_BREAKDOWN)
 	assert_almost_eq(r.breakdown_panel.size.y, 5.0 * 84.0 + 24.0, 0.01)
-	assert_eq(r.strip_panel.position.y, 1228.0)
+	assert_eq(r.strip_panel.position.y, ResultScreen.Y_STRIP)
 	assert_eq(r.strip_panel.size.y, 170.0)
-	assert_eq(r.combo_panel.position.y, 1422.0)
+	assert_eq(r.combo_panel.position.y, ResultScreen.Y_COMBOS)
 
 
 func test_safe_area_extra_keeps_blocks_inside() -> void:
