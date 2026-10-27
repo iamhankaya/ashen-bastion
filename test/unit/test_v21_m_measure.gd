@@ -91,9 +91,15 @@ func test_m6_lord_tracker_records_spawn_hits_and_death_of_the_first_lord() -> vo
 	var guard := 0
 	while st["n"] == 0 and guard < 60 * 10:
 		guard += 1
+		if sim.state == GameSim.State.LEVEL_UP:
+			sim.choose(0)
+			continue
+		SimKit.godmode(sim)
 		sim.step(Vector2.ZERO)
 		mid._track_lord(sim, st)
 	assert_eq(st["n"], 1, "Lord 1190. sn'de doğar")
+	if st["n"] != 1:
+		return
 	assert_gte(st["spawn_t"], 1190.0)
 	assert_eq(mid.lord_id(sim), st["id"])
 	var i := EnemyPool.index_of(st["id"])
