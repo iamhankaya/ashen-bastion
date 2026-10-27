@@ -266,6 +266,9 @@ func _load_lists(raw: Dictionary) -> void:
 ## Yedek yoksa göç iptal. v2 yazımı başarısızsa v1 dosyası sağlam kalır, göç sonraki açılışta yeniden denenir.
 func _migrate_v1(v1_text: String) -> void:
 	var bak := _path + ".v1.bak"
+	if FileAccess.file_exists(bak) and FileAccess.get_file_as_string(bak) == v1_text:
+		save()  # aynı v1 için yedek zaten var (önceki yarım göç): yeni kopya birikmez
+		return
 	if FileAccess.file_exists(bak):
 		var stamp := int(Time.get_unix_time_from_system())
 		bak = "%s.v1.%d.bak" % [_path, stamp]

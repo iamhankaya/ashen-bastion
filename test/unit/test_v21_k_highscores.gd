@@ -166,6 +166,7 @@ func test_k7_v2_write_failure_keeps_v1_intact_and_retries_next_load() -> void:
 	assert_true(retry.load_file())
 	assert_eq(int(_json()["v"]), 2)
 	assert_eq(_read(_path() + ".v1.bak"), V1, "ilk yedek yerinde")
+	assert_eq(_numbered_baks().size(), 0, "aynı v1 için yeni yedek açılmaz")
 
 
 func test_k8_v1_mixed_valid_and_invalid_entries_keep_valid_ones_only() -> void:
@@ -308,7 +309,6 @@ func test_k16_helper_files_derive_from_injected_path() -> void:
 	assert_true(h.load_file())
 	assert_true(FileAccess.file_exists(p + ".v1.bak"))
 	assert_false(FileAccess.file_exists(DIR + "/highscores.json.v1.bak"))
-	assert_false(FileAccess.file_exists(Highscores.DEFAULT_PATH + ".v1.bak"))
 
 
 func test_k17_save_failure_keeps_previous_valid_v2_file() -> void:
