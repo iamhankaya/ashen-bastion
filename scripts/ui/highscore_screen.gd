@@ -1,17 +1,25 @@
 class_name HighscoreScreen
 extends Control
-## En İyi Skorlar ekranı (DESIGN §3.5): en çok 10 satır, boş durum, GERİ ve OYNA. Kural yok; Highscores girişlerini gösterir.
-## Satırlar 936×156, aralık 12, y 360'tan; GERİ altta (alt 72). Veri bozuksa/boşsa boş durum gibi davranır.
+## En İyi Skorlar ekranı (DESIGN v2.1 §7): iki sıra üçlü sekme (MOD 3 + ZORLUK 3 = 9 liste), en çok 10 satır, boş sekme,
+## GERİ ve BU AYARLA OYNA. Kural yok; seçili (mod, zorluk) listesini `store`'dan (Highscores) okur.
+## Satırlar 936×~147, aralık 12, y 590'dan; GERİ altta (alt 72). Veri bozuksa/boşsa boş durum gibi davranır.
 
 signal back_requested
+## Eski (v1.1) sözleşme: boş sekmede oyna düğmesi; v2.1'de `play_with_requested` ile birlikte yayılır.
 signal play_requested
+## Boş sekmenin çifti seçilip koşu başlatılır ("BU AYARLA OYNA").
+signal play_with_requested(mode: StringName, diff: StringName)
+## Sekme değişti (kalıcı değil; denetleyici dinlemek zorunda değil).
+signal tab_changed(mode: StringName, diff: StringName)
 
 const W := 936.0
 const ROWS := 10
 const Y_TITLE := 150.0
-const Y_SUB := 262.0
-const Y_DIV := 316.0
-const Y_ROWS := 360.0
+const Y_TAB_MODE := 290.0
+const Y_TAB_DIFF := 434.0
+const TAB_H := 132.0
+const TAB_GAP := 12.0
+const Y_ROWS := 590.0
 const ROW_H := 156.0
 const ROW_GAP := 12.0
 const ROW_MIN_H := 120.0
@@ -25,8 +33,6 @@ const SLIDE_SEC := 0.26
 const SLIDE_PX := 40.0
 
 var title_label: Label
-var sub_label: Label
-var divider: Control
 var back_button: Button
 var play_button: Button
 var empty_box: Control
@@ -36,6 +42,12 @@ var empty_text: Label
 var rows: Array[Control] = []
 var empty: bool = true
 var highlight: int = -1
+## Sekme listeleri bu depodan okunur (denetleyici atar); null = sekme değişince boş liste.
+var store: Highscores = null
+var sel_mode: StringName = &"normal"
+var sel_diff: StringName = &"normal"
+var mode_tabs: Array[SegTab] = []
+var diff_tabs: Array[SegTab] = []
 
 var _extra := Vector4.ZERO
 var _x0: float = 72.0
@@ -44,6 +56,49 @@ var _dy: float = 0.0
 var _entries: Array[Dictionary] = []
 var _slide_t: float = 1.0
 var _built: bool = false
+
+
+## Segmentli sekme (DESIGN v2.1 §7): seçili = bordo yüzey + 6 px amber alt çizgi + 900 yazı; seçilmemiş = taş yüzey.
+class SegTab:
+	extends Button
+	const LINE_H := 6.0
+	var selected: bool = false
+	var _name_label: Label
+
+	func setup(glyph: Control, text: String) -> void:
+		custom_minimum_size = Vector2(0, HighscoreScreen.TAB_H)
+		focus_mode = Control.FOCUS_ALL
+		for st in [&"normal", &"hover", &"disabled"]:
+			add_theme_stylebox_override(st, UiKit.skin_box("dugme-dolu", 40, UiKit.TAS_600))
+		add_theme_stylebox_override(&"pressed", UiKit.skin_box("dugme-basili", 40, UiKit.TAS_800))
+		add_theme_stylebox_override(&"focus", UiKit.stylebox(Color(0, 0, 0, 0), UiKit.AMBER, 6, 14))
+		var row := HBoxContainer.new()
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override(&"separation", 12)
+		UiKit.fill(row)
+		glyph.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(glyph)
+		_name_label = UiKit.label(text, &"LabelAccent", 34, UiKit.KEMIK_300)
+		_name_label.add_theme_constant_override(&"shadow_offset_y", 0)
+		row.add_child(_name_label)
+		add_child(row)
+
+	func set_selected(on: bool) -> void:
+		selected = on
+		var skin := "dugme-birincil" if on else "dugme-dolu"
+		var fallback := UiKit.BORDO_500 if on else UiKit.TAS_600
+		for st in [&"normal", &"hover", &"disabled"]:
+			add_theme_stylebox_override(st, UiKit.skin_box(skin, 40, fallback))
+		_name_label.theme_type_variation = &"LabelTitle" if on else &"LabelAccent"
+		_name_label.add_theme_color_override(
+			&"font_color", UiKit.KEMIK_100 if on else UiKit.KEMIK_300
+		)
+		queue_redraw()
+
+	func _draw() -> void:
+		if selected:
+			draw_rect(Rect2(0.0, size.y - LINE_H, size.x, LINE_H), UiKit.AMBER)
 
 
 ## Sonuç çipi: "KAZANDI" (amber kenar + çizilmiş onay) / "YENİLDİ" (bordo dolgu).
@@ -203,11 +258,7 @@ func _build() -> void:
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.add_theme_constant_override(&"shadow_offset_y", 4)
 	add_child(title_label)
-	sub_label = UiKit.label("Bu cihazdaki en iyi 10 sonuç", &"", 32, UiKit.KEMIK_300)
-	sub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(sub_label)
-	divider = UiKit.divider()
-	add_child(divider)
+	_build_tabs()
 	for i in ROWS:
 		var row := _make_row(i)
 		add_child(row)
@@ -220,21 +271,83 @@ func _build() -> void:
 	empty_title = UiKit.label("HENÜZ SKOR YOK", &"LabelTimer", 56)
 	empty_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	empty_box.add_child(empty_title)
-	empty_text = UiKit.label(
-		"İlk oyunundan sonra en iyi on sonucun burada listelenir.", &"", 34, UiKit.KEMIK_300
-	)
+	empty_text = UiKit.label("", &"", 34, UiKit.KEMIK_300)
 	empty_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	empty_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	empty_box.add_child(empty_text)
 	add_child(empty_box)
-	play_button = UiKit.button("OYNA", &"primary", PLAY_H)
-	play_button.add_theme_font_size_override(&"font_size", 64)
-	play_button.pressed.connect(func() -> void: play_requested.emit())
+	play_button = UiKit.button("BU AYARLA OYNA", &"primary", PLAY_H)
+	play_button.add_theme_font_size_override(&"font_size", 56)
+	play_button.pressed.connect(_on_play)
 	add_child(play_button)
 	back_button = UiKit.button("GERİ", &"secondary", BACK_H)
 	back_button.pressed.connect(func() -> void: back_requested.emit())
 	add_child(back_button)
 	_layout()
+
+
+func _build_tabs() -> void:
+	for m: StringName in RunStrip.MODE_ORDER:
+		var tab := SegTab.new()
+		tab.name = "ModeTab_%s" % m
+		tab.setup(RunStrip.ModeGlyph.new(m, UiKit.BRONZ_500, 40.0), RunStrip.MODE_NAMES[m])
+		tab.pressed.connect(func() -> void: select_tab(m, sel_diff))
+		add_child(tab)
+		mode_tabs.append(tab)
+	for d: StringName in RunStrip.DIFF_ORDER:
+		var tab := SegTab.new()
+		tab.name = "DiffTab_%s" % d
+		tab.setup(
+			RunStrip.Shields.new(int(RunStrip.SHIELDS[d]), UiKit.BRONZ_500, Vector2(60.0, 20.0)),
+			RunStrip.DIFF_NAMES[d]
+		)
+		tab.pressed.connect(func() -> void: select_tab(sel_mode, d))
+		add_child(tab)
+		diff_tabs.append(tab)
+
+
+func _on_play() -> void:
+	play_requested.emit()
+	play_with_requested.emit(sel_mode, sel_diff)
+
+
+## Sekme seçimi (kalıcı değil): listeyi `store`'dan yeniler, vurgu yok.
+func select_tab(mode: StringName, diff: StringName) -> void:
+	_mark_tabs(mode, diff)
+	var list: Array[Dictionary] = store.list_for(mode, diff) if store != null else []
+	_fill(list, -1)
+	tab_changed.emit(mode, diff)
+
+
+func _mark_tabs(mode: StringName, diff: StringName) -> void:
+	sel_mode = mode
+	sel_diff = diff
+	for i in mode_tabs.size():
+		var m: StringName = RunStrip.MODE_ORDER[i]
+		mode_tabs[i].set_selected(m == mode)
+		mode_tabs[i].accessibility_name = (
+			"Mod sekmesi, %s, %s, üç sekmeden %s"
+			% [RunStrip.MODE_TITLES[m], "seçili" if m == mode else "seçili değil", _ordinal(i)]
+		)
+	for i in diff_tabs.size():
+		var d: StringName = RunStrip.DIFF_ORDER[i]
+		diff_tabs[i].set_selected(d == diff)
+		diff_tabs[i].accessibility_name = (
+			"Zorluk sekmesi, %s, %s, üç sekmeden %s"
+			% [RunStrip.DIFF_TITLES[d], "seçili" if d == diff else "seçili değil", _ordinal(i)]
+		)
+
+
+static func _ordinal(i: int) -> String:
+	return ["birincisi", "ikincisi", "üçüncüsü"][i]
+
+
+## Boş sekme metni: "Sonsuz · Zor listesinde kayıt yok." + yönlendirme (DESIGN §7 `04b`).
+static func empty_text_for(mode: StringName, diff: StringName) -> String:
+	return (
+		"%s · %s listesinde kayıt yok.\nBu ayarla oynayıp ilk skoru yaz."
+		% [RunStrip.MODE_TITLES.get(mode, ""), RunStrip.DIFF_TITLES.get(diff, "")]
+	)
 
 
 func _make_row(i: int) -> Control:
@@ -285,9 +398,21 @@ func _make_row(i: int) -> Control:
 	return row
 
 
-## highlight_index: vurgulanacak satır (-1 = yok; denetleyici v1.1'de hep -1 verir).
-func show_scores(entries: Array[Dictionary], highlight_index: int = -1) -> void:
+## highlight_index: vurgulanacak satır (-1 = yok; denetleyici hep -1 verir). mode/diff: açılış sekmesi.
+func show_scores(
+	entries: Array[Dictionary],
+	highlight_index: int = -1,
+	mode: StringName = &"normal",
+	diff: StringName = &"normal"
+) -> void:
 	_build()
+	_mark_tabs(mode, diff)
+	_fill(entries, highlight_index)
+	visible = true
+	(play_button if empty else back_button).grab_focus.call_deferred()
+
+
+func _fill(entries: Array[Dictionary], highlight_index: int) -> void:
 	_entries = entries.slice(0, ROWS)
 	highlight = (
 		highlight_index if highlight_index >= 0 and highlight_index < _entries.size() else -1
@@ -325,11 +450,14 @@ func show_scores(entries: Array[Dictionary], highlight_index: int = -1) -> void:
 				&"panel", UiKit.stylebox(Color(UiKit.VOID, 0.35), Color(0, 0, 0, 0), 0, 14)
 			)
 	empty_box.visible = empty
+	empty_text.text = empty_text_for(sel_mode, sel_diff)
+	play_button.accessibility_name = (
+		"%s modda, %s zorlukta oyna"
+		% [RunStrip.MODE_TITLES[sel_mode], RunStrip.DIFF_TITLES[sel_diff]]
+	)
 	play_button.visible = empty
 	_slide_t = 0.0 if highlight >= 0 else 1.0
 	_layout()
-	visible = true
-	(play_button if empty else back_button).grab_focus.call_deferred()
 
 
 ## Güvenli alan payı: Vector4(sol, üst, sağ, alt); null = UiKit.current_safe_extra.
@@ -350,8 +478,10 @@ func _layout() -> void:
 	_x0 = (1080.0 - _w) * 0.5 if _w >= W else _x0
 	_dy = maxf(0.0, _extra.y - (Y_TITLE - TOP_DEFAULT))
 	_abs(title_label, 0.0, Y_TITLE + _dy, 1080.0, 110.0)
-	_abs(sub_label, 0.0, Y_SUB + _dy, 1080.0, 44.0)
-	_abs(divider, _x0, Y_DIV + _dy, _w, 20.0)
+	var tab_w := (_w - 2.0 * TAB_GAP) / 3.0
+	for i in 3:
+		_abs(mode_tabs[i], _x0 + float(i) * (tab_w + TAB_GAP), Y_TAB_MODE + _dy, tab_w, TAB_H)
+		_abs(diff_tabs[i], _x0 + float(i) * (tab_w + TAB_GAP), Y_TAB_DIFF + _dy, tab_w, TAB_H)
 	var back_y := DESIGN_H - BOTTOM - _extra.w - BACK_H
 	_abs(back_button, _x0, back_y, _w, BACK_H)
 	var play_y := minf(Y_PLAY + _dy, back_y - BUTTONS_GAP - PLAY_H)
@@ -364,7 +494,7 @@ func _layout() -> void:
 		var row := rows[i]
 		_abs(row, _x0, top + float(i) * pitch, _w, rh)
 		_layout_row(row, rh)
-	var ey := 760.0 + _dy
+	var ey := 700.0 + _dy
 	_abs(empty_box, _x0, ey, _w, 520.0)
 	(empty_box.get_node("Ring") as Control).position = Vector2((_w - 160.0) * 0.5, 0)
 	_abs(empty_title, 0.0, 220.0, _w, 80.0)

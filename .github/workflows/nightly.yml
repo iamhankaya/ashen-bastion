@@ -1,0 +1,25 @@
+name: nightly
+# v2.1 U1b: uzun simülasyon doğrulaması (gate/PR kapısı DIŞI). Tek giriş noktası `bash tools/verify_long.sh`:
+# test/long/ altındaki 20 dk koşuları + Sonsuz 40. dk testi (test_ver_v21_endless_long.gd). ci.yml'deki `verify` işi uzun
+# simülasyon koşmaz. Kırmızı nightly PR'ları bloke etmez; V fazı ve sürüm kapısı SON nightly'nin yeşil olmasını şart koşar.
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  long:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ashen-bastion
+          key: godot-${{ hashFiles('.godot-version') }}
+      - uses: actions/cache@v4
+        with:
+          path: .godot
+          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+      - run: bash tools/verify_long.sh

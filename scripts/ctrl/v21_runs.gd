@@ -90,3 +90,22 @@ static func achievement_rules() -> AchievementRules:
 ## Sim'in koşu zorluğu; profilsiz sim = Zor (sonuç sözlüğüyle aynı varsayılan).
 static func diff_of(sim: GameSim) -> StringName:
 	return sim.run_profile.diff if sim != null and sim.run_profile != null else &"hard"
+
+
+# --- U4b (skor/sonuç/bant) ----------------------------------------------------------------------
+
+
+## Müzik kararı: koşu sürerken (Sonsuz kilometre taşından sonra da) savaş müziği devam eder; bitince kilometre taşı
+## kazanıldıysa kazanma müziği çalar (sonuç ekranı "KAZANDIN" gösterir), aksi halde kayıp müziği.
+static func music_won(sim: GameSim) -> bool:
+	return (
+		sim != null
+		and (
+			sim.state == GameSim.State.WON
+			or (sim.state == GameSim.State.LOST and sim.milestone_won)
+		)
+	)
+
+
+static func music_lost(sim: GameSim) -> bool:
+	return sim != null and sim.state == GameSim.State.LOST and not sim.milestone_won
