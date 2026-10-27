@@ -257,7 +257,7 @@ func test_k12_unknown_list_keys_are_preserved_across_save() -> void:
 	assert_true(h.save())
 	var lists: Dictionary = _json()["lists"]
 	assert_eq(lists["ultra:normal"][0]["score"], 9)
-	assert_eq(lists["quick:impossible"], [1, 2, 3])
+	assert_eq(lists["quick:impossible"], [1.0, 2.0, 3.0], "JSON sayıları float okunur")
 	assert_eq(lists["bozuk"], "x")
 	assert_eq(_scores(lists["normal:normal"]), [77, 5] as Array[int])
 
