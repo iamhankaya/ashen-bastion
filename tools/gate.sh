@@ -49,6 +49,8 @@ else
   JOBS="$(nproc 2>/dev/null || echo 1)"; [[ "$JOBS" =~ ^[0-9]+$ ]] || JOBS=1
   [ "$JOBS" -gt 4 ] && JOBS=4
 fi
+# Süre denetimi (adım 7) bayrağı: yalnız paralel GUT koşusu "--contended" alır (CPU çekişmesi süreleri şişirir; check_durations.py).
+DUR_FLAGS=""
 SHARD_K=0; SHARD_N=0
 if [ "$PART" = "gut" ]; then
   [[ "${GATE_SHARD:-}" =~ ^([0-9]+)/([0-9]+)$ ]] || { echo "GATE_PART=gut için GATE_SHARD=K/N gerekir" >&2; exit 2; }
@@ -199,6 +201,7 @@ if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; t
   if [ "$PART" = "all" ] && [ $FAST -eq 0 ] && [ "$JOBS" -gt 1 ]; then
     # F-066: tam yerel gate GUT'u $JOBS paralel süreçte koşar; birleşik JUnit adım 7'nin girdisidir.
     echo "GUT $JOBS paralel süreçte (GATE_JOBS=1 tek süreç)"
+    DUR_FLAGS="--contended"
     bash tools/ci/run_gut_parallel.sh "$JOBS" || fail "GUT paralel koşu (bkz. .gate/gut-*.log)"
     scan_log .gate/gut.log
   else
@@ -228,7 +231,7 @@ if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then
   step "7. Sahte yeşil korumaları"
   [ -f .gate/junit.xml ] || fail "JUnit çıktısı yok"
   python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
-  python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
+  python3 tools/ci/check_durations.py .gate/junit.xml $DUR_FLAGS || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
   python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v202_slices.txt)"
   python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v203_slices.txt)"

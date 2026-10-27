@@ -170,7 +170,11 @@ Godot sürecinde** koşar. N = `GATE_JOBS` (varsayılan `min(4, çekirdek)`; `GA
 - Hızlı mod (`--changed`) ve `GATE_PART=gut|static|verify` yolları değişmedi; CI işleri değişmedi (`ci.yml` aynı).
 - Saat eşiği yok: testler yalnız ms'i raporlar (`test_acc_perf_counters`, `test_ver_crowd_perf`), duvar saatine iddia etmez;
   paralel yük sonuçları değiştirmez. Tek-test 75 sn sınırı yük altında tek test için daha riskli olabilir (en yavaş test 105 sn'lik
-  dosyanın içindeki testlerden biri); kırmızı olursa `GATE_JOBS=2` ile ölçüp sınırı/testi ele alın.
+  dosyanın içindeki testlerden biri). **Kapandı (T20261027-12):** CI selftest tam gate'i 4 çekirdekte 4 süreçle koştu, JUnit süreleri
+  ~2× şişti (run 40460222973: `test_p20…` 41,9→75,1 sn, toplam 435→724 sn) ve 75/720 sn eşikleri yanlış kırmızı verdi. Paralel koşunun
+  süre denetimi artık `check_durations.py --contended` alır (`gate.sh` `DUR_FLAGS`): tek-test aşımı `GATE_SLOW_CONTENDED` uyarısı, toplam
+  uyarısı yok, bilgi listesi kalır. Sert 75 sn denetimi çekişmesiz ölçümde sürer: CI `gut` parçaları (iş başına tek süreç) → `verify`
+  işi birleşik JUnit'i denetler; yerelde `GATE_JOBS=1`. Eşikler gevşetilmedi, test `test/long`'a taşınmadı.
 - Öz-test: `tools/ci/tests/test_gate_parallel.py` (sahte Godot: kapsam, ayrı `user://`, kırmızı parça, eksik JUnit, USER_LEAK,
   bariyerle gerçek eşzamanlılık).
 
