@@ -125,14 +125,14 @@ func _contact(s: GameSim, type_id: StringName) -> float:
 func test_s7_contact_damage_applies_difficulty_multiplier_to_every_enemy() -> void:
 	var def := GameData.load_default().get_enemy(PIYADE)
 	var e := _sim(&"normal", &"easy")
-	assert_almost_eq(_contact(e, PIYADE), def.dmg * 0.55, 0.001)
+	assert_almost_eq(_contact(e, PIYADE), def.dmg * 0.40, 0.001)
 
 
 func test_s8_lord_contact_gets_profile_multiplier_but_not_the_time_curve() -> void:
 	var e := _sim(&"normal", &"easy")
 	e.debug_set_time(600.0)
 	assert_almost_eq(
-		_contact(e, LORD), 40.0 * 0.55, 0.001, "Lord scales_with_time=false: yalnız profil çarpanı"
+		_contact(e, LORD), 40.0 * 0.40, 0.001, "Lord scales_with_time=false: yalnız profil çarpanı"
 	)
 
 
@@ -146,20 +146,20 @@ func test_s9_contact_curve_reads_curve_t() -> void:
 func test_s10_enrage_scales_contact_damage_after_threshold() -> void:
 	var def := GameData.load_default().get_enemy(PIYADE)
 	var e := _sim(&"endless", &"hard")
-	e.debug_set_time(2399.0)
+	e.debug_set_time(1499.0)
 	var before := _contact(e, PIYADE)
 	assert_almost_eq(
-		before, def.dmg * Difficulty.enemy_dmg_mult(2399.0), 0.001, "eşik öncesi enrage yok"
+		before, def.dmg * Difficulty.enemy_dmg_mult(1499.0), 0.001, "eşik öncesi enrage yok"
 	)
 	var f := _sim(&"endless", &"hard")
-	f.debug_set_time(3000.0)  # 600 sn sonra: 1 + 0,10 · 10 = 2
-	assert_almost_eq(_contact(f, PIYADE), def.dmg * Difficulty.enemy_dmg_mult(3000.0) * 2.0, 0.01)
+	f.debug_set_time(2100.0)  # 600 sn sonra: 1 + 0,35 · 10 = 4,5
+	assert_almost_eq(_contact(f, PIYADE), def.dmg * Difficulty.enemy_dmg_mult(2100.0) * 4.5, 0.01)
 
 
 func test_s11_enrage_also_hits_the_lord() -> void:
 	var f := _sim(&"endless", &"hard")
-	f.debug_set_time(3000.0)
-	assert_almost_eq(_contact(f, LORD), 40.0 * 2.0, 0.01)
+	f.debug_set_time(2100.0)
+	assert_almost_eq(_contact(f, LORD), 40.0 * 4.5, 0.01)
 
 
 # --- XP birikimli kesir ----------------------------------------------------------------------------

@@ -128,8 +128,8 @@ func test_s3_contact_damage_follows_the_difficulty_multiplier() -> void:
 	var easy := _contact_loss(V21Kit.profile(&"normal", &"easy"))
 	var norm := _contact_loss(V21Kit.profile(&"normal", &"normal"))
 	assert_gt(hard, 0.0, "piyade temas hasarı verdi (kurulum)")
-	assert_almost_eq(easy / hard, 0.55, 0.02, "Kolay temas ×0,55")
-	assert_almost_eq(norm / hard, 0.75, 0.02, "Normal temas ×0,75")
+	assert_almost_eq(easy / hard, 0.40, 0.02, "Kolay temas ×0,40")
+	assert_almost_eq(norm / hard, 0.60, 0.02, "Normal temas ×0,60")
 
 
 func _alive_after(profile: RunProfile, seconds: float) -> int:
@@ -151,7 +151,7 @@ func test_s4_spawn_density_scales_the_number_of_spawns() -> void:
 	var easy := _alive_after(V21Kit.profile(&"normal", &"easy"), 40.0)
 	var norm := _alive_after(V21Kit.profile(&"normal", &"normal"), 40.0)
 	assert_gt(hard, 20, "yeterli örnek (kurulum)")
-	assert_between(float(easy) / hard, 0.60, 0.80, "Kolay doğuş ×0,70 (%d/%d)" % [easy, hard])
+	assert_between(float(easy) / hard, 0.50, 0.70, "Kolay doğuş ×0,60 (%d/%d)" % [easy, hard])
 	assert_between(float(norm) / hard, 0.75, 0.95, "Normal doğuş ×0,85 (%d/%d)" % [norm, hard])
 
 

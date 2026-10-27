@@ -28,21 +28,21 @@
    "lord_repeat_sec": 300,
    "lord_repeat_hp_mult": 1.5,
    "lord_hp_cap_mult": 8,
-   "enrage_after_sec": 2400,
-   "enrage_dmg_per_min": 0.1
+   "enrage_after_sec": 1500,
+   "enrage_dmg_per_min": 0.35
   }
  },
  "difficulties": {
   "easy": {
    "enemy_hp": 0.7,
-   "enemy_dmg": 0.55,
-   "spawn_density": 0.7,
+   "enemy_dmg": 0.4,
+   "spawn_density": 0.6,
    "xp": 1.25,
    "lord_hp": 0.7
   },
   "normal": {
    "enemy_hp": 0.85,
-   "enemy_dmg": 0.75,
+   "enemy_dmg": 0.6,
    "spawn_density": 0.85,
    "xp": 1.0,
    "lord_hp": 0.85
