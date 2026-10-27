@@ -28,7 +28,7 @@ const FIELDS := [
 ]
 
 
-func test_m1_the_measurement_tool_reports_every_planned_field() -> void:
+func test_v21m1_the_measurement_tool_reports_every_planned_field() -> void:
 	if V21Slice.require(self, "M"):
 		return
 	var text := FileAccess.get_file_as_string(MID_RUN)
@@ -37,7 +37,7 @@ func test_m1_the_measurement_tool_reports_every_planned_field() -> void:
 		assert_true(text.contains('"%s"' % f), "çıktı alanı: %s" % f)
 
 
-func test_m2_the_tool_can_play_the_lord_fight_and_the_endless_horizon() -> void:
+func test_v21m2_the_tool_can_play_the_lord_fight_and_the_endless_horizon() -> void:
 	if V21Slice.require(self, "M"):
 		return
 	var text := FileAccess.get_file_as_string(MID_RUN)
@@ -49,7 +49,7 @@ func test_m2_the_tool_can_play_the_lord_fight_and_the_endless_horizon() -> void:
 		assert_gte(int(hit.get_string(1)), 144000, "Lord dövüşü için ≥ 2400 sn (144000 adım)")
 
 
-func test_m3_the_balance_workflow_covers_the_mode_difficulty_matrix() -> void:
+func test_v21m3_the_balance_workflow_covers_the_mode_difficulty_matrix() -> void:
 	if V21Slice.require(self, "M"):
 		return
 	var text := FileAccess.get_file_as_string(BALANCE_YML)
