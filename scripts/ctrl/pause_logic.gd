@@ -40,6 +40,11 @@ static func back_action(screen: int) -> int:
 	return Back.NONE  # LEVEL_UP: kart seçilmeden çıkılmaz
 
 
+## HUD bu ekranda görünür mü? Menü, sonuç, skorlar ve KOŞU ekranında gizli (sim bağlıyken de).
+static func hud_allowed(screen: int) -> bool:
+	return not (screen in [Screen.MENU, Screen.RESULT, Screen.SCORES, Screen.RUN])
+
+
 ## Sim bu karede adım atar mı? Yalnız oyun ekranında ve sim RUNNING iken (LEVEL_UP'ta donuk).
 static func sim_should_step(screen: int, sim_state: int) -> bool:
 	return screen == Screen.PLAYING and sim_state == GameSim.State.RUNNING

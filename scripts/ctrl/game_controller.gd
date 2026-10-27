@@ -313,9 +313,7 @@ func _set_screen(next: int) -> void:
 		gate.reset()
 	_accum = 0.0
 	menu.visible = next == PauseLogic.Screen.MENU
-	hud.visible = (
-		sim != null and next != PauseLogic.Screen.MENU and next != PauseLogic.Screen.RESULT
-	)
+	hud.visible = sim != null and PauseLogic.hud_allowed(next)
 	joystick.visible = next == PauseLogic.Screen.PLAYING
 	if _render_label != null:
 		_render_label.visible = (
@@ -387,7 +385,7 @@ func _update_music() -> void:
 	audio.update_music(
 		s.time if s != null else 0.0,
 		screen == PauseLogic.Screen.MENU,
-		V21Runs.run_won(s),
+		s != null and s.state == GameSim.State.WON,
 		s != null and s.state == GameSim.State.LOST,
 		screen == PauseLogic.Screen.PAUSED
 	)

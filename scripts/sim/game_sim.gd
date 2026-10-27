@@ -9,7 +9,7 @@ enum State { RUNNING, LEVEL_UP, WON, LOST }
 const STEP := 1.0 / 60.0
 const END_MODE_LORD := "lord"
 const END_MODE_TIMER := "timer"
-## v2.1 Sonsuz: yalnız hp<=0 ile biter; ilk Lord ölümü `milestone_won` yapar (kurallar U2: plan K-C1..K-C3).
+## v2.1 Sonsuz: yalnız hp<=0 ile biter; ilk Lord ölümü milestone_won yapar (U2).
 const END_MODE_ENDLESS := "endless"
 const DEFAULT_END_TIME := 1200.0
 const DEFAULT_MAX_LOG := 200000
@@ -88,9 +88,8 @@ var work: Dictionary = {}
 var spawn_dropped: int = 0
 ## Kale Lordu öldü (end_mode lord): _phase_status hp<=0'dan ÖNCE WON yapar.
 var lord_killed: bool = false
-## v2.1: koşu profili (null = bugünkü davranış). C fazında yalnız okunur/saklanır; çarpanlar U2'de uygulanır.
+## v2.1: koşu profili; opts önceliği: doğrudan end_*  > profil > varsayılan (null = bugünkü davranış); çarpanlar U2'de uygulanır. Sonsuz: ilk Lord öldü / Lord sayısı.
 var run_profile: RunProfile = null
-## v2.1 Sonsuz: ilk Lord öldü / öldürülen toplam Lord sayısı. Lord/Timer modunda hep false / 0 kalır.
 var milestone_won: bool = false
 var lords_killed: int = 0
 ## Şu an hasar veren merminin bayrakları (on_kill kancaları kaynağı görebilsin diye); mermi dışı kaynak 0.
@@ -149,11 +148,9 @@ var _last_score: int = 0
 
 func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void:
 	_seed = p_seed
-	# Öncelik: doğrudan verilen end_mode/end_time > run_profile.opts() > bugünkü varsayılan (K-C7).
-	var prof: Variant = opts.get("run_profile", null)
 	var prof_opts: Dictionary = {}
-	if prof is RunProfile:
-		run_profile = prof
+	if opts.get("run_profile", null) is RunProfile:
+		run_profile = opts["run_profile"]
 		prof_opts = run_profile.opts()
 	end_mode = str(opts.get("end_mode", prof_opts.get("end_mode", END_MODE_LORD)))
 	end_time = float(opts.get("end_time", prof_opts.get("end_time", DEFAULT_END_TIME)))
@@ -339,13 +336,13 @@ func pick_highest_hp(from: Vector2, range_px: float) -> int:
 	return best
 
 
-## Lord'un doğduğu mod mu (Lord ve Sonsuz)? Zamanlayıcı modunda false.
+## Lord doğan mod (Lord, Sonsuz).
 func lord_mode() -> bool:
 	return end_mode == END_MODE_LORD or end_mode == END_MODE_ENDLESS
 
 
 ## Düşman doğurur (zamana bağlı çarpanlarla); id ya da havuz doluysa -1 (spawn_dropped++).
-## `hp_mult_extra` (v2.1): Lord tekrarı HP basamağı için ek çarpan; 1.0 iken sonuç eski davranışla bayt bayt aynıdır.
+## `hp_mult_extra` (v2.1): Lord tekrarı HP basamağı; 1.0 = eski davranış bayt bayt.
 func spawn_enemy(type_id: StringName, pos: Vector2, hp_mult_extra: float = 1.0) -> int:
 	var def := data.get_enemy(type_id)
 	if def == null:
