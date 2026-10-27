@@ -387,4 +387,8 @@ Tek kaynak: `data/run_profiles.json` (dosya yoksa HATA, yerleşik varsayılan yo
 
 ### Arayüz (U4a/U4b)
 
-(U4a/U4b doldurur: KOŞU ekranı, skor sekmeleri, sonuç çipleri; sayılar `RunProfiles`'tan okunur.)
+**U4a (koşu seçimi) `run_profiles.json`'dan neyi okur** (ekranda sabit sayı yok; `RunStrip` saf yardımcılarıdır):
+- Mod süresi: `end_mode != endless` ise `GameSim.DEFAULT_END_TIME × modes.<mod>.time_scale / 60` dakika ("10 DK", "20 DK"); `endless` süresiz ("SONSUZ", "∞"). Açıklamadaki "Lord N. dakikada gelir" aynı sayıdır.
+- Ayrıntı levhası: `difficulties.<zorluk>.{enemy_hp, enemy_dmg, spawn_density, xp}` çarpanı -> `(çarpan − 1) × 100` yuvarlanır ("−%30", "+%25"); sıfır ise XP satırında "aynı", diğerlerinde "tam" (Zor).
+- Kural levhası: her zaman skor-listesi satırı; zorluk `easy` ise Kolay uyarısı; mod `endless` ise Sonsuz uyarısı. Başarım kuralı metni `achievements.<zorluk>.block_lord_bound` ile aynı olgudur (metin sabit, kural JSON'da).
+- Seçim: `Settings.run_mode/run_diff` (`kosu_modu`/`kosu_zorluk`); dokunma `V21Runs.set_selection` ile anında kaydeder. U4b (skor sekmeleri, sonuç çipleri) bu başlığa kendi satırlarını ekler.
