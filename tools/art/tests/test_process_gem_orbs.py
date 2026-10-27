@@ -32,3 +32,11 @@ def test_orbs_differ_in_mean_colour():
     for i in range(3):
         for j in range(i + 1, 3):
             assert sum(abs(a - b) for a, b in zip(m[i], m[j])) > 60, (i, j)
+
+
+def test_normal_orb_is_visible_at_least_20px_wide_at_its_game_size():
+    # F-075: boş pay normal küreyi 34 px kutuda ~14 px gösteriyordu; ORB_PX GemTiers.NORMAL = 44 (gem_tiers.gd).
+    normal_px = 44
+    alpha = Image.open(pg.OUT / "normal.png").getchannel("A").point(lambda v: 255 if v >= 128 else 0)
+    x0, _, x1, _ = alpha.getbbox()
+    assert (x1 - x0) / pg.SIZE * normal_px >= 20

@@ -9,6 +9,8 @@
 #   GATE_PART=static bash tools/gate.sh                       adım 1-5: kurulum, içe aktarma, lint, veri, Python testleri
 #   GATE_PART=gut GATE_SHARD=K/N bash tools/gate.sh           adım 1-2 + 6: yalnız K. parçanın GUT test dosyaları
 #   GATE_PART=verify GATE_SHARD_COUNT=N bash tools/gate.sh    parça JUnit'lerini birleştirir + adım 7 (Godot gerekmez)
+# Yerel tam gate GUT'u paralel koşar (F-066): GATE_JOBS=N süreç (varsayılan min(4, çekirdek); 1 = eski tek süreç).
+#   Parçalama + kapsam kanıtı CI ile aynıdır (tools/ci/run_gut_parallel.sh: shard.py check-merge --require-all).
 # Hızlı mod (YALNIZ geliştirici geri bildirimi; docs/dev/ci-speed.md):
 #   bash tools/gate.sh --changed [--base REF]
 #   Değişen dosyalara göre test seçer (tools/ci/test_map.py); eşlemede yeri olmayan/paylaşılan dosya => tam gate.
@@ -39,6 +41,16 @@ if [ $FAST -eq 1 ]; then
     echo "HIZLI MOD CI'DA YASAK: PR CI'ı, entegrasyon merge'ü ve son kapı her zaman tam suite koşar (docs/dev/ci-speed.md)" >&2; exit 2
   fi
 fi
+# GUT süreç sayısı (yalnız PART=all, tam gate): varsayılan min(4, çekirdek); GATE_JOBS=1 => tek süreç.
+if [ -n "${GATE_JOBS:-}" ]; then
+  [[ "$GATE_JOBS" =~ ^[1-9][0-9]*$ ]] || { echo "GATE_JOBS geçersiz: '$GATE_JOBS' (pozitif tam sayı)" >&2; exit 2; }
+  JOBS="$GATE_JOBS"
+else
+  JOBS="$(nproc 2>/dev/null || echo 1)"; [[ "$JOBS" =~ ^[0-9]+$ ]] || JOBS=1
+  [ "$JOBS" -gt 4 ] && JOBS=4
+fi
+# Süre denetimi (adım 7) bayrağı: yalnız paralel GUT koşusu "--contended" alır (CPU çekişmesi süreleri şişirir; check_durations.py).
+DUR_FLAGS=""
 SHARD_K=0; SHARD_N=0
 if [ "$PART" = "gut" ]; then
   [[ "${GATE_SHARD:-}" =~ ^([0-9]+)/([0-9]+)$ ]] || { echo "GATE_PART=gut için GATE_SHARD=K/N gerekir" >&2; exit 2; }
@@ -171,6 +183,7 @@ fi
 GUT_CONFIG="res://.gutconfig.json"; GUT_LOG=.gate/gut.log; JUNIT=.gate/junit.xml
 if [ "$PART" = "gut" ]; then
   GUT_CONFIG="res://.gate/gutconfig-$SHARD_K.json"; GUT_LOG=".gate/gut-$SHARD_K.log"; JUNIT=".gate/junit-$SHARD_K.xml"
+  python3 tools/ci/shard.py check-dirs || fail "[GUT ERROR] .gutconfig.json'da olmayan test dizini"
   python3 tools/ci/shard.py config "$SHARD_K" "$SHARD_N" ".gate/gutconfig-$SHARD_K.json" --junit "res://$JUNIT" || fail "shard.py config"
   echo "parça $SHARD_K/$SHARD_N: $(python3 tools/ci/shard.py assign "$SHARD_K" "$SHARD_N" | wc -l) test dosyası"
 elif [ $FAST -eq 1 ]; then
@@ -185,6 +198,13 @@ fi
 
 if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; then
   step "6. Birim + kabul (GUT)"
+  if [ "$PART" = "all" ] && [ $FAST -eq 0 ] && [ "$JOBS" -gt 1 ]; then
+    # F-066: tam yerel gate GUT'u $JOBS paralel süreçte koşar; birleşik JUnit adım 7'nin girdisidir.
+    echo "GUT $JOBS paralel süreçte (GATE_JOBS=1 tek süreç)"
+    DUR_FLAGS="--contended"
+    bash tools/ci/run_gut_parallel.sh "$JOBS" || fail "GUT paralel koşu (bkz. .gate/gut-*.log)"
+    scan_log .gate/gut.log
+  else
   "$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gconfig="$GUT_CONFIG" > "$GUT_LOG" 2>&1
   gut_rc=$?
   tail -n 30 "$GUT_LOG"
@@ -195,6 +215,7 @@ if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; t
   fi
   [ $gut_rc -eq 0 ] || fail "GUT çıkış kodu $gut_rc"
   scan_log "$GUT_LOG"
+  fi
 fi
 
 if [ "$PART" = "verify" ]; then
@@ -210,7 +231,7 @@ if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then
   step "7. Sahte yeşil korumaları"
   [ -f .gate/junit.xml ] || fail "JUnit çıktısı yok"
   python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
-  python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
+  python3 tools/ci/check_durations.py .gate/junit.xml $DUR_FLAGS || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
   python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v202_slices.txt)"
   python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v203_slices.txt)"

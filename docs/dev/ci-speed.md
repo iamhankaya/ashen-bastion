@@ -154,3 +154,29 @@ Duvar saati ≈ %70 düşer; toplam iş süresi ≈ %24 artar (4× içe aktarma)
 ## Tek-test süre sınırı 60 -> 75 sn (F-ashen-bastion-048)
 
 `tools/ci/check_durations.py --limit` varsayılanı, `tools/gate.sh` hata mesajları ve `docs/dev/setup.md` 75 sn oldu. Bu **geçici**dir (kullanıcı kararı 2026-10-25); kalıcı çözüm testi hızlandırmaktır.
+
+## Yerel tam gate: paralel GUT (F-066, T20261026-75)
+
+Sorun: tek süreçli `bash tools/gate.sh` 819 sn'ye çıktı (15 dk = 900 sn bütçenin %91'i); GUT adımı süreyi belirler
+(`tools/ci/shard_weights.json` toplamı ≈ 686 sn / 226 dosya). Bulut çalışanları da bu gate'i koşar.
+
+Çözüm (kapsam aynı, hiçbir test taşınmadı/atlanmadı): tam gate adım 6'yı `tools/ci/run_gut_parallel.sh` ile **N paralel
+Godot sürecinde** koşar. N = `GATE_JOBS` (varsayılan `min(4, çekirdek)`; `GATE_JOBS=1` eski tek süreç yolu).
+- Parçalama CI ile aynıdır (`shard.py config K N`, LPT, `shard_weights.json`); her süreç kendi JUnit/günlüğünü yazar.
+- **Kendi `XDG_DATA_HOME`'u:** `user://` süreç başına ayrıdır. Ortak olsaydı USER_LEAK denetimi (kanca taban/son karşılaştırır)
+  başka parçanın geçici dosyalarını sızıntı sayardı.
+- Kapsam kanıtı CI `test` işiyle aynı: `shard.py check-merge --require-all` (eksik/yinelenen/bilinmeyen dosya = kırmızı), sonra
+  `shard.py merge` -> `.gate/junit.xml`; adım 7 (asgari sayı, 75 sn, dilim/pending) birleşik JUnit üstünde aynen koşar.
+- Hızlı mod (`--changed`) ve `GATE_PART=gut|static|verify` yolları değişmedi; CI işleri değişmedi (`ci.yml` aynı).
+- Saat eşiği yok: testler yalnız ms'i raporlar (`test_acc_perf_counters`, `test_ver_crowd_perf`), duvar saatine iddia etmez;
+  paralel yük sonuçları değiştirmez. Tek-test 75 sn sınırı yük altında tek test için daha riskli olabilir (en yavaş test 105 sn'lik
+  dosyanın içindeki testlerden biri). **Kapandı (T20261027-12):** CI selftest tam gate'i 4 çekirdekte 4 süreçle koştu, JUnit süreleri
+  ~2× şişti (run 40460222973: `test_p20…` 41,9→75,1 sn, toplam 435→724 sn) ve 75/720 sn eşikleri yanlış kırmızı verdi. Paralel koşunun
+  süre denetimi artık `check_durations.py --contended` alır (`gate.sh` `DUR_FLAGS`): tek-test aşımı `GATE_SLOW_CONTENDED` uyarısı, toplam
+  uyarısı yok, bilgi listesi kalır. Sert 75 sn denetimi çekişmesiz ölçümde sürer: CI `gut` parçaları (iş başına tek süreç) → `verify`
+  işi birleşik JUnit'i denetler; yerelde `GATE_JOBS=1`. Eşikler gevşetilmedi, test `test/long`'a taşınmadı.
+- Öz-test: `tools/ci/tests/test_gate_parallel.py` (sahte Godot: kapsam, ayrı `user://`, kırmızı parça, eksik JUnit, USER_LEAK,
+  bariyerle gerçek eşzamanlılık).
+
+`test/long`'a taşıma (>20 sn testler) **yapılmadı**: `test/long` `.gutconfig.json` kümesinde değildir, taşıma gate kapsamını
+düşürür; görev kuralı (kapsam aynı kalır) ile çelişir.
