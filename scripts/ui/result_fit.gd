@@ -24,6 +24,7 @@ const TIERS := [
 	[16.0, 24.0, 20.0, 132.0, 112.0, 96.0, 56.0, 22.0, 10.0, 96.0, 96.0],
 	[12.0, 12.0, 16.0, 132.0, 112.0, 88.0, 48.0, 20.0, 8.0, 80.0, 96.0],
 	[12.0, 8.0, 12.0, 132.0, 112.0, 88.0, 48.0, 16.0, 8.0, 80.0, 88.0],
+	[8.0, 8.0, 8.0, 132.0, 112.0, 84.0, 40.0, 12.0, 6.0, 80.0, 80.0],
 ]
 const NOTE_FONT := 30
 const NOTE_FONT_MIN := 26
@@ -65,11 +66,21 @@ static func stone_box() -> StyleBox:
 	return sb
 
 
-## Kolay notu metni: autowrap'lı Label'ın en küçük yüksekliği dar genişlikte (1 px) hesaplanıp metni panel dışına itiyordu
-## (CI görüntüsü: not boş görünüyordu); sarma genişliği taban olarak verilir.
+## Kolay notu metni: autowrap'lı Label'ın en küçük yüksekliği ekranda dar genişlikte hesaplanıp (CI: 2163 px) metni panel dışına
+## itiyordu (not boş görünüyordu); sarma kapatılır, sığmayan metin boşlukta elle iki satıra bölünür.
 static func size_note_text(text: Label, width: float, height: float) -> void:
-	text.custom_minimum_size = Vector2(width - 92.0 - 28.0, 0.0)
-	text.size = Vector2(width - 92.0 - 28.0, height)
+	var avail := width - 92.0 - 28.0
+	var raw := text.text.replace("\n", " ")
+	var font := text.get_theme_font(&"font")
+	var fs := text.get_theme_font_size(&"font_size")
+	text.autowrap_mode = TextServer.AUTOWRAP_OFF
+	text.text = raw
+	if font.get_string_size(raw, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fs).x > avail:
+		var cut := raw.rfind(" ", int(raw.length() * 0.5) + 4)
+		if cut > 0:
+			text.text = raw.substr(0, cut) + "\n" + raw.substr(cut + 1)
+	text.custom_minimum_size = Vector2(avail, 0.0)
+	text.size = Vector2(avail, height)
 
 
 ## Çip giriş kayması blok arası boşluktan (sıkı kademelerde <24) büyük olamaz; yoksa çip kombo paneline biner.

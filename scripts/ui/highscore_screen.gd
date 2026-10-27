@@ -315,7 +315,7 @@ func _build() -> void:
 	play_button.add_theme_font_size_override(&"font_size", 56)
 	play_button.pressed.connect(_on_play)
 	add_child(play_button)
-	back_button = UiKit.button("GERİ", &"secondary", BACK_H)
+	back_button = UiKit.back_button(BACK_H)
 	back_button.pressed.connect(func() -> void: back_requested.emit())
 	add_child(back_button)
 	_layout()
@@ -349,7 +349,9 @@ func _on_play() -> void:
 ## Sekme seçimi (kalıcı değil): listeyi `store`'dan yeniler, vurgu yok.
 func select_tab(mode: StringName, diff: StringName) -> void:
 	_mark_tabs(mode, diff)
-	var list: Array[Dictionary] = store.list_for(mode, diff) if store != null else []
+	var list: Array[Dictionary] = []
+	if store != null:
+		list = store.list_for(mode, diff)
 	_fill(list, -1)
 	tab_changed.emit(mode, diff)
 
@@ -664,10 +666,10 @@ func _layout_row(row: Control, h: float) -> void:
 	if _big:
 		# 2×: sağ sütun 300 px (tarih üstte, YENİ altta); sol: skor üstte, çip + süre altta; hepsi 156 içinde
 		var rx := _w - 24.0 - 300.0
-		score.position = Vector2(140.0, 4.0)
-		score.size = Vector2(rx - 8.0 - 140.0, 90.0)
-		chip.position = Vector2(140.0, 100.0)
-		time.position = Vector2(140.0 + chip.size.x + 14.0, 103.0)
+		score.position = Vector2(140.0, 0.0)
+		score.size = Vector2(rx - 8.0 - 140.0, 100.0)
+		chip.position = Vector2(140.0, 102.0)
+		time.position = Vector2(140.0 + chip.size.x + 14.0, 105.0)
 		time.size = Vector2(maxf(0.0, rx - 8.0 - time.position.x), 46.0)
 		date.position = Vector2(rx, 14.0)
 		date.size = Vector2(300.0, 46.0)

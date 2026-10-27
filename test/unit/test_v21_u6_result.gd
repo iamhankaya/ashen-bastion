@@ -12,7 +12,7 @@ const STATS := {
 	"score_parts": {"kills": 100, "streak": 10, "evolution": 0, "survival": 50, "lord": 5000},
 }
 const NOTCH := Vector4(0.0, 60.0, 0.0, 40.0)
-const LAST_TIER := 4
+const LAST_TIER := 5
 
 var fake: V21Kit.FakeSettings
 
