@@ -96,9 +96,9 @@ if [ $FAST -eq 1 ]; then
   MB="$(git merge-base HEAD "$FAST_BASE" 2>/dev/null)" || MB=""
   if [ -z "$MB" ]; then
     echo "hızlı mod: '$FAST_BASE' ile ortak ata bulunamadı => TAM GATE" >&2; FAST=0
-  elif ! python3 tools/ci/test_map.py check > .gate/map_check.log 2>&1; then
+  elif ! python3 tools/ci/test_map.py ensure > .gate/map_check.log 2>&1; then
     cat .gate/map_check.log >&2
-    echo "hızlı mod: tools/ci/test_map.json güncel/tutarlı değil => TAM GATE" >&2; FAST=0
+    echo "hızlı mod: tools/ci/test_map.json üretilemedi => TAM GATE" >&2; FAST=0
   else
     { git diff --name-only "$MB"; git ls-files -o --exclude-standard; } | sort -u > .gate/changed.txt
     if python3 tools/ci/test_map.py select < .gate/changed.txt > .gate/selected.txt 2> .gate/select.why; then
