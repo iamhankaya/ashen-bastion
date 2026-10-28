@@ -262,6 +262,8 @@ static func priority_of(character: StringName) -> Array:
 		var f := FileAccess.open(PRIORITY_PATH, FileAccess.READ)
 		var parsed: Variant = JSON.parse_string(f.get_as_text()) if f != null else null
 		var table: Dictionary = parsed if parsed is Dictionary else {}
+		if table.is_empty():
+			push_error("kart önceliği okunamadı: %s" % PRIORITY_PATH)
 		for k in table:
 			var ids: Array = []
 			for id in table[k]:
