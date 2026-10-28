@@ -2,6 +2,5 @@
 # (--base ile LINE_BUDGET_RAISED), dosya <= 800 olunca satır silinmeli (LINE_BUDGET_STALE). merge=union YOK. R dilimleri kendi satırını siler.
 scripts/ui/result_screen.gd | 999
 scripts/sim/game_sim.gd | 987
-scripts/ctrl/game_controller.gd | 959
 scripts/sim/game_data.gd | 945
 scripts/ui/characters_screen.gd | 860
