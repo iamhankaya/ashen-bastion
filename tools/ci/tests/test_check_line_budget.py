@@ -96,9 +96,10 @@ def test_real_repo_is_green_with_committed_exceptions():
     assert r.returncode == 0, r.stderr
 
 
-def test_committed_exceptions_are_the_five_known_files_at_current_size():
+def test_committed_exceptions_are_a_subset_of_the_five_known_files():
     parsed = check_line_budget.parse_exceptions((ROOT / "tools" / "ci" / "line_budget_exceptions.txt").read_text(encoding="utf-8"))
-    assert set(parsed) == {
+    # R dilimleri kendi satırını siler: küme yalnız küçülür, yeni dosya girmez.
+    assert set(parsed) <= {
         "scripts/ui/result_screen.gd",
         "scripts/sim/game_sim.gd",
         "scripts/ctrl/game_controller.gd",
