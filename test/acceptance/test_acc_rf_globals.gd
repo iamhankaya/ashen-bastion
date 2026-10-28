@@ -85,8 +85,9 @@ func test_rf_escape_toggle_mid_run_is_deterministic() -> void:
 
 func test_rf_second_sim_in_same_process_is_not_affected_by_first() -> void:
 	var solo := _trail(_make(SEED_A), STEPS)
-	var _other := _trail(_make(SEED_B), STEPS)  # araya başka koşu
+	var other := _trail(_make(SEED_B), STEPS)  # araya başka koşu
 	var again := _trail(_make(SEED_A), STEPS)
+	assert_ne(other, solo, "araya giren koşu farklı tohum: farklı iz")
 	assert_eq(
 		again, solo, "ardışık koşular birbirinden sızıntısız (Targeting/EnemyEscape/GameData)"
 	)
@@ -143,6 +144,7 @@ func test_rf_enabled_flag_applies_to_every_new_sim() -> void:
 	assert_false(
 		EnemyEscape.enabled, "yeni GameSim bayrağı değiştirmez (R9c oturum kapsamını korur)"
 	)
-	var _t1 := _trail(s1, 120)
-	var _t2 := _trail(s2, 120)
+	var t1 := _trail(s1, 120)
+	var t2 := _trail(s2, 120)
+	assert_ne(t1, t2, "iki farklı tohum farklı iz")
 	assert_false(EnemyEscape.enabled, "koşu bayrağı değiştirmez")
