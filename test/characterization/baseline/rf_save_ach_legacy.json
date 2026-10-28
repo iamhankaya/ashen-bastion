@@ -1,0 +1,490 @@
+{
+ "bad_json": {
+  "bad_kept": true,
+  "corrupt": true,
+  "loaded": false,
+  "raw": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  },
+  "saved": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  }
+ },
+ "empty_file": {
+  "bad_kept": false,
+  "corrupt": true,
+  "loaded": false,
+  "raw": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  },
+  "saved": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  }
+ },
+ "empty_object": {
+  "bad_kept": true,
+  "corrupt": true,
+  "loaded": false,
+  "raw": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  },
+  "saved": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  }
+ },
+ "extra_fields": {
+  "bad_kept": false,
+  "corrupt": false,
+  "loaded": true,
+  "raw": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 3.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 1.0
+  },
+  "saved": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 3.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 1.0
+  }
+ },
+ "missing_totals": {
+  "bad_kept": false,
+  "corrupt": false,
+  "loaded": true,
+  "raw": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {
+    "a": 5.0
+   },
+   "v": 1.0
+  },
+  "saved": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {
+    "a": 5.0
+   },
+   "v": 1.0
+  }
+ },
+ "not_object": {
+  "bad_kept": true,
+  "corrupt": true,
+  "loaded": false,
+  "raw": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  },
+  "saved": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  }
+ },
+ "real_v20": {
+  "bad_kept": true,
+  "corrupt": true,
+  "loaded": false,
+  "raw": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  },
+  "saved": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  }
+ },
+ "wrong_types": {
+  "bad_kept": true,
+  "corrupt": true,
+  "loaded": false,
+  "raw": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  },
+  "saved": {
+   "best": {
+    "active_slots": 0.0,
+    "bomb_hits": 0.0,
+    "clean_secs": 0.0,
+    "elite_kinds": 0.0,
+    "evolutions": 0.0,
+    "kills": 0.0,
+    "level": 0.0,
+    "mult": 0.0,
+    "pickups": 0.0,
+    "reloads": 0.0,
+    "score": 0.0,
+    "time": 0.0,
+    "unlimited_kills": 0.0
+   },
+   "chars5": [],
+   "steps": {},
+   "totals": {
+    "boss_kills": 0.0,
+    "kills": 0.0,
+    "play_secs": 0.0,
+    "runs": 0.0,
+    "wins": 0.0
+   },
+   "unlocked": {},
+   "v": 2.0
+  }
+ }
+}

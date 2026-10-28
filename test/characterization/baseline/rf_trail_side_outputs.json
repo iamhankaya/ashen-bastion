@@ -1,0 +1,77 @@
+{
+ "11": {
+  "hp": 100.0,
+  "invariants": [],
+  "kills": 1.0,
+  "level": 1.0,
+  "state": 0.0,
+  "work": {
+   "cells_scanned": 6275.0,
+   "collision_tests": 5.0,
+   "enemy_updates": 1994.0,
+   "explosions": 0.0,
+   "hash_inserts": 1995.0,
+   "hash_queries": 1934.0,
+   "proj_updates": 268.0
+  },
+  "work_keys": [
+   "hash_inserts",
+   "hash_queries",
+   "cells_scanned",
+   "collision_tests",
+   "enemy_updates",
+   "proj_updates",
+   "explosions"
+  ]
+ },
+ "23": {
+  "hp": 100.0,
+  "invariants": [],
+  "kills": 1.0,
+  "level": 1.0,
+  "state": 0.0,
+  "work": {
+   "cells_scanned": 6256.0,
+   "collision_tests": 8.0,
+   "enemy_updates": 2087.0,
+   "explosions": 0.0,
+   "hash_inserts": 2088.0,
+   "hash_queries": 1895.0,
+   "proj_updates": 245.0
+  },
+  "work_keys": [
+   "hash_inserts",
+   "hash_queries",
+   "cells_scanned",
+   "collision_tests",
+   "enemy_updates",
+   "proj_updates",
+   "explosions"
+  ]
+ },
+ "37": {
+  "hp": 100.0,
+  "invariants": [],
+  "kills": 2.0,
+  "level": 1.0,
+  "state": 0.0,
+  "work": {
+   "cells_scanned": 5927.0,
+   "collision_tests": 11.0,
+   "enemy_updates": 1983.0,
+   "explosions": 0.0,
+   "hash_inserts": 1985.0,
+   "hash_queries": 1897.0,
+   "proj_updates": 337.0
+  },
+  "work_keys": [
+   "hash_inserts",
+   "hash_queries",
+   "cells_scanned",
+   "collision_tests",
+   "enemy_updates",
+   "proj_updates",
+   "explosions"
+  ]
+ }
+}

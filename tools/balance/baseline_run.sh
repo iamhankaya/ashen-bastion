@@ -24,7 +24,7 @@ POLICIES="${POLICIES:-strong kite greedy idle}"
 CHAR="${CHAR:-gunslinger}"
 CHUNK=5
 SEEDS_FILE="$ROOT/tools/balance/seeds_v202.txt"
-DEST="$ROOT/docs/design/v2.0.2/balance"
+DEST="${DEST:-$ROOT/docs/design/v2.0.2/balance}"
 ARMS_ALL="v201-A v201-B v201-nodyn-A"
 # Uzatılmış kollar (seeds_v202.txt A400/B400; yalnız strong+kite için): v201-A400 v201-B400 v201-nodyn-A400
 ARMS="${*:-$ARMS_ALL}"
