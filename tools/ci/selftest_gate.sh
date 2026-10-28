@@ -80,9 +80,8 @@ scenario_test_kimligi_kaybi() { # tabandaki bir test kimliği HEAD'de yok (silin
 import sys
 sys.path.insert(0, sys.argv[1] + "/tools/ci")
 import check_test_ids as T
-open(sys.argv[2], "w", encoding="utf-8").write("
-".join(sorted(T.collect_declared(T.FsSource(sys.argv[1])).ids)) + "
-")
+ids = sorted(T.collect_declared(T.FsSource(sys.argv[1])).ids)
+open(sys.argv[2], "w", encoding="utf-8").write("\n".join(ids) + "\n")
 PY
   python3 - "$d/test/unit/test_art_loader.gd" <<'PY'
 import re, sys
@@ -105,12 +104,7 @@ scenario_stub_todo() { # Stub.todo => test başarısızlığı (stub.gd varsa; y
 
 scenario_kosmayan_test() { # bildirilen ama koşuda pending olan test (dilim dışı): kimlik kapısı MISSING der
   local d; d=$(fresh f)
-  printf 'extends GutTest
-
-
-func test_p() -> void:
-	pending("selftest")
-' > "$d/test/unit/test_zz_pending.gd"
+  printf 'extends GutTest\n\n\nfunc test_p() -> void:\n\tpending("selftest")\n' > "$d/test/unit/test_zz_pending.gd"
   expect "koşmayan test" 1 "$d" X=1
   grep -q "MISSING" "$TMP/koşmayan test.log" || { echo "FAIL koşmayan test: günlükte MISSING yok (başka nedenle kırmızı)"; FAILS=$((FAILS+1)); }
 }

@@ -66,3 +66,12 @@ def test_check_junit_is_a_total_sanity_check_only(tmp_path):
     assert r.returncode == 1 and "sıfır" in r.stderr
     j.write_text('<testsuites><testsuite name="a" tests="2" skipped="1"></testsuite></testsuites>')
     assert subprocess.run([sys.executable, str(CI / "check_junit.py"), str(j)]).returncode == 0
+
+
+def test_selftest_inline_python_heredocs_compile():
+    """selftest_gate.sh içindeki `python3 - <<'PY'` gövdeleri sözdizimi olarak geçerli (kaçış hatası CI'da geç görünür)."""
+    text = (CI / "selftest_gate.sh").read_text(encoding="utf-8")
+    bodies = re.findall(r"<<'PY'\n(.*?)\nPY\n", text, re.S)
+    assert len(bodies) >= 3
+    for b in bodies:
+        compile(b, "selftest_gate.sh:heredoc", "exec")
