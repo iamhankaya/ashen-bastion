@@ -87,7 +87,9 @@ func test_rf_second_sim_in_same_process_is_not_affected_by_first() -> void:
 	var solo := _trail(_make(SEED_A), STEPS)
 	var _other := _trail(_make(SEED_B), STEPS)  # araya başka koşu
 	var again := _trail(_make(SEED_A), STEPS)
-	assert_eq(again, solo, "ardışık koşular birbirinden sızıntısız (Targeting/EnemyEscape/GameData)")
+	assert_eq(
+		again, solo, "ardışık koşular birbirinden sızıntısız (Targeting/EnemyEscape/GameData)"
+	)
 
 
 func test_rf_interleaved_sims_match_their_solo_runs() -> void:
@@ -128,7 +130,9 @@ func test_rf_begun_total_is_session_scoped_and_does_not_feed_hash() -> void:
 	EnemyEscape.begun_total = 12345
 	var t2 := _trail(_make(SEED_A), STEPS)
 	assert_eq(t1, t2, "begun_total başlangıç değeri hash'i etkilemez")
-	assert_gte(EnemyEscape.begun_total, 12345, "sayaç oturum boyunca birikir (azalmaz, sıfırlanmaz)")
+	assert_gte(
+		EnemyEscape.begun_total, 12345, "sayaç oturum boyunca birikir (azalmaz, sıfırlanmaz)"
+	)
 	assert_gte(after_first, 0, "sayaç negatif olmaz")
 
 
@@ -136,7 +140,9 @@ func test_rf_enabled_flag_applies_to_every_new_sim() -> void:
 	EnemyEscape.enabled = false
 	var s1 := _make(SEED_A)
 	var s2 := _make(SEED_B)
-	assert_false(EnemyEscape.enabled, "yeni GameSim bayrağı değiştirmez (R9c oturum kapsamını korur)")
+	assert_false(
+		EnemyEscape.enabled, "yeni GameSim bayrağı değiştirmez (R9c oturum kapsamını korur)"
+	)
 	var _t1 := _trail(s1, 120)
 	var _t2 := _trail(s2, 120)
 	assert_false(EnemyEscape.enabled, "koşu bayrağı değiştirmez")
