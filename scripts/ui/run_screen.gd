@@ -96,17 +96,13 @@ func _build() -> void:
 	glow.offset_bottom = 600.0
 	add_child(glow)
 
-	scroll = ScrollContainer.new()
-	scroll.name = "Scroll"
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll = UiKit.make_scroll(UiKit.SCROLL_AXIS_VERTICAL, {"name": "Scroll"})
 	scroll.anchor_left = 0.5
 	scroll.anchor_right = 0.5
 	scroll.offset_left = -W * 0.5
 	scroll.offset_right = W * 0.5
 	scroll.offset_top = LIST_TOP
 	scroll.offset_bottom = BACK_TOP - 24.0
-	UiKit.touch_scroll(scroll)
 	add_child(scroll)
 	column = VBoxContainer.new()
 	column.name = "Column"
