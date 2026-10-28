@@ -278,7 +278,7 @@ static func band_dir(player: Vector2, lord_pos: Vector2) -> Vector2:
 ## Politika hareketi. lord >= 0 (canlı Lord kimliği) ve politika strong_lord ise Lord bandı; aksi halde strong BİREBİR
 ## (strong_lord'un iki dalından biri burası, diğeri `_choose`'a giden STRONG_POLICIES).
 static func move_for(sim: GameSim, policy: String, lord: int = -1) -> Vector2:
-	if not STRONG_POLICIES.has(policy):
+	if policy != "strong":
 		return Bots.move(StringName(policy), sim)
 	if policy == "strong_lord" and lord >= 0 and sim.enemies.is_alive(lord):
 		var want := band_dir(sim.player_pos, sim.enemies.pos[EnemyPool.index_of(lord)])
