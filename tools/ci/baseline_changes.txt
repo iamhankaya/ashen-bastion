@@ -25,3 +25,5 @@ test/characterization/baseline/rf_ui_run_rects.json | 90e3afa11513de806b5b8e4f9a
 test/characterization/baseline/rf_ctrl_scene_tree.json | 411707bb64e116cd9a55802208e972a56dc247359bec8d6ea63498638e18a516 | ilk baz: refactor öncesi kod, kararlı adlar+sabit tohum (ci 40781464585) | T20261028-35
 test/characterization/baseline/rf_ctrl_scene_tree_restart.json | aaf530539b6d1a2fd1b3101975d8d2f9ea5d3dc563ca1732edbe240d7ee47d87 | ilk baz: refactor öncesi kod, kararlı adlar+sabit tohum (ci 40781464585) | T20261028-35
 test/characterization/baseline/rf_ui_characters_rects.json | c06e5dc41d722f1310f0ed4bf47e6028ab5e82856f6eb19f8554e9a8fb3ae5ad | ilk baz: refactor öncesi kod, kararlı adlar+sabit tohum (ci 40781464585) | T20261028-35
+test/characterization/baseline/rf_ctrl_scene_tree.json | 07ecad953da9733d54cbcbea6da554143e1c4369b3800350469998302e07152a | grup adı sayaçları atıldı | T20261028-35
+test/characterization/baseline/rf_ui_characters_rects.json | 7c88c6680381024ef0be21b0f44c4bf21ae08f15677fee7e47c85bd7abd228f5 | canlı portre düğümleri dışlandı (/Stage/) | T20261028-35

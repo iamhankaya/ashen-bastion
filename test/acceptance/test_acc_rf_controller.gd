@@ -40,8 +40,10 @@ func _controller() -> GameController:
 ## Koşuya özgü adlar kararlı olsun: "@Label@12" -> tür; sonundaki 5+ haneli sayaç ("_root_canvas7730...") atılır.
 func _label(n: Node) -> String:
 	var nm := String(n.name)
-	if nm.begins_with("@"):
-		return n.get_class()
+	return n.get_class() if nm.begins_with("@") else _strip(nm)
+
+
+func _strip(nm: String) -> String:
 	var re := RegEx.new()
 	re.compile("[0-9]{5,}$")
 	return re.sub(nm, "")
@@ -54,7 +56,9 @@ func _tree(root: Node) -> Array:
 	while not stack.is_empty():
 		var item: Array = stack.pop_back()
 		var n: Node = item[0]
-		var groups := Array(n.get_groups())
+		var groups := []
+		for g in n.get_groups():
+			groups.append(_strip(String(g)))
 		groups.sort()
 		out.append("%s|%s|%s" % [item[1], n.get_class(), ",".join(groups)])
 		var kids := n.get_children()

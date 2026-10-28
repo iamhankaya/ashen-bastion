@@ -139,7 +139,8 @@ func test_rf_characters_screen_rects() -> void:
 		s.open(data, AchKit.store(), &"gunslinger")
 		s.apply_safe_area(SAFE)
 		await _settle()
-		out[str(vp)] = _rects(s)
+		# Portre (Ghost/Portrait/PortraitVideo) canlı nefes hareketi yapar: konum kareye göre kayar, kararsız; dışlanır.
+		out[str(vp)] = _rects(s).filter(func(l: String) -> bool: return not l.contains("/Stage/"))
 		host.queue_free()
 	RfBaseline.check(self, "rf_ui_characters_rects", out)
 
