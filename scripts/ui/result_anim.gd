@@ -17,7 +17,7 @@ const ROW_SLIDE_PX := 40.0
 
 
 static func apply(host, t: float) -> void:
-	var done := host._skip_t >= 0.0
+	var done: bool = host._skip_t >= 0.0
 	var k := 1.0 if done else ResultTimeline.count_progress(t)
 	host.score_value.text = UiKit.format_thousands(roundi(float(host._hero_total) * k))
 	host.time_value.text = UiKit.format_time(float(host.stats.get("time", 0.0)) * k)

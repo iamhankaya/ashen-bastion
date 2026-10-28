@@ -191,10 +191,10 @@ static func layout_tail(host) -> float:
 		combos_y += note_h + gb
 	host._chip_y = combos_y
 	if not host._new_names.is_empty():
-		var chip_h := float(t[T_CHIP])
-		put(host, host.achievement_chip, host._x0, combos_y, host._w, chip_h)
-		place_chip_parts(host.chip_star, host.chip_title, host.chip_names, host._w, chip_h)
-		combos_y += chip_h + gb
+		var ch := float(t[T_CHIP])
+		put(host, host.achievement_chip, host._x0, combos_y, host._w, ch)
+		place_chip_parts(host.chip_star, host.chip_title, host.chip_names, host._w, ch)
+		combos_y += ch + gb
 	host.combo_panel.custom_minimum_size = Vector2(host._w, 0)
 	host.combo_panel.size = Vector2(host._w, 0)
 	host.combo_panel.position = Vector2(host._x0, combos_y + host._dy + host._bdy)
@@ -286,20 +286,20 @@ static func spoken_rank(rank: int) -> String:
 ## Büyük yazıda 34'ten 30'a. Kutu yüksekliği döner (sarmada en çok `avail_h`).
 static func fit_note(note: Label, width: float, big: bool, avail_h: float) -> float:
 	var grow := 4 if big else 0
-	var fs := NOTE_FONT + grow
+	var size_px := NOTE_FONT + grow
 	var font := note.get_theme_font(&"font")
 	var text := note.text
 	while (
-		fs > NOTE_FONT_MIN + grow
-		and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fs).x > width
+		size_px > NOTE_FONT_MIN + grow
+		and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size_px).x > width
 	):
-		fs -= 2
-	note.add_theme_font_size_override(&"font_size", fs)
-	var wide := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fs).x > width
+		size_px -= 2
+	note.add_theme_font_size_override(&"font_size", size_px)
+	var wide := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size_px).x > width
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wide else TextServer.AUTOWRAP_OFF
 	if wide:
-		return minf(avail_h, 2.0 * ceilf(font.get_height(fs)))
-	return maxf(40.0, ceilf(font.get_height(fs)))
+		return minf(avail_h, 2.0 * ceilf(font.get_height(size_px)))
+	return maxf(40.0, ceilf(font.get_height(size_px)))
 
 
 ## Taş/kahve yüzey (DESIGN v2.1 §5: `levha` rengi): tema `PanelRaised` mordur (v2.0.3 kalıntısı); iç boşluklar temadan alınır.
@@ -317,10 +317,10 @@ static func size_note_text(text: Label, width: float, height: float) -> void:
 	var avail := width - 92.0 - 28.0
 	var raw := text.text.replace("\n", " ")
 	var font := text.get_theme_font(&"font")
-	var fs := text.get_theme_font_size(&"font_size")
+	var size_px := text.get_theme_font_size(&"font_size")
 	text.autowrap_mode = TextServer.AUTOWRAP_OFF
 	text.text = raw
-	if font.get_string_size(raw, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fs).x > avail:
+	if font.get_string_size(raw, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size_px).x > avail:
 		var cut := raw.rfind(" ", int(raw.length() * 0.5) + 4)
 		if cut > 0:
 			text.text = raw.substr(0, cut) + "\n" + raw.substr(cut + 1)
