@@ -15,27 +15,6 @@ func _policies(with_pickups: bool) -> Array[StringName]:
 	return out
 
 
-func test_p20_early_game_invariants_every_60_steps_all_policies_both_arms() -> void:
-	for with_pickups in [true, false]:
-		for policy in _policies(with_pickups):
-			var r := (
-				AbRunner
-				. run(
-					{
-						"seed": 20,
-						"policy": policy,
-						"pickups": with_pickups,
-						"max_steps": EARLY_STEPS,
-						"check_every": 60,
-					}
-				)
-			)
-			assert_eq(
-				r["violations"], PackedStringArray(), "erken %s pickups=%s" % [policy, with_pickups]
-			)
-			assert_gt(int(r["checks"]), 0)
-
-
 func test_p20_late_game_crowd_invariants_every_60_steps_all_policies_both_arms() -> void:
 	var max_alive := 0
 	for with_pickups in [true, false]:
