@@ -5,6 +5,8 @@ extends GutTest
 
 const TMP := "user://rf_ctrl_tests"
 
+const RUN_SEED := 4242  # start_run randi() ile tohumlanır (harita/harabe sayısı); global RNG sabitlenir
+
 var _settings_path := ""
 var _n := 0
 
@@ -35,9 +37,14 @@ func _controller() -> GameController:
 	return c
 
 
+## Koşuya özgü adlar kararlı olsun: "@Label@12" -> tür; sonundaki 5+ haneli sayaç ("_root_canvas7730...") atılır.
 func _label(n: Node) -> String:
 	var nm := String(n.name)
-	return n.get_class() if nm.begins_with("@") else nm
+	if nm.begins_with("@"):
+		return n.get_class()
+	var re := RegEx.new()
+	re.compile("[0-9]{5,}$")
+	return re.sub(nm, "")
 
 
 ## Düğüm yolu|tür|sıralı gruplar; otomatik adlar ("@Label@12") türle değiştirilir; çocuk sırası korunur.
@@ -90,6 +97,7 @@ func _triples(obj: Object) -> Array:
 func test_rf_scene_tree_summary_at_run_start() -> void:
 	var c := _controller()
 	var before := _tree(c)
+	seed(RUN_SEED)
 	c.start_run()
 	var after := _tree(c)
 	assert_gt(
@@ -114,8 +122,10 @@ func test_rf_scene_tree_after_restart() -> void:
 	# Bulgu: yeniden başlatma düğüm sayısını artırıyor (Sprite2D 153 -> 297, CI 40773133231); davranış korunur,
 	# bu yüzden ilişkisel eşitlik değil baz sabitlenir. Düzeltme ayrı Developer işidir (rapor: Bulunan hatalar).
 	var c := _controller()
+	seed(RUN_SEED)
 	c.start_run()
 	var first := _kind_hist(_tree(c))
+	seed(RUN_SEED)
 	c.start_run()
 	var second := _kind_hist(_tree(c))
 	RfBaseline.check(self, "rf_ctrl_scene_tree_restart", {"first": first, "second": second})
@@ -123,6 +133,7 @@ func test_rf_scene_tree_after_restart() -> void:
 
 func test_rf_signal_triples_and_restart_leak() -> void:
 	var c := _controller()
+	seed(RUN_SEED)
 	c.start_run()
 	var sim1 := c.sim
 	var t1 := _triples(sim1.bus)
@@ -130,6 +141,7 @@ func test_rf_signal_triples_and_restart_leak() -> void:
 	c.pause_game()
 	c.resume_game()
 	assert_eq(_triples(sim1.bus), t1, "duraklat/devam sim bağlantılarını değiştirmez")
+	seed(RUN_SEED)
 	c.start_run()
 	var sim2 := c.sim
 	var t2 := _triples(sim2.bus)

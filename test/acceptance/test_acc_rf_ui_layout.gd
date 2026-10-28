@@ -46,7 +46,7 @@ func _settle() -> void:
 ## Görünür Control'lerin yol|tür|x,y,w,h kaydı (yuvarlama yok: +-0 eşiği); metin içeriği dahil değil.
 func _rects(root: Node) -> Array:
 	var out := []
-	var stack := [[root, String(root.name)]]
+	var stack := [[root, _name(root)]]
 	while not stack.is_empty():
 		var item: Array = stack.pop_back()
 		var n: Node = item[0]
@@ -69,9 +69,14 @@ func _rects(root: Node) -> Array:
 		var kids := n.get_children()
 		kids.reverse()
 		for k in kids:
-			var nm := String(k.name)
-			stack.append([k, "%s/%s" % [item[1], k.get_class() if nm.begins_with("@") else nm]])
+			stack.append([k, "%s/%s" % [item[1], _name(k)]])
 	return out
+
+
+## "@Control@778" gibi otomatik adlar türle değiştirilir (koşuya özgü sayaç baza girmez).
+func _name(n: Node) -> String:
+	var nm := String(n.name)
+	return n.get_class() if nm.begins_with("@") else nm
 
 
 func _stats() -> Dictionary:
