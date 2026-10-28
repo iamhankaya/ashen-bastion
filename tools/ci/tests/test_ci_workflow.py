@@ -35,7 +35,7 @@ def test_ci_triggers_push_only_main_and_vlad_branches():
 
 def test_ci_concurrency_per_ref_cancels_all_but_main():
     head = CI.split("jobs:")[0]
-    assert "group: ci-${{ github.ref }}" in head
+    assert "group: ci-${{ github.ref }}-${{ github.event_name }}" in head  # workflow_call (nightly) push CI'ını iptal etmesin
     assert "cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}" in head
 
 
