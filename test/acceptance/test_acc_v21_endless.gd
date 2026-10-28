@@ -1,6 +1,6 @@
 extends GutTest
 ## Kabul (v2.1 S): Sonsuz mod (spec senaryo 8, K4-A, plan K-C1/K-C2/K-C3). İlk Lord ölümü kazanma sayılır (kilometre taşı),
-## koşu sürer ve yalnız ölümle biter; Lord ölümünden `lord_repeat_sec` (300) sonra HP ×1,5 (tavan ×8) ile döner; 2400. sn
+## koşu sürer ve yalnız ölümle biter; Lord ölümünden `lord_repeat_sec` (300) sonra HP ×1,5 (tavan ×8) ile döner; 1200. sn
 ## sonrası temas hasarı artar (enrage). Determinizm testi tester'ındır (Sonsuz altın hash dışıdır). 40. dk performansı
 ## nightly (test/long). V21Slice "S" açılana dek pending; e1 (profil/opts) C'den beri koşar.
 
@@ -175,9 +175,9 @@ func test_s30_enrage_raises_contact_damage_only_in_endless_after_the_threshold()
 	if V21Slice.require(self, "S"):
 		return
 	var loss := {}
-	# 2390: ~2 sn'lik pencere eşiğin (2400) altında biter; 2400'de başlasa pencere eşiği aşardı.
-	var cases := [["endless", 2000.0], ["endless", 2390.0], ["endless", 2700.0]]
-	cases.append(["normal", 2700.0])
+	# 1190: ~2 sn'lik pencere eşiğin (1200) altında biter; 1200'de başlasa pencere eşiği aşardı.
+	var cases := [["endless", 1100.0], ["endless", 1190.0], ["endless", 1500.0]]
+	cases.append(["normal", 1500.0])
 	for key in cases:
 		var s := SimKit.make(
 			3,
@@ -195,12 +195,12 @@ func test_s30_enrage_raises_contact_damage_only_in_endless_after_the_threshold()
 		for i in 120:
 			s.step(Vector2.ZERO)
 		loss["%s@%d" % [key[0], int(key[1])]] = 100000.0 - s.hp
-	assert_gt(loss["endless@2000"], 0.0, "Lord temas hasarı verdi (kurulum)")
-	assert_almost_eq(loss["endless@2390"], loss["endless@2000"], 0.01, "eşik altında çarpan 1")
+	assert_gt(loss["endless@1100"], 0.0, "Lord temas hasarı verdi (kurulum)")
+	assert_almost_eq(loss["endless@1190"], loss["endless@1100"], 0.01, "eşik altında çarpan 1")
 	assert_almost_eq(
-		loss["endless@2700"] / loss["endless@2000"], 1.5, 0.05, "300 sn sonra ×(1+0,10·5)"
+		loss["endless@1500"] / loss["endless@1100"], 6.0, 0.05, "300 sn sonra ×(1+1,0·5)"
 	)
-	assert_almost_eq(loss["normal@2700"], loss["endless@2000"], 0.01, "Normal modda enrage yok")
+	assert_almost_eq(loss["normal@1500"], loss["endless@1100"], 0.01, "Normal modda enrage yok")
 
 
 func test_s31_endless_run_is_deterministic_through_a_repeat() -> void:
