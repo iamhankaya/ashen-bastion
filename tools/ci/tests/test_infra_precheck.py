@@ -234,6 +234,9 @@ def test_script_does_not_use_grep_q_in_pipelines():
 
 
 def test_script_is_executable_in_index():
+    # selftest_gate.sh senaryo dizini git'siz kopyadır (izlenen dosyaları kopyalar): orada indeks yok, kip denetlenemez.
+    if sh(["git", "rev-parse", "--is-inside-work-tree"], ROOT).returncode != 0 or not (ROOT / ".git").exists():
+        pytest.skip("git deposu değil (selftest kopyası)")
     r = sh(["git", "ls-files", "-s", "tools/precheck.sh"], ROOT)
     assert r.stdout.startswith("100755"), r.stdout
 
