@@ -105,11 +105,9 @@ def test_slice_of_accepts_letter_suffix():
 
 
 def test_v202_marked_slice_counts_suffixed_test(tmp_path):
-    r = _run202(tmp_path, "E
-", _junit(_case("test_e5b_x")))
+    r = _run202(tmp_path, "E\n", _junit(_case("test_e5b_x")))
     assert r.returncode == 0, r.stderr
-    assert _run202(tmp_path, "E
-", _junit(_case("test_e5b_x", "pending"))).returncode == 1
+    assert _run202(tmp_path, "E\n", _junit(_case("test_e5b_x", "pending"))).returncode == 1
 
 
 def test_v202_unmarked_pending_is_fine(tmp_path):
