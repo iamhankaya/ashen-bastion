@@ -21,17 +21,21 @@ static func from_dicts(metrics: Array) -> AchievementMetricRegistry:
 	for m in metrics:
 		if m is Dictionary:
 			r._metrics.append(m)
-	r._metrics.sort_custom(
-		func(a: Dictionary, b: Dictionary) -> bool:
-			return str(a.get("stat", "")) < str(b.get("stat", ""))
-	)
+	var keyed: Array = []
+	for i in r._metrics.size():
+		keyed.append([str(r._metrics[i].get("stat", "")), i])
+	keyed.sort()  # (stat, giriş sırası): yinelenenlerde de deterministik
+	var sorted: Array = []
+	for k in keyed:
+		sorted.append(r._metrics[k[1]])
+	r._metrics = sorted
 	return r
 
 
 ## "ACH_METRIC: <stat>: <neden>"; boş = geçerli. Sıra deterministiktir (stat sırası).
 func validate() -> PackedStringArray:
 	var out := PackedStringArray()
-	var stats := {}
+	var seen_stats := {}
 	var keys := {}  # persist anahtarı -> ilk sahibi stat
 	var events := _event_names()
 	var vre := RegEx.create_from_string(VALUE_RE)
@@ -48,9 +52,10 @@ func validate() -> PackedStringArray:
 		if not (persist is Dictionary):
 			continue
 		for k in ["total", "best"]:
-			var key := str((persist as Dictionary).get(k, ""))
-			if key == "":
-				continue
+			var raw: Variant = (persist as Dictionary).get(k, null)
+			if not (raw is String) or raw == "":
+				continue  # null/yok = bu metrik o değeri tutmaz
+			var key: String = raw
 			if keys.has(key):
 				out.append(
 					(

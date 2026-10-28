@@ -18,9 +18,8 @@ func test_characters_keep_order() -> void:
 
 func test_characters_fixture_leaves_no_user_files() -> void:
 	CatalogFixtures.characters(2)
-	assert_false(
-		DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(CatalogFixtures.TMP_DIR))
-	)
+	var dir := "%s_%d" % [CatalogFixtures.TMP_DIR, OS.get_process_id()]
+	assert_false(DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(dir)))
 
 
 func test_characters_do_not_touch_default_cache() -> void:

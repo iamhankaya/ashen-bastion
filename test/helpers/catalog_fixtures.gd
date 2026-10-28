@@ -8,7 +8,9 @@ const TMP_DIR := "user://catalog_fixture"  # paralel GUT süreçleri için chara
 
 ## `n` karakterli GameData (GameData.load_dir geçici dizinden; okuduktan sonra dizin silinir, USER_LEAK bırakmaz).
 static func characters(n: int) -> GameData:
-	var abs_dir := ProjectSettings.globalize_path(TMP_DIR)
+	var dir := "%s_%d" % [TMP_DIR, OS.get_process_id()]
+	var abs_dir := ProjectSettings.globalize_path(dir)
+	_rm_rf(abs_dir)  # önceki çökmeden kalan dosyalar sayıyı bozmasın
 	DirAccess.make_dir_recursive_absolute(abs_dir.path_join("characters"))
 	for i in n:
 		var d := {
@@ -19,8 +21,9 @@ static func characters(n: int) -> GameData:
 			"max_hp": 100
 		}
 		var f := FileAccess.open(abs_dir.path_join("characters/zz_c%d.json" % i), FileAccess.WRITE)
-		f.store_string(JSON.stringify(d))
-		f.close()
+		if f != null:
+			f.store_string(JSON.stringify(d))
+			f.close()
 	var g := GameData.load_dir(dir)
 	_rm_rf(abs_dir)
 	return g
