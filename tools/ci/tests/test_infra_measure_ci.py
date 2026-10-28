@@ -50,6 +50,14 @@ def test_cache_label_from_log_is_recorded_not_assumed():
     assert m.cache_label("önbellek satırı yok") == "bilinmiyor"
 
 
+def test_cache_label_ignores_other_caches():
+    # pip / Godot ikilisi önbelleği ıskalaması içe aktarma önbelleğini soğuk yapmaz
+    other = "Cache not found for input keys: setup-python-Linux-abc\nCache not found for input keys: godot-4.7.2"
+    imp = "Cache restored from key: godot-import-abc"
+    assert m.cache_label(other + "\n" + imp) == "sicak"
+    assert m.cache_label(other) == "bilinmiyor"
+
+
 def test_skipped_by_filter_markers_are_collected():
     log = "PATH_FILTER: run=0 — SKIPPED_BY_FILTER (eşleşen yol yok)\nSKIPPED_BY_FILTER taban_yesil (x)"
     assert m.skipped_by_filter(log) == 2

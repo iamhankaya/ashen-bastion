@@ -88,9 +88,10 @@ def metrics(jobs, needs):
 
 
 def cache_label(log_text):
-    if "Cache not found for input keys" in log_text:
+    """Yalnız içe aktarma önbelleği (anahtar godot-import-*) sayılır; pip / Godot ikilisi önbellekleri etiketi etkilemez."""
+    if re.search(r"Cache not found for input keys: godot-import-", log_text):
         return "soguk"
-    if "Cache restored from key" in log_text or "Cache hit occurred" in log_text:
+    if re.search(r"Cache (restored from key|hit occurred on the primary key)[: ]+godot-import-", log_text):
         return "sicak"
     return "bilinmiyor"
 
