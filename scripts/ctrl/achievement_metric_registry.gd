@@ -1,6 +1,6 @@
 class_name AchievementMetricRegistry
 extends RefCounted
-## Başarım metrik tanım kaydı iskeleti (sözleşme-B): data/achievements/<stat>.json tanımlarını doğrular. Tracker/Store
+## Başarım metrik tanım kaydı iskeleti (sözleşme-B; plan scripts/sim/catalog/ demişti ama test_b9 sim'de 'Achievement' geçmesini yasaklar, bu yüzden ctrl'de): data/achievements/<stat>.json tanımlarını doğrular. Tracker/Store
 ## dönüşümü ve gerçek veri R8'dedir; `default()` şimdilik BOŞ kayıttır (mevcut data/achievements.json başka şemadadır).
 ## Metrik: {stat, group, tiers:[int], goal_text, icon_family, persist:{total, best},
 ##   source:{event, filter, value:"one"|"payload.<alan>"} + aggregate:"sum"|"max"|"count"  VEYA  reducer:"<sınıf>"}.

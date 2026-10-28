@@ -99,6 +99,8 @@ static func metrics(n: int) -> Array:
 
 
 static func _rm_rf(abs_dir: String) -> void:
+	if not DirAccess.dir_exists_absolute(abs_dir):
+		return
 	for sub in DirAccess.get_directories_at(abs_dir):
 		_rm_rf(abs_dir.path_join(sub))
 	for f in DirAccess.get_files_at(abs_dir):

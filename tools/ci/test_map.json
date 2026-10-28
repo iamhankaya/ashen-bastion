@@ -202,6 +202,9 @@
    "test/unit/test_v2_flow.gd",
    "test/unit/test_v2_maint.gd"
   ],
+  "scripts/ctrl/achievement_metric_registry.gd": [
+   "test/unit/test_catalog_achievement_metrics.gd"
+  ],
   "scripts/ctrl/achievement_progress.gd": [
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
