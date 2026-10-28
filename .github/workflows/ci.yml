@@ -1,9 +1,14 @@
 name: ci
 on:
+  # H3: tek tetik. pull_request kaldırıldı (aynı commit için çift koşu); PR'ın "test" bağlamı dal ucundaki push koşusundan gelir.
   push:
-  pull_request:
+    branches: [main, 'vlad/**']
 permissions:
   contents: read
+concurrency:
+  # Aynı ref'te yeni push eskisini iptal eder; main hiçbir zaman iptal edilmez (son kapı kanıtı).
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   # F-044: tam gate (tools/gate.sh) üç parçaya bölündü; BİRLEŞİMLERİ tam gate ile aynı kapsamdır ve PR CI'ında, entegrasyon
   # merge'ünde ve son kapıda (main) HER ZAMAN tam kapsam koşar. Hızlı mod (`gate.sh --changed`) CI'da yasaktır (gate.sh reddeder)
