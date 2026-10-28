@@ -45,9 +45,9 @@ GROUP[bos_test_dizisi]=1
 GROUP[anlamsal_hata]=2
 GROUP[to_upper]=2
 GROUP[veri_hatasi]=2
-GROUP[asgari_sayi_alti]=3
+GROUP[test_kimligi_kaybi]=3
 GROUP[stub_todo]=4
-GROUP[pending_sayilmaz]=5
+GROUP[kosmayan_test]=5
 GROUP[ag_yok]=5
 GROUP[gut_error]=6
 
@@ -73,9 +73,26 @@ scenario_bos_test_dizisi() {
   expect "boş test dizisi" 1 "$d" X=1
 }
 
-scenario_asgari_sayi_alti() {
-  local d; d=$(fresh c); echo '{"test/unit/test_smoke.gd": 99}' > "$d/tools/gate_min_tests.json"
-  expect "asgari sayı altı" 1 "$d" X=1
+scenario_test_kimligi_kaybi() { # tabandaki bir test kimliği HEAD'de yok (silinmiş/yeniden adlandırılmış): kimlik kapısı LOST der
+  local d base; d=$(fresh c); base="$TMP/base_declared_c.txt"
+  # git'siz kopya: taban kimlikleri özgün (mutasyonsuz) ağaçtan üretilir, gate.sh'a GATE_BASE_DECLARED ile verilir
+  python3 - "$ROOT" "$base" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[1] + "/tools/ci")
+import check_test_ids as T
+ids = sorted(T.collect_declared(T.FsSource(sys.argv[1])).ids)
+open(sys.argv[2], "w", encoding="utf-8").write("\n".join(ids) + "\n")
+PY
+  python3 - "$d/test/unit/test_art_loader.gd" <<'PY'
+import re, sys
+p = sys.argv[1]
+t = open(p, encoding="utf-8").read()
+n = re.sub(r"^func test_\w+\(", "func renamed_by_selftest(", t, count=1, flags=re.M)
+assert n != t, "selftest: test_art_loader.gd'de test işlevi yok"
+open(p, "w", encoding="utf-8").write(n)
+PY
+  expect "test kimliği kaybı" 1 "$d" GATE_BASE_DECLARED="$base"
+  grep -q "test_art_loader.gd::.*LOST (declared kayboldu)" "$TMP/test kimliği kaybı.log" || { echo "FAIL test kimliği kaybı: günlükte LOST yok (başka nedenle kırmızı)"; FAILS=$((FAILS+1)); }
 }
 
 scenario_stub_todo() { # Stub.todo => test başarısızlığı (stub.gd varsa; yoksa senaryo atlanır ama grup boş kalmaz)
@@ -85,11 +102,11 @@ scenario_stub_todo() { # Stub.todo => test başarısızlığı (stub.gd varsa; y
   expect "Stub.todo başarısızlık" 1 "$d" X=1
 }
 
-scenario_pending_sayilmaz() { # pending testler asgari sayıya sayılmaz
+scenario_kosmayan_test() { # bildirilen ama koşuda pending olan test (dilim dışı): kimlik kapısı MISSING der
   local d; d=$(fresh f)
   printf 'extends GutTest\n\n\nfunc test_p() -> void:\n\tpending("selftest")\n' > "$d/test/unit/test_zz_pending.gd"
-  echo '{"test/unit/test_zz_pending.gd": 1}' > "$d/tools/gate_min_tests.json"
-  expect "pending sayılmaz" 1 "$d" X=1
+  expect "koşmayan test" 1 "$d" X=1
+  grep -q "MISSING" "$TMP/koşmayan test.log" || { echo "FAIL koşmayan test: günlükte MISSING yok (başka nedenle kırmızı)"; FAILS=$((FAILS+1)); }
 }
 
 scenario_gut_error() { # GUT'ın saydığı ama çıkış kodunu etkilemeyen hata ([GUT ERROR]): olmayan test dizini

@@ -97,6 +97,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # kimlik kapısı tabanı: merge-base(HEAD, origin/main) (tools/ci/check_test_ids.py, gate.sh adım 7)
       - uses: actions/download-artifact@v4
         with:
           pattern: gut-junit-*
