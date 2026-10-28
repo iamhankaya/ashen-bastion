@@ -115,6 +115,15 @@ if [ $FAST -eq 1 ]; then
   fi
 fi
 
+# --- Kanca: tools/ci/checks.d/NN-ad.sh (sözleşme fazları gate.sh'e dokunmadan Godot'suz denetim ekler) ----------------------
+# Yalnız static/all: gut parçaları ve verify aynı denetimi yinelemez. Koşucu: tools/ci/run_checks.sh (ad sırası, ilk kırmızı durdurur).
+if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
+  if compgen -G "tools/ci/checks.d/*.sh" > /dev/null; then
+    step "0. Ön denetimler (tools/ci/checks.d)"
+    bash tools/ci/run_checks.sh tools/ci/checks.d || fail "ön denetim kırmızı (bkz. yukarıdaki satırlar)"
+  fi
+fi
+
 if [ "$PART" != "verify" ]; then
   step "1. Godot kurulumu"
   GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"; rc=$?
