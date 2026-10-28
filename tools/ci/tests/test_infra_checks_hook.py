@@ -53,7 +53,7 @@ def test_gate_goes_red_at_step_0_on_deliberate_violation(tmp_path):
     shutil.copy(ROOT / "tools" / "gate.sh", repo / "tools" / "gate.sh")
     shutil.copy(RUNNER, repo / "tools" / "ci" / "run_checks.sh")
     (repo / "tools" / "ci" / "checks.d" / "10-ihlal.sh").write_text("echo KASITLI_IHLAL >&2; exit 1\n", newline="\n")
-    r = subprocess.run(["bash", "tools/gate.sh"], cwd=repo, capture_output=True, text=True,
+    r = subprocess.run(["bash", "tools/gate.sh"], cwd=repo, capture_output=True, text=True, encoding="utf-8",
                        env={"PATH": os.environ["PATH"], "GATE_PART": "static"})
     assert r.returncode == 1
     assert "KASITLI_IHLAL" in r.stderr and "ön denetim kırmızı" in r.stderr
