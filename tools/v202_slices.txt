@@ -7,7 +7,7 @@
 # Test adı öneki: test_p<N>_ (P), test_r<N>_ (R), test_w<N>_ (W), test_z<N>_ (Z), test_e<N>_ (E), test_a<N>_ (A).
 # Her simge ayrı satırdadır (birleşme dostu): çakışmasız açılır.
 P
-#R
+R
 #W
 #Z
 #E
