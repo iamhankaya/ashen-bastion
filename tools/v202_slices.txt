@@ -8,7 +8,7 @@
 # Her simge ayrı satırdadır (birleşme dostu): çakışmasız açılır.
 P
 R
-#W
+W
 #Z
 #E
 #A
