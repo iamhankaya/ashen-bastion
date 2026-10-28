@@ -38,7 +38,7 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 - **Bilinen sınırlar:** tek `cast_point` (iki bağımsız nişanlı silah için yetmez); kare tutarlılığı (renk/kıyafet sıçraması) elle denetlenir; iki yönlü `walk_cast` yok.
 
 ## Dokunulan dosyalar
-`data/characters/<id>.json`; `assets/gfx/char/<id>_{body,strip,portrait}.png` + `.import`; `art/source/<id>/` (kare, `strip_manifest.json`, `quality.json`); `docs/data-schema.md`; `docs/dev/new-character.md`; karakter listesi sabitleyen mevcut testler (adım 7). Dokunulmaz: `scripts/ctrl/character_roster.gd` (`DEFAULT_ID = gunslinger`), Gunslinger dosyaları.
+`data/characters/<id>.json`; `assets/gfx/char/<id>_{body,strip,portrait}.png` + `.import`; `art/source/<id>/` (kare, `strip_manifest.json`, `quality.json`); `docs/data-schema.md`; `docs/dev/new-character.md`; karakter listesi sabitleyen mevcut testler (adım 7). Dokunulmaz: `scripts/domain/character_roster.gd` (`DEFAULT_ID = gunslinger`), Gunslinger dosyaları.
 
 ## Doğrulama
 - `bash tools/gate.sh` (adım 4 `validate_data` karakter hatalarını dosya/alan olarak söyler; `test/fixtures/rig_bad_*` örnek bozuk rig'ler).
