@@ -62,7 +62,7 @@ func test_opts_are_applied() -> void:
 
 
 func test_absent_opts_keep_godot_defaults() -> void:
-	var ref: ScrollContainer = autofree(ScrollContainer.new())
+	var ref: ScrollContainer = autofree(ClassDB.instantiate("ScrollContainer"))
 	var sc: ScrollContainer = autofree(UiKit.make_scroll())
 	assert_eq(sc.follow_focus, ref.follow_focus)
 	assert_eq(sc.scroll_deadzone, ref.scroll_deadzone)
@@ -72,7 +72,7 @@ func test_absent_opts_keep_godot_defaults() -> void:
 
 
 func test_touch_scroll_is_idempotent() -> void:
-	var sc: ScrollContainer = autofree(ScrollContainer.new())
+	var sc: ScrollContainer = autofree(ClassDB.instantiate("ScrollContainer"))
 	UiKit.touch_scroll(sc)
 	UiKit.touch_scroll(sc)
 	assert_eq(_handlers(sc), 1)
