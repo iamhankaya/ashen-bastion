@@ -147,16 +147,15 @@ func test_rf_signal_triples_and_restart_leak() -> void:
 	)
 
 
-func _scroll(h_mode: int = ScrollContainer.SCROLL_MODE_DISABLED) -> ScrollContainer:
-	var sc := ScrollContainer.new()
-	sc.custom_minimum_size = Vector2(100, 100)
+func _scroll(h_open: bool = false) -> ScrollContainer:
+	# Fabrika (UiKit.make_scroll) touch_scroll'u kendisi bağlar; ScrollContainer.new() testte de yasak (UI_RULE).
+	var axis := UiKit.SCROLL_AXIS_BOTH if h_open else UiKit.SCROLL_AXIS_VERTICAL
+	var sc := UiKit.make_scroll(axis, {"custom_min": Vector2(100, 100)})
 	sc.size = Vector2(100, 100)
-	sc.horizontal_scroll_mode = h_mode
 	var content := Control.new()
 	content.custom_minimum_size = Vector2(1000, 2000)
 	sc.add_child(content)
 	add_child_autofree(sc)
-	UiKit.touch_scroll(sc)
 	return sc
 
 
@@ -184,14 +183,14 @@ func test_rf_touch_scroll_emulated_mouse_is_ignored() -> void:
 
 
 func test_rf_touch_scroll_closed_axis_does_not_move() -> void:
-	var sc := _scroll(ScrollContainer.SCROLL_MODE_DISABLED)
+	var sc := _scroll(false)
 	await wait_frames(2)
 	_drag(sc, Vector2(-40, 0), 0)
 	assert_eq(sc.scroll_horizontal, 0, "kapalı yatay eksen kaymaz")
 
 
 func test_rf_touch_scroll_open_axis_moves() -> void:
-	var sc := _scroll(ScrollContainer.SCROLL_MODE_AUTO)
+	var sc := _scroll(true)
 	await wait_frames(2)
 	_drag(sc, Vector2(-40, 0), 0)
 	assert_eq(sc.scroll_horizontal, 40, "açık yatay eksen kayar")
