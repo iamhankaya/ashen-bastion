@@ -205,7 +205,7 @@ func _init() -> void:
 	row.add_child(_change)
 
 
-## 2× yazı: yükseklik 168, glif 80, yazı 50/40; "DEĞİŞTİR" sözcüğü düşer, yalnız "›" kalır (sığma için).
+## 2× yazı: yükseklik 168, glif 80, yazı 50/40; "DEĞİŞTİR ›" 40 px'te kalır (maket 01b; hiçbir şey kesilmez).
 func set_big(big: bool) -> void:
 	_big = big
 	custom_minimum_size.y = H_BIG if big else H
@@ -213,8 +213,7 @@ func set_big(big: bool) -> void:
 	_sub.add_theme_font_size_override(&"font_size", 40 if big else 26)
 	_shields.custom_minimum_size = Vector2(99, 33) if big else Vector2(66, 22)
 	_shields.size = _shields.custom_minimum_size
-	_change.text = "›" if big else "DEĞİŞTİR ›"
-	_change.add_theme_font_size_override(&"font_size", 56 if big else 26)
+	_change.add_theme_font_size_override(&"font_size", 40 if big else 26)
 
 
 func is_big() -> bool:

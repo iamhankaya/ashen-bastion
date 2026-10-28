@@ -19,6 +19,10 @@ func _rows(sim: GameSim, kind: String) -> Array:
 	return out
 
 
+func after_all() -> void:
+	V21Acc.release()
+
+
 func test_q1_run_length_rules_come_from_the_profile() -> void:
 	var s := _quick()
 	assert_eq(s.end_mode, "lord")
@@ -33,12 +37,14 @@ func test_s12_scheduled_waves_are_halved_and_consistent() -> void:
 	var s := _quick()
 	var waves: Dictionary = s.spawn_director.waves
 	assert_eq(waves["end_time"], 600.0)
-	var bursts_at: Array = []
-	for r in _rows(s, "burst"):
-		bursts_at.append(r["at"])
-	assert_has(bursts_at, 150.0, "elit 300 -> 150")
-	assert_has(bursts_at, 300.0, "elit 600 -> 300")
-	assert_has(bursts_at, 450.0, "elit 900 -> 450")
+	# Elit dalgaları waves.json'da `boss` satırıdır; `burst` piyade halkalarıdır.
+	var elite_at: Array = []
+	for r in _rows(s, "boss"):
+		if r["type"] != "kale_lordu":
+			elite_at.append(r["at"])
+	assert_has(elite_at, 150.0, "elit 300 -> 150")
+	assert_has(elite_at, 300.0, "elit 600 -> 300")
+	assert_has(elite_at, 450.0, "elit 900 -> 450")
 	for r in _rows(s, "boss"):
 		assert_lte(float(r["warn"]), float(r["at"]), "warn <= at")
 		assert_lte(float(r["at"]), float(waves["end_time"]), "olay end_time'dan sonra değil")

@@ -1,0 +1,61 @@
+name: shots
+# v2.1 U6: ekran görüntüsü yakalama (tools/capture/shots_v21*.gd) ve PNG'leri artifact olarak yükleme. Gate (ci.yml) DIŞI: kırmızı/yeşil
+# PR'ı bloke etmez, gate süresini şişirmez. İki yan koşar: `before` (before_ref; varsayılan U4b+denetim başı 502b568, düzeltmeden önceki
+# hal) ve `after` (bu commit). Yakalama betikleri HER İKİ YANDA da bu commit'ten gelir (aynı senaryo, önce/sonra kıyası); taban kodda
+# olmayan çağrılar betikte has_method ile atlanır. Elle: Actions > shots > Run workflow (before_ref isteğe bağlı).
+on:
+  workflow_dispatch:
+    inputs:
+      before_ref:
+        description: "Önce yakalaması için commit/dal (boş = 502b568)"
+        default: ""
+  push:
+    paths:
+      - "scripts/ui/**"
+      - "tools/capture/shots_v21*.gd"
+      - "tools/ci/capture_shots.sh"
+      - ".github/workflows/shots.yml"
+permissions:
+  contents: read
+jobs:
+  shots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        side: [before, after]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Taban sürümü getir (before)
+        if: matrix.side == 'before'
+        env:
+          BEFORE_REF: ${{ inputs.before_ref || '502b568568d648408931bf0bd75b57f9ff10ebed' }}
+        run: |
+          git checkout --force "$BEFORE_REF"
+          # yakalama betikleri iki yanda aynı olsun (bu commit'ten)
+          git checkout "$GITHUB_SHA" -- tools/capture tools/ci/capture_shots.sh
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ashen-bastion
+          key: godot-${{ hashFiles('.godot-version') }}
+      - name: Xvfb ve yazılımsal GL
+        run: |
+          command -v xvfb-run >/dev/null || { sudo apt-get update -q; sudo apt-get install -y -q xvfb libgl1-mesa-dri; }
+      - name: İçe aktar
+        run: |
+          export GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"
+          bash tools/ci/godot_import.sh /tmp/import.log
+      - name: Yakala
+        run: |
+          export GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"
+          bash tools/ci/capture_shots.sh "$RUNNER_TEMP/shots"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots-v21-${{ matrix.side }}
+          path: ${{ runner.temp }}/shots/*.png
+          retention-days: 14
+          if-no-files-found: error

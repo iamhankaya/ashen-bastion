@@ -28,6 +28,10 @@ func _to_first_kill(s: GameSim) -> Dictionary:
 	return w
 
 
+func after_all() -> void:
+	V21Acc.release()
+
+
 func test_e1_endless_profile_sets_the_end_rules() -> void:
 	var s := GameSim.new(5, &"gunslinger", {"run_profile": V21Kit.profile(&"endless", &"normal")})
 	assert_eq(s.end_mode, GameSim.END_MODE_ENDLESS)
@@ -171,7 +175,10 @@ func test_s30_enrage_raises_contact_damage_only_in_endless_after_the_threshold()
 	if V21Slice.require(self, "S"):
 		return
 	var loss := {}
-	for key in [["endless", 1100.0], ["endless", 1200.0], ["endless", 1500.0], ["normal", 1500.0]]:
+	# 1190: ~2 sn'lik pencere eşiğin (1200) altında biter; 1200'de başlasa pencere eşiği aşardı.
+	var cases := [["endless", 1100.0], ["endless", 1190.0], ["endless", 1500.0]]
+	cases.append(["normal", 1500.0])
+	for key in cases:
 		var s := SimKit.make(
 			3,
 			{
@@ -188,12 +195,12 @@ func test_s30_enrage_raises_contact_damage_only_in_endless_after_the_threshold()
 		for i in 120:
 			s.step(Vector2.ZERO)
 		loss["%s@%d" % [key[0], int(key[1])]] = 100000.0 - s.hp
-	assert_gt(loss["endless@1200"], 0.0, "Lord temas hasarı verdi (kurulum)")
-	assert_almost_eq(loss["endless@1100"], loss["endless@1200"], 0.01, "eşikte çarpan 1")
+	assert_gt(loss["endless@1100"], 0.0, "Lord temas hasarı verdi (kurulum)")
+	assert_almost_eq(loss["endless@1190"], loss["endless@1100"], 0.01, "eşik altında çarpan 1")
 	assert_almost_eq(
-		loss["endless@1500"] / loss["endless@1200"], 6.0, 0.05, "300 sn sonra ×(1+1,0·5)"
+		loss["endless@1500"] / loss["endless@1100"], 6.0, 0.05, "300 sn sonra ×(1+1,0·5)"
 	)
-	assert_almost_eq(loss["normal@1500"], loss["endless@1200"], 0.01, "Normal modda enrage yok")
+	assert_almost_eq(loss["normal@1500"], loss["endless@1100"], 0.01, "Normal modda enrage yok")
 
 
 func test_s31_endless_run_is_deterministic_through_a_repeat() -> void:

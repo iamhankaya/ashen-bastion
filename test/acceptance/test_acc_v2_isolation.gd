@@ -52,7 +52,7 @@ func test_iso_menu_label_shows_character_and_truncates_long_names() -> void:
 	add_child_autofree(m)
 	m.set_character_name("Barutçu")
 	assert_true(AchKit.any_text_contains(m, "Barutçu"), "alt satır / sürüm etiketi adı gösterir")
-	assert_true(AchKit.any_text_contains(m, "Sürüm 2.0.3"), "sürüm satırı (karakter adı yok)")
+	assert_true(AchKit.any_text_contains(m, "Sürüm 2.1.0"), "sürüm satırı (karakter adı yok)")
 	m.set_character_name("ışıklı iğneli çok uzun bir karakter adı burada")
 	assert_true(AchKit.any_text_contains(m, "…"), "24 harften uzun ad kırpılır")
 	assert_false(AchKit.any_text_contains(m, "burada"), "kuyruk görünmez")

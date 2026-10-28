@@ -18,7 +18,7 @@ const WON_SUB := "Düşmüş Kale Lordu devrildi."
 
 const SIDE_MIN := 72.0
 const Y_TITLE := 170.0
-const Y_SUB := 300.0
+const Y_SUB := 292.0  # v2.1 denetim #10 (DESIGN §11/7): çipler y352'de kalır
 ## v2.1: koşu çipleri y352'de (48 yüksek); altındaki tüm bloklar +44 kaydı (DESIGN v2.1 §5).
 const Y_CHIPS := 352.0
 const CHIP_ROW_H := 48.0
@@ -44,7 +44,7 @@ const CHIP_H := 96.0
 const CHIP_AT := 1.1
 const CHIP_IN := 0.2
 const CHIP_SLIDE := 24.0
-const CHIP_MAX_COMBOS := 3
+const CHIP_MAX_COMBOS := 4
 ## v2.1 Kolay notu: şerit ile kombolar arası 96 yüksek satır, amber 6 px sol çizgi.
 const NOTE_H := 96.0
 const EASY_NOTE := "Kolay: bu koşu Lord başarımlarına ve toplam sayaçlara yazılmadı."
@@ -60,6 +60,11 @@ const TOP_DEFAULT := 96.0
 const BOTTOM_DEFAULT := 72.0
 const DESIGN_H := 2400.0
 const DISPLAY_CAP := 99999999
+## v2.1 U6 (denetim #5): kombo bloğu sığmazsa satır AZALTILMAZ (en çok MAX_COMBOS / çipte CHIP_MAX_COMBOS, "+N" kalır);
+## `ResultFit.TIERS` kademeleri sırayla devreye girer, ilk sığan seçilir. (#2) font_scale > 1,3: çip satırı sarar (+56).
+const BIG_SCALE := 1.3
+const CHIP_WRAP := 56.0
+const NOTE_EXTRA := 12.0
 
 var won: bool = false
 var stats: Dictionary = {}
@@ -91,6 +96,8 @@ var achievement_chip: Panel
 var chip_title: Label
 var chip_names: Label
 var chip_star: Control
+var combo_cv: VBoxContainer
+var combo_title: Label
 ## v2.1 (U4b): koşu çipleri (mod, zorluk, Sonsuz'da LORD ×N) ve Kolay notu. Mod/zorluk sonuç sözlüğünden (stats.mode/diff).
 var chip_holder: Control
 var easy_note: Panel
@@ -117,6 +124,14 @@ var _shown_combos: int = MAX_COMBOS
 var _new_names: Array[String] = []
 var _chip_y: float = Y_COMBOS
 var _run_chips: Control = null
+var _big: bool = false
+## Çip satırı sarınca altındaki blokların kaydığı pay (büyük yazıda CHIP_WRAP + NOTE_EXTRA).
+var _bdy: float = 0.0
+var _tier: int = 0
+var _panel_sb: StyleBox
+var _bg: ColorRect
+var _scroll: ScrollContainer
+var _content: Control
 
 
 func _ready() -> void:
@@ -127,11 +142,11 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	var bg := ColorRect.new()
-	bg.color = UiKit.VOID
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	UiKit.fill(bg)
-	add_child(bg)
+	_bg = ColorRect.new()
+	_bg.color = UiKit.VOID
+	_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiKit.fill(_bg)
+	add_child(_bg)
 	glow = TextureRect.new()
 	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -167,9 +182,14 @@ func _build() -> void:
 	combo_panel = PanelContainer.new()
 	combo_panel.theme_type_variation = &"PanelRaised"
 	combo_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# kademeler panel üst/alt boşluğunu değiştirir: tema kutusunun kopyası (kenar/renk aynı)
+	_panel_sb = ResultFit.stone_box()
+	combo_panel.add_theme_stylebox_override(&"panel", _panel_sb)
 	var cv := VBoxContainer.new()
+	combo_cv = cv
 	cv.add_theme_constant_override(&"separation", 16)
-	cv.add_child(UiKit.label("KURULAN KOMBOLAR", &"LabelAccent", 32))
+	combo_title = UiKit.label("KURULAN KOMBOLAR", &"LabelAccent", 32)
+	cv.add_child(combo_title)
 	combo_box = VBoxContainer.new()
 	combo_box.add_theme_constant_override(&"separation", 0)
 	cv.add_child(combo_box)
@@ -183,6 +203,7 @@ func _build() -> void:
 	menu_button = UiKit.button("ANA MENÜ", &"secondary", MENU_H)
 	menu_button.pressed.connect(func() -> void: menu_requested.emit())
 	add_child(menu_button)
+	_apply_fonts()
 	_layout()
 
 
@@ -239,7 +260,7 @@ func _draw_band() -> void:
 
 func _build_breakdown() -> void:
 	breakdown_panel = PanelContainer.new()
-	breakdown_panel.theme_type_variation = &"PanelRaised"
+	breakdown_panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
 	breakdown_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(breakdown_panel)
 	var defs := [
@@ -285,7 +306,7 @@ func _build_breakdown() -> void:
 
 func _build_strip() -> void:
 	strip_panel = PanelContainer.new()
-	strip_panel.theme_type_variation = &"PanelRaised"
+	strip_panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
 	strip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(strip_panel)
 	var defs := [["hud-sure", "Süre"], ["hud-xp", "Seviye"], ["hud-oldurme", "Öldürme"]]
@@ -399,9 +420,14 @@ func _fill_run() -> void:
 		lord_chip.name = "LordChip"
 		lord_chip.accessibility_name = "%d Lord devrildi." % lords
 		row.add_child(lord_chip)
-	chip_holder.add_child(row)
-	row.size = Vector2(_w, CHIP_ROW_H)
-	_run_chips = row
+	var holder_row: Control = ResultFit.wrap_chips(row) if _big else row
+	chip_holder.add_child(holder_row)
+	holder_row.size = Vector2(_w, _chip_h())
+	_run_chips = holder_row
+
+
+func _chip_h() -> float:
+	return CHIP_ROW_H + CHIP_WRAP if _big else CHIP_ROW_H
 
 
 ## Sıra satırı: "Normal · Zor listesinde 3. sıra" (Mod · Zorluk); mod/zorluk bilinmiyorsa boş.
@@ -468,6 +494,10 @@ func show_result(
 	subtitle: String = "",
 	record: Dictionary = {}
 ) -> void:
+	var st := get_node_or_null(^"/root/Settings")
+	if st != null:
+		_big = float(st.font_scale()) > BIG_SCALE
+		_apply_fonts()
 	won = p_won
 	stats = p_stats
 	last_record = record
@@ -502,14 +532,14 @@ func _fill_combos(combos: Array[Dictionary]) -> void:
 	_render_combos()
 
 
-## Görünen kombo satırları `_shown_combos` kadar; taşma olursa `_layout` bunu azaltır ve "+N" büyür.
+## Görünen kombo satırları `_shown_combos` kadar (sabit tavan); taşan kombolar "+N" olur. Satır/aralık ölçüsü `_tier`dir.
 func _render_combos() -> void:
 	var combos := _combos_data
 	for c in combo_box.get_children():
 		combo_box.remove_child(c)
 		c.queue_free()
 	if combos.is_empty():
-		var e := UiKit.label(EMPTY_TEXT, &"", 32, UiKit.KEMIK_300)
+		var e := UiKit.label(EMPTY_TEXT, &"", 40 if _big else 32, UiKit.KEMIK_300)
 		e.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		e.custom_minimum_size = Vector2(_w - 100.0, 0)
 		combo_box.add_child(e)
@@ -518,9 +548,12 @@ func _render_combos() -> void:
 		combo_box.add_child(_combo_row(combos[i]))
 	if combos.size() > _shown_combos:
 		var more := UiKit.label(
-			"+%d" % (combos.size() - _shown_combos), &"LabelTimer", 36, UiKit.BRONZ_300
+			"+%d" % (combos.size() - _shown_combos),
+			&"LabelTimer",
+			42 if _big else 36,
+			UiKit.BRONZ_300
 		)
-		more.custom_minimum_size = Vector2(0, 56)
+		more.custom_minimum_size = Vector2(0, ResultFit.TIERS[_tier][ResultFit.T_MORE])
 		more.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		combo_box.add_child(more)
 
@@ -564,8 +597,12 @@ func _prefix_rank_line(rank: int) -> void:
 		return
 	record_note.text = line if record_note.text == "" else line + " · " + record_note.text
 	record_note.accessibility_name = (
-		"%s modda, %s listesinde %d. sıra."
-		% [RunStrip.MODE_TITLES[run_mode], RunStrip.DIFF_TITLES[run_diff], rank]
+		"%s modda, %s listesinde %s sıra."
+		% [
+			RunStrip.MODE_TITLES[run_mode],
+			RunStrip.DIFF_TITLES[run_diff],
+			ResultFit.spoken_rank(rank)
+		]
 	)
 
 
@@ -606,13 +643,14 @@ func _layout() -> void:
 	_w = minf(W, x1 - _x0)
 	_x0 = (1080.0 - _w) * 0.5 if _w >= W else _x0
 	_dy = maxf(0.0, _extra.y - (Y_TITLE - TOP_DEFAULT))
-	_put(title_label, 0.0, Y_TITLE, 1080.0, 130.0)
+	_bdy = CHIP_WRAP if _big else 0.0
+	_put_top(title_label, 0.0, Y_TITLE, 1080.0, 130.0)
 	title_label.position.x = 0.0
-	_put(sub_label, 0.0, Y_SUB, 1080.0, 50.0)
+	_put_top(sub_label, 0.0, Y_SUB, 1080.0, 50.0)
 	sub_label.position.x = 0.0
-	_put(chip_holder, _x0, Y_CHIPS, _w, CHIP_ROW_H)
+	_put_top(chip_holder, _x0, Y_CHIPS, _w, _chip_h())
 	if _run_chips != null:
-		_run_chips.size = Vector2(_w, CHIP_ROW_H)
+		_run_chips.size = Vector2(_w, _chip_h())
 	_put(divider, _x0, Y_DIV, _w, 20.0)
 	_put(score_caption, 0.0, Y_HERO, 1080.0, 44.0)
 	_put(score_value, 0.0, Y_HERO_VALUE, 1080.0, 130.0)
@@ -627,13 +665,15 @@ func _layout() -> void:
 		record_stars[i].size = Vector2(48.0, 48.0)
 	_put(record_pill, _x0 + 40.0, Y_RECORD + 20.0, _w - 80.0, 76.0)
 	record_pill.pivot_offset = Vector2((_w - 80.0) * 0.5, 38.0)
-	_put(
-		record_note,
-		_x0,
-		Y_RECORD + BAND_H + 8.0 if record_kind in [&"record", &"top10"] else Y_RECORD + 54.0,
-		_w,
-		40.0
+	var note_y := (
+		Y_RECORD + BAND_H + 8.0 if record_kind in [&"record", &"top10"] else Y_RECORD + 54.0
 	)
+	var note_extra := NOTE_EXTRA if _big else 0.0
+	var note_h := ResultFit.fit_note(
+		record_note, _w - 16.0, _big, Y_BREAKDOWN + note_extra - note_y
+	)
+	_put(record_note, _x0, note_y, _w, note_h)
+	_bdy += note_extra  # büyük yazıda sıra notu 2 satıra sarabilir: döküm ve altı 12 px daha kayar
 	var bh := ROW_H * float(breakdown_rows.size()) + 2.0 * BREAKDOWN_PAD
 	_put(breakdown_panel, _x0, Y_BREAKDOWN, _w, bh)
 	for i in breakdown_rows.size():
@@ -641,11 +681,14 @@ func _layout() -> void:
 		_put(row, _x0 + 36.0, Y_BREAKDOWN + BREAKDOWN_PAD + float(i) * ROW_H, _w - 72.0, ROW_H)
 		var rw := _w - 72.0
 		var det := row.get_node("Detail") as Label
-		det.position = Vector2(rw - 500.0, 0)
-		det.size = Vector2(230.0, ROW_H)
 		var val := row.get_node("Value") as Label
-		val.position = Vector2(rw - 260.0, 0)
-		val.size = Vector2(260.0, ROW_H)
+		# büyük yazıda değer 300 px, ayrıntı onun solunda 260 px (Ad 72..~362 ile çakışmaz)
+		var val_w := 300.0 if _big else 260.0
+		var det_w := 260.0 if _big else 230.0
+		det.position = Vector2(rw - val_w - (20.0 if _big else 10.0) - det_w, 0)
+		det.size = Vector2(det_w, ROW_H)
+		val.position = Vector2(rw - val_w, 0)
+		val.size = Vector2(val_w, ROW_H)
 	_put(strip_panel, _x0, Y_STRIP, _w, STRIP_H)
 	var cw := _w / 3.0
 	for i in _strip_nodes.size():
@@ -653,41 +696,141 @@ func _layout() -> void:
 		_put(col, _x0 + cw * i, Y_STRIP, cw, STRIP_H)
 		(col.get_node("Icon") as Control).position = Vector2(cw * 0.5 - 22.0, 18.0)
 		(col.get_node("Icon") as Control).size = Vector2(44, 44)
-		(col.get_node("Value") as Control).position = Vector2(0, 62.0)
-		(col.get_node("Value") as Control).size = Vector2(cw, 64.0)
-		(col.get_node("Caption") as Control).position = Vector2(0, 126.0)
-		(col.get_node("Caption") as Control).size = Vector2(cw, 34.0)
+		(col.get_node("Value") as Control).position = Vector2(0, 58.0 if _big else 62.0)
+		(col.get_node("Value") as Control).size = Vector2(cw, 70.0 if _big else 64.0)
+		(col.get_node("Caption") as Control).position = Vector2(0, 130.0 if _big else 126.0)
+		(col.get_node("Caption") as Control).size = Vector2(cw, 36.0 if _big else 34.0)
+	# Kombo bloğu ve düğmeler: satır sayısı sabit; ilk sığan kademe (TIERS) seçilir (denetim #5).
+	var limit := DESIGN_H - BOTTOM_DEFAULT - _extra.w
+	var tail_bottom := 0.0
+	for ti in ResultFit.TIERS.size():
+		_set_tier(ti)
+		tail_bottom = _layout_tail()
+		if tail_bottom <= limit + 0.01:
+			break
+	# sığmayan durum (yalnız büyük yazıda ya da aritmetiği imkânsız en kötü durumlarda): içerik kayar
+	_set_scroll(
+		tail_bottom + BOTTOM_DEFAULT + _extra.w - DESIGN_H if _big and tail_bottom > limit else 0.0
+	)
+
+
+## Kademe: kombo satırı/"+N"/panel boşlukları yeniden kurulur (değiştiyse), Kolay notu yüksekliği.
+func _set_tier(ti: int) -> void:
+	var t: Array = ResultFit.TIERS[ti]
+	_panel_sb.content_margin_top = float(t[ResultFit.T_MARGIN])
+	_panel_sb.content_margin_bottom = float(t[ResultFit.T_MARGIN])
+	combo_cv.add_theme_constant_override(&"separation", int(t[ResultFit.T_SEP]))
+	if ti != _tier:
+		_tier = ti
+		if combo_box != null:
+			_render_combos()
+
+
+## Kombo paneli + not/çip + düğmeler (geçerli kademede); düğme bloğunun alt kenarını döndürür.
+func _layout_tail() -> float:
+	var t: Array = ResultFit.TIERS[_tier]
+	var gb := float(t[ResultFit.T_GB])
+	var note_h := float(t[ResultFit.T_NOTE])
 	var combos_y := Y_COMBOS
 	if easy_note.visible:
-		_put(easy_note, _x0, combos_y, _w, NOTE_H)
-		var note_text := easy_note.get_node("Text") as Label
-		note_text.size = Vector2(_w - 92.0 - 28.0, NOTE_H)
-		combos_y += NOTE_H + GAP
+		_put(easy_note, _x0, combos_y, _w, note_h)
+		var bar := easy_note.get_child(0) as Control
+		bar.size = Vector2(6.0, note_h)
+		(easy_note.get_child(1) as Control).position.y = (note_h - 40.0) * 0.5
+		ResultFit.size_note_text(easy_note.get_node("Text") as Label, _w, note_h)
+		combos_y += note_h + gb
 	_chip_y = combos_y
 	if not _new_names.is_empty():
-		_put(achievement_chip, _x0, combos_y, _w, CHIP_H)
-		chip_names.size = Vector2(_w - 92.0 - 28.0, 40.0)
-		combos_y += CHIP_H + GAP
+		var chip_h := float(t[ResultFit.T_CHIP])
+		_put(achievement_chip, _x0, combos_y, _w, chip_h)
+		ResultFit.place_chip_parts(chip_star, chip_title, chip_names, _w, chip_h)
+		combos_y += chip_h + gb
 	combo_panel.custom_minimum_size = Vector2(_w, 0)
 	combo_panel.size = Vector2(_w, 0)
-	combo_panel.position = Vector2(_x0, combos_y + _dy)
+	combo_panel.position = Vector2(_x0, combos_y + _dy + _bdy)
 	combo_panel.size = Vector2(_w, combo_panel.get_combined_minimum_size().y)
-	var by := maxf(combo_panel.position.y + combo_panel.size.y + GAP, BUTTONS_MIN_Y)
-	var limit := DESIGN_H - BOTTOM_DEFAULT - _extra.w
-	if (
-		by + REPLAY_H + BUTTON_GAP + MENU_H > limit
-		and _shown_combos > 0
-		and _combos_data.size() > 1
-	):
-		_shown_combos -= 1  # alt güvenli alana sığmıyor: bir kombo satırı daha "+N"e katılır
-		_render_combos()
-		_layout()
+	var by := maxf(
+		combo_panel.position.y + combo_panel.size.y + float(t[ResultFit.T_GBTN]), BUTTONS_MIN_Y
+	)
+	var rh := float(t[ResultFit.T_RH])
+	var mh := float(t[ResultFit.T_MH])
+	replay_button.custom_minimum_size.y = rh
+	menu_button.custom_minimum_size.y = mh
+	_put_abs(replay_button, _x0, by, _w, rh)
+	_put_abs(menu_button, _x0, by + rh + float(t[ResultFit.T_BGAP]), _w, mh)
+	return menu_button.position.y + menu_button.size.y
+
+
+## Büyük yazıda sığmayan içerik için dikey kaydırma (`extra_h` <= 0 kapatır); tembel kurulur, 1× düğüm ağacı değişmez.
+func _set_scroll(extra_h: float) -> void:
+	if _scroll == null:
+		if extra_h <= 0.0:
+			return
+		_scroll = ResultFit.wrap_in_scroll(self, [_bg, glow])
+		_content = _scroll.get_child(0) as Control
+	_content.custom_minimum_size = Vector2(1080.0, DESIGN_H + maxf(extra_h, 0.0))
+	_scroll.vertical_scroll_mode = (
+		ScrollContainer.SCROLL_MODE_AUTO if extra_h > 0.0 else ScrollContainer.SCROLL_MODE_DISABLED
+	)
+	if extra_h <= 0.0:
+		_scroll.scroll_vertical = 0
+
+
+## v2.1 U6 (denetim #2): `f` > 1,3 => büyük yazı (çip satırı sarar, döküm/şerit/kombo/düğme yazıları büyür).
+func set_font_scale(f: float) -> void:
+	var big := f > BIG_SCALE
+	if big == _big:
 		return
-	_put_abs(replay_button, _x0, by, _w, REPLAY_H)
-	_put_abs(menu_button, _x0, by + REPLAY_H + BUTTON_GAP, _w, MENU_H)
+	_big = big
+	_apply_fonts()
+	if title_label == null:
+		return
+	_render_combos()
+	if not stats.is_empty():
+		_fill_run()
+	_layout()
+	if not stats.is_empty():
+		_apply(_t)
+
+
+func is_big() -> bool:
+	return _big
+
+
+## Yazı boyutları (büyükte DESIGN §5/§9: Ad 40, ayrıntı 34, şerit 54/30, kombo/düğme büyür); 1× değerleri ilk kuruluşla aynı.
+func _apply_fonts() -> void:
+	if title_label == null:
+		return
+	_fs(sub_label, 34, 38)
+	_fs(record_pill, 38, 42)
+	for row in breakdown_rows:
+		_fs(row.get_node("Name"), 32, 40)
+		_fs(row.get_node("Detail"), DETAIL_FONT, 34)
+		_fs(row.get_node("Value"), 44, 44)
+	for col in _strip_nodes:
+		_fs(col.get_node("Value"), 48, 54)
+		_fs(col.get_node("Caption"), 26, 30)
+	_fs(combo_title, 32, 38)
+	_fs(replay_button, 52, 60)
+	if _big:
+		menu_button.add_theme_font_size_override(&"font_size", 52)
+	else:
+		menu_button.remove_theme_font_size_override(&"font_size")
+	_fs(chip_title, 30, 32)
+	_fs(chip_names, 28, 30)
+	_fs(easy_note.get_node("Text"), 28, 32)
+
+
+func _fs(c: Node, small: int, big: int) -> void:
+	(c as Control).add_theme_font_size_override(&"font_size", big if _big else small)
 
 
 func _put(c: Control, x: float, y: float, w: float, h: float) -> void:
+	_put_abs(c, x, y + _dy + _bdy, w, h)
+
+
+## Çip satırının üstündeki bloklar (başlık, altyazı, çipler): yalnız güvenli alan kayması.
+func _put_top(c: Control, x: float, y: float, w: float, h: float) -> void:
 	_put_abs(c, x, y + _dy, w, h)
 
 
@@ -773,7 +916,7 @@ func _apply(t: float) -> void:
 		var a := rp if not _row_dim[i] else rp * EMPTY_ROW_ALPHA
 		row.modulate.a = a
 		row.position.y = (
-			Y_BREAKDOWN + _dy + BREAKDOWN_PAD + float(i) * ROW_H + (1.0 - rp) * ROW_SLIDE_PX
+			Y_BREAKDOWN + _dy + _bdy + BREAKDOWN_PAD + float(i) * ROW_H + (1.0 - rp) * ROW_SLIDE_PX
 		)
 	_apply_chip(t, done)
 	_apply_stamp(t, done)
@@ -787,7 +930,9 @@ func _apply_chip(t: float, done: bool) -> void:
 		return
 	var k := 1.0 if done else ResultTimeline.cubic_out(clampf((t - CHIP_AT) / CHIP_IN, 0.0, 1.0))
 	achievement_chip.modulate.a = k
-	achievement_chip.position.y = _chip_y + _dy + (1.0 - k) * CHIP_SLIDE
+	achievement_chip.position.y = (
+		_chip_y + _dy + _bdy + (1.0 - k) * ResultFit.chip_slide(_tier, CHIP_SLIDE)
+	)
 
 
 func _apply_stamp(t: float, done: bool) -> void:
@@ -823,7 +968,7 @@ func _apply_stamp(t: float, done: bool) -> void:
 
 func _combo_row(c: Dictionary) -> Control:
 	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0, 96)
+	row.custom_minimum_size = Vector2(0, ResultFit.TIERS[_tier][ResultFit.T_ROW])
 	row.add_theme_constant_override(&"separation", 27)
 	var slot := SkillSlot.new(&"evolution", 80.0)
 	slot.set_skill(StringName(str(c.get("id", ""))), 0, str(c.get("icon", "")), true)
@@ -832,8 +977,10 @@ func _combo_row(c: Dictionary) -> Control:
 	var v := VBoxContainer.new()
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_theme_constant_override(&"separation", 0)
-	v.add_child(UiKit.label(UiKit.upper_tr(str(c.get("name", ""))), &"LabelTimer", 36))
-	v.add_child(UiKit.label(str(c.get("pair", "")), &"", 26, UiKit.KEMIK_300))
+	v.add_child(
+		UiKit.label(UiKit.upper_tr(str(c.get("name", ""))), &"LabelTimer", 40 if _big else 36)
+	)
+	v.add_child(UiKit.label(str(c.get("pair", "")), &"", 30 if _big else 26, UiKit.KEMIK_300))
 	row.add_child(v)
 	return row
 

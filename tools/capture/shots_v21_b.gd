@@ -2,7 +2,8 @@ extends SceneTree
 ## v2.1 U4b ekran görüntüsü öz-kontrolü (sonuç çipleri/Kolay notu, skor sekmeleri, kilometre taşı bandı; commit'lenmez). Kullanım:
 ##   xvfb-run -a -s "-screen 0 1080x2400x24" godot --path . --rendering-driver opengl3 --resolution 1080x2400 \
 ##     -s res://tools/capture/shots_v21_b.gd -- <çıktı_dizini> [senaryo,senaryo]
-## Senaryolar: result_lost, result_quick_win, result_endless_win, result_easy, scores, scores_empty, band.
+## Senaryolar: result_lost, result_quick_win, result_endless_win, result_easy, result_2x, result_combos5_easy,
+## result_combos5_chip, result_combos5_notch, scores, scores_2x, scores_empty, band, band_2x, band_no_hint.
 ## ÖNCE/SONRA: aynı betik iki kaynakta koşulur; taban commit'te v2.1 alanları yoksa result_* eski düzeni gösterir.
 
 var out_dir := "/tmp/shots/"
@@ -11,9 +12,16 @@ var scenarios: PackedStringArray = [
 	"result_quick_win",
 	"result_endless_win",
 	"result_easy",
+	"result_2x",
+	"result_combos5_easy",
+	"result_combos5_chip",
+	"result_combos5_notch",
 	"scores",
+	"scores_2x",
 	"scores_empty",
-	"band"
+	"band",
+	"band_2x",
+	"band_no_hint"
 ]
 
 
@@ -61,11 +69,38 @@ func _stats(mode: String, diff: String, extra: Dictionary = {}) -> Dictionary:
 	return d
 
 
-func _result(won: bool, stats: Dictionary) -> void:
+## Taban commit'te olmayan `set_font_scale`/`apply_safe_area` çağrıları `has_method` ile atlanır (önce/sonra aynı betik).
+func _scale(n: Node, f: float) -> void:
+	if f > 1.0 and n.has_method(&"set_font_scale"):
+		n.call(&"set_font_scale", f)
+
+
+func _combos(n: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for i in n:
+		out.append(
+			{"id": &"zincirleme_patlama", "name": "Kıyamet Mermisi", "pair": "A + B", "icon": ""}
+		)
+	return out
+
+
+func _result(
+	won: bool,
+	stats: Dictionary,
+	f: float = 1.0,
+	combos: int = 0,
+	chip: bool = false,
+	notch := false
+) -> void:
 	var r := ResultScreen.new()
 	root.add_child(r)
+	if chip:
+		r.set_new_achievements(["AİLE II", "AİLE III"] as Array[String])
+	if notch:
+		r.apply_safe_area(Vector4(0.0, 60.0, 0.0, 40.0))
 	var rec := {"rank": 3, "is_record": false, "previous_best": 900}
-	r.show_result(won, stats, [] as Array[Dictionary], "", rec)
+	r.show_result(won, stats, _combos(combos), "", rec)
+	_scale(r, f)
 	r.finish_count()
 
 
@@ -97,18 +132,33 @@ func _run() -> void:
 				_result(true, _stats("endless", "hard", {"lords_killed": 2, "milestone_t": 1200.0}))
 			"result_easy":
 				_result(false, _stats("normal", "easy"))
-			"scores":
+			"result_2x":
+				_result(
+					true,
+					_stats("endless", "hard", {"lords_killed": 2, "milestone_t": 1200.0}),
+					2.0,
+					2
+				)
+			"result_combos5_easy":
+				_result(true, _stats("normal", "easy"), 1.0, 5)
+			"result_combos5_chip":
+				_result(true, _stats("endless", "easy", {"lords_killed": 3}), 1.0, 5, true)
+			"result_combos5_notch":
+				_result(true, _stats("normal", "easy"), 1.0, 5, false, true)
+			"scores", "scores_2x":
 				var s := HighscoreScreen.new()
 				root.add_child(s)
 				s.show_scores(_entries(10), -1, &"normal", &"hard")
+				_scale(s, 2.0 if sc == "scores_2x" else 1.0)
 			"scores_empty":
 				var e := HighscoreScreen.new()
 				root.add_child(e)
 				e.show_scores([] as Array[Dictionary], -1, &"endless", &"hard")
-			"band":
+			"band", "band_2x", "band_no_hint":
 				var b := MilestoneBand.new()
 				root.add_child(b)
-				b.show_band(300.0, true)
+				b.show_band(0.0 if sc == "band_no_hint" else 300.0, true)
+				_scale(b, 2.0 if sc == "band_2x" else 1.0)
 			_:
 				continue
 		await _shot(sc)

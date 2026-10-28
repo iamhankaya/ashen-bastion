@@ -120,9 +120,9 @@ func test_d6_safe_area_title_list_and_back_stay_inside() -> void:
 
 
 func test_d7_version_comes_from_project_setting() -> void:
-	assert_eq(ProjectSettings.get_setting("application/config/version"), "2.0.3")
-	assert_eq(MainMenu.version_text(), "Sürüm 2.0.3")
-	assert_eq(SettingsScreen.version_text(), "2.0.3")
+	assert_eq(ProjectSettings.get_setting("application/config/version"), "2.1.0")
+	assert_eq(MainMenu.version_text(), "Sürüm 2.1.0")
+	assert_eq(SettingsScreen.version_text(), "2.1.0")
 
 
 func test_d8_menu_reduce_motion_stops_embers_and_breath() -> void:

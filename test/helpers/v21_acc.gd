@@ -5,10 +5,16 @@ extends RefCounted
 
 const LORD := &"kale_lordu"
 
+static var _lord_only: GameData = null
+
 
 ## Gerçek veri; dalga çizelgesinde yalnız Lord satırı kalır (kalabalıksız, hızlı Lord testleri).
+## Taze `load_dir` örneği (`load_default` önbelleği paylaşılır: `waves` değişirse tüm testler bozulur);
+## süreç boyu bir kez kurulur, sim veriyi değiştirmez.
 static func lord_only_data() -> GameData:
-	var d := GameData.load_default()
+	if _lord_only != null:
+		return _lord_only
+	var d := GameData.load_dir("res://data")
 	var w: Dictionary = d.waves.duplicate(true)
 	var rows: Array = []
 	for r: Dictionary in w["rows"]:
@@ -16,7 +22,14 @@ static func lord_only_data() -> GameData:
 			rows.append(r)
 	w["rows"] = rows
 	d.waves = w
+	_lord_only = d
 	return d
+
+
+## Önbelleği bırakır: statik değişken GameData kaynaklarını tuttuğundan, çıkışta 'resources still in use' hatasını
+## (gate: günlükte hata satırı) önlemek için kullanan her kabul dosyası after_all'da çağırır.
+static func release() -> void:
+	_lord_only = null
 
 
 static func lord_id(sim: GameSim) -> int:
@@ -31,17 +44,20 @@ static func hp_of(sim: GameSim, id: int) -> float:
 
 
 ## Sim olaylarını toplar: {"spawns": [zaman], "warns": [zaman], "slain": [n], "milestone": [sayı]}.
+## Lambdalar sim'i ZAYIF tutar: sim.bus -> lambda -> sim döngüsü sim'i (ve GameData kaynaklarını) sızdırır; çıkışta
+## 'resources still in use' hatası gate'i kırar (CI 40514013114, gut 2).
 static func watch(sim: GameSim) -> Dictionary:
 	var w := {"spawns": [], "warns": [], "slain": [], "milestone": [0]}
+	var wr: WeakRef = weakref(sim)
 	sim.bus.boss_spawned.connect(
 		func(t: StringName) -> void:
-			if t == LORD:
-				w["spawns"].append(sim.time)
+			if t == LORD and wr.get_ref() != null:
+				w["spawns"].append((wr.get_ref() as GameSim).time)
 	)
 	sim.bus.boss_warning.connect(
 		func(t: StringName) -> void:
-			if t == LORD:
-				w["warns"].append(sim.time)
+			if t == LORD and wr.get_ref() != null:
+				w["warns"].append((wr.get_ref() as GameSim).time)
 	)
 	sim.bus.lord_slain.connect(func(n: int) -> void: w["slain"].append(n))
 	sim.bus.milestone_reached.connect(func() -> void: w["milestone"][0] += 1)
