@@ -158,6 +158,7 @@ def test_ensure_command_via_cli(tmp_path):
     assert r.returncode == 0, r.stderr
 
 
+@pytest.mark.skipif(not (ROOT / ".git").exists(), reason="git'siz selftest kopyası")
 def test_map_json_is_untracked_and_ignored():
     tracked = subprocess.run(["git", "ls-files", "tools/ci/test_map.json"], capture_output=True, text=True, cwd=ROOT).stdout
     assert tracked.strip() == "", "tools/ci/test_map.json izlenmemeli (git rm --cached)"

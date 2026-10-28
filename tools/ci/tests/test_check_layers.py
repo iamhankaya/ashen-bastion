@@ -189,3 +189,14 @@ def test_committed_baseline_is_what_the_tool_emits():
     emitted = subprocess.run([sys.executable, str(TOOL), "--emit-baseline"], capture_output=True, text=True, cwd=ROOT, encoding="utf-8").stdout
     committed = (ROOT / "tools/ci/layer_exceptions.txt").read_text(encoding="utf-8")
     assert [l for l in committed.splitlines() if l and not l.startswith("#")] == [l for l in emitted.splitlines() if l and not l.startswith("#")]
+
+
+def test_single_quoted_preload_is_an_edge(tmp_path):
+    tree(tmp_path, {"scripts/sim/a.gd": "extends RefCounted\nconst P := preload('res://scripts/ui/dst.gd')\n", "scripts/ui/dst.gd": cls("Dst")})
+    assert messages(tmp_path) == ["LAYER_VIOLATION: scripts/sim/a.gd -> Dst (sim -> ui)"]
+
+
+def test_unresolvable_base_ref_is_an_error_not_a_silent_skip(tmp_path):
+    tree(tmp_path, {"scripts/sim/a.gd": "extends RefCounted\n"})
+    r = subprocess.run([sys.executable, str(TOOL), "--root", str(tmp_path), "--base", "yok-ref"], capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode != 0 and "BASE_UNRESOLVED" in (r.stderr + r.stdout)

@@ -74,6 +74,8 @@ def check(root: Path, max_lines: int, exceptions: dict, base: dict | None) -> li
 
 
 def base_exceptions(root: Path, ref: str) -> dict | None:
+    if subprocess.run(["git", "-C", str(root), "rev-parse", "--verify", "-q", f"{ref}^{{commit}}"], capture_output=True).returncode != 0:
+        raise SystemExit(f"BASE_UNRESOLVED: {ref}: git rev çözülemedi (shallow checkout ya da yanlış ref?)")
     r = subprocess.run(["git", "-C", str(root), "show", f"{ref}:{EXCEPTIONS}"], capture_output=True, text=True)
     return parse_exceptions(r.stdout) if r.returncode == 0 else None  # base'de dosya yok = kayıt bu teslimde doğuyor, ratchet yok
 

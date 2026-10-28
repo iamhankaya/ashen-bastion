@@ -41,7 +41,7 @@ DIR_LAYER = {**{k: k for k in LAYERS}, "audio": "view", "debug": "ctrl"}
 BAD = "\0bad"
 CLASS_NAME = re.compile(r"^\s*class_name\s+([A-Za-z_]\w*)", re.M)
 IDENT = re.compile(r"(?<![\w.$%@&^])[A-Za-z_]\w*")
-PRELOAD = re.compile(r"(?<![\w.])(?:preload|load)\(\s*\"(res://[^\"]+\.gd)\"\s*\)")
+PRELOAD = re.compile(r"""(?<![\w.])(?:preload|load)\(\s*(["'])(res://[^"']+\.gd)\1\s*\)""")
 EXTENDS_PATH = re.compile(r"^\s*extends\s+\"(res://[^\"]+\.gd)\"", re.M)
 DYNAMIC_LOAD = re.compile(r"(?<![\w.])load\(\s*[^\"\s)]")
 AUTOLOAD = re.compile(r"^(\w+)=\"\*?res://([^\"]+)\"", re.M)
@@ -124,7 +124,7 @@ def violations(root: Path) -> tuple[dict, list[str], list[str]]:
                 unmapped.setdefault("/".join(parts[:2]), [])
             continue
         edges = {targets[t] for t in IDENT.findall(code[f]) if t in targets}
-        edges |= {p.removeprefix("res://") for p in PRELOAD.findall(kept[f]) + EXTENDS_PATH.findall(kept[f])}
+        edges |= {p.removeprefix("res://") for p in [m[1] for m in PRELOAD.findall(kept[f])] + EXTENDS_PATH.findall(kept[f])}
         edges = {e for e in edges if e in fileset and e != f}
         for e in edges:
             a, b = layer_of(f), layer_of(e)
@@ -153,6 +153,8 @@ def check(root: Path, exceptions, base) -> tuple[list[str], list[str]]:
 
 
 def base_exceptions(root: Path, ref: str):
+    if subprocess.run(["git", "-C", str(root), "rev-parse", "--verify", "-q", f"{ref}^{{commit}}"], capture_output=True).returncode != 0:
+        raise SystemExit(f"BASE_UNRESOLVED: {ref}: git rev çözülemedi (shallow checkout ya da yanlış ref?)")
     r = subprocess.run(["git", "-C", str(root), "show", f"{ref}:{EXCEPTIONS}"], capture_output=True, text=True, encoding="utf-8")
     return parse_exceptions(r.stdout) if r.returncode == 0 else None  # base'de dosya yok = kayıt bu teslimde doğuyor, ratchet yok
 

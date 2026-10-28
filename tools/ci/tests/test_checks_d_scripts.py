@@ -7,6 +7,12 @@ import pytest
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPTS = ["10-line-budget.sh", "20-test-ids.sh", "30-layers.sh"]
 
+def _in_git() -> bool:
+    return (ROOT / ".git").exists()
+
+
+needs_git = pytest.mark.skipif(not _in_git(), reason="git'siz selftest kopyası")
+
 
 def test_contract_scripts_exist_in_name_order():
     found = sorted(p.name for p in (ROOT / "tools/ci/checks.d").glob("*.sh"))
@@ -19,6 +25,7 @@ def test_script_is_green_on_the_real_repo(name):
     assert r.returncode == 0, r.stderr
 
 
+@needs_git
 @pytest.mark.parametrize("name", SCRIPTS)
 def test_script_has_executable_mode_in_git(name):
     out = subprocess.run(["git", "ls-files", "-s", f"tools/ci/checks.d/{name}"], cwd=ROOT, capture_output=True, text=True).stdout

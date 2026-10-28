@@ -59,15 +59,14 @@ Değişen dosyalar = `git diff --name-only $(git merge-base HEAD REF)` (çalış
 | `docs/**.md` hiçbir testin bağımlılığı değilse | test yok (lint/veri doğrulama yine koşar) |
 | **paylaşılan**: `scripts/sim/*`, `scripts/autoload/*`, `data/*`, `test/helpers/*`, `test/fixtures/*`, `test/long/*`, `tools/gate*`, `tools/ci/*`, `tools/*.{gd,json,txt,sh}`, `project.godot`, `.gutconfig.json`, `export_presets.cfg`, `addons/*`, `.github/*`, `assets/*`, `art/*`, `audio/*`, `themes/*`, `scenes/*` | **TAM GATE** |
 | eşlemede yeri olmayan dosya (yeni betik, bilinmeyen dizin, kök dosyaları) | **TAM GATE** |
-| eşleme güncel değil (`test_map.py check` kırmızı), taban bulunamadı, seçim hatası | **TAM GATE** |
+| eşleme üretilemedi (`test_map.py ensure` hata), taban bulunamadı, seçim hatası | **TAM GATE** |
 
 Karışık değişiklikte tek bir paylaşılan/eşlemesiz dosya tam gate'e düşürür. Şüphede tam suite. Hızlı modda lint yalnız değişen
 `.gd` dosyalarına, Python testleri yalnız değişen araç dizinine (`tools/art`, `tools/audio`) uygulanır; veri doğrulaması her
 zaman koşar; adım 7'de asgari test sayısı seçilen dosyalar için, tek test süre sınırı aynen denetlenir. Dilim/pending denetimi
 tam JUnit ister ve yalnız tam gate'tedir.
 
-Eşleme bakımı: yeni betik/test eklenince `python3 tools/ci/test_map.py generate`; `tools/ci/tests/test_test_map.py`
-güncel olmayan eşlemeyi kırmızı yapar (bu test tam gate'in Python adımında koşar).
+Eşleme bakımı: `tools/ci/test_map.json` izlenmez; hızlı mod başında `python3 tools/ci/test_map.py ensure` üretir (elle commit yok).
 
 ### Eşlemenin doğruluğu
 

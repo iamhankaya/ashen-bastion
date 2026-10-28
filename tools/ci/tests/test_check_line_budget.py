@@ -105,3 +105,9 @@ def test_committed_exceptions_are_the_five_known_files_at_current_size():
         "scripts/sim/game_data.gd",
         "scripts/ui/characters_screen.gd",
     }
+
+
+def test_unresolvable_base_ref_is_an_error_not_a_silent_skip(tmp_path):
+    gd(tmp_path, "scripts/sim/a.gd", 1)
+    r = subprocess.run([sys.executable, str(TOOL), "--root", str(tmp_path), "--base", "yok-ref"], capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode != 0 and "BASE_UNRESOLVED" in (r.stderr + r.stdout)

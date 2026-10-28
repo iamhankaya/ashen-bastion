@@ -62,16 +62,17 @@ class FsSource:
 class GitSource:
     def __init__(self, root: Path, rev: str):
         self.root, self.rev, self._cache = Path(root), rev, {}
-        r = subprocess.run(["git", "-C", str(self.root), "ls-tree", "-r", "--name-only", rev], capture_output=True, text=True, encoding="utf-8")
+        r = subprocess.run(["git", "-C", str(self.root), "ls-tree", "-r", "-z", "--name-only", rev], capture_output=True, text=True, encoding="utf-8")
         if r.returncode != 0:
             raise SystemExit(f"TEST_IDS_USAGE: git rev okunamadı: {rev}: {r.stderr.strip()}")
-        self._files = sorted(r.stdout.split("\n")[:-1])
+        self._files = sorted(x for x in r.stdout.split("\0") if x)
 
     def files(self) -> list[str]:
         return self._files
 
     def prefetch(self, paths) -> None:
-        want = [p for p in paths if p in set(self._files) and p not in self._cache]
+        known = set(self._files)
+        want = [p for p in paths if p in known and p not in self._cache]
         if not want:
             return
         inp = "".join(f"{self.rev}:{p}\n" for p in want).encode("utf-8")
