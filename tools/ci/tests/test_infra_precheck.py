@@ -236,3 +236,27 @@ def test_script_does_not_use_grep_q_in_pipelines():
 def test_script_is_executable_in_index():
     r = sh(["git", "ls-files", "-s", "tools/precheck.sh"], ROOT)
     assert r.stdout.startswith("100755"), r.stdout
+
+
+def test_test_map_without_ensure_command_uses_check_even_if_word_appears(repo, tmp_path):
+    """Gerçek test_map.py'de 'ensure_ascii' geçer; bu 'ensure' komutu var demek değildir (yerel Godot denemesinde yakalandı)."""
+    ci = repo / "tools" / "ci"
+    ci.mkdir()
+    (ci / "test_map.py").write_text(
+        "import sys, json\njson.dumps({}, ensure_ascii=False)\n"
+        "sys.exit(0 if sys.argv[1] == 'check' else 1)\n"
+    )
+    commit_all(repo)
+    r = run(repo, "--base", "main", tmp_path=tmp_path)
+    assert r.returncode == 0, r.stderr
+
+
+def test_test_map_with_ensure_command_uses_ensure(repo, tmp_path):
+    ci = repo / "tools" / "ci"
+    ci.mkdir()
+    (ci / "test_map.py").write_text(
+        'import sys\ncmd = sys.argv[1]\nif cmd == "ensure":\n    sys.exit(0)\nsys.exit(1)\n'
+    )
+    commit_all(repo)
+    r = run(repo, "--base", "main", tmp_path=tmp_path)
+    assert r.returncode == 0, r.stderr

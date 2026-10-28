@@ -60,7 +60,7 @@ mapfile -t SH_FILES < <(changed_ext sh)
 if [ -f tools/ci/test_map.py ]; then
   if [ -z "$PY" ]; then
     skip TEST_MAP "çalışan python yok"
-  elif grep -qE 'ensure' tools/ci/test_map.py; then
+  elif grep -qE "cmd == ['\"]ensure['\"]" tools/ci/test_map.py; then  # komut gerçekten dağıtılıyor mu ('ensure_ascii' değil)
     "$PY" tools/ci/test_map.py ensure > "$TMP/map.log" 2>&1 || { cat "$TMP/map.log" >&2; fail TEST_MAP "test_map.py ensure başarısız"; }
   else
     "$PY" tools/ci/test_map.py check > "$TMP/map.log" 2>&1 || { cat "$TMP/map.log" >&2; fail TEST_MAP "test_map.json güncel değil (test_map.py generate)"; }
