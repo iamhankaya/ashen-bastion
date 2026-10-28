@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Karakterizasyon bazlarını CI günlüğünden ayıklar (T20261028-35, plan Faz 4 madde 18).
 
-Kullanım: python3 tools/ci/rf_extract_baselines.py LOG [--task T20261028-35] [--reason METIN]
-Günlükteki `CHAR_BASELINE <ad> <tek satır JSON>` satırlarını test/characterization/baseline/<ad>.json dosyasına yazar
+Kullanım: python3 tools/ci/rf_extract_baselines.py JUNIT_VEYA_LOG... [--task T20261028-35] [--reason METIN]
+Girdi: gut-junit-N.xml dosyaları (kapı GUT günlüğünün yalnız son 30 satırını gösterir; değer JUnit'te pending mesajındadır)
+ya da düz günlük. `CHAR_BASELINE <ad> <tek satır JSON>` kayıtlarını test/characterization/baseline/<ad>.json dosyasına yazar
 (anahtarlar sıralı, girinti 1, LF, sonda satır sonu) ve tools/ci/baseline_changes.txt'e
 `dosya | sha256 | gerekçe | görev` satırı ekler. Baz yalnız tester fazında bu araçla değişir.
 """
@@ -12,6 +13,7 @@ import json
 import pathlib
 import re
 import sys
+import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 BASE = ROOT / "test" / "characterization" / "baseline"
@@ -21,17 +23,26 @@ LINE = re.compile(r"CHAR_BASELINE (\S+) (.*)$")
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("log")
+    ap.add_argument("inputs", nargs="+")
     ap.add_argument("--task", default="T20261028-35")
     ap.add_argument("--reason", default="ilk baz: refactor öncesi kod")
     a = ap.parse_args()
     found: dict[str, str] = {}
-    for raw in open(a.log, encoding="utf-8", errors="replace"):
-        m = LINE.search(raw.rstrip("\n"))
-        if m:
-            found[m.group(1)] = m.group(2)
+    for path in a.inputs:
+        if path.endswith(".xml"):
+            for tc in ET.parse(path).getroot().iter("testcase"):
+                for node in tc.iter():
+                    for text in (node.get("message") or "", node.text or ""):
+                        m = LINE.search(text.strip())
+                        if m:
+                            found[m.group(1)] = m.group(2)
+        else:
+            for raw in open(path, encoding="utf-8", errors="replace"):
+                m = LINE.search(raw.rstrip(chr(10)))
+                if m:
+                    found[m.group(1)] = m.group(2)
     if not found:
-        print("BASELINE_EXTRACT: günlükte CHAR_BASELINE satırı yok", file=sys.stderr)
+        print("BASELINE_EXTRACT: girdide CHAR_BASELINE kaydı yok", file=sys.stderr)
         return 1
     BASE.mkdir(parents=True, exist_ok=True)
     with open(CHANGES, "a", encoding="utf-8", newline="\n") as ch:
