@@ -1,0 +1,37 @@
+name: v202-forced
+# GEÇİCİ (T20261029-04 R0 madde 17): yalnız bu dalda push ile koşar; R0 bitince silinir.
+on:
+  push:
+    branches: ['vlad/T20261029-04']
+permissions:
+  contents: read
+jobs:
+  forced:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ashen-bastion
+          key: godot-${{ hashFiles('.godot-version') }}
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .godot/imported
+            .godot/uid_cache.bin
+          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+      - run: |
+          mkdir -p .gate
+          export GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"
+          bash tools/ci/godot_import.sh .gate/import.log
+          bash tools/ci/v202_forced_run.sh .gate/forced
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v202-forced
+          path: |
+            .gate/forced/*.xml
+            .gate/forced/*.log
+            .gate/forced/summary.json
+          retention-days: 7
