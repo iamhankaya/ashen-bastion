@@ -1,3 +1,24 @@
 # Karakterizasyon bazı değişiklik kaydı (append-only). Biçim: dosya | yeni_sha256 | gerekçe | görev
 # test/characterization/baseline/** değişirse bu dosyaya aynı sha256 ile satır eklenmeden gate kırmızıdır
 # (tools/ci/tests/test_rf_baseline_guard.py: BASELINE_CHANGED). Satırları tools/ci/rf_extract_baselines.py üretir.
+test/characterization/baseline/rf_ach_flows.json | c59062b791d9bb6d53ba2c6a69076b2d6dc8b277792e9ed93979b52908367963 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ach_flows_legacy.json | f941fd2548ff5208661ced00df8b230269f7b2d903da8347db333b93e40bf199 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_api_surface.json | ac446017b3d05ac10d48eee01fbb1a4b58070d388a3452e4b4adebfa9edd764f | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ctrl_scene_tree.json | 52d881dd0e4026178bfef7177c63b45ee58af15c473faa2f72e2c548d5e9295f | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ctrl_scene_tree_restart.json | bc074442ee23a59cedcacf143d1b2a59e0334d5d29de4ca2a5b38cc191372a1f | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ctrl_signal_triples.json | 179c8ec4005bf6b511a587795cc3537ba7e3d44e8840ed613e9617afb1ab6d1f | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_data_errors.json | 60623e2e3eb7aa43b9ea3e0faaaca44e6662ab2a6f3307ef285d7ebdbd92346e | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_runs_highscores.json | 547e94cc097ebb7c693266d7fd60ea6bcad04cf0a9f950fe5038887bf11f883c | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_runs_profile_values.json | b2006b18623dd6d4ace622976f96251a98573f1836941d806d4ceef092083343 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_runs_profiles_file.json | aa27e9eab051ad607082f40b8bb2299d08295fd0159c2c2753c25e19716499d5 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_runs_strip_texts.json | 15a51c63d521f18216004570fd7c508bfc87a9c50fe6af3f25e46fb9243c2f2f | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_save_ach_legacy.json | 69eb8fc78316a04220af1abd0b2cdadee445688c814ca581bfd415197ee9c718 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_save_ach_v2.json | 0d1c5c39c506b073dd78b4245dc37a47232eb0c0ea5d124101d40284120e704c | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_save_highscores_v1.json | b9d934a0242d119eafec52a781ad3bc4966ac47556fb74d5a36f048f14e62290 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_trail_event_log.json | b51ec046708e4cd40019760fbc3f738dac780080362b0e61ac24726bd2e00219 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_trail_mid_hash.json | a58744d92d500d6ad529e445cff020e9b366cdfa0891995e0afb9e0df93d79d7 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_trail_side_outputs.json | 40f892841aa3892d234b70219b8c97a933078dd88bf6469207d4a70067cb3a87 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ui_characters_rects.json | 3f1bd4d5bacae04b283e6adada3f39b111f6f5262781c2de5e343d5da8f97d85 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ui_result_rects.json | 73160e8b6850b040cdfef4f69e40851e056fa7ea54da323531b8efe07fe2900b | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ui_run_rects.json | 2dda64402be42a599ec812af05bf2573ad6d7cc6bb9964e1a2878148693f3fe4 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ui_settings_rects.json | ae99e8b9c12b39c304191d871deb51bf164fc38ec847127dce420277f9e8bcf3 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
