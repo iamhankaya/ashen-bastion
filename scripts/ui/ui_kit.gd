@@ -12,6 +12,9 @@ const SAFE_EDGE := 36.0  # varsayılan yan/üst boşluk; çentik/yuvarlak köşe
 const SIDE := 36.0
 const DEFAULT_TOP := 96.0  # DESIGN-UI §5: üst 96 / yan 36 / alt 72
 const DEFAULT_BOTTOM := 72.0
+const SCROLL_AXIS_VERTICAL := 0  # make_scroll ekseni
+const SCROLL_AXIS_HORIZONTAL := 1
+const SCROLL_AXIS_BOTH := 2
 
 const VOID := Color("#0d0910")
 const MOR_900 := Color("#171020")
@@ -413,6 +416,9 @@ static func toggle_text(label_upper: String, on: bool) -> String:
 ## kendiliğinden kaydırmaz. Sürüklemeyi kaydırmaya çevirir. Fare↔dokunma emülasyonu (device -1) atlanır:
 ## fare sürüklemesini ScrollContainer zaten kaydırır, ikinci kez kaydırmak çift hız yapardı.
 static func touch_scroll(sc: ScrollContainer) -> void:
+	if sc.has_meta(&"touch_scroll"):
+		return  # idempotent: ikinci çağrı sürüklemeyi iki kez kaydırmasın
+	sc.set_meta(&"touch_scroll", true)
 	sc.gui_input.connect(
 		func(ev: InputEvent) -> void:
 			if not (ev is InputEventScreenDrag) or ev.device == InputEvent.DEVICE_ID_EMULATION:
@@ -424,6 +430,40 @@ static func touch_scroll(sc: ScrollContainer) -> void:
 				sc.scroll_horizontal -= int(roundf(rel.x))
 			sc.accept_event()
 	)
+
+
+## Kaydırma kabının TEK üretim noktası (tools/ci/check_ui_rules.py: başka yerde `ScrollContainer.new()` yasak); `touch_scroll`
+## bağlı döner. `axis`: açık eksen(ler), kapalı eksen SCROLL_MODE_DISABLED. `opts` (yoksa Godot varsayılanı kalır):
+## name, follow_focus, deadzone (scroll_deadzone), mouse_filter, size_flags_h/_v, custom_min, show_bars (false => SHOW_NEVER).
+## 7 mevcut yerin ayarı (R2 geçişi bu tabloya göre; hepsi dikey, "karakter şeridi" yatay):
+##   achievements_screen:88 V {name List, mouse_filter STOP, deadzone 12}   characters_screen:153 H {name Strip, show_bars false}
+##   highscore_screen:604   V {name ListScroll}                             result_fit:105 V {name ResultScroll, mouse_filter PASS}
+##   run_screen:99, settings_screen:142 V {name Scroll}                     settings_screen:339 V {name LicScroll}
+## Yerleşim (anchor/offset/fill) ve `visible` çağıranda kalır.
+static func make_scroll(axis: int = SCROLL_AXIS_VERTICAL, opts: Dictionary = {}) -> ScrollContainer:
+	var sc := ScrollContainer.new()
+	var open := ScrollContainer.SCROLL_MODE_AUTO
+	if not bool(opts.get("show_bars", true)):
+		open = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	var off := ScrollContainer.SCROLL_MODE_DISABLED
+	sc.horizontal_scroll_mode = open if axis != SCROLL_AXIS_VERTICAL else off
+	sc.vertical_scroll_mode = open if axis != SCROLL_AXIS_HORIZONTAL else off
+	if opts.has("name"):
+		sc.name = str(opts["name"])
+	if opts.has("follow_focus"):
+		sc.follow_focus = bool(opts["follow_focus"])
+	if opts.has("deadzone"):
+		sc.scroll_deadzone = int(opts["deadzone"])
+	if opts.has("mouse_filter"):
+		sc.mouse_filter = int(opts["mouse_filter"]) as Control.MouseFilter
+	if opts.has("size_flags_h"):
+		sc.size_flags_horizontal = int(opts["size_flags_h"]) as Control.SizeFlags
+	if opts.has("size_flags_v"):
+		sc.size_flags_vertical = int(opts["size_flags_v"]) as Control.SizeFlags
+	if opts.has("custom_min"):
+		sc.custom_minimum_size = opts["custom_min"]
+	touch_scroll(sc)
+	return sc
 
 
 ## Tam ekran kökü olarak bir Control'ü yay.

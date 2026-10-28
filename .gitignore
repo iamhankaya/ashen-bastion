@@ -15,3 +15,6 @@ tools/art/_preview/
 
 # v2.0.3 üretilen video çıktıları (Gemini; tools/art/gen_video.py)
 art/source/*/video/
+
+# F-044/S-map: seçici koşu eşlemesi türetilmiş dosyadır (python3 tools/ci/test_map.py ensure); izlenmez, çakışma kaynağı olmasın
+tools/ci/test_map.json

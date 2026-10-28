@@ -96,9 +96,9 @@ if [ $FAST -eq 1 ]; then
   MB="$(git merge-base HEAD "$FAST_BASE" 2>/dev/null)" || MB=""
   if [ -z "$MB" ]; then
     echo "hızlı mod: '$FAST_BASE' ile ortak ata bulunamadı => TAM GATE" >&2; FAST=0
-  elif ! python3 tools/ci/test_map.py check > .gate/map_check.log 2>&1; then
+  elif ! python3 tools/ci/test_map.py ensure > .gate/map_check.log 2>&1; then
     cat .gate/map_check.log >&2
-    echo "hızlı mod: tools/ci/test_map.json güncel/tutarlı değil => TAM GATE" >&2; FAST=0
+    echo "hızlı mod: tools/ci/test_map.json üretilemedi => TAM GATE" >&2; FAST=0
   else
     { git diff --name-only "$MB"; git ls-files -o --exclude-standard; } | sort -u > .gate/changed.txt
     if python3 tools/ci/test_map.py select < .gate/changed.txt > .gate/selected.txt 2> .gate/select.why; then
@@ -115,6 +115,15 @@ if [ $FAST -eq 1 ]; then
   fi
 fi
 
+# --- Kanca: tools/ci/checks.d/NN-ad.sh (sözleşme fazları gate.sh'e dokunmadan Godot'suz denetim ekler) ----------------------
+# Yalnız static/all: gut parçaları ve verify aynı denetimi yinelemez. Koşucu: tools/ci/run_checks.sh (ad sırası, ilk kırmızı durdurur).
+if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
+  if compgen -G "tools/ci/checks.d/*.sh" > /dev/null; then
+    step "0. Ön denetimler (tools/ci/checks.d)"
+    bash tools/ci/run_checks.sh tools/ci/checks.d || fail "ön denetim kırmızı (bkz. yukarıdaki satırlar)"
+  fi
+fi
+
 if [ "$PART" != "verify" ]; then
   step "1. Godot kurulumu"
   GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"; rc=$?
@@ -128,7 +137,7 @@ if [ "$PART" != "verify" ]; then
   step "2. İçe aktarma"
   # Önceden var olan .godot önbelleği bozuksa --import çıkış 0 verip yalnız ERROR: satırı yazar (prova: tools/ci/prova_import_cache.sh).
   HAD_CACHE=0; [ -d .godot ] && HAD_CACHE=1
-  # F-042: aralıklı SIGABRT çöküşüne karşı en çok 1 bilinen-imzalı yeniden deneme (tools/ci/godot_import.sh; sessiz değil).
+  # F-042: aralıklı SIGABRT çöküşüne karşı en çok 3 deneme (2 bilinen-imzalı yeniden deneme, geri çekilmeli) (tools/ci/godot_import.sh; sessiz değil).
   bash tools/ci/godot_import.sh .gate/import.log || fail "--import başarısız (bkz. .gate/import.log, .gate/import_retry.txt)"
   [ $HAD_CACHE -eq 1 ] && echo "not: .godot önbelleği önceden vardı; içe aktarma günlüğü hata verirse önce 'rm -rf .godot' dene" >&2
   scan_log .gate/import.log

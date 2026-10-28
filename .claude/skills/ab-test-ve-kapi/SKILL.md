@@ -9,7 +9,7 @@ Kapı komutu: `bash tools/gate.sh` (tam kapsam). CI aynı kapsamı parçalayarak
 
 ## Adımlar
 1. **Test yaz:** birim `test/unit/`, kabul `test/acceptance/` (kabul/E2E tester'ındır), ağır koşular `test/long/`. Adlandırma: dilim önekleri (`test_acc_v2_*`, `test_v202_*`); açık bulguyu sabitleyen test `karakterizasyon (F-xxx)`; kusurlu davranışı beklenen değer yapma, bulgu kimliğine bağlı `pending`.
-2. **Kayıtlar:** `bash tools/update_min_tests.sh` (`tools/gate_min_tests.json`); `python3 tools/ci/test_map.py generate` ardından `check` (`tools/ci/test_map.json`); parça ağırlıkları `tools/ci/shard_weights.json`.
+2. **Kayıtlar:** `bash tools/update_min_tests.sh` (`tools/gate_min_tests.json`); `tools/ci/test_map.json` artık izlenmez, gate üretir (`python3 tools/ci/test_map.py ensure`; elle commit yok); silinen/taşınan test `tools/ci/removed_tests.txt` / `moved_tests.txt`'e yazılır (`check_test_ids.py`); parça ağırlıkları `tools/ci/shard_weights.json`.
 3. **Geri alma:** global/önbellek durumuna (GameData, Settings) yazan test `after_each` ile geri alır; `user://` sızıntısı kırmızıdır (`tools/ci/user_leak_allow.txt`).
 4. **Süre bütçesi:** test dosyası ≤ 75 sn (`python3 tools/ci/check_durations.py`); yavaşsa `test/long/`. CI iş süresi sınıra %80 yaklaşınca bölme işi aç (`tools/ci/ci_budget.json`, `tools/ci/check_budget.py`).
 5. **Harita/çarpışma/hareket değişirse** test botları (`test/helpers/bots.gd`) ve kısa koşu testleri aynı fazda.
