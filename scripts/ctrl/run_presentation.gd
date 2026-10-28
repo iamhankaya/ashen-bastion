@@ -43,24 +43,30 @@ static func lord_killed(host, pos: Vector2) -> void:
 	host.hit_stop.request(Motion.sec(Motion.HITSTOP_LORD_DEATH))
 	host.camera.shake(18.0)
 	host._lord_slow_left = Motion.sec(Motion.LORD_SLOWMO)
+	var t: PackedFloat32Array = host._lord_blast_t
+	var at: PackedVector2Array = host._lord_blast_pos
 	for k in 3:
-		host._lord_blast_t.append(0.1 + 0.3 * float(k) + randf() * 0.1)
-		host._lord_blast_pos.append(
-			pos + Vector2(randf_range(-120.0, 120.0), randf_range(-120.0, 120.0))
-		)
+		t.append(0.1 + 0.3 * float(k) + randf() * 0.1)
+		at.append(pos + Vector2(randf_range(-120.0, 120.0), randf_range(-120.0, 120.0)))
+	host._lord_blast_t = t  # Variant erişimde değer/başvuru farkına karşı geri yaz
+	host._lord_blast_pos = at
 
 
 ## Bekleyen Lord patlamalarını gerçek süreyle (yavaş çekimden bağımsız) geri sayar.
 static func tick_blasts(host, vdt: float) -> void:
+	var t: PackedFloat32Array = host._lord_blast_t
+	var at: PackedVector2Array = host._lord_blast_pos
 	var k := 0
-	while k < host._lord_blast_t.size():
-		host._lord_blast_t[k] -= vdt
-		if host._lord_blast_t[k] <= 0.0:
-			host.fx_renderer.add_explosion(host._lord_blast_pos[k], 150.0)
-			host._lord_blast_t.remove_at(k)
-			host._lord_blast_pos.remove_at(k)
+	while k < t.size():
+		t[k] -= vdt
+		if t[k] <= 0.0:
+			host.fx_renderer.add_explosion(at[k], 150.0)
+			t.remove_at(k)
+			at.remove_at(k)
 		else:
 			k += 1
+	host._lord_blast_t = t
+	host._lord_blast_pos = at
 
 
 ## Öfkeli Lord kor aurası (E9): `rate` parçacık/sn.
