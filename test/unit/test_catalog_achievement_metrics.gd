@@ -68,6 +68,13 @@ func test_duplicate_stat_and_persist_key_fail() -> void:
 	)
 
 
+func test_null_persist_best_is_not_a_key_and_fractional_tier_fails() -> void:
+	var m := CatalogFixtures.metrics(3)
+	assert_eq(_errs(m), "")  # üçünde de best: null
+	m[0]["tiers"] = [1.5, 3]
+	assert_string_contains(_errs(m), "ACH_METRIC: zz_stat0: tiers artan olmalı")
+
+
 func test_bad_value_expression_fails() -> void:
 	var m := CatalogFixtures.metrics(1)
 	m[0]["source"]["value"] = "toplam"

@@ -5,7 +5,7 @@
 
 Yasak: `ui_kit.gd` dışında `ScrollContainer.new()`; `.tscn`'de `type="ScrollContainer"` düğümü.
 Geçiş istisnası (`tools/ci/ui_rules_exceptions.txt`): her satır bir izinli yer (dosya yolu; aynı dosyada n yer = n satır).
-Ratchet: istisna yalnız azalır. Hata biçimi stderr `ETİKET: ...`, çıkış 1:
+Ratchet: istisna yalnız azalır. Bilinçli delik: `ClassDB.instantiate("ScrollContainer")` ve `extends ScrollContainer` taranmaz. Hata biçimi stderr `ETİKET: ...`, çıkış 1:
   UI_RULE: <yol>:<satır>: ScrollContainer fabrika dışı     (listelenmemiş ihlal)
   UI_RULE_STALE: <yol>: ...                                  (listedeki yer artık ihlal değil)
   UI_RULE_NEW_EXCEPTION: <yol>: ...                          (--base REF'te olmayan yeni istisna satırı)
@@ -13,6 +13,7 @@ Ratchet: istisna yalnız azalır. Hata biçimi stderr `ETİKET: ...`, çıkış 
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -20,7 +21,8 @@ from collections import Counter
 from pathlib import Path
 
 FACTORY = "scripts/ui/ui_kit.gd"
-SKIP_DIRS = {".git", ".godot", ".gate", ".claude", "addons", "node_modules", "build", "__pycache__"}
+ALWAYS_SKIP = {".git", ".godot", ".gate", ".claude", "__pycache__"}
+ROOT_SKIP = {"addons", "node_modules", "build"}
 GD_RE = re.compile(r"\bScrollContainer\.new\(")
 TSCN_RE = re.compile(r'type="ScrollContainer"')
 DEFAULT_EXC = "tools/ci/ui_rules_exceptions.txt"
@@ -46,11 +48,20 @@ def strip_gd(line: str) -> str:
     return "".join(out)
 
 
+def walk(root: Path):
+    """Dizin budamalı gezinti; SKIP_DIRS yalnız kök seviyesinde atlanır (.git/.godot/.gate/.claude her yerde)."""
+    for cur, dirs, files in os.walk(root):
+        top = Path(cur) == root
+        dirs[:] = sorted(d for d in dirs if d not in ALWAYS_SKIP and not (top and d in ROOT_SKIP))
+        for f in sorted(files):
+            yield Path(cur) / f
+
+
 def violations(root: Path) -> list[tuple[str, int]]:
     found: list[tuple[str, int]] = []
-    for p in sorted(root.rglob("*")):
+    for p in walk(root):
         rel = p.relative_to(root)
-        if SKIP_DIRS & set(rel.parts) or not p.is_file() or p.suffix not in (".gd", ".tscn"):
+        if p.suffix not in (".gd", ".tscn"):
             continue
         key = rel.as_posix()
         if key == FACTORY:
@@ -67,8 +78,10 @@ def read_exceptions(text: str) -> list[str]:
 
 
 def base_exceptions(root: Path, ref: str, rel: str) -> list[str] | None:
+    if subprocess.run(["git", "rev-parse", "--verify", "-q", f"{ref}^{{commit}}"], cwd=root, capture_output=True).returncode:
+        raise SystemExit(f"UI_RULE_BASE: --base {ref} çözülemedi (sığ klon ya da yanlış REF); ratchet atlanamaz")
     r = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=root, capture_output=True, text=True)
-    return read_exceptions(r.stdout) if r.returncode == 0 else None
+    return read_exceptions(r.stdout) if r.returncode == 0 else None  # base'te dosya yok: ilk teslim
 
 
 def main(argv: list[str]) -> int:

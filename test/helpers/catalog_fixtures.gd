@@ -3,7 +3,7 @@ extends RefCounted
 ## Sentetik katalog fixture'ları (sözleşme-B): 0/1/3 girdili karakter, mod/zorluk ve başarım metriği. Gerçek veriye bağlı
 ## değildir; testler sabit sayı yerine "tüm kimlikler için X" yazar.
 
-const TMP_DIR := "user://catalog_fixture"
+const TMP_DIR := "user://catalog_fixture"  # paralel GUT süreçleri için characters() kimlik ekler
 
 
 ## `n` karakterli GameData (GameData.load_dir geçici dizinden; okuduktan sonra dizin silinir, USER_LEAK bırakmaz).
@@ -21,7 +21,7 @@ static func characters(n: int) -> GameData:
 		var f := FileAccess.open(abs_dir.path_join("characters/zz_c%d.json" % i), FileAccess.WRITE)
 		f.store_string(JSON.stringify(d))
 		f.close()
-	var g := GameData.load_dir(TMP_DIR)
+	var g := GameData.load_dir(dir)
 	_rm_rf(abs_dir)
 	return g
 

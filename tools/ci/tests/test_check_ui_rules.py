@@ -106,3 +106,16 @@ def test_shrinking_exceptions_vs_base_passes(tmp_path):
 def test_real_repo_is_green():
     r = run(ROOT)
     assert r.returncode == 0, r.stderr
+
+
+def test_unresolvable_base_is_an_error_not_a_skip(tmp_path):
+    root = repo(tmp_path)
+    git(root, "init", "-q")
+    r = run(root, "--base", "yok-boyle-ref")
+    assert r.returncode != 0 and "UI_RULE_BASE" in r.stderr
+
+
+def test_build_dir_below_root_is_still_scanned(tmp_path):
+    root = repo(tmp_path)
+    write(root, "scripts/build/x.gd", "var s := ScrollContainer.new()\n")
+    assert run(root).returncode == 1

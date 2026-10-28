@@ -39,9 +39,9 @@ func validate() -> PackedStringArray:
 		var stat := str(m.get("stat", ""))
 		if stat == "":
 			out.append("ACH_METRIC: (statsız): stat boş")
-		elif stats.has(stat):
+		elif seen_stats.has(stat):
 			out.append("ACH_METRIC: %s: yinelenen stat" % stat)
-		stats[stat] = true
+		seen_stats[stat] = true
 		_check_tiers(out, stat, m.get("tiers", null))
 		_check_source(out, stat, m, events, vre)
 		var persist: Variant = m.get("persist", {})
@@ -94,7 +94,7 @@ static func _check_tiers(out: PackedStringArray, stat: String, tiers: Variant) -
 		return
 	var prev := 0
 	for t in tiers:
-		if not (t is int or t is float) or int(t) <= prev:
+		if not (t is int or t is float) or t != floorf(t) or int(t) <= prev:
 			out.append("ACH_METRIC: %s: tiers artan olmalı (pozitif tamsayılar)" % stat)
 			return
 		prev = int(t)
