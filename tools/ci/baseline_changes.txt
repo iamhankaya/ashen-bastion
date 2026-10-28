@@ -1,0 +1,3 @@
+# Karakterizasyon bazı değişiklik kaydı (append-only). Biçim: dosya | yeni_sha256 | gerekçe | görev
+# test/characterization/baseline/** değişirse bu dosyaya aynı sha256 ile satır eklenmeden gate kırmızıdır
+# (tools/ci/tests/test_rf_baseline_guard.py: BASELINE_CHANGED). Satırları tools/ci/rf_extract_baselines.py üretir.

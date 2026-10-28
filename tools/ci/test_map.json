@@ -18,6 +18,8 @@
    "test/acceptance/test_ver_v11_package.gd"
   ],
   "scripts/audio/audio_director.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -51,6 +53,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/audio/audio_mix.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -131,6 +136,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/audio/music_plan.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -165,6 +172,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/audio/sfx.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -203,6 +213,12 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/achievement_progress.gd": [
+   "test/acceptance/test_acc_rf_achievements.gd",
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_save.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
@@ -261,6 +277,12 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/achievement_rules.gd": [
+   "test/acceptance/test_acc_rf_achievements.gd",
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_save.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -337,6 +359,12 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/achievement_step.gd": [
+   "test/acceptance/test_acc_rf_achievements.gd",
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_save.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
@@ -396,6 +424,12 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/achievement_tracker.gd": [
+   "test/acceptance/test_acc_rf_achievements.gd",
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_save.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_ach_progress.gd",
@@ -448,6 +482,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/character_roster.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
@@ -485,6 +522,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/game_controller.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -515,6 +554,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/hit_stop.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_tables.gd",
@@ -548,6 +589,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/input_gate.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -581,6 +624,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/pause_logic.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_tables.gd",
@@ -617,6 +662,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/screen_delay.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui_logic.gd",
@@ -654,6 +701,9 @@
    "test/unit/test_v203_d_zz_contract.gd"
   ],
   "scripts/ctrl/v21_runs.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -712,6 +762,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/v2_achievements.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -742,6 +794,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/v2_characters.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -773,6 +827,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/v2_flow.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -803,6 +859,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/v2_maint.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -833,6 +891,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ctrl/v2_part.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -864,6 +924,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/debug/bounce_debug.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -904,6 +966,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/debug/debug_labels.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -944,6 +1008,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/debug/stress_run.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -974,6 +1040,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/debug/stress_scenario.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -1005,6 +1073,12 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/store/achievement_migration.gd": [
+   "test/acceptance/test_acc_rf_achievements.gd",
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_save.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
@@ -1063,6 +1137,12 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/store/achievement_store.gd": [
+   "test/acceptance/test_acc_rf_achievements.gd",
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_save.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v202_pool_migration.gd",
@@ -1121,6 +1201,10 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/store/highscores.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_save.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1172,7 +1256,15 @@
    "test/acceptance/test_acc_magazine.gd",
    "test/acceptance/test_acc_perf_counters.gd",
    "test/acceptance/test_acc_pistols.gd",
+   "test/acceptance/test_acc_rf_achievements.gd",
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_data_errors.gd",
    "test/acceptance/test_acc_rf_globals.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_save.gd",
+   "test/acceptance/test_acc_rf_trail.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_rhythm.gd",
    "test/acceptance/test_acc_run_end.gd",
    "test/acceptance/test_acc_short_runs.gd",
@@ -1396,6 +1488,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/achievement_chronicle.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_ach_progress.gd",
@@ -1429,6 +1523,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/achievement_icons.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_ach_progress.gd",
@@ -1465,6 +1561,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/achievement_plate.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_ach_progress.gd",
@@ -1498,6 +1596,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/achievement_row.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_ach_progress.gd",
@@ -1531,6 +1631,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/achievement_toast.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -1563,6 +1665,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/achievements_screen.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_ach_progress.gd",
@@ -1596,6 +1700,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/buff_row.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1638,6 +1744,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/characters_screen.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_anim.gd",
@@ -1671,6 +1780,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/float_text.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1713,6 +1824,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/highscore_screen.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1748,6 +1861,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/hud.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1788,6 +1903,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/level_up_screen.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -1821,6 +1938,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/magazine_drum.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1862,6 +1981,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/main_menu.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1903,6 +2024,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/milestone_band.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1948,6 +2072,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/offscreen_arrow.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -1990,6 +2116,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/pause_screen.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -2022,6 +2150,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/portrait_player.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_anim.gd",
@@ -2056,6 +2187,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/result_fit.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -2095,6 +2229,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/result_screen.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -2132,6 +2269,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/result_timeline.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -2181,6 +2321,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/run_screen.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -2222,6 +2365,10 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/run_strip.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -2278,6 +2425,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/score_block.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_score.gd",
@@ -2321,6 +2470,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/settings_screen.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -2354,6 +2506,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/settings_sections.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -2388,6 +2543,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/showcase_motion.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -2432,6 +2590,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/skill_slot.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -2482,6 +2643,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/toast_queue.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -2515,6 +2678,10 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/ui_kit.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_runs.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -2604,6 +2771,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/ui/virtual_joystick.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -2636,6 +2805,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/arm_rig.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -2675,6 +2846,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/art_loader.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
@@ -2747,6 +2920,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/ash_ghost_renderer.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -2787,6 +2962,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/atmosphere.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -2818,6 +2995,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/camera_rig.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -2863,6 +3042,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/cast_anim.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -2904,6 +3085,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/enemy_anim.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -2945,6 +3128,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/enemy_atlas.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -2988,6 +3173,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/enemy_renderer.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -3028,6 +3215,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/enemy_shadow_layer.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
@@ -3073,6 +3262,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/fx_renderer.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -3118,6 +3309,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/gem_renderer.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_orbs.gd",
@@ -3152,6 +3345,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/gem_tiers.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_orbs.gd",
@@ -3187,6 +3382,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/ground_view.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -3219,6 +3416,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/motion.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -3285,6 +3485,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/pickup_renderer.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v11_ui.gd",
@@ -3329,6 +3531,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/placeholder_art.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
@@ -3398,6 +3602,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/player_anim.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -3448,6 +3654,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/player_view.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -3487,6 +3695,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/projectile_renderer.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -3521,6 +3731,9 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/render_fix.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
+   "test/acceptance/test_acc_rf_ui_layout.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
@@ -3616,6 +3829,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/ruin_view.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_flow.gd",
    "test/acceptance/test_acc_v11_highscores.gd",
    "test/acceptance/test_acc_v203_screens.gd",
@@ -3647,6 +3862,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/walk_cycle.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_anim.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -3700,6 +3917,8 @@
    "test/unit/test_walk_cycle.gd"
   ],
   "scripts/view/wind_renderer.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -3745,6 +3964,8 @@
    "test/unit/test_v2_maint.gd"
   ],
   "scripts/view/zyfen_fx.gd": [
+   "test/acceptance/test_acc_rf_api.gd",
+   "test/acceptance/test_acc_rf_controller.gd",
    "test/acceptance/test_acc_v11_budget.gd",
    "test/acceptance/test_acc_v11_enemy_anim.gd",
    "test/acceptance/test_acc_v11_flow.gd",
@@ -3830,7 +4051,15 @@
   "test/acceptance/test_acc_magazine.gd",
   "test/acceptance/test_acc_perf_counters.gd",
   "test/acceptance/test_acc_pistols.gd",
+  "test/acceptance/test_acc_rf_achievements.gd",
+  "test/acceptance/test_acc_rf_api.gd",
+  "test/acceptance/test_acc_rf_controller.gd",
+  "test/acceptance/test_acc_rf_data_errors.gd",
   "test/acceptance/test_acc_rf_globals.gd",
+  "test/acceptance/test_acc_rf_runs.gd",
+  "test/acceptance/test_acc_rf_save.gd",
+  "test/acceptance/test_acc_rf_trail.gd",
+  "test/acceptance/test_acc_rf_ui_layout.gd",
   "test/acceptance/test_acc_rhythm.gd",
   "test/acceptance/test_acc_run_end.gd",
   "test/acceptance/test_acc_short_runs.gd",
