@@ -46,7 +46,6 @@ def test_shared_files_force_full():
         "test/fixtures/golden_hashes.json",
         "tools/gate.sh",
         "tools/ci/shard.py",
-        "tools/gate_min_tests.json",
         "project.godot",
         ".gutconfig.json",
         "export_presets.cfg",

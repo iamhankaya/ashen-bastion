@@ -11,7 +11,6 @@ ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools" / "ci" / "check_test_ids.py"
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "gut_junit_real.xml"
 sys.path.insert(0, str(ROOT / "tools" / "ci"))
-import check_junit  # noqa: E402
 import check_test_ids as T  # noqa: E402
 
 GUTCONFIG = json.dumps({"dirs": ["res://test/unit", "res://test/acceptance"], "prefix": "test_", "suffix": ".gd", "include_subdirs": True})
@@ -279,6 +278,17 @@ def test_base_declared_file_replaces_git_base(tmp_path):
     assert r.returncode == 1 and "test_gone: LOST" in r.stderr
 
 
+def test_base_declared_with_junit_does_not_flag_allowed_pending_as_lost(tmp_path):
+    """git'siz kopya (selftest): taban dosyası pending bilgisi taşımaz; HEAD'de izinli pending olan test koşmadı diye LOST sayılmaz."""
+    write_tree(tmp_path, {"tools/v202_slices.txt": "# başlık\n", "test/acceptance/test_acc_v202_x.gd": gd("test_p1_a"), "test/unit/test_a.gd": gd("test_one")})
+    bd = tmp_path / "base.txt"
+    bd.write_text("test/acceptance/test_acc_v202_x.gd::test_p1_a\ntest/unit/test_a.gd::test_one\n", encoding="utf-8")
+    j = tmp_path / "j.xml"
+    j.write_text(junit([("test/acceptance/test_acc_v202_x.gd", "test_p1_a", "pending"), ("test/unit/test_a.gd", "test_one", "pass")]), encoding="utf-8")
+    r = run(tmp_path, "--mode", "full", "--junit", str(j), "--base-declared", str(bd))
+    assert r.returncode == 0, r.stderr
+
+
 # --- kipler ------------------------------------------------------------------------------------------------------------------
 
 
@@ -353,27 +363,21 @@ def synth_junit(tmp_path, d, allowed, drop_file=None):
     return p
 
 
-def test_parity_with_old_gate_on_the_real_tree(tmp_path):
+def test_every_declared_file_is_guarded_on_the_real_tree(tmp_path):
+    """Kapı geçişinden sonra eski tablo yok: tam JUnit yeşil, bir dosyanın koşmaması (suite yok) kırmızı olmalı."""
     src = T.FsSource(ROOT)
     d = T.collect_declared(src)
     allowed = T.pending_allowed(src, d.ids) | T.parse_pending_allowed((ROOT / "tools/ci/pending_allowed.txt").read_text(encoding="utf-8"))[0]
-    mins = json.loads((ROOT / "tools/gate_min_tests.json").read_text(encoding="utf-8"))
-    # tam JUnit: iki kapı da yeşil (kimlik düzeyinde declared == ran ∪ izinli pending)
     full = synth_junit(tmp_path, d, allowed)
-    assert check_junit.main(str(full), str(ROOT / "tools/gate_min_tests.json")) == 0
     assert T.verify(d, T.read_junit([full]), allowed) == []
     by_file = {}
     for i in d.ids:
         by_file.setdefault(i.split("::")[0], []).append(i)
-    no_declared = sorted(f for f in mins if f not in by_file)
-    assert len(no_declared) >= 0  # bilgi: tabloda olup declared'da dosyası olmayan girdi (rapora yazılır, kapıyı etkilemez)
     checked = 0
-    for f, need in sorted(mins.items()):
-        runnable = [i for i in by_file.get(f, []) if i not in allowed]
-        if need == 0 or not runnable:
-            continue  # sıfır asgari ya da tümü izinli pending: eski kapının sayısı kimlik düzeyine eşlenmez (raporda)
+    for f, ids in sorted(by_file.items()):
+        if not [i for i in ids if i not in allowed]:
+            continue  # tümü izinli pending: koşmaması kapıyı kırmaz
         broken = synth_junit(tmp_path, d, allowed, drop_file=f)
-        assert check_junit.main(str(broken), str(ROOT / "tools/gate_min_tests.json")) == 1, f"eski kapı yeşil: {f}"
-        assert T.verify(d, T.read_junit([broken]), allowed), f"yeni kapı yeşil: {f}"
+        assert T.verify(d, T.read_junit([broken]), allowed), f"kimlik kapısı yeşil: {f}"
         checked += 1
     assert checked > 150
