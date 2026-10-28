@@ -24,20 +24,20 @@ func test_null_store_is_corrupt_and_everything_locked() -> void:
 
 
 func test_store_view_follows_unlocked_ids() -> void:
-	var v := AchievementProgressView.of_store(_store(["a"]))
+	var v := AchievementProgressView.of_store(_store([&"a"]))
 	assert_false(v.corrupt)
 	assert_true(v.is_unlocked(&"a"))
 	assert_false(v.is_unlocked(&"b"))
 
 
 func test_corrupt_store_locks_even_unlocked_ids() -> void:
-	var v := AchievementProgressView.of_store(_store(["a"], true))
+	var v := AchievementProgressView.of_store(_store([&"a"], true))
 	assert_true(v.corrupt)
 	assert_false(v.is_unlocked(&"a"))
 
 
 func test_of_accepts_view_store_or_null() -> void:
-	var v := AchievementProgressView.of_store(_store(["a"]))
+	var v := AchievementProgressView.of_store(_store([&"a"]))
 	assert_same(AchievementProgressView.of(v), v)
-	assert_true(AchievementProgressView.of(_store(["a"])).is_unlocked(&"a"))
+	assert_true(AchievementProgressView.of(_store([&"a"])).is_unlocked(&"a"))
 	assert_true(AchievementProgressView.of(null).corrupt)
