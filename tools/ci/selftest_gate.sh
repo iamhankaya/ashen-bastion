@@ -3,11 +3,15 @@
 # Kullanım: selftest_gate.sh [--group N] [--list]
 #   --group N : yalnız GROUP tablosunda N numaralı gruba atanmış senaryolar (CI matrisi; F-028). Verilmezse hepsi.
 #   --list    : "<senaryo> <grup>" satırlarını yazar ve çıkar.
+#   --scenario AD : yalnız o senaryo (hata ayıklama / prova).
+# Ortam: SELFTEST_SKIP_TABAN=1 yalnız `taban_yesil` senaryosunu atlar (H1: ci.yml yol süzgeci; negatif senaryolar HER ZAMAN koşar).
+#        SELFTEST_GODOT_CACHE=<.godot> (varsayılan $ROOT/.godot) içindeki imported/ + uid_cache.bin her senaryo kopyasına aktarılır (H2).
 # Senaryo -> grup tablosu AŞAĞIDADIR (GROUP[...]=N); her senaryo `scenario_<ad>` işlevidir ve tam bir grupta olmalıdır
 # (başlangıçta denetlenir; uyumsuzluk çıkış 2). ci.yml selftest matrisi group değerleri = tablodaki gruplar.
 # Süreler (S0 ölçümü, docs/dev/v2.0-s0-measure.md §2): tam-gate senaryosu ≈ 340 s, hafifler 1–40 s.
 set -uo pipefail
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# SELFTEST_ROOT yalnız prova içindir (tools/ci/tests/test_infra_selftest_cache.py): sahte depo ile senaryo mekaniğini sınar.
+ROOT="${SELFTEST_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 FAILS=0
@@ -17,6 +21,13 @@ fresh() { # fresh <ad> : kopya oluşturur, yolu yazar
   mkdir -p "$d"
   # Temiz checkout'u taklit: yalnız izlenen + izlenmeyen-ama-ignore-edilmemiş DOSYALAR (boş dizinler taşınmaz)
   (cd "$ROOT" && git ls-files -co --exclude-standard -z | tar --null -T - -cf -) | tar -xf - -C "$d"
+  # H2: .godot gitignore'ludur, kopyaya girmez; yalnız imported/ + uid_cache.bin AÇIKÇA aktarılır (class cache aktarılmaz:
+  # gate.sh her koşuda --import çalıştırır ve sınıf önbelleğini kendisi üretir; mutasyon sonrası import doğrulaması korunur).
+  local gc="${SELFTEST_GODOT_CACHE:-$ROOT/.godot}"
+  if [ -d "$gc/imported" ]; then
+    mkdir -p "$d/.godot" && cp -a "$gc/imported" "$d/.godot/imported"
+    [ -f "$gc/uid_cache.bin" ] && cp -a "$gc/uid_cache.bin" "$d/.godot/uid_cache.bin"
+  fi
   echo "$d"
 }
 expect() { # expect <ad> <beklenen_kod> <dizin> [env...]
@@ -40,7 +51,10 @@ GROUP[pending_sayilmaz]=5
 GROUP[ag_yok]=5
 GROUP[gut_error]=6
 
-scenario_taban_yesil() { local d; d=$(fresh base); expect "taban yeşil" 0 "$d" X=1; }
+scenario_taban_yesil() {
+  if [ "${SELFTEST_SKIP_TABAN:-0}" = "1" ]; then echo "SKIPPED_BY_FILTER taban_yesil (ci.yml yol süzgeci: altyapı yolu değişmedi)"; return; fi
+  local d; d=$(fresh base); expect "taban yeşil" 0 "$d" X=1
+}
 
 scenario_bozuk_gd() { # bozuk .gd
   local d; d=$(fresh a); printf 'extends Node\nfunc broken(:\n' > "$d/scripts/sim/zz_broken.gd"
@@ -120,11 +134,13 @@ if [ "$defined" != "$listed" ]; then
 fi
 
 ONLY=""
+ONE=""
 LIST=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --group) ONLY="${2:-}"; shift 2 ;;
     --list) LIST=1; shift ;;
+    --scenario) ONE="${2:-}"; shift 2 ;;
     *) echo "bilinmeyen bağımsız değişken: $1" >&2; exit 2 ;;
   esac
 done
@@ -137,8 +153,10 @@ if [ -n "$ONLY" ] && ! printf '%s\n' "${GROUP[@]}" | grep -qx "$ONLY"; then
   exit 2
 fi
 
+if [ -n "$ONE" ] && [ -z "${GROUP[$ONE]:-}" ]; then echo "SELFTEST: senaryo $ONE tabloda yok" >&2; exit 2; fi
 ran=0
 for n in $(printf '%s\n' "${!GROUP[@]}" | sort); do
+  if [ -n "$ONE" ] && [ "$n" != "$ONE" ]; then continue; fi
   if [ -z "$ONLY" ] || [ "${GROUP[$n]}" = "$ONLY" ]; then
     echo "--- senaryo: $n (grup ${GROUP[$n]})"
     "scenario_$n"
