@@ -1,6 +1,6 @@
 extends GutTest
 ## v2.1 U6 sonuç ekranı denetim düzeltmeleri (#5 kombo kademeleri, #2 büyük yazı, #9 sıra notu, #10 Y_SUB, #15 TalkBack).
-## Godot yerelde koşmaz: CI. Kademe aritmetiği docs/dev notunda değil, ResultFit.TIERS ve result_screen.gd başlığındadır.
+## Godot yerelde koşmaz: CI. Kademe aritmetiği docs/dev notunda değil, ResultLayout.TIERS ve result_screen.gd başlığındadır.
 
 const STATS := {
 	"time": 1500.0,
@@ -132,7 +132,7 @@ func test_b60_state_matrix_never_cuts_rows_and_never_overlaps() -> void:
 						)
 
 
-# Kırmızı olur: kademe tablosu (ResultFit.TIERS) ve '_tier' yok.
+# Kırmızı olur: kademe tablosu (ResultLayout.TIERS) ve '_tier' yok.
 func test_b61_tier_zero_keeps_design_sizes_when_it_fits() -> void:
 	var r := _make(4, false, false)
 	assert_eq(r._tier, 0, "4 kombo, payı yok: tasarım ölçüleri")
@@ -203,8 +203,8 @@ func test_b65_spoken_rank_words_for_one_to_ten() -> void:
 		"onuncu"
 	]
 	for i in 10:
-		assert_eq(ResultFit.spoken_rank(i + 1), want[i])
-	assert_eq(ResultFit.spoken_rank(11), "11.")
+		assert_eq(ResultLayout.spoken_rank(i + 1), want[i])
+	assert_eq(ResultLayout.spoken_rank(11), "11.")
 	var st := STATS.duplicate(true)
 	st["mode"] = "normal"
 	st["diff"] = "hard"
@@ -226,7 +226,7 @@ func _assert_note_fits(r: ResultScreen, tag: String) -> void:
 	var font := note.get_theme_font(&"font")
 	var fs := note.get_theme_font_size(&"font_size")
 	var wide := font.get_string_size(note.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fs).x
-	assert_gte(fs, ResultFit.NOTE_FONT_MIN, tag + ": yazı >= 26")
+	assert_gte(fs, ResultLayout.NOTE_FONT_MIN, tag + ": yazı >= 26")
 	if wide > r._w:
 		assert_ne(note.autowrap_mode, TextServer.AUTOWRAP_OFF, tag + ": sığmıyorsa sarar")
 		assert_gte(note.size.y, 2.0 * font.get_height(fs) - 1.0, tag + ": 2 satır payı")
@@ -381,7 +381,7 @@ func test_f037_result_scroll_follows_touch_drag() -> void:
 	host.size = Vector2(1080, 800)
 	add_child_autofree(host)
 	host.add_child(Control.new())
-	var scroll := ResultFit.wrap_in_scroll(host, [])
+	var scroll := ResultLayout.wrap_in_scroll(host, [])
 	(scroll.get_child(0) as Control).custom_minimum_size = Vector2(1080, 3000)
 	await get_tree().process_frame
 	await get_tree().process_frame

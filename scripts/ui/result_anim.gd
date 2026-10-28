@@ -59,7 +59,7 @@ static func apply_chip(host, t: float, done: bool) -> void:
 		host._chip_y
 		+ host._dy
 		+ host._bdy
-		+ (1.0 - k) * ResultFit.chip_slide(host._tier, CHIP_SLIDE)
+		+ (1.0 - k) * ResultLayout.chip_slide(host._tier, CHIP_SLIDE)
 	)
 
 

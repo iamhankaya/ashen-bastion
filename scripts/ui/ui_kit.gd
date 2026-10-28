@@ -442,7 +442,7 @@ static func touch_scroll(sc: ScrollContainer) -> void:
 ## name, follow_focus, deadzone (scroll_deadzone), mouse_filter, size_flags_h/_v, custom_min, show_bars (false => SHOW_NEVER).
 ## 7 mevcut yerin ayarı (R2 geçişi bu tabloya göre; hepsi dikey, "karakter şeridi" yatay):
 ##   achievements_screen:88 V {name List, mouse_filter STOP, deadzone 12}   characters_screen:153 H {name Strip, show_bars false}
-##   highscore_screen:604   V {name ListScroll}                             result_fit:105 V {name ResultScroll, mouse_filter PASS}
+##   highscore_screen:604   V {name ListScroll}                             result_layout:353 V {name ResultScroll, mouse_filter PASS}
 ##   run_screen:99, settings_screen:142 V {name Scroll}                     settings_screen:339 V {name LicScroll}
 ## Yerleşim (anchor/offset/fill) ve `visible` çağıranda kalır.
 static func make_scroll(axis: int = SCROLL_AXIS_VERTICAL, opts: Dictionary = {}) -> ScrollContainer:

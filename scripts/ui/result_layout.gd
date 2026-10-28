@@ -1,7 +1,8 @@
 class_name ResultLayout
 extends RefCounted
 ## Sonuç ekranı yerleşimi (R5b): tüm bloklar mutlak konumlu, güvenli alan kayması, kademe (TIERS) seçimi, yazı boyutları, büyük
-## yazıda kaydırma. Gövdeler `result_screen.gd`den AYNEN taşındı. `host` ResultScreen'dir ama tipi BİLİNMEZ (class_name döngüsü
+## yazıda kaydırma + (R5b, ayrı commit) eski `ResultFit` yardımcıları (kademe tablosu, not sığdırma, TalkBack sıra sözcüğü, çip sarma,
+## kaydırma kabı). Gövdeler `result_screen.gd`/`result_fit.gd`den AYNEN taşındı. `host` ResultScreen'dir ama tipi BİLİNMEZ (class_name döngüsü
 ## yok; WorldBuilder ile aynı kural): alanlara dinamik erişilir. Durum tutmaz.
 
 const W := 936.0
@@ -37,11 +38,38 @@ const DETAIL_FONT := 26
 const TOP_DEFAULT := 96.0
 const BOTTOM_DEFAULT := 72.0
 const DESIGN_H := 2400.0
-## v2.1 U6 (denetim #5): kombo bloğu sığmazsa satır AZALTILMAZ; `ResultFit.TIERS` kademeleri sırayla devreye girer, ilk sığan
+## v2.1 U6 (denetim #5): kombo bloğu sığmazsa satır AZALTILMAZ; `TIERS` kademeleri sırayla devreye girer, ilk sığan
 ## seçilir. (#2) font_scale > 1,3: çip satırı sarar (+56).
 const BIG_SCALE := 1.3
 const CHIP_WRAP := 56.0
 const NOTE_EXTRA := 12.0
+
+## Kombo bloğu sığmazsa satır AZALTILMAZ; bu kademeler sırayla devreye girer, ilk sığan seçilir (hiçbiri sığmazsa sonuncu).
+## 0 = tasarım ölçüleri. Sütunlar (T_* dizinleri): gb = not/çip/panel arası boşluk, gbtn = panel→düğme boşluğu,
+## bgap = düğmeler arası, rh/mh = Tekrar/Menü yüksekliği, row/more = kombo satırı / "+N" satırı,
+## margin/sep = kombo paneli üst-alt kenar boşluğu / başlık altı aralık, note = Kolay notu yüksekliği.
+const T_GB := 0
+const T_GBTN := 1
+const T_BGAP := 2
+const T_RH := 3
+const T_MH := 4
+const T_ROW := 5
+const T_MORE := 6
+const T_MARGIN := 7
+const T_SEP := 8
+const T_NOTE := 9
+const T_CHIP := 10
+const TIERS := [
+	[24.0, 24.0, 27.0, 156.0, 132.0, 96.0, 56.0, 27.0, 16.0, 96.0, 96.0],
+	[16.0, 24.0, 20.0, 156.0, 132.0, 96.0, 56.0, 22.0, 10.0, 96.0, 96.0],
+	[16.0, 24.0, 20.0, 132.0, 112.0, 96.0, 56.0, 22.0, 10.0, 96.0, 96.0],
+	[12.0, 12.0, 16.0, 132.0, 112.0, 88.0, 48.0, 20.0, 8.0, 80.0, 96.0],
+	[12.0, 8.0, 12.0, 132.0, 112.0, 88.0, 48.0, 16.0, 8.0, 80.0, 88.0],
+	[8.0, 8.0, 8.0, 132.0, 112.0, 84.0, 40.0, 12.0, 6.0, 80.0, 80.0],
+]
+const NOTE_FONT := 30
+const NOTE_FONT_MIN := 26
+const ORDINALS := "birinci ikinci üçüncü dördüncü beşinci altıncı yedinci sekizinci dokuzuncu onuncu"
 
 
 ## Yerleşim: tüm bloklar mutlak konumlu (Y_* sabitleri). Güvenli alan üst payı kadar aşağı kayar.
@@ -79,7 +107,7 @@ static func layout(host) -> void:
 		Y_RECORD + BAND_H + 8.0 if host.record_kind in [&"record", &"top10"] else Y_RECORD + 54.0
 	)
 	var note_extra := NOTE_EXTRA if host._big else 0.0
-	var note_h := ResultFit.fit_note(
+	var note_h := fit_note(
 		host.record_note, host._w - 16.0, host._big, Y_BREAKDOWN + note_extra - note_y
 	)
 	put(host, host.record_note, host._x0, note_y, host._w, note_h)
@@ -120,7 +148,7 @@ static func layout(host) -> void:
 	# Kombo bloğu ve düğmeler: satır sayısı sabit; ilk sığan kademe (TIERS) seçilir (denetim #5).
 	var limit: float = DESIGN_H - BOTTOM_DEFAULT - host._extra.w
 	var tail_bottom := 0.0
-	for ti in ResultFit.TIERS.size():
+	for ti in TIERS.size():
 		set_tier(host, ti)
 		tail_bottom = layout_tail(host)
 		if tail_bottom <= limit + 0.01:
@@ -138,10 +166,10 @@ static func layout(host) -> void:
 
 ## Kademe: kombo satırı/"+N"/panel boşlukları yeniden kurulur (değiştiyse), Kolay notu yüksekliği.
 static func set_tier(host, ti: int) -> void:
-	var t: Array = ResultFit.TIERS[ti]
-	host._panel_sb.content_margin_top = float(t[ResultFit.T_MARGIN])
-	host._panel_sb.content_margin_bottom = float(t[ResultFit.T_MARGIN])
-	host.combo_cv.add_theme_constant_override(&"separation", int(t[ResultFit.T_SEP]))
+	var t: Array = TIERS[ti]
+	host._panel_sb.content_margin_top = float(t[T_MARGIN])
+	host._panel_sb.content_margin_bottom = float(t[T_MARGIN])
+	host.combo_cv.add_theme_constant_override(&"separation", int(t[T_SEP]))
 	if ti != host._tier:
 		host._tier = ti
 		if host.combo_box != null:
@@ -150,39 +178,36 @@ static func set_tier(host, ti: int) -> void:
 
 ## Kombo paneli + not/çip + düğmeler (geçerli kademede); düğme bloğunun alt kenarını döndürür.
 static func layout_tail(host) -> float:
-	var t: Array = ResultFit.TIERS[host._tier]
-	var gb := float(t[ResultFit.T_GB])
-	var note_h := float(t[ResultFit.T_NOTE])
+	var t: Array = TIERS[host._tier]
+	var gb := float(t[T_GB])
+	var note_h := float(t[T_NOTE])
 	var combos_y := Y_COMBOS
 	if host.easy_note.visible:
 		put(host, host.easy_note, host._x0, combos_y, host._w, note_h)
 		var bar := host.easy_note.get_child(0) as Control
 		bar.size = Vector2(6.0, note_h)
 		(host.easy_note.get_child(1) as Control).position.y = (note_h - 40.0) * 0.5
-		ResultFit.size_note_text(host.easy_note.get_node("Text") as Label, host._w, note_h)
+		size_note_text(host.easy_note.get_node("Text") as Label, host._w, note_h)
 		combos_y += note_h + gb
 	host._chip_y = combos_y
 	if not host._new_names.is_empty():
-		var chip_h := float(t[ResultFit.T_CHIP])
+		var chip_h := float(t[T_CHIP])
 		put(host, host.achievement_chip, host._x0, combos_y, host._w, chip_h)
-		ResultFit.place_chip_parts(
-			host.chip_star, host.chip_title, host.chip_names, host._w, chip_h
-		)
+		place_chip_parts(host.chip_star, host.chip_title, host.chip_names, host._w, chip_h)
 		combos_y += chip_h + gb
 	host.combo_panel.custom_minimum_size = Vector2(host._w, 0)
 	host.combo_panel.size = Vector2(host._w, 0)
 	host.combo_panel.position = Vector2(host._x0, combos_y + host._dy + host._bdy)
 	host.combo_panel.size = Vector2(host._w, host.combo_panel.get_combined_minimum_size().y)
 	var by := maxf(
-		host.combo_panel.position.y + host.combo_panel.size.y + float(t[ResultFit.T_GBTN]),
-		BUTTONS_MIN_Y
+		host.combo_panel.position.y + host.combo_panel.size.y + float(t[T_GBTN]), BUTTONS_MIN_Y
 	)
-	var rh := float(t[ResultFit.T_RH])
-	var mh := float(t[ResultFit.T_MH])
+	var rh := float(t[T_RH])
+	var mh := float(t[T_MH])
 	host.replay_button.custom_minimum_size.y = rh
 	host.menu_button.custom_minimum_size.y = mh
 	put_abs(host, host.replay_button, host._x0, by, host._w, rh)
-	put_abs(host, host.menu_button, host._x0, by + rh + float(t[ResultFit.T_BGAP]), host._w, mh)
+	put_abs(host, host.menu_button, host._x0, by + rh + float(t[T_BGAP]), host._w, mh)
 	return host.menu_button.position.y + host.menu_button.size.y
 
 
@@ -191,7 +216,7 @@ static func set_scroll(host, extra_h: float) -> void:
 	if host._scroll == null:
 		if extra_h <= 0.0:
 			return
-		host._scroll = ResultFit.wrap_in_scroll(host, [host._bg, host.glow])
+		host._scroll = wrap_in_scroll(host, [host._bg, host.glow])
 		host._content = host._scroll.get_child(0) as Control
 	host._content.custom_minimum_size = Vector2(1080.0, DESIGN_H + maxf(extra_h, 0.0))
 	host._scroll.vertical_scroll_mode = (
@@ -249,3 +274,108 @@ static func put_abs(host, c: Control, x: float, y: float, w: float, h: float) ->
 
 static func chip_h(host) -> float:
 	return CHIP_ROW_H + CHIP_WRAP if host._big else CHIP_ROW_H
+
+
+## TalkBack sıra sözcüğü (denetim #15, DESIGN §9): 1-10 "üçüncü"; sonrası rakamlı "11.".
+static func spoken_rank(rank: int) -> String:
+	var words := ORDINALS.split(" ")
+	return words[rank - 1] if rank >= 1 and rank <= words.size() else "%d." % rank
+
+
+## Sıra notu: 30 px tek satıra sığmazsa 26'ya kadar küçülür, yine sığmazsa 2 satıra sarar (denetim #9).
+## Büyük yazıda 34'ten 30'a. Kutu yüksekliği döner (sarmada en çok `avail_h`).
+static func fit_note(note: Label, width: float, big: bool, avail_h: float) -> float:
+	var grow := 4 if big else 0
+	var fs := NOTE_FONT + grow
+	var font := note.get_theme_font(&"font")
+	var text := note.text
+	while (
+		fs > NOTE_FONT_MIN + grow
+		and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fs).x > width
+	):
+		fs -= 2
+	note.add_theme_font_size_override(&"font_size", fs)
+	var wide := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fs).x > width
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wide else TextServer.AUTOWRAP_OFF
+	if wide:
+		return minf(avail_h, 2.0 * ceilf(font.get_height(fs)))
+	return maxf(40.0, ceilf(font.get_height(fs)))
+
+
+## Taş/kahve yüzey (DESIGN v2.1 §5: `levha` rengi): tema `PanelRaised` mordur (v2.0.3 kalıntısı); iç boşluklar temadan alınır.
+static func stone_box() -> StyleBox:
+	var theme_sb := UiKit.theme().get_stylebox(&"panel", &"PanelRaised")
+	var sb := UiKit.stylebox(UiKit.TAS_800, UiKit.BRONZ_700, 3, 14)
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		sb.set_content_margin(side, theme_sb.get_content_margin(side))
+	return sb
+
+
+## Kolay notu metni: autowrap'lı Label'ın en küçük yüksekliği ekranda dar genişlikte hesaplanıp (CI: 2163 px) metni panel dışına
+## itiyordu (not boş görünüyordu); sarma kapatılır, sığmayan metin boşlukta elle iki satıra bölünür.
+static func size_note_text(text: Label, width: float, height: float) -> void:
+	var avail := width - 92.0 - 28.0
+	var raw := text.text.replace("\n", " ")
+	var font := text.get_theme_font(&"font")
+	var fs := text.get_theme_font_size(&"font_size")
+	text.autowrap_mode = TextServer.AUTOWRAP_OFF
+	text.text = raw
+	if font.get_string_size(raw, HORIZONTAL_ALIGNMENT_LEFT, -1.0, fs).x > avail:
+		var cut := raw.rfind(" ", int(raw.length() * 0.5) + 4)
+		if cut > 0:
+			text.text = raw.substr(0, cut) + "\n" + raw.substr(cut + 1)
+	text.custom_minimum_size = Vector2(avail, 0.0)
+	text.size = Vector2(avail, height)
+
+
+## Çip giriş kayması blok arası boşluktan (sıkı kademelerde <24) büyük olamaz; yoksa çip kombo paneline biner.
+static func chip_slide(tier: int, slide: float) -> float:
+	return minf(slide, float(TIERS[tier][T_GB]))
+
+
+## Başarım çipinin iç parçaları çip yüksekliğine (96 / en sıkı kademede 88) göre dizilir; adlar çip genişliğine kırpılır.
+static func place_chip_parts(
+	star: Control, title: Control, names: Control, width: float, height: float
+) -> void:
+	var top := (height - 80.0) * 0.5
+	star.position.y = (height - 44.0) * 0.5
+	title.position.y = top
+	names.position.y = top + 40.0
+	names.size = Vector2(width - 92.0 - 28.0, 40.0)
+
+
+## Büyük yazıda sığmayan içerik için: `host`un `keep` dışındaki tüm çocukları, host'u dolduran bir ScrollContainer'ın
+## içerik düğümüne (ilk çocuk) taşır; tembel kurulur, böylece 1× düğüm ağacı değişmez. Kaydırma tıklamaları host'a geçirir (PASS).
+static func wrap_in_scroll(host: Control, keep: Array) -> ScrollContainer:
+	var scroll := UiKit.make_scroll(
+		UiKit.SCROLL_AXIS_VERTICAL,
+		{"name": "ResultScroll", "mouse_filter": Control.MOUSE_FILTER_PASS}
+	)
+	UiKit.fill(scroll)
+	var content := Control.new()
+	content.name = "ResultContent"
+	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	scroll.add_child(content)
+	for c in host.get_children():
+		if not keep.has(c):
+			host.remove_child(c)
+			content.add_child(c)
+	host.add_child(scroll)
+	return scroll
+
+
+## Büyük yazı: çipler (yazı 30) HFlowContainer'da sığmazsa iki satıra sarar; çipler ve adları aynı kalır.
+static func wrap_chips(row: HBoxContainer) -> HFlowContainer:
+	var flow := HFlowContainer.new()
+	flow.name = row.name
+	flow.alignment = FlowContainer.ALIGNMENT_CENTER
+	flow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flow.add_theme_constant_override(&"h_separation", 16)
+	flow.add_theme_constant_override(&"v_separation", 8)
+	for c in row.get_children():
+		row.remove_child(c)
+		flow.add_child(c)
+		for l in c.find_children("*", "Label", true, false):
+			(l as Label).add_theme_font_size_override(&"font_size", 30)
+	row.queue_free()
+	return flow

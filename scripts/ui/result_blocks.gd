@@ -48,7 +48,7 @@ static func build(host) -> void:
 	host.combo_panel.theme_type_variation = &"PanelRaised"
 	host.combo_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# kademeler panel üst/alt boşluğunu değiştirir: tema kutusunun kopyası (kenar/renk aynı)
-	host._panel_sb = ResultFit.stone_box()
+	host._panel_sb = ResultLayout.stone_box()
 	host.combo_panel.add_theme_stylebox_override(&"panel", host._panel_sb)
 	var cv := VBoxContainer.new()
 	host.combo_cv = cv
@@ -108,7 +108,7 @@ static func build_record(host) -> void:
 
 static func build_breakdown(host) -> void:
 	host.breakdown_panel = PanelContainer.new()
-	host.breakdown_panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
+	host.breakdown_panel.add_theme_stylebox_override(&"panel", ResultLayout.stone_box())
 	host.breakdown_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	host.add_child(host.breakdown_panel)
 	var defs := [
@@ -154,7 +154,7 @@ static func build_breakdown(host) -> void:
 
 static func build_strip(host) -> void:
 	host.strip_panel = PanelContainer.new()
-	host.strip_panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
+	host.strip_panel.add_theme_stylebox_override(&"panel", ResultLayout.stone_box())
 	host.strip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	host.add_child(host.strip_panel)
 	var defs := [["hud-sure", "Süre"], ["hud-xp", "Seviye"], ["hud-oldurme", "Öldürme"]]
@@ -268,7 +268,7 @@ static func fill_run(host, profiles: Callable) -> void:
 		lord_chip.name = "LordChip"
 		lord_chip.accessibility_name = "%d Lord devrildi." % lords
 		row.add_child(lord_chip)
-	var holder_row: Control = ResultFit.wrap_chips(row) if host._big else row
+	var holder_row: Control = ResultLayout.wrap_chips(row) if host._big else row
 	host.chip_holder.add_child(holder_row)
 	holder_row.size = Vector2(host._w, ResultLayout.chip_h(host))
 	host._run_chips = holder_row
@@ -295,14 +295,14 @@ static func render_combos(host) -> void:
 			42 if host._big else 36,
 			UiKit.BRONZ_300
 		)
-		more.custom_minimum_size = Vector2(0, ResultFit.TIERS[host._tier][ResultFit.T_MORE])
+		more.custom_minimum_size = Vector2(0, ResultLayout.TIERS[host._tier][ResultLayout.T_MORE])
 		more.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		host.combo_box.add_child(more)
 
 
 static func combo_row(host, c: Dictionary) -> Control:
 	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0, ResultFit.TIERS[host._tier][ResultFit.T_ROW])
+	row.custom_minimum_size = Vector2(0, ResultLayout.TIERS[host._tier][ResultLayout.T_ROW])
 	row.add_theme_constant_override(&"separation", 27)
 	var slot := SkillSlot.new(&"evolution", 80.0)
 	slot.set_skill(StringName(str(c.get("id", ""))), 0, str(c.get("icon", "")), true)
@@ -371,7 +371,7 @@ static func prefix_rank_line(host, rank: int) -> void:
 		% [
 			RunStrip.MODE_TITLES[host.run_mode],
 			RunStrip.DIFF_TITLES[host.run_diff],
-			ResultFit.spoken_rank(rank)
+			ResultLayout.spoken_rank(rank)
 		]
 	)
 
