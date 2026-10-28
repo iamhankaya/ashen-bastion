@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# v1.1 uzun doğrulama (gate DIŞI): 20 dk bot koşuları (P20 tam hali) + bellek büyümesi. Süre: ≈ 30–60 dk (tek çekirdek).
+# Uzun doğrulama (gate DIŞI; nightly.yml bunu çağırır): 20 dk bot koşuları + bellek büyümesi + v2.1 Sonsuz 40. dk testi. Süre: ≈ 30–120 dk (tek çekirdek).
 # Kullanım: bash tools/verify_long.sh            (ardından A/B için: bash tools/balance/ab_all.sh)
 set -uo pipefail
 cd "$(dirname "$0")/.."

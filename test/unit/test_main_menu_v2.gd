@@ -125,14 +125,14 @@ func test_default_sublines_and_version() -> void:
 	await _settle()
 	assert_eq((m.characters_button.get_node("Sub") as Label).text, "Gunslinger")
 	assert_eq((m.achievements_button.get_node("Sub") as Label).text, "0/53")
-	assert_eq(m.version_label.text, "Sürüm 2.0.3")
+	assert_eq(m.version_label.text, "Sürüm 2.1.0")
 
 
 func test_set_character_name_updates_sub_and_version() -> void:
 	var m := _menu()
 	m.set_character_name("Barutçu")
 	assert_eq((m.characters_button.get_node("Sub") as Label).text, "Barutçu")
-	assert_eq(m.version_label.text, "Sürüm 2.0.3", "karakter adı sürüm satırında yok")
+	assert_eq(m.version_label.text, "Sürüm 2.1.0", "karakter adı sürüm satırında yok")
 
 
 func test_set_achievement_count() -> void:
@@ -179,13 +179,16 @@ func test_focus_order_follows_tree_order() -> void:
 	var col := m.play_button.get_parent() as Control
 	var tree_order: Array[Node] = col.find_children("*", "Button", true, false)
 	var want: Array[Node] = [
+		m.run_button,
 		m.play_button,
 		m.characters_button,
 		m.achievements_button,
 		m.scores_button,
 		m.settings_button
 	]
-	assert_eq(tree_order, want, "OYNA → KARAKTERLER → BAŞARIMLAR → EN İYİ SKORLAR → AYARLAR")
+	assert_eq(
+		tree_order, want, "şerit → OYNA → KARAKTERLER → BAŞARIMLAR → EN İYİ SKORLAR → AYARLAR"
+	)
 	for c in want:
 		assert_eq((c as Control).focus_mode, Control.FOCUS_ALL, c.name)
 

@@ -358,3 +358,69 @@ düzenlemeyin: `python3 tools/art/ruin_collision.py` (kural: görsel yüksekliğ
 parçalar dekordur; bkz. `docs/dev/ruins.md`). Dosya yoksa harita
 boştur. Doğrulama: `scripts/sim/ruins_validator.gd`; sprite ve ölçüler `tools/art/process_art.py` çıktısından
 (`assets/gfx/map/ruins_manifest.json`) üretilir.
+
+## Koşu profilleri — `run_profiles.json` (v2.1)
+
+Tek kaynak: `data/run_profiles.json` (dosya yoksa HATA, yerleşik varsayılan yok). Okuyucu/doğrulayıcı `scripts/sim/run_profiles.gd`
+(`RunProfiles`; `GameData`'dan bağımsız; `tools/validate_data.gd` çağırır). Satır başına bir anahtar (birleştirilebilir). Kimlikler
+İngilizce küçük harf: modlar `quick|normal|endless`, zorluklar `easy|normal|hard`. Hata satırı `[kod] bağlam: açıklama`.
+
+- Kök: `v` (=1), `default {mode, diff}` (tanımlı adlar), `modes`, `difficulties`, `achievements`; başka anahtar `profile_unknown_key`.
+- `modes.<ad>` (hepsi zorunlu): `time_scale` 0,25..4; `end_mode` `lord|endless`; `xp_mult` 1..5; `lord_hp_mult` 0,1..5; `rate_mult` 0,25..4.
+  Yalnız `end_mode=endless`: `lord_repeat_sec` 60..1800, `lord_repeat_hp_mult` 1..5, `lord_hp_cap_mult` 1..20, `enrage_after_sec` 1200..7200,
+  `enrage_dmg_per_min` 0..1 (Sonsuz'da zorunlu, diğer modlarda yasak: `profile_cross`).
+- `difficulties.<ad>` (hepsi zorunlu): `enemy_hp`, `enemy_dmg`, `spawn_density`, `lord_hp` 0,1..5; `xp` 1..5.
+- `achievements`: `lord_bound_tier_ids` (`"<aile>:<1 tabanlı kademe>"` dizisi, örn. `endure:4`) ve her zorluk için `{block_lord_bound: bool,
+  totals: runs_playsecs_only|all}`; her zorluk için kural zorunlu (`profile_cross`).
+- Hata kodları: `profile_file_missing`, `profile_range`, `profile_type`, `profile_missing_key`, `profile_unknown_key`, `profile_default`,
+  `profile_cross`. Her kod için `test/fixtures/profile_bad_<kod>/run_profiles.json` (üretici `tools/ci/gen_profile_fixtures.py`;
+  `data_bad_` öneki DEĞİL: `test_game_data.gd` o önekli dizinleri `GameData` hata kodu sayar).
+- Sayılar TAHMİNDİR; U5 ayar turunda yalnız sayı satırları değişir (şema/doğrulayıcı C'nindir).
+
+### Sim ve veri (U2)
+
+Mantık `scripts/sim/v21_sim.gd` (`V21Sim`) içindedir; `GameSim.v21` yalnız **legacy olmayan profilde ya da `end_mode == endless`**
+iken kurulur, aksi halde `null` (her yardımcı eski değeri döndürür: RNG/karma baytı değişmez, K-C10).
+
+- **Süre ölçeği (`time_scale`):** `curve_t = t / time_scale` HP/hız/temas eğrilerini ve `alive_cap`'i okur;
+  `WaveScaler.scale` `SpawnDirector`'a verilen `waves` kopyasını ölçekler (`rate`/grup boyutu/burst adedi hariç);
+  `PickupDirector` yalnız `interval`'ı `time_scale` ile çarpar. Hızlı `end_time` 600 (`RunProfile.opts`).
+- **Çarpanlar:** `enemy_hp` yalnız `scales_with_time` düşmanlara; Lord HP = taban · `lord_hp` · `lord_hp_mult`
+  (· Lord tekrarı basamağı), zaman eğrisi/`enemy_hp` uygulanmaz. Temas: zaman eğrisi yalnız `scales_with_time`;
+  zorluk `enemy_dmg` ve enrage **koşulsuz tüm düşmanlara (Lord dahil)**. `spawn_density` · `rate_mult` `rate` birikimine;
+  `spawn_density` grup boyutuna ve `burst.count`'a (`maxi(1, roundi(...))`).
+- **XP:** `xp_carry += xp_değeri · xp_mult · xp`; taş değeri `floori(xp_carry)`, kalan taşınır (yuvarlama kaybı yok).
+- **Sonsuz:** `rate`/`group` satırları `to` sonrası son değerinde sürer, `after_lord` kapalı, `burst` tek seferlik; ilk Lord `waves`
+  satırından (1200). Lord ölümü: `lords_killed += 1`, `score.on_lord()`, `lord_slain(n)`, ilk ölümde `milestone_won` +
+  `milestone_reached`; `lord_killed` set edilmez, sim yalnız `hp <= 0` ile `LOST` olur. Tekrar: ölümden `lord_repeat_sec` sonra
+  (`warn` sn önce `boss_warning`), HP × `min(lord_repeat_hp_mult^n, lord_hp_cap_mult)`; doğuş başarısızsa her adım yeniden denenir,
+  süre yeniden başlamaz. Enrage: `t >= enrage_after_sec` sonrası temas × `1 + enrage_dmg_per_min · (t − enrage_after_sec) / 60`.
+- **Karma kapsamı:** `xp_carry` her legacy olmayan profilde (profilsiz `end_mode=endless` testinde de), Sonsuz durumu (`repeat_n`, sonraki doğuş, uyarı, `lords_killed`,
+  `milestone_won`) yalnız Sonsuz'da `state_hash` sonuna eklenir; Lord/Zamanlayıcı modunda ve legacy'de baytlar değişmez.
+- `lords_killed`/`milestone_won` yalnız Sonsuz'da sayılır (Lord modunda kazanma `lord_killed` → `WON`).
+
+### Kayıt, skor ve başarım (U3)
+
+- `highscores.json` v2: `{"v":2,"lists":{"<mod>:<zorluk>":[{"score","time","won","level","unix","mode","diff"}]}}`. Liste anahtarı
+  otoritedir (girişteki `mode`/`diff` anahtara göre yeniden yazılır); bilinmeyen anahtarlı listeler silinmeden saklanır, gösterilmez.
+  Bozuk dosya, `v` sayı değil/bilinmeyen, `lists` yok/sözlük değil: `.bad` kopyası + boş liste. Giriş sayıları `Highscores`
+  sınırlarıyla temizlenir; >10 giriş kırpılır, eşit skorda eski giriş önde.
+- v1 → v2 göçü (`load_file`): v1 girişleri `normal:normal`'a gider. Sıra: (1) v1 baytları `<yol>.v1.bak`'a atomik yazılır; varsa üzerine
+  yazılmaz, `<yol>.v1.<unix>[-n].bak` kullanılır; (2) yedek yazılamazsa göç İPTAL: v1 dosyası dokunulmaz, oturum bellekte sürer,
+  `save()` v2 yazmaz (oturum skorları kaybolabilir), sonraki açılışta göç yeniden denenir; (3) v2 `StoreIo.write_atomic` ile yazılır, hata
+  olursa v1 sağlam kalır ve göç sonraki açılışta tekrar denenir. `.bad`/`.tmp`/`.v1.bak` enjekte edilen yoldan türer. Eski APK v2 dosyasını
+  bozuk sayar (`.bad`); `.v1.bak` korunur (kabul edilen risk).
+- `AchievementRules` tracker'a kurulurken enjekte edilir (`AchievementTracker.new(..., rules, diff)`; `V21Runs.achievement_rules()` ve
+  `V21Runs.diff_of(sim)`). Kolay'da Lord'a bağlı kademeler (`lord_bound_tier_ids`) olay anında verilmez (kademeler ardışık verildiğinden
+  tracker ilk kapalı kademede durur); toplamlardan yalnız `runs`/`play_secs` artar (`wins`, `kills`, `boss_kills`, `chars5` artmaz).
+  Koşu içi en iyiler her zorlukta işler. Sonsuz'da yalnız ilk Lord ölümü `wins` sayar (`finish(won)` koşu başına bir kez).
+
+### Arayüz (U4a/U4b)
+
+**U4a (koşu seçimi) `run_profiles.json`'dan neyi okur** (ekranda sabit sayı yok; `RunStrip` saf yardımcılarıdır):
+- Mod süresi: `end_mode != endless` ise `GameSim.DEFAULT_END_TIME × modes.<mod>.time_scale / 60` dakika ("10 DK", "20 DK"); `endless` süresiz ("SONSUZ", "∞"). Açıklamadaki "Lord N. dakikada gelir" aynı sayıdır.
+- Ayrıntı levhası: `difficulties.<zorluk>.{enemy_hp, enemy_dmg, spawn_density, xp}` çarpanı -> `(çarpan − 1) × 100` yuvarlanır ("−%30", "+%25"); sıfır ise XP satırında "aynı", diğerlerinde "tam" (Zor).
+- Kural levhası: her zaman skor-listesi satırı; zorluk `easy` ise Kolay uyarısı; mod `endless` ise Sonsuz uyarısı. Başarım kuralı metni `achievements.<zorluk>.block_lord_bound` ile aynı olgudur (metin sabit, kural JSON'da).
+- Seçim: `Settings.run_mode/run_diff` (`kosu_modu`/`kosu_zorluk`); dokunma `V21Runs.set_selection` ile anında kaydeder. U4b (skor sekmeleri, sonuç çipleri) bu başlığa kendi satırlarını ekler.
+
+**U4b (skor/sonuç/bant):** sonuç sözlüğüne `milestone_t` (Sonsuz'da ilk Lord ölümünün sim zamanı, yoksa -1) eklendi; sonuç ekranı `mode/diff/lords_killed/milestone_t` alanlarını `stats`'tan okur (alan yoksa çip/not gizli). `Highscores.list_for(mode,diff)` sekme listelerini besler; bant ipucu süresi `modes.endless.lord_repeat_sec`'ten. Sonsuz'da koşu bitince `milestone_won` ise kazanma müziği (`V21Runs.music_won`).

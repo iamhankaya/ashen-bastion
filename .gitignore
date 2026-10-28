@@ -11,6 +11,7 @@ tools/art/_preview/
 .mid/
 .baseline/
 .mid_dps/
+.balance/
 
 # v2.0.3 üretilen video çıktıları (Gemini; tools/art/gen_video.py)
 art/source/*/video/

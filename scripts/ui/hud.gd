@@ -24,6 +24,9 @@ const BOSS_BAND_TIME := 2.4
 const BOSS_BAND_TOP := 520.0
 const BOSS_BAND_H := 132.0
 const HUD_ALPHA := 0.85
+## v2.1 debug sayaç etiketi (Sonsuz): DebugLabels satırının (y 6–40) altı.
+const ENDLESS_LABEL_Y := 44.0
+const ENDLESS_LABEL_W := 760.0
 ## Elit/Lord can satırı: pasif yuva satırının altında, ortada, oyuncu canından ayrı (N2). Ad üstte (≥26 px),
 ## çubuk altta; Lord daha kalın ve ayrı renkte. Birden çok elit varsa en yüksek maks. canlı gösterilir, ada "+N" eklenir.
 const BOSS_W := 700.0
@@ -40,6 +43,9 @@ const SCORE_W := 460.0
 const SCORE_H := 152.0
 const BUFF_BADGE := 108.0  # etki rozeti; rozet n'nin sol x'i 231 + n·120 (BuffRow.badge_x), alt BOTTOM
 const BUFF_ROW_W := 231.0 + 3.0 * 120.0 - 12.0
+
+## Debug sayaç etiketi açık mı (yalnız debug derleme; testler/cihaz kapatabilir).
+static var endless_counter_on: bool = true
 
 var level_badge: LevelBadge
 var xp_bar: ProgressBar
@@ -60,6 +66,9 @@ var boss_is_lord: bool = false
 var boss_extra: int = 0
 var boss_label: Label
 var vignette: Vignette
+## v2.1 (U4b): Sonsuz kilometre taşı bandı + debug sayaç etiketi (yalnız debug derleme, Sonsuz'da).
+var milestone_band: MilestoneBand
+var endless_label: Label
 ## v1.1 (gizli doğar; ilgili D fazı görünür yapar): skor sütunu, etki rozetleri, ekran dışı ok, kayan metin.
 var score_block: ScoreBlock
 var buff_row: BuffRow
@@ -302,6 +311,10 @@ func _build() -> void:
 	boss_band.add_child(boss_label)
 	boss_band.visible = false
 	add_child(boss_band)
+	milestone_band = MilestoneBand.new()
+	milestone_band.set_safe_top(_safe_top)
+	add_child(milestone_band)
+	_build_endless_label()
 
 
 ## v1.1 öğeleri (hepsi gizli): skor sütunu ve etki rozetleri HUD katmanında, ok ve kayan metin tam ekran güvenli katmanda.
@@ -349,6 +362,10 @@ func apply_safe_area(extra: Variant = null) -> void:
 	safe.offset_bottom = -e.w
 	_safe_top = e.y
 	_shift_boss_band()
+	if milestone_band != null:
+		milestone_band.set_safe_top(e.y)
+	if endless_label != null:
+		endless_label.position.y = ENDLESS_LABEL_Y + e.y
 
 
 ## Lord bandını güvenli alan üst payı kadar indirir (bant `safe` dışında, tam genişlikte kalır).
@@ -365,15 +382,20 @@ func bind(sim: GameSim) -> void:
 			_sim.bus.boss_warning.disconnect(_on_boss_warning)
 		if _sim.bus.player_damaged.is_connected(_on_player_damaged):
 			_sim.bus.player_damaged.disconnect(_on_player_damaged)
+		if _sim.bus.milestone_reached.is_connected(_on_milestone):
+			_sim.bus.milestone_reached.disconnect(_on_milestone)
 	_sim = sim
 	_bind_v11(sim)
 	_boss_left = 0.0
 	if boss_band != null:
 		boss_band.visible = false
+	if milestone_band != null:
+		milestone_band.hide_band()
 	if sim == null:
 		return
 	sim.bus.boss_warning.connect(_on_boss_warning)
 	sim.bus.player_damaged.connect(_on_player_damaged)
+	sim.bus.milestone_reached.connect(_on_milestone)
 	_xp_shown = _xp_ratio()
 	refresh(0.0)
 
@@ -408,6 +430,7 @@ func refresh(dt: float) -> void:
 	drum.tick(dt)
 	_refresh_boss_bar()
 	_refresh_v11(dt)
+	_refresh_v21(dt)
 	_tick_effects(dt)
 
 
@@ -425,6 +448,63 @@ func _refresh_v11(dt: float) -> void:
 	buff_row.refresh(dt)
 	offscreen_arrow.refresh(dt)
 	float_text.refresh(dt)
+
+
+## v2.1 (U4b): bant zamanı ve debug sayaç.
+func _refresh_v21(dt: float) -> void:
+	milestone_band.advance(dt)
+	if endless_label == null:
+		return
+	endless_label.visible = endless_counter_on and _sim.end_mode == GameSim.END_MODE_ENDLESS
+	if endless_label.visible:
+		endless_label.text = endless_counter_text(_sim)
+
+
+## Kilometre taşı (ilk Lord ölümü): bant, 3,2 sn. Tekrar süresi Sonsuz profilinden (yoksa ipucu satırı yok).
+func _on_milestone() -> void:
+	var repeat := _sim.v21.p.lord_repeat_sec if _sim != null and _sim.v21 != null else 0.0
+	var st := get_node_or_null(^"/root/Settings")
+	if st != null:
+		set_font_scale(st.font_scale())  # 2× yazı: ayar bant her göründüğünde okunur
+	milestone_band.show_band(repeat, _reduce_motion())
+
+
+## 2× yazı (`f > 1,3`): v2.1 ile eklenen tek ölçeklenir öğe Sonsuz bandıdır (debug sayacı yalnız debug derlemede, 1×).
+func set_font_scale(f: float) -> void:
+	milestone_band.set_font_scale(f)
+
+
+func is_big() -> bool:
+	return milestone_band.is_big()
+
+
+func _reduce_motion() -> bool:
+	var st := get_node_or_null(^"/root/Settings")
+	return st != null and st.hareket_azalt
+
+
+## Debug sayaç etiketi (yalnız debug derleme): ikinci satır, DebugLabels satırının altı; dokunmayı yutmaz.
+func _build_endless_label() -> void:
+	if not OS.is_debug_build():
+		return
+	endless_label = UiKit.label("", &"", DebugLabels.FONT_SIZE, UiKit.KEMIK_100)
+	endless_label.name = "EndlessCounter"  # "*Debug" adı değil: üst satır debug testi (y6–40) kapsamı dışı
+	endless_label.position = Vector2(DebugLabels.RENDER_X, ENDLESS_LABEL_Y)
+	endless_label.size = Vector2(ENDLESS_LABEL_W, DebugLabels.H)
+	endless_label.max_lines_visible = 1
+	endless_label.clip_text = true
+	endless_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	endless_label.visible = false
+	add_child(endless_label)
+
+
+## "düşman N/M  Lord ×N  süre M:SS": N canlı düşman, M o andaki doğuş tavanı.
+static func endless_counter_text(sim: GameSim) -> String:
+	var cap := Difficulty.alive_cap(V21Sim.curve_t(sim))
+	return (
+		"düşman %d/%d  Lord ×%d  süre %s"
+		% [sim.enemies.count, cap, sim.lords_killed, UiKit.format_time(sim.time)]
+	)
 
 
 ## "86 / 120" (yukarı yuvarlanmış can; 0'ın altı 0).

@@ -39,3 +39,9 @@ signal bomb_hits(pos: Vector2, radius: float, hits: int)
 # --- v2.0.1 ---
 ## Mermi düşmana isabet etti ve öldürmedi (ölüm `enemy_killed` ile duyulur). Yalnız bildirim: sim durumunu ve RNG'yi etkilemez.
 signal enemy_hit(pos: Vector2)
+
+# --- v2.1 ---
+## Sonsuz: ilk Lord öldü (kilometre taşı; yalnız bir kez). Yalnız bildirim: sim durumunu etkilemez.
+signal milestone_reached
+## Sonsuz: n. Lord öldü (n = lords_killed, 1'den başlar). Yalnız bildirim.
+signal lord_slain(n: int)

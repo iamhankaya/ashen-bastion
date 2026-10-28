@@ -364,3 +364,44 @@ Aynı kural: bulutta telefon yok; yalnız cihazda (Redmi Note 13 Pro, debug APK)
 6. **TİTREŞİM** AÇIK/KAPALI ayara uyar (anahtar artık yalnız AYARLAR'da).
 7. **Duraklatmadan AYARLAR:** GERİ duraklatmaya döner.
 8. **Ara denetim (#65) açık bulguları cihazda gözle:** 2× yazı boyutunda ayarlar düzeni, lisans kartı kaydırma, sessizde çizili hoparlör, mini portre/halka (0/53), 2× tek sütunda ikon hizası.
+
+## N. v2.1 (bölüm dosyaları birleştirildi: A, B + göç + denge)
+
+Aynı kural: bulutta telefon yok; yalnız cihazda (Redmi Note 13 Pro, debug APK) doğrulanır. Bölüm kaynakları `docs/dev/user-verify/v2.1-{A,B}.md` (faz notu olarak kalır). Maketler `docs/design/v2.1/mock/` (Chromium; Godot render değil). A/B kodu yerelde hiç çalışmadı, yalnız CI'da (GUT) koştu; aşağıdakilerin hiçbiri cihazda görülmedi.
+
+### A — Koşu seçimi: şerit, KOŞU ekranı, duraklatma çipleri
+1. **Şerit konumu:** ana sayfada OYNA'nın hemen üstünde taş şerit ("NORMAL · 20 DK", "Zorluk: Normal" + 2 kalkan, sağda "DEĞİŞTİR ›"). Beklenen: OYNA yerinde, şerit karakter ayaklarına binmiyor; şeride dokununca KOŞU ekranı açılır.
+2. **Kazara dokunma:** şerit ile OYNA 27 px arayla yan yana; başparmakla OYNA'ya basarken şerit tetiklenmemeli (tasarım açık noktası 6).
+3. **KOŞU ekranı:** HIZLI / NORMAL / SONSUZ satırı ve KOLAY / NORMAL / ZOR kart seçilir; seçili olanda bordo yüzey + ✓ mührü. Seçimi değiştirince ayrıntı levhası (düşman canı/hasarı/sayısı/XP) ve kural levhası yerinde güncellenir. Kolay'da amber uyarı, Sonsuz'da amber uyarı.
+4. **Kalıcılık:** seçimi değiştir, GERİ, uygulamayı kapatıp aç: şerit son seçimi gösterir; OYNA o seçimle başlar (Hızlı: Lord 10. dakikada).
+5. **BÜYÜK YAZI açık:** ana sayfa tek sütun, şerit 168 px ve "›" ile; karakter küçülür, hiçbir şey kesilmez. KOŞU ekranında zorluk kartları alt alta, liste kayar, GERİ sabit; seçili satır görünür.
+6. **HAREKETİ AZALT açık:** KOŞU ekranında seçim değişince levhalar anında değişir (çapraz geçiş yok).
+7. **Çentik/alt çubuk:** KOŞU ekranı başlığı çentiğin altında, GERİ alt çubuğun üstünde.
+8. **Duraklatma:** koşu sırasında duraklat: "DURAKLATILDI" altında iki çip (mod, zorluk); dokununca bir şey olmaz; eylem düğmeleri eski yerinde ve ekrana sığıyor (2× yazıda da).
+9. **TalkBack:** şerit "Koşu: Normal, yirmi dakika. Zorluk: Normal. Değiştirmek için çift dokun." okur; mod/kart satırları "seçili"/"seçili değil" söyler.
+
+### B — Skor sekmeleri, sonuç çipleri, Sonsuz kilometre taşı bandı
+1. **Sonuç çipleri:** koşu bitince altyazı altında iki çip (mod + süre, zorluk + kalkan); Sonsuz'da Lord devrildiyse üçüncü "LORD ×N". Blokların +44 px kayması dökümü/şeridi kesmiyor (tasarım açık noktası 6, 7: altyazı–çip boşluğu dar mı?).
+2. **Sıra satırı:** rekor/ilk 10'da "Normal · Zor listesinde 3. sıra" biçimi; sıra o (mod, zorluk) listesine göre.
+3. **Kolay notu:** Kolay'da biten koşuda amber çizgili not; başarım çipi varsa notun altında; 4 kombo + not + çipte düğmeler ekrana sığıyor (kombo satırı "+N"e katılabilir).
+4. **Sonsuz zaferi:** KAZANDIN / "Lord'u devirdin; sonra M:SS daha dayandın."; ölüm müziği yerine zafer müziği çalar.
+5. **Skorlar:** iki sıra sekme (MOD, ZORLUK); ana sayfadan geçerli seçimle, sonuçtan biten koşunun çiftiyle açılır; sekme değişince liste değişir, kalıcı olmaz. 10 satır GERİ'ye değmeden sığar; 146 px satır okunur mu?
+6. **Boş sekme:** "<Mod> · <Zorluk> listesinde kayıt yok." + BU AYARLA OYNA; basınca o çiftle koşu başlar ve seçim o çifte geçer.
+7. **Kilometre taşı bandı (Sonsuz, ilk Lord ölümü):** üstte "KALE LORDU DÜŞTÜ / ZAFER SAYILDI · Koşu sürüyor / Lord 5:00 sonra daha güçlü döner."; 3,2 sn; dokunma/joystick engellenmez; HAREKETİ AZALT'ta anlık.
+8. **Debug APK:** Sonsuz'da ikinci üst satırda "düşman N/M  Lord ×N  süre M:SS" etiketi.
+9. **Çentik:** skor sekmeleri ve bant çentik altında.
+
+### C — Kayıt göçü, yedek, aşağı sürüm (en önemlisi; v2.0.3 → v2.1)
+Kayıt yedeklemesi: göçten önce kaydı kopyalayın (adb: `adb exec-out run-as <paket> cat files/highscores.json > highscores.v2.0.3.json`; aynısı `achievements.json` için). Kopya olmadan göç adımlarını deneme.
+1. **Göç:** v2.0.3 APK'sı oynanmış cihazın üstüne v2.1 kur. En İyi Skorlar'da eski skorlar **Normal · Zor** listesinde görünür (v1 listeleri `normal:normal` ya da legacy çiftine göçer; sıra ve skorlar aynı), diğer sekmeler boş. Çökme yok, ilk açılışta başarım toast'ı yağmuru yok.
+2. **Yedek:** ilk kayıttan sonra `files/highscores.json.v1.bak` (özgün v2.0.3 baytları) oluşur; ikinci göçte (yedek farklıysa) mevcut yedek ezilmez, `highscores.json.v1.<unix>.bak` adı alır. Başarımlar için `achievements.json.v1.bak` (v2.0.3'te de vardı).
+3. **İkinci açılış:** uygulamayı kapat/aç: skorlar aynı, yeni `.bak` birikmez.
+4. **Aşağı sürüm (beklenen davranış, koddan okundu, cihazda görülmedi):** yedeği aldıktan sonra v2.0.3 APK'sını yeniden kurmak (önce kaldırmak gerekebilir) v2 `highscores.json`'ı tanımaz; eski sürüm dosyayı bozuk sayıp boş listeyle açabilir. Kurtarma: `.v1.bak` ya da adım başındaki kopya geri yüklenir. Sonucu bildirin (boş mu açıldı, çöktü mü).
+5. **Kolay → başarım:** Kolay'da biten koşu kademe/toplam sayaçlarını tam saymaz (sonuç ekranındaki amber not); Normal'de aynı koşu sayar.
+
+### D — Denge hissi (bot ölçümü insan dengesi değildir)
+1. **Normal'de 10 koşu:** bota göre kazanma ~%20–30 hedefli; **10 koşuda 2–3 kazanma** beklenir (0–1 ya da 5+ ise bildirin: zorluk Normal'e yakın mı?). Her koşuda sonuç ekranındaki süre/öldürme sayısını not edin.
+2. **Kolay:** Normal'den belirgin rahat mı (hedef: çoğu koşu Lord'a ulaşır)? **Zor:** v2.0.3 deneyimiyle aynı mı (Zor = eski dengenin aynısı)?
+3. **Hızlı:** 10. dakikada Lord; tüm koşu ~11 dk içinde biter; ritim "acele" mi, "kısaltılmış" mı hissettiriyor?
+4. **Sonsuz:** Lord devrildikten sonra ortalama ne kadar dayanıyorsunuz (bot medyanı ~5 dk; ikinci Lord 5:00'te gelir)? Son kapıda açık olan: enrage etkisi ölçülemedi, hissi bildirin.
+5. **Lord dövüşü süresi:** Normal'de Lord kaç saniyede düşüyor (bot ölçümü ~50 sn; spec hedefi 3–6 dk)? Hızlı'da? Çok kısa geliyorsa bildirin (son kapı kararı).

@@ -120,9 +120,9 @@ func test_d6_safe_area_title_list_and_back_stay_inside() -> void:
 
 
 func test_d7_version_comes_from_project_setting() -> void:
-	assert_eq(ProjectSettings.get_setting("application/config/version"), "2.0.3")
-	assert_eq(MainMenu.version_text(), "Sürüm 2.0.3")
-	assert_eq(SettingsScreen.version_text(), "2.0.3")
+	assert_eq(ProjectSettings.get_setting("application/config/version"), "2.1.0")
+	assert_eq(MainMenu.version_text(), "Sürüm 2.1.0")
+	assert_eq(SettingsScreen.version_text(), "2.1.0")
 
 
 func test_d8_menu_reduce_motion_stops_embers_and_breath() -> void:
@@ -214,7 +214,7 @@ func test_d12_big_font_scale_stacks_half_buttons_in_one_column_without_clipping(
 	assert_lte(m.version_label.get_global_rect().end.y, 2400.0 - 72.0 + 0.5)
 	if m.hero != null:
 		var hr := m.hero.get_global_rect()
-		assert_almost_eq(hr.size.x, 512.0, 1.0, "karakter %80")
+		assert_almost_eq(hr.size.x, 320.0, 1.0, "karakter %50 (v2.1 DESIGN §2: şerit için küçülür)")
 		assert_lte(hr.end.y, m.play_button.get_global_rect().position.y)
 		assert_gte(hr.position.y, m._head.get_global_rect().position.y + 300.0, "başlığın altında")
 	m.set_font_scale(1.0)

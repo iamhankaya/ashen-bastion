@@ -1,0 +1,26 @@
+{
+  "base": "544661ad6058fda26245d6f5bb4d26873a584577",
+  "late": {
+    "11:600:7200": {
+      "damage_q": 118562,
+      "hash": "1582209811",
+      "kills": 42,
+      "level": 3,
+      "lord_spawns": 0,
+      "rng_combat": "7665415464325916712",
+      "state": 0,
+      "steps": 7200
+    },
+    "23:1190:7200": {
+      "damage_q": 203003,
+      "hash": "3578798136",
+      "kills": 413,
+      "level": 12,
+      "lord_spawns": 1,
+      "rng_combat": "4173534761309125201",
+      "state": 0,
+      "steps": 7200
+    }
+  },
+  "version": 1
+}

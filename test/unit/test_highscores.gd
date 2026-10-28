@@ -32,7 +32,15 @@ func _write(text: String, path: String = "") -> void:
 func _e(
 	score: int, unix: int = 1000, won: bool = false, time: int = 60, level: int = 3
 ) -> Dictionary:
-	return {"score": score, "time": time, "won": won, "level": level, "unix": unix}
+	return {
+		"score": score,
+		"time": time,
+		"won": won,
+		"level": level,
+		"unix": unix,
+		"mode": "normal",
+		"diff": "normal",
+	}
 
 
 func test_missing_file_gives_empty_list_and_false() -> void:
@@ -135,11 +143,12 @@ func test_save_load_roundtrip_and_file_shape() -> void:
 	h.submit(_e(300, 1_700_000_100, false, 90, 4))
 	assert_true(h.save())
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(_path()))
-	assert_eq(int(raw["v"]), 1)
-	assert_eq((raw["entries"] as Array).size(), 2)
-	var first: Dictionary = raw["entries"][0]
-	assert_eq(first.keys().size(), 5)
-	for k in ["score", "time", "won", "level", "unix"]:
+	assert_eq(int(raw["v"]), 2)
+	var list: Array = raw["lists"]["normal:normal"]
+	assert_eq(list.size(), 2)
+	var first: Dictionary = list[0]
+	assert_eq(first.keys().size(), 7)
+	for k in ["score", "time", "won", "level", "unix", "mode", "diff"]:
 		assert_true(first.has(k), k)
 	var h2 := Highscores.new(_path())
 	assert_true(h2.load_file())

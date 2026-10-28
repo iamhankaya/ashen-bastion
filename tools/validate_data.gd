@@ -11,6 +11,10 @@ func _init() -> void:
 	var complete := FileAccess.get_file_as_string("res://tools/slice.txt").strip_edges() == "2"
 	var g := GameData.load_dir(root)
 	var errs := g.validate({}, complete)
+	# v2.1: run_profiles.json (GameData'dan bağımsız doğrulayıcı). Asıl veri kökünde dosya ZORUNLU; başka kökte varsa denetlenir.
+	var profile_path := root.path_join("run_profiles.json")
+	if root == "res://data" or FileAccess.file_exists(profile_path):
+		errs.append_array(PackedStringArray(RunProfiles.load_file(profile_path)["errors"]))
 	for e in errs:
 		print("VERİ HATASI: ", e)
 	print(

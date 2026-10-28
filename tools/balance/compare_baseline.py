@@ -4,7 +4,11 @@ bootstrap %95 güven aralığıyla ölçer.
 
   python3 tools/balance/compare_baseline.py <taban> <yeni> [--char gunslinger] [--noise <B>] [--nodyn <nodyn>]
          [--gate-policies strong,kite] [--info-policies greedy,idle] [--boot 4000] [--seed 1] [--band 0.05]
-         [--noise-limit 0.025] [--out rapor.md] [--json rapor.json]
+         [--noise-limit 0.025] [--base-cell normal:hard] [--new-cell normal:hard] [--out rapor.md] [--json rapor.json]
+
+v2.1: satır anahtarı `(mod, zorluk, karakter, politika, tohum)`; mod/zorluk alanı olmayan (v2.0.x) satırlar normal:hard
+(legacy Zor) sayılır. `--base-cell`/`--new-cell` karşılaştırılan hücreleri seçer (varsayılan normal:hard); tohum eşleşmesi hücre
+içindedir, hücreler birbirine karışmaz. survival/reach10 sabitleri mod bazlıdır (mid_rows.MODE_CONSTS: Normal 1200/1199, Hızlı 600/599).
 
 Girdiler: `mid_run.gd` çıktısı (satır başına bir JSON) içeren .jsonl dosyası ya da dizini (tools/balance/baseline_run.sh
 çıktıları: docs/design/v2.0.2/balance/baseline-v201-A.jsonl vb.). <taban> = v201-A, <yeni> = yeni kodun A kümesi koşusu.
@@ -24,7 +28,6 @@ Bot dengesi ölçülüyor, oyun dengesi değil.
 from __future__ import annotations
 
 import argparse
-import glob
 import json
 import os
 import sys
@@ -32,39 +35,34 @@ from pathlib import Path
 
 import numpy as np
 
-CAP = 1200.0
-SURVIVED = 1199.0  # mid_run.gd: 72000 adım = 1200 sn; >= 1199 hayatta
-MID_START = 600.0
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import mid_rows  # noqa: E402
+from mid_rows import normalize, row_key  # noqa: E402,F401
+
 DISCLAIMER = "Bot dengesi ölçülüyor, oyun dengesi değil."
 
 
 def load(path: str, char: str | None = None) -> list[dict]:
-    p = Path(path)
-    files = sorted(glob.glob(str(p / "*.jsonl"))) if p.is_dir() else [str(p)]
-    if not files:
-        raise FileNotFoundError(f"girdi yok: {path}")
-    rows: list[dict] = []
-    for f in files:
-        with open(f, encoding="utf-8") as fh:
-            rows += [json.loads(line) for line in fh if line.strip()]
+    rows = mid_rows.read_jsonl_files(path)
     if char:
         rows = [r for r in rows if r.get("character") == char]
     return rows
 
 
 def survival(r: dict) -> float:
-    return CAP if r["time"] >= SURVIVED else float(r["time"])
+    cap = mid_rows.consts(r.get("mode", "normal"))["cap"]
+    return cap if r["time"] >= cap - 1.0 else float(r["time"])
 
 
 def hp_mid(r: dict) -> float:
     """Ölen koşu 0 sayılır; hayatta kalanın 10-20 dk ortalaması (örnek yoksa 0)."""
-    if r["time"] < SURVIVED or r.get("hp_mid", -1.0) < 0:
+    if r["time"] < mid_rows.consts(r.get("mode", "normal"))["cap"] - 1.0 or r.get("hp_mid", -1.0) < 0:
         return 0.0
     return float(r["hp_mid"])
 
 
 def reach10(r: dict) -> float:
-    return 1.0 if r["time"] >= MID_START else 0.0
+    return 1.0 if r["time"] >= mid_rows.consts(r.get("mode", "normal"))["mid"] else 0.0
 
 
 def kills5(r: dict) -> float | None:
@@ -88,9 +86,18 @@ GATE_METRICS = ("survival", "hp_mid")
 AUX_METRICS = ("reach10", "kills5", "hp_early")  # karar dışı
 
 
-def values(rows: list[dict], policy: str, metric: str) -> dict[int, float]:
+def values(rows: list[dict], policy: str, metric: str, cell: tuple | None = None) -> dict[int, float]:
+    """tohum -> değer. `cell` (mod, zorluk) verilirse yalnız o hücre; verilmezse tüm satırlar ve aynı tohum iki hücrede
+    varsa hata (sessiz üzerine yazma yok)."""
     fn = METRICS[metric][0]
-    out = {int(r["seed"]): fn(r) for r in rows if r["policy"] == policy}
+    out: dict[int, float] = {}
+    for r in rows:
+        if r["policy"] != policy or (cell is not None and mid_rows.cell_of(r) != cell):
+            continue
+        seed = int(r["seed"])
+        if seed in out:
+            raise ValueError(f"aynı tohum birden çok satırda: {policy} {seed} (hücre seçin: --base-cell/--new-cell)")
+        out[seed] = fn(r)
     return {k: v for k, v in out.items() if v is not None}
 
 
@@ -125,7 +132,8 @@ def rel_diff_ci(a: np.ndarray, b: np.ndarray, stat, rng: np.random.Generator, n:
 
 
 def compare(base_rows, new_rows, noise_rows=None, nodyn_rows=None, gate_policies=("strong", "kite"),
-            info_policies=("greedy", "idle"), boot=4000, seed=1, band=0.05, noise_limit=0.025) -> dict:
+            info_policies=("greedy", "idle"), boot=4000, seed=1, band=0.05, noise_limit=0.025,
+            base_cell: tuple | None = None, new_cell: tuple | None = None) -> dict:
     rng = np.random.default_rng(seed)
     res: dict = {"band": band, "noise_limit": noise_limit, "boot": boot, "policies": {}}
     verdicts = []
@@ -133,7 +141,7 @@ def compare(base_rows, new_rows, noise_rows=None, nodyn_rows=None, gate_policies
         gate = pol in gate_policies
         pr: dict = {"gate": gate, "metrics": {}}
         for m, (_, stat) in METRICS.items():
-            vb, vn = values(base_rows, pol, m), values(new_rows, pol, m)
+            vb, vn = values(base_rows, pol, m, base_cell), values(new_rows, pol, m, new_cell)
             if not vb or not vn:
                 pr["metrics"][m] = {"error": "veri yok"}
                 continue
@@ -151,7 +159,7 @@ def compare(base_rows, new_rows, noise_rows=None, nodyn_rows=None, gate_policies
                 entry["paired"] = dict(zip(("diff", "lo", "hi"), rel_diff_ci(pa_, pb_, stat, rng, boot, True)))
             entry["unpaired"] = dict(zip(("diff", "lo", "hi"), rel_diff_ci(a, b, stat, rng, boot, False)))
             if noise_rows is not None:
-                vz = values(noise_rows, pol, m)
+                vz = values(noise_rows, pol, m, base_cell)
                 if vz:
                     z = np.array(list(vz.values()))
                     nz = abs(float(stat(z)) / entry["base"] - 1.0) if entry["base"] else float("nan")
@@ -162,7 +170,7 @@ def compare(base_rows, new_rows, noise_rows=None, nodyn_rows=None, gate_policies
                     # ±band, A-B gürültü GA'sı bandın yarı genişliğinden dar ise çözülebilir (nan => çözülemez)
                     entry["noise"]["band_resolvable"] = bool(half <= band) if not np.isnan(half) else False
             if nodyn_rows is not None:
-                vd = values(nodyn_rows, pol, m)
+                vd = values(nodyn_rows, pol, m, base_cell)
                 if vd:
                     d = np.array(list(vd.values()))
                     entry["decomposition"] = {
@@ -247,10 +255,13 @@ def main(argv=None) -> int:
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--band", type=float, default=0.05)
     ap.add_argument("--noise-limit", type=float, default=0.025)
+    ap.add_argument("--base-cell", default="normal:hard", help="taban hücre mod:zorluk (varsayılan legacy Zor)")
+    ap.add_argument("--new-cell", default="normal:hard", help="yeni hücre mod:zorluk")
     ap.add_argument("--out")
     ap.add_argument("--json")
     a = ap.parse_args(argv)
     try:
+        base_cell, new_cell = mid_rows.parse_cell(a.base_cell), mid_rows.parse_cell(a.new_cell)
         base, new = load(a.base, a.char), load(a.new, a.char)
         noise = load(a.noise, a.char) if a.noise else None
         nodyn = load(a.nodyn, a.char) if a.nodyn else None
@@ -260,8 +271,12 @@ def main(argv=None) -> int:
     if not base or not new:
         print("girdi boş (karakter süzgeci?)", file=sys.stderr)
         return 2
-    res = compare(base, new, noise, nodyn, tuple(p for p in a.gate_policies.split(",") if p), tuple(p for p in a.info_policies.split(",") if p),
-                  a.boot, a.seed, a.band, a.noise_limit)
+    try:
+        res = compare(base, new, noise, nodyn, tuple(p for p in a.gate_policies.split(",") if p), tuple(p for p in a.info_policies.split(",") if p),
+                      a.boot, a.seed, a.band, a.noise_limit, base_cell, new_cell)
+    except ValueError as e:
+        print(f"girdi hatası: {e}", file=sys.stderr)
+        return 2
     md = render(res, os.path.basename(a.base.rstrip("/")), os.path.basename(a.new.rstrip("/")))
     print(md)
     if a.out:

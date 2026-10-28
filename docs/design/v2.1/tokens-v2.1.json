@@ -1,0 +1,142 @@
+{
+ "$comment": "v2.1: koşu modu + zorluk. Yeni renk yok; v2.0.3 yüzeyleri geçerli.",
+ "settings": {
+  "mod": [
+   "hizli",
+   "normal",
+   "sonsuz"
+  ],
+  "zorluk": [
+   "kolay",
+   "normal",
+   "zor"
+  ],
+  "default": {
+   "mod": "normal",
+   "zorluk": "normal"
+  }
+ },
+ "strings": {
+  "modes": {
+   "hizli": [
+    "HIZLI",
+    "Kısa koşu. Lord 10. dakikada gelir.",
+    "10 DK"
+   ],
+   "normal": [
+    "NORMAL",
+    "Klasik koşu. Lord 20. dakikada gelir.",
+    "20 DK"
+   ],
+   "sonsuz": [
+    "SONSUZ",
+    "Lord devrilince koşu sürer; ölene kadar.",
+    "∞"
+   ]
+  },
+  "diffs": {
+   "kolay": [
+    "KOLAY",
+    1,
+    "Daha az ve zayıf düşman."
+   ],
+   "normal": [
+    "NORMAL",
+    2,
+    "Dengeli koşu."
+   ],
+   "zor": [
+    "ZOR",
+    3,
+    "Yoğun ve sert düşman."
+   ]
+  },
+  "rules": {
+   "base": "Skorun bu mod ve zorluğun kendi listesine yazılır.",
+   "kolay": "Kolay'da Lord başarımları ve toplam sayaçlar ilerlemez.",
+   "sonsuz": "İlk Lord'u devirmek zaferdir; koşu sen ölene kadar sürer.",
+   "result_kolay": "Kolay: bu koşu Lord başarımlarına ve toplam sayaçlara yazılmadı."
+  },
+  "milestone": [
+   "KALE LORDU DÜŞTÜ",
+   "ZAFER SAYILDI · Koşu sürüyor",
+   "Lord 5:00 sonra daha güçlü döner."
+  ]
+ },
+ "metrics": {
+  "run_strip": {
+   "w": 936,
+   "h": 132,
+   "h_2x": 168,
+   "y": 1604,
+   "col_top_2x": 1106
+  },
+  "mode_row": {
+   "w": 936,
+   "h": 184,
+   "h_2x": 336,
+   "gap": 16
+  },
+  "diff_card": {
+   "w": 296,
+   "h": 272,
+   "gap": 24,
+   "row_2x": [
+    936,
+    260
+   ]
+  },
+  "tab": {
+   "w": 306,
+   "h": 132,
+   "gap": 12,
+   "y_mode": 290,
+   "y_diff": 434
+  },
+  "hs_row": {
+   "h": 146,
+   "pitch": 158,
+   "y0": 590
+  },
+  "result_chip": {
+   "h": 48,
+   "y": 352,
+   "gap": 16
+  },
+  "result_shift": 44,
+  "milestone_band": {
+   "w": 936,
+   "h": 204,
+   "y": 300,
+   "ms": 3200
+  },
+  "home_hero_scale_2x": 0.5
+ },
+ "motion_ms": {
+  "sel_change": 140,
+  "milestone_in": 220,
+  "milestone_out": 400,
+  "hs_new_slide": 260,
+  "tap_feedback": 80
+ },
+ "example_difficulty_deltas_TAHMIN": {
+  "kolay": {
+   "hp": 0.7,
+   "hasar": 0.55,
+   "dogus": 0.7,
+   "xp": 1.25
+  },
+  "normal": {
+   "hp": 0.85,
+   "hasar": 0.75,
+   "dogus": 0.85,
+   "xp": 1.0
+  },
+  "zor": {
+   "hp": 1.0,
+   "hasar": 1.0,
+   "dogus": 1.0,
+   "xp": 1.0
+  }
+ }
+}

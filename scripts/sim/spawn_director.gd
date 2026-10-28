@@ -38,8 +38,10 @@ func _init(p_waves: Dictionary = {}) -> void:
 func step(sim: GameSim) -> void:
 	var t := sim.time
 	var dt := GameSim.STEP
-	var cap := mini(Difficulty.alive_cap(t), EnemyPool.CAP - BOSS_RESERVE)
+	var cap := mini(Difficulty.alive_cap(V21Sim.curve_t(sim)), EnemyPool.CAP - BOSS_RESERVE)
 	var after := sim.end_mode == GameSim.END_MODE_LORD and t >= sim.end_time
+	var endless := sim.end_mode == GameSim.END_MODE_ENDLESS
+	var rscale := V21Sim.rate_scale(sim)
 	var al: Dictionary = waves.get("after_lord", {})
 	for k in _rows.size():
 		var row: Dictionary = _rows[k]
@@ -58,16 +60,18 @@ func step(sim: GameSim) -> void:
 		var rate_mult := 1.0
 		var f := (t - from_t) / (to_t - from_t)
 		if t >= to_t:
-			# after_lord: Lord doğduktan sonra yalnız piyade sürekli doğuşu (yarı hızda) sürer, kargalar durur.
-			if not (after and kind == "rate" and type_id == &"curumus_piyade"):
-				continue
-			rate_mult = float(al.get("piyade_rate_mult", 1.0))
 			f = 1.0
+			# Sonsuz (K-C1): satırlar son değerinde sürer, after_lord yok. Aksi halde yalnız after_lord piyade
+			# sürekli doğuşu (Lord doğduktan sonra yarı hızda) sürer, kargalar durur.
+			if not endless:
+				if not (after and kind == "rate" and type_id == &"curumus_piyade"):
+					continue
+				rate_mult = float(al.get("piyade_rate_mult", 1.0))
 		elif t < from_t:
 			continue
 		if kind == "rate":
 			var r: Array = row.get("rate", [0.0, 0.0])
-			_acc[k] += lerpf(float(r[0]), float(r[1]), f) * rate_mult * dt
+			_acc[k] += lerpf(float(r[0]), float(r[1]), f) * rate_mult * rscale * dt
 			while _acc[k] >= 1.0:
 				_acc[k] -= 1.0
 				if sim.enemies.count < cap:
@@ -80,7 +84,7 @@ func step(sim: GameSim) -> void:
 			var g: Array = row.get("group", [1, 1])
 			var ev: Array = row.get("every", [10.0, 10.0])
 			_acc[k] = lerpf(float(ev[0]), float(ev[1]), f)
-			var n := roundi(lerpf(float(g[0]), float(g[1]), f))
+			var n := V21Sim.count(sim, lerpf(float(g[0]), float(g[1]), f))
 			var center := ring_position(sim, TAU * sim.rng_spawn.randf())
 			for j in n:
 				if sim.enemies.count >= cap:
@@ -99,7 +103,7 @@ func _burst(sim: GameSim, k: int, row: Dictionary, t: float) -> void:
 		return
 	_done[k] = 1
 	var type_id := StringName(str(row.get("type", "")))
-	var n := int(row.get("count", 1))
+	var n := V21Sim.count(sim, float(int(row.get("count", 1))))
 	var a0 := TAU * sim.rng_spawn.randf()
 	for j in n:
 		var a := (
@@ -117,7 +121,7 @@ func _burst(sim: GameSim, k: int, row: Dictionary, t: float) -> void:
 func _boss(sim: GameSim, k: int, row: Dictionary, t: float) -> void:
 	var type_id := StringName(str(row.get("type", "")))
 	var def := sim.data.get_enemy(type_id)
-	if def == null or (def.ai == &"lord" and sim.end_mode != GameSim.END_MODE_LORD):
+	if def == null or (def.ai == &"lord" and not sim.lord_mode()):
 		return
 	var at := float(row.get("at", 0.0))
 	if _warned[k] == 0 and t >= at - float(row.get("warn", 5.0)):
@@ -135,6 +139,12 @@ func _boss(sim: GameSim, k: int, row: Dictionary, t: float) -> void:
 			_spawned[k] = 1
 			sim.log_event(SimEvents.BOSS_SPAWN, {"enemy_type": type_id, "id": id})
 			sim.bus.boss_spawned.emit(type_id)
+
+
+## Lord tekrarı (V21Sim.step) için: havuz doluysa yer açar (`_boss` ile aynı kural ve kanca).
+func make_room_for_lord(sim: GameSim) -> void:
+	if make_room_enabled and sim.enemies.count >= EnemyPool.CAP:
+		_make_room(sim)
 
 
 ## Havuz doluyken Lord için oyuncudan en uzak sıradan (elit olmayan) düşmanı sessizce kaldırır (XP/öldürme yok).

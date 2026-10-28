@@ -38,6 +38,7 @@ func test_panel_grows_with_combos_and_five_combos_fit_the_screen() -> void:
 	var r5 := _screen(5)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# v2.1 U6: 5 kombo 4 satır + "+1" olarak sığar (kademeler: boşluk/düğme ölçüsü; satır azaltılmaz)
 	assert_gt(_panel(r5).size.y, _panel(r0).size.y + 300.0, "içeriğe göre büyür")
 	var bottom := r5.menu_button.get_global_rect().end.y
 	assert_lte(

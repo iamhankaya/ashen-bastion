@@ -98,7 +98,7 @@ func test_d1_version_line_is_plain_2_0_3_without_the_character_name() -> void:
 	var m := _menu()
 	m.set_character_name("Gunslinger")
 	await _settle()
-	assert_eq(m.version_label.text, "Sürüm 2.0.3")
+	assert_eq(m.version_label.text, "Sürüm 2.1.0")
 
 
 ## Üretim yolu: denetleyici menüyü kurunca sayaç gerçek kademe toplamını (53) gösterir; `MainMenu.DEFAULT_ACH_TOTAL`
@@ -228,7 +228,7 @@ func test_d5_settings_title_is_turkish_uppercase_and_motion_row_text_matches_the
 		AchKit.any_text_contains(s, "Hareketli portreleri ve ekran efektlerini durdurur."),
 		"kapsam metni (hepsi durur)"
 	)
-	assert_true(AchKit.any_text_contains(s, "2.0.3"), "HAKKINDA sürüm")
+	assert_true(AchKit.any_text_contains(s, "2.1.0"), "HAKKINDA sürüm")
 
 
 func test_d5_every_settings_touch_target_is_at_least_132_px() -> void:

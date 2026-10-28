@@ -261,7 +261,7 @@ const METHODS := {
 	},
 	"HighscoreScreen":
 	{
-		"show_scores": ["entries,highlight_index", N],
+		"show_scores": ["entries,highlight_index,mode,diff", N],
 		"apply_safe_area": ["extra", N],
 	},
 	"ResultScreen":
@@ -330,7 +330,13 @@ const SIGNALS := {
 	},
 	"ScoreKeeper": {"gained": "gain,source", "streak_changed": "mult,left"},
 	"MainMenu": {"scores_requested": ""},
-	"HighscoreScreen": {"back_requested": "", "play_requested": ""},
+	"HighscoreScreen":
+	{
+		"back_requested": "",
+		"play_requested": "",
+		"play_with_requested": "mode,diff",
+		"tab_changed": "mode,diff",
+	},
 	"Magazine":
 	{
 		"changed": "count,cap",
@@ -398,8 +404,8 @@ func test_signal_signatures() -> void:
 func test_sim_bus_has_exactly_the_contract_signals() -> void:
 	assert_eq(
 		SimBus.new().get_script().get_script_signal_list().size(),
-		27,
-		"16 v1 + 9 v1.1 + 1 v2.0 (bomb_hits) + 1 v2.0.1 (enemy_hit)"
+		29,
+		"16 v1 + 9 v1.1 + 1 v2.0 (bomb_hits) + 1 v2.0.1 (enemy_hit) + 2 v2.1 (milestone_reached, lord_slain)"
 	)
 
 
@@ -435,7 +441,7 @@ func test_v11_constants_and_limits() -> void:
 	assert_eq(AshGhostRenderer.LOD_ALIVE, 150)
 	assert_eq(EnemyAnim.LUT_SIZE, 256)
 	assert_eq(HitStop.MAX_SEC, 0.15)
-	assert_eq(Highscores.VERSION, 1)
+	assert_eq(Highscores.VERSION, 2, "v2.1 K-C6: kayıt biçimi v2")
 	assert_eq(Highscores.MAX_ENTRIES, 10)
 	assert_eq(Highscores.DEFAULT_PATH, "user://highscores.json")
 	assert_eq(PauseLogic.LEVEL_UP_PREROLL, 0.18)
