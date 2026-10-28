@@ -349,6 +349,10 @@ def main(argv=None) -> int:
         miss = verify(d, j, allowed, only)
         errs += miss
     base = base_sets(root, a)
+    if base and a.base_declared:
+        # taban dosyası pending bilgisi taşımaz (git'siz kopya): HEAD'in izinli pending kümesi kullanılır; yoksa kapalı dilimdeki
+        # her test (iii)'te "koşmadı" diye LOST sayılırdı.
+        base = (base[0], allowed)
     gone = {i for i in (base[0] if base else set()) if i not in d.ids and i not in removed and i not in moved}
     errs += [f"TEST_IDS: {i}: LOST (declared kayboldu)" for i in sorted(gone)]
     if base and j is not None:

@@ -278,6 +278,17 @@ def test_base_declared_file_replaces_git_base(tmp_path):
     assert r.returncode == 1 and "test_gone: LOST" in r.stderr
 
 
+def test_base_declared_with_junit_does_not_flag_allowed_pending_as_lost(tmp_path):
+    """git'siz kopya (selftest): taban dosyası pending bilgisi taşımaz; HEAD'de izinli pending olan test koşmadı diye LOST sayılmaz."""
+    write_tree(tmp_path, {"tools/v202_slices.txt": "# başlık\n", "test/acceptance/test_acc_v202_x.gd": gd("test_p1_a"), "test/unit/test_a.gd": gd("test_one")})
+    bd = tmp_path / "base.txt"
+    bd.write_text("test/acceptance/test_acc_v202_x.gd::test_p1_a\ntest/unit/test_a.gd::test_one\n", encoding="utf-8")
+    j = tmp_path / "j.xml"
+    j.write_text(junit([("test/acceptance/test_acc_v202_x.gd", "test_p1_a", "pending"), ("test/unit/test_a.gd", "test_one", "pass")]), encoding="utf-8")
+    r = run(tmp_path, "--mode", "full", "--junit", str(j), "--base-declared", str(bd))
+    assert r.returncode == 0, r.stderr
+
+
 # --- kipler ------------------------------------------------------------------------------------------------------------------
 
 

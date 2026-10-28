@@ -93,7 +93,7 @@ assert n != t, "selftest: test_art_loader.gd'de test işlevi yok"
 open(p, "w", encoding="utf-8").write(n)
 PY
   expect "test kimliği kaybı" 1 "$d" GATE_BASE_DECLARED="$base"
-  grep -q "LOST" "$TMP/test kimliği kaybı.log" || { echo "FAIL test kimliği kaybı: günlükte LOST yok (başka nedenle kırmızı)"; FAILS=$((FAILS+1)); }
+  grep -q "test_art_loader.gd::.*LOST (declared kayboldu)" "$TMP/test kimliği kaybı.log" || { echo "FAIL test kimliği kaybı: günlükte LOST yok (başka nedenle kırmızı)"; FAILS=$((FAILS+1)); }
 }
 
 scenario_stub_todo() { # Stub.todo => test başarısızlığı (stub.gd varsa; yoksa senaryo atlanır ama grup boş kalmaz)
