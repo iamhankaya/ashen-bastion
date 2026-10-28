@@ -83,3 +83,8 @@ def test_mad_outliers_are_reported_not_dropped():
     vals = [100, 101, 99, 100, 102, 400]
     out = m.outliers(vals)
     assert out == [400] and len(vals) == 6
+
+
+def test_run_id_may_carry_a_rerun_attempt():
+    assert m.run_args("123") == ["123"]
+    assert m.run_args("123@3") == ["123", "--attempt", "3"]

@@ -5,7 +5,7 @@ Metrikler (koşu başına): duvar = max(completedAt) - min(startedAt) (kuyruk ha
 needs grafında en uzun iş zinciri (matrix üyelerinin en uzunu; kuyruktan bağımsız); runner_min = iş sürelerinin toplamı (bilgi).
 Soğuk/sıcak etiketi koşu günlüğündeki önbellek satırından KAYIT edilir ("ilk koşu soğuktur" varsayımı yok).
 
-  measure_ci.py run <koşu-id> [--workflow .github/workflows/ci.yml]   tek koşunun metrikleri (JSON)
+  measure_ci.py run <koşu-id[@deneme]> [--workflow .github/workflows/ci.yml]   tek koşunun metrikleri (JSON)
   measure_ci.py compare --before id,id,... --after id,id,... [--workflow ...]   etiketli medyan tablosu + %30 kabulü
 
 Kabul: aynı etikette hem medyan duvar hem medyan kritik yol Tson <= 0.70 * Tönce; taraf başına >= 5 koşu.
@@ -134,10 +134,16 @@ def _gh(*args):
     return r.stdout
 
 
+def run_args(run_id):
+    """"<id>" ya da "<id>@<deneme>" (yeniden koşu denemesi) => gh bağımsız değişkenleri."""
+    rid, _, attempt = str(run_id).partition("@")
+    return [rid] + (["--attempt", attempt] if attempt else [])
+
+
 def measure_run(run_id, workflow):
-    jobs = json.loads(_gh("run", "view", str(run_id), "--json", "jobs"))["jobs"]
+    jobs = json.loads(_gh("run", "view", *run_args(run_id), "--json", "jobs"))["jobs"]
     needs = parse_needs(Path(workflow).read_text(encoding="utf-8"))
-    log = _gh("run", "view", str(run_id), "--log")
+    log = _gh("run", "view", *run_args(run_id), "--log")
     res = metrics(jobs, needs)
     res.update(run=run_id, label=cache_label(log), skipped_by_filter=skipped_by_filter(log))
     return res
