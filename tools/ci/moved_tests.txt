@@ -1,0 +1,2 @@
+# Taşınan/bölünen testler (check_test_ids.py). Yalnız eklemeli (merge=union). Biçim: eski -> yeni1[, yeni2...]
+# Kurallar: eski kimlik HEAD'de yok; tüm yeniler HEAD'de var; bir eski tek satırda; bir yeni en çok bir eskiden gelir.
