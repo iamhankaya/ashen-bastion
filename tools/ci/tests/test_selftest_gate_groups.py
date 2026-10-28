@@ -68,9 +68,9 @@ def test_full_gate_scenarios_do_not_share_a_group():
     heavy = [
         "taban_yesil",
         "anlamsal_hata",
-        "asgari_sayi_alti",
+        "test_kimligi_kaybi",
         "stub_todo",
-        "pending_sayilmaz",
+        "kosmayan_test",
         "gut_error",
     ]
     t = table()

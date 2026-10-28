@@ -77,6 +77,18 @@ end_step() {
 fail() { end_step; echo "GATE FAIL: $*" >&2; exit 1; }
 step() { end_step; STEP_NAME="$*"; STEP_START=$SECONDS; echo "=== $*"; }
 
+# Kimlik kapısının tabanı (check_test_ids.py): GATE_BASE_REF ya da merge-base(HEAD, origin/main); git'siz kopyada (selftest)
+# GATE_BASE_DECLARED=<dosya> (taban declared kimlikleri); ikisi de yoksa LOST denetimi atlanır ve bu AÇIKÇA yazılır.
+IDS_BASE=()
+ids_base_args() {
+  local b
+  if [ -n "${GATE_BASE_DECLARED:-}" ]; then IDS_BASE=(--base-declared "$GATE_BASE_DECLARED"); return; fi
+  b="${GATE_BASE_REF:-$(git merge-base HEAD origin/main 2>/dev/null || true)}"
+  if [ -n "$b" ]; then IDS_BASE=(--base "$b"); return; fi
+  echo "not: taban bulunamadı (git merge-base HEAD origin/main yok, GATE_BASE_REF/GATE_BASE_DECLARED verilmedi): LOST denetimi atlandı; yalnız bildirilen testlerin koşması denetlenir" >&2
+  IDS_BASE=(--no-base)
+}
+
 # Günlük taraması: izin listesi YOK. ANSI renk kodları atılır.
 scan_log() { # scan_log <dosya>
   if sed 's/\x1b\[[0-9;]*m//g' "$1" | grep -nE '^(SCRIPT ERROR|Parse Error|ERROR:|\[GUT ERROR\])|^Errors +[1-9]' > .gate/scan.out; then
@@ -240,17 +252,21 @@ fi
 if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then
   step "7. Sahte yeşil korumaları"
   [ -f .gate/junit.xml ] || fail "JUnit çıktısı yok"
-  python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
+  python3 tools/ci/check_junit.py .gate/junit.xml || fail "JUnit'te çalışan test yok"
+  ids_base_args
+  python3 tools/ci/check_test_ids.py --mode full --junit .gate/junit.xml "${IDS_BASE[@]}" || fail "test kimliği kapısı (tools/ci/check_test_ids.py: MISSING = bildirilen test koşmadı, LOST = kimlik kayboldu)"
   python3 tools/ci/check_durations.py .gate/junit.xml $DUR_FLAGS || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
   python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v202_slices.txt)"
   python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v203_slices.txt)"
   python3 tools/ci/check_slices.py --v21 tools/v21_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v21_slices.txt)"
 elif [ $FAST -eq 1 ] && [ -n "$GUT_CONFIG" ]; then
-  # Hızlı mod: asgari sayı yalnız seçilen dosyalar için; tek test süre sınırı aynı; dilim/pending denetimi tam JUnit ister
-  # (yalnız tam gate'te koşar).
+  # Hızlı mod: kimlik kapısı yalnız seçilen dosyalar için (--mode selected); tek test süre sınırı aynı; dilim/pending denetimi
+  # tam JUnit ister (yalnız tam gate'te koşar).
   step "7. Sahte yeşil korumaları (hızlı mod: kısmi)"
-  python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json --only .gate/selected.txt || fail "asgari test sayısı (hızlı mod)"
+  python3 tools/ci/check_junit.py .gate/junit.xml || fail "JUnit'te çalışan test yok (hızlı mod)"
+  ids_base_args
+  python3 tools/ci/check_test_ids.py --mode selected --files .gate/selected.txt --junit .gate/junit.xml "${IDS_BASE[@]}" || fail "test kimliği kapısı (hızlı mod; tools/ci/check_test_ids.py)"
   python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
 fi
 

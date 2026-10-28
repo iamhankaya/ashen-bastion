@@ -30,8 +30,8 @@ selftest ×6, export-debug, release-prova      değişmedi
   (dosya -> sn, tam gate JUnit'inden) ağırlıklarıyla açgözlü en-uzun-önce (LPT) atanır; ağırlığı olmayan yeni dosya medyan
   ağırlık alır, yani **yeni test otomatik bir parçaya düşer**. Her dosya tam bir parçada olur (`tools/ci/tests/test_shard.py`).
 - **Kapsam kanıtı (verify işi)**: parça sayısı beklenenle eşit olmalı; `shard.py check-merge --require-all` her test dosyasının
-  bir parçada koştuğunu (eksik/yinelenen/bilinmeyen dosya = kırmızı) denetler; birleşik JUnit üzerinde adım 7 (asgari test sayısı
-  `tools/gate_min_tests.json`, tek test ≤ 75 sn, dilim/pending denetimleri) **aynen** koşar. Parçası düşen ya da hiç koşmayan
+  bir parçada koştuğunu (eksik/yinelenen/bilinmeyen dosya = kırmızı) denetler; birleşik JUnit üzerinde adım 7 (test kimliği kapısı
+  `tools/ci/check_test_ids.py`: bildirilen her test koştu mu + tabana göre kimlik kaybı yok, tek test ≤ 75 sn, dilim/pending denetimleri) **aynen** koşar. Parçası düşen ya da hiç koşmayan
   bir iş `test` işini kırmızı yapar.
 - `test` işi adını korur: dal koruması bu bağlamı bekliyor olabilir.
 - Parça sayısını değiştirmek: `ci.yml` (`matrix.shard`, `/N`, `GATE_SHARD_COUNT`) ve `tools/ci/tests/test_shard.py::SHARD_COUNT`

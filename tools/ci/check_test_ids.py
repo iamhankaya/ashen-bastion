@@ -362,11 +362,6 @@ def main(argv=None) -> int:
             non_slice = sorted(i for i in j.skipped if i not in allowed)
             print(f"dilim dışı pending ({len(non_slice)}): " + ", ".join(non_slice))
             print(f"declared olup ne koşan ne izinli pending ({len(miss)}): " + ", ".join(m.split(": ")[1] for m in miss if m.endswith("MISSING")))
-        mins = root / "tools" / "gate_min_tests.json"
-        if mins.is_file():
-            files = {i.split("::")[0] for i in d.ids}
-            orphan = sorted(f for f in json.loads(mins.read_text(encoding="utf-8")) if f not in files)
-            print(f"gate_min_tests.json'da olup declared'da dosyası olmayan ({len(orphan)}): " + ", ".join(orphan))
         for e in errs:
             if not e.endswith("MISSING"):
                 print(e)

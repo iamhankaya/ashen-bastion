@@ -11,7 +11,6 @@ ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools" / "ci" / "check_test_ids.py"
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "gut_junit_real.xml"
 sys.path.insert(0, str(ROOT / "tools" / "ci"))
-import check_junit  # noqa: E402
 import check_test_ids as T  # noqa: E402
 
 GUTCONFIG = json.dumps({"dirs": ["res://test/unit", "res://test/acceptance"], "prefix": "test_", "suffix": ".gd", "include_subdirs": True})
@@ -353,27 +352,21 @@ def synth_junit(tmp_path, d, allowed, drop_file=None):
     return p
 
 
-def test_parity_with_old_gate_on_the_real_tree(tmp_path):
+def test_every_declared_file_is_guarded_on_the_real_tree(tmp_path):
+    """Kapı geçişinden sonra eski tablo yok: tam JUnit yeşil, bir dosyanın koşmaması (suite yok) kırmızı olmalı."""
     src = T.FsSource(ROOT)
     d = T.collect_declared(src)
     allowed = T.pending_allowed(src, d.ids) | T.parse_pending_allowed((ROOT / "tools/ci/pending_allowed.txt").read_text(encoding="utf-8"))[0]
-    mins = json.loads((ROOT / "tools/gate_min_tests.json").read_text(encoding="utf-8"))
-    # tam JUnit: iki kapı da yeşil (kimlik düzeyinde declared == ran ∪ izinli pending)
     full = synth_junit(tmp_path, d, allowed)
-    assert check_junit.main(str(full), str(ROOT / "tools/gate_min_tests.json")) == 0
     assert T.verify(d, T.read_junit([full]), allowed) == []
     by_file = {}
     for i in d.ids:
         by_file.setdefault(i.split("::")[0], []).append(i)
-    no_declared = sorted(f for f in mins if f not in by_file)
-    assert len(no_declared) >= 0  # bilgi: tabloda olup declared'da dosyası olmayan girdi (rapora yazılır, kapıyı etkilemez)
     checked = 0
-    for f, need in sorted(mins.items()):
-        runnable = [i for i in by_file.get(f, []) if i not in allowed]
-        if need == 0 or not runnable:
-            continue  # sıfır asgari ya da tümü izinli pending: eski kapının sayısı kimlik düzeyine eşlenmez (raporda)
+    for f, ids in sorted(by_file.items()):
+        if not [i for i in ids if i not in allowed]:
+            continue  # tümü izinli pending: koşmaması kapıyı kırmaz
         broken = synth_junit(tmp_path, d, allowed, drop_file=f)
-        assert check_junit.main(str(broken), str(ROOT / "tools/gate_min_tests.json")) == 1, f"eski kapı yeşil: {f}"
-        assert T.verify(d, T.read_junit([broken]), allowed), f"yeni kapı yeşil: {f}"
+        assert T.verify(d, T.read_junit([broken]), allowed), f"kimlik kapısı yeşil: {f}"
         checked += 1
     assert checked > 150

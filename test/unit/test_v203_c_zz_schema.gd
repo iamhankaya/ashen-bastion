@@ -1,5 +1,5 @@
 extends GutTest
-## v2.0.3 sözleşme (C ad alanı): aşamalı başarım şeması. Dosya adındaki `zz`, ortak kayıt dosyalarında (gate_min_tests,
+## v2.0.3 sözleşme (C ad alanı): aşamalı başarım şeması. Dosya adındaki `zz`, ortak kayıt dosyalarında (asgari-sayı tablosu,
 ## shard_weights) C fazının satırlarını A/B/D'nin satırlarından ayrı tutan ayırıcıdır (N4); C kendi testlerini
 ## `test_v203_c_<ad>.gd` diye ekler, bu dosyayı yeniden adlandırmaz.
 
