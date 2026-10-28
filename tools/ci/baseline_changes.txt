@@ -19,3 +19,9 @@ test/characterization/baseline/rf_trail_side_outputs.json | 40f892841aa3892d234b
 test/characterization/baseline/rf_ui_result_rects.json | 73160e8b6850b040cdfef4f69e40851e056fa7ea54da323531b8efe07fe2900b | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
 test/characterization/baseline/rf_ui_run_rects.json | 2dda64402be42a599ec812af05bf2573ad6d7cc6bb9964e1a2878148693f3fe4 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
 test/characterization/baseline/rf_ui_settings_rects.json | ae99e8b9c12b39c304191d871deb51bf164fc38ec847127dce420277f9e8bcf3 | ilk baz: refactor öncesi kod (ci 40778084457) | T20261028-35
+test/characterization/baseline/rf_ui_result_rects.json | ac6a90ae8eaff3c9220793a1e827825b686022f6050ab5ecfc3272a1a02de395 | kök ad normalleştirildi (@Control@N -> Control), ci 40781464585 | T20261028-35
+test/characterization/baseline/rf_ui_settings_rects.json | 113ea7d576c8b3a3ca004fae183ea59776f5803eb01f310fbbd350b6c95c719d | kök ad normalleştirildi (@Control@N -> Control), ci 40781464585 | T20261028-35
+test/characterization/baseline/rf_ui_run_rects.json | 90e3afa11513de806b5b8e4f9a74a350e2ef152133cb6bd1aebc2de4cd0c63d4 | kök ad normalleştirildi (@Control@N -> Control), ci 40781464585 | T20261028-35
+test/characterization/baseline/rf_ctrl_scene_tree.json | 411707bb64e116cd9a55802208e972a56dc247359bec8d6ea63498638e18a516 | ilk baz: refactor öncesi kod, kararlı adlar+sabit tohum (ci 40781464585) | T20261028-35
+test/characterization/baseline/rf_ctrl_scene_tree_restart.json | aaf530539b6d1a2fd1b3101975d8d2f9ea5d3dc563ca1732edbe240d7ee47d87 | ilk baz: refactor öncesi kod, kararlı adlar+sabit tohum (ci 40781464585) | T20261028-35
+test/characterization/baseline/rf_ui_characters_rects.json | c06e5dc41d722f1310f0ed4bf47e6028ab5e82856f6eb19f8554e9a8fb3ae5ad | ilk baz: refactor öncesi kod, kararlı adlar+sabit tohum (ci 40781464585) | T20261028-35
