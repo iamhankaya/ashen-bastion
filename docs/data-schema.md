@@ -238,7 +238,7 @@ tamamlanan aile "TAMAM". Açılma animasyonu yok (anlık). `group` alanı olmaya
   Kasırga Patlaması 7, Tufan 8).
 - `cast_sfx` (isteğe bağlı, aktif ve evrimde; pasifte `unknown_key`): becerinin ateşlenme/doğuş sesi (`SimFx.skill_sfx`
   ile çalar). Tek dosya ya da `_1..N` varyasyon; yoksa `asset_missing`. Sürekli bölgeler (hortum, tufan) doğuşta tek
-  seferlik, Girdap 4 sn'de bir; `Sfx.MIN_GAP_MS` aynı sesin en kısa tekrar aralığını sınırlar.
+  seferlik, Girdap 4 sn'de bir; `data/sfx_rules.json` `min_gap_ms` (Sfx.min_gap_of) aynı sesin en kısa tekrar aralığını sınırlar.
 - `tags`: metin dizisi. `rhythm` = şarjör ritmiyle etkileşir. **İçerik tamamlandı (slice 2)** modunda `rhythm` etiketli
   **aktif** sayısı ≥ 2 (`rhythm_count`).
 - `levels[i]` sayısal değerlerden oluşan nesnedir; **tüm seviyelerde aynı anahtar kümesi** (`levels_keys`). İstisna: `target_mode` (Hortum/Tufan, `"cluster"`) metindir; hız/hedefleme düğmeleri `speed`, `retarget_every` (sn; yoksa türe göre yedek), `max_dist` (kullanılmaz), `min_spawn_dist` (doğuşta oyuncudan en az uzaklık, px), `keep_out` (oyuncuya en fazla yaklaşma, px; `min_spawn_dist >= keep_out`), `boss_mult` sayıdır.

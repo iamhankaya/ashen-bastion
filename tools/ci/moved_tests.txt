@@ -1,2 +1,4 @@
 # Taşınan/bölünen testler (check_test_ids.py). Yalnız eklemeli (merge=union). Biçim: eski -> yeni1[, yeni2...]
 # Kurallar: eski kimlik HEAD'de yok; tüm yeniler HEAD'de var; bir eski tek satırda; bir yeni en çok bir eskiden gelir.
+test/unit/test_characters_screen.gd::test_f030_gunslinger_first_by_order_field -> test/unit/test_characters_screen.gd::test_f030_default_character_first_by_order_field, test/unit/test_characters_screen.gd::test_f030_order_field_sorts_and_ties_keep_current_order
+test/unit/test_v202_pool_real.gd::test_card_pool_exhaustion_both_characters -> test/unit/test_v202_pool_real.gd::test_card_pool_exhaustion_every_character

@@ -13,6 +13,8 @@ cd "$(dirname "$0")/../.."
 OUT="${1:-.mid}"; FIRST="${2:-3001}"; N="${3:-400}"; JOBS="${4:-$(nproc)}"
 GODOT_BIN="${GODOT_BIN:-$(bash tools/ci/ensure_godot.sh)}"
 mkdir -p "$OUT"
+# Karakter listesi katalogdan (data/characters/<id>.json, dosya adı sırası); CHARS ile daraltılır.
+CHARS_LIST="${CHARS:-$(for f in data/characters/*.json; do printf '%s ' "$(basename "$f" .json)"; done)}"
 CHUNK=5
 jobs_file="$(mktemp)"
 # İş satırı: politika karakter ilk_tohum sayı çıktı [mod zorluk]; hücresiz satırda mod/zorluk yok (legacy).
@@ -20,7 +22,7 @@ for cell in ${CELLS:-legacy}; do
   extra=""; tag=""
   if [ "$cell" != "legacy" ]; then extra="${cell%%:*} ${cell##*:}"; tag="${cell/:/_}_"; fi
   for pol in ${POLICIES:-strong kite}; do
-    for ch in ${CHARS:-gunslinger zyfen}; do
+    for ch in $CHARS_LIST; do
       for ((s = FIRST; s < FIRST + N; s += CHUNK)); do
         n=$(( CHUNK < FIRST + N - s ? CHUNK : FIRST + N - s ))
         echo "$pol $ch $s $n $OUT/${tag}${pol}_${ch}_${s}.jsonl${extra:+ $extra}" >> "$jobs_file"
