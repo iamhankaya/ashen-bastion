@@ -107,6 +107,7 @@ static func wrap_in_scroll(host: Control, keep: Array) -> ScrollContainer:
 	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	UiKit.fill(scroll)
+	UiKit.touch_scroll(scroll)
 	var content := Control.new()
 	content.name = "ResultContent"
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE

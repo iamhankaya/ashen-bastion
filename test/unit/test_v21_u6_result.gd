@@ -373,3 +373,19 @@ func test_b71_panels_are_stone_and_easy_note_text_has_a_wrap_width() -> void:
 		"sarma genişliği taban: dar genişlikte min yükseklik şişmez"
 	)
 	assert_lte(text.get_combined_minimum_size().y, r.easy_note.size.y, "metin not şeridine sığar")
+
+
+# F-037 (Codex P2): büyük yazı sonuç kaydırma kabı parmak sürüklemesiyle kaymalı.
+func test_f037_result_scroll_follows_touch_drag() -> void:
+	var host := Control.new()
+	host.size = Vector2(1080, 800)
+	add_child_autofree(host)
+	host.add_child(Control.new())
+	var scroll := ResultFit.wrap_in_scroll(host, [])
+	(scroll.get_child(0) as Control).custom_minimum_size = Vector2(1080, 3000)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var d := InputEventScreenDrag.new()
+	d.relative = Vector2(0, -40)
+	scroll.gui_input.emit(d)
+	assert_eq(scroll.scroll_vertical, 40, "parmak yukarı sürüklenince içerik kayar")

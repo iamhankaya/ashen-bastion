@@ -606,6 +606,7 @@ func _ensure_list_scroll() -> void:
 	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	list_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	list_scroll.visible = false
+	UiKit.touch_scroll(list_scroll)
 	add_child(list_scroll)
 	move_child(list_scroll, rows[0].get_index())
 	_list_content = Control.new()

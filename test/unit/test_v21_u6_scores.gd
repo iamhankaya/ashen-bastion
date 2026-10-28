@@ -155,3 +155,15 @@ func test_b65_reads_font_scale_from_settings_on_show() -> void:
 	st.buyuk_yazi = true
 	var s := _scores(_ten())
 	assert_eq(s.is_big(), st.font_scale() > 1.3)
+
+
+# F-037 (Codex P2): büyük yazı skor listesi parmak sürüklemesiyle kaymalı (emulate_mouse_from_touch kapalı).
+func test_f037_big_text_list_scroll_follows_touch_drag() -> void:
+	var s := _scores(_ten())
+	s.set_font_scale(2.0)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var d := InputEventScreenDrag.new()
+	d.relative = Vector2(0, -40)
+	s.list_scroll.gui_input.emit(d)
+	assert_eq(s.list_scroll.scroll_vertical, 40, "parmak yukarı sürüklenince liste kayar")
