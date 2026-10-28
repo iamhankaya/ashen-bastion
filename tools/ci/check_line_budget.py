@@ -96,4 +96,6 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
+    for _s in (sys.stdout, sys.stderr):
+        _s.reconfigure(encoding="utf-8")  # Windows: Türkçe mesajlar yerel kod sayfasına düşmesin
     sys.exit(main())
