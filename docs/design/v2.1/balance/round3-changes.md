@@ -40,3 +40,7 @@ Dayanak: `round2.md` (run 40577026397). Yetki: VLAD 01:15 (dar yetki kapsamı, s
 ## Yerelde koşulamayan
 
 Godot yok: GUT testleri (yukarıdaki dosyalar) yalnız CI'da koşar. Yerelde: `gdformat --check` temiz; `pytest tools/ci/tests` 167 geçti, 1 başarısız (`test_v2_snapshot_is_byte_identical`, bilinen Windows) + 8 `test_godot_import` deselect.
+
+## Entegrasyon merge sonrası düzeltme (`test_acc_v21_endless.gd`)
+
+`vlad/T20261027-15` merge'ünde `test_s30` entegrasyon dalında yeniden yazılmıştı (2 sn'lik pencere eşiğin altında bitmeli). Çakışma o yapıyla çözüldü, değerler tur 3'e uyarlandı: zamanlar 1100 / 1190 (eşik 1200'ün altı) / 1500 / normal 1500; oran 6.0 (×(1+1,0·5)). Tur 3 CI'ı (6ed9bae) bu satırlar yeniydi: CI yeşil, merge sonrası CI VLAD'da.
