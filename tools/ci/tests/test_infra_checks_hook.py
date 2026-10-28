@@ -37,7 +37,24 @@ def test_empty_dir_is_green_missing_dir_is_usage_error(tmp_path):
 
 
 def test_gate_calls_hook_before_godot_only_for_static_and_all():
-    assert 'if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
-  if compgen -G "tools/ci/checks.d/*.sh"' in GATE
+    guard = 'if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then' + chr(10) + '  if compgen -G "tools/ci/checks.d/*.sh"'
+    assert guard in GATE
     assert "bash tools/ci/run_checks.sh tools/ci/checks.d || fail" in GATE
     assert GATE.index("run_checks.sh") < GATE.index('step "1. Godot kurulumu"')
+
+
+def test_gate_goes_red_at_step_0_on_deliberate_violation(tmp_path):
+    # Uçtan uca: gate.sh'in kendisi, Godot'a varmadan kanca ihlalinde kırmızı (kabul: kasıtlı ihlalde kırmızı)
+    import os
+    import shutil
+
+    repo = tmp_path / "repo"
+    (repo / "tools" / "ci" / "checks.d").mkdir(parents=True)
+    shutil.copy(ROOT / "tools" / "gate.sh", repo / "tools" / "gate.sh")
+    shutil.copy(RUNNER, repo / "tools" / "ci" / "run_checks.sh")
+    (repo / "tools" / "ci" / "checks.d" / "10-ihlal.sh").write_text("echo KASITLI_IHLAL >&2; exit 1\n", newline="\n")
+    r = subprocess.run(["bash", "tools/gate.sh"], cwd=repo, capture_output=True, text=True,
+                       env={"PATH": os.environ["PATH"], "GATE_PART": "static"})
+    assert r.returncode == 1
+    assert "KASITLI_IHLAL" in r.stderr and "ön denetim kırmızı" in r.stderr
+    assert "ensure_godot" not in r.stderr  # Godot kurulumuna hiç gelinmedi
