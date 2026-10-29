@@ -22,7 +22,7 @@ func test_step_moves_projectile_and_ages_life() -> void:
 
 func test_step_removes_projectile_when_life_ends() -> void:
 	var sim := _sim()
-	sim.projectiles.spawn(Vector2.ZERO, Vector2(10.0, 0.0), 10.0, {"life": GameSim.STEP})
+	sim.projectiles.spawn(Vector2.ZERO, Vector2(10.0, 0.0), 10.0, {"life": 0.001})
 	SimProjectiles.step(sim)
 	assert_eq(sim.projectiles.count, 0)
 
