@@ -1,0 +1,13 @@
+diff --git a/scripts/sim/game_sim.gd b/scripts/sim/game_sim.gd
+index 7cb29ce..a13087e 100644
+--- a/scripts/sim/game_sim.gd
++++ b/scripts/sim/game_sim.gd
+@@ -402,7 +402,7 @@ func state_hash() -> int:
+ 		h.append(hash(String(s.id)))
+ 		h.append(s.level)
+ 	h.append(rng_spawn.state)
+-	h.append(rng_choice.state)
++	h.append(randi())
+ 	h.append(rng_map.state)
+ 	h.append(rng_combat.state)
+ 	h.append_array(V11State.hash_items(self))  # v1.1: sona eklenir, mevcut sıra değişmez
