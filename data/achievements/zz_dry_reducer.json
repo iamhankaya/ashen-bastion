@@ -1,0 +1,13 @@
+{
+  "stat": "zz_dry_reducer",
+  "order": 901,
+  "icon_family": "hud-can",
+  "persist": {
+    "total": null,
+    "best": null
+  },
+  "reducer": "ZzDryReducer",
+  "events": [
+    "enemy_killed"
+  ]
+}
