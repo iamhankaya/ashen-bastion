@@ -229,6 +229,8 @@ var _raw_waves: Variant = null
 var _waves_failed: bool = false
 var _raw_ruins: Variant = null
 var _ruins_failed: bool = false
+## Son validate() çağrısında toplanan rig şerit boyut denetimleri: {ctx, path, w, h}. Doku okumayı AssetCheck (validate katmanı) yapar.
+var _strip_probes: Array[Dictionary] = []
 var _pickups: Dictionary = {}  # StringName -> PickupDef
 var _v11: Dictionary = {}  # DataV11 ham durumu (pickups/score + yükleme başarısızlık bayrakları)
 var _v2: Dictionary = {}  # DataV2 ham durumu (achievements.json)
@@ -323,6 +325,7 @@ func skills_of_kind(kind: StringName) -> Array[SkillDef]:
 ## complete: içerik tamamlandı modu (slice 2): "ritim" etiketli aktif sayısı >= 2.
 func validate(registry: Dictionary = {}, complete: bool = false) -> PackedStringArray:
 	var out := PackedStringArray()
+	_strip_probes.clear()
 	out.append_array(load_errors)
 	var reg: Dictionary = registry if not registry.is_empty() else _default_registry()
 	var sv := SchemaValidators.new(self)

@@ -2,7 +2,6 @@
 # yeni satır LAYER_NEW_EXCEPTION, ihlali kalkmış satır LAYER_STALE. İlk liste --emit-baseline ile üretilmiştir.
 scripts/autoload/settings.gd -> AudioMix
 scripts/autoload/settings.gd -> RenderFix
-scripts/sim/data_v2.gd -> StoreIo
 scripts/store/achievement_migration.gd -> AchievementProgress
 scripts/store/achievement_migration.gd -> AchievementStep
 scripts/store/achievement_store.gd -> AchievementStep
