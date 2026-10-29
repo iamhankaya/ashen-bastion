@@ -180,7 +180,7 @@ func test_min_gap_blocks_rapid_repeats_of_wind_sounds_only() -> void:
 	assert_true(Sfx.gap_blocked(&"hortum", 1200))
 	assert_false(Sfx.gap_blocked(&"hortum", 1500))
 	for id in LEGACY_IDS + ([&"enemy_die", &"xp_pickup", &"explosion"] as Array[StringName]):
-		assert_eq(Sfx.min_gap_of(id), 0, "Gunslinger sesi %s aralık almaz" % id)
+		assert_false(Sfx.MIN_GAP_MS.has(id), "Gunslinger sesi %s aralık almaz" % id)
 	Sfx.teardown()
 
 

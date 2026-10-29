@@ -8,14 +8,44 @@ extends RefCounted
 
 const DIR := "res://assets/audio/sfx/"
 const POOL_SIZE := 16
-const RULES_PATH := "res://data/sfx_rules.json"
-## data/sfx_rules.json: "limits" (kimlik başına eşzamanlı sınır; yoksa POOL_SIZE) ve "min_gap_ms" (kimlik başına en kısa
-## tekrar aralığı; aralık dolmadan gelen çağrı yutulur). Yeni karakter sesi yalnız veriyle eklenir.
+const LIMITS := {
+	&"shot_right": 4,
+	&"shot_left": 4,
+	&"hit": 3,
+	&"explosion": 3,
+	&"enemy_die": 3,
+	&"xp_pickup": 2,
+	&"zyfen_cast": 3,
+	&"zyfen_wind_hit": 3,
+	&"zyfen_gather": 1,
+	&"hava_bicaklari": 2,
+	&"delen_ruzgar": 2,
+	&"hortum": 2,
+	&"girdap": 1,
+	&"tufan": 1,
+	&"hava_cebi": 2,
+	&"nefes_dalgasi": 1,
+	&"kasirga_patlamasi": 1,
+}
+## v2.0.2 A4: yalnız rüzgar sesleri; kimlik başına en kısa tekrar aralığı (ms). Aralık dolmadan gelen çağrı yutulur
+## (hortum/tufan/isabet yoğunluğunda ses kalabalığı olmasın). Gunslinger kimlikleri burada yok: davranışları aynı.
+const MIN_GAP_MS := {
+	&"zyfen_wind_hit": 70,
+	&"hava_bicaklari": 150,
+	&"delen_ruzgar": 100,
+	&"gogun_mizragi": 400,
+	&"ay_oragi": 200,
+	&"hava_cebi": 120,
+	&"nefes_dalgasi": 300,
+	&"kasirga_patlamasi": 500,
+	&"hortum": 400,
+	&"tufan": 800,
+	&"girdap": 3000,
+}
 const COMBO_WINDOW_MS := 600
 const COMBO_MAX := 12
 const COMBO_STEP := 0.06
 
-static var _rules: Dictionary = {}
 static var _players: Array[AudioStreamPlayer] = []
 static var _ids: Array[StringName] = []
 static var _stamp: PackedInt64Array = PackedInt64Array()
@@ -24,7 +54,7 @@ static var _variants: Dictionary = {}  # StringName -> Array[AudioStream] (_1.._
 static var _last_variant: Dictionary = {}  # StringName -> son seçilen indeks
 static var _rng := RandomNumberGenerator.new()
 static var _clock: int = 0
-static var _last_ms: Dictionary = {}  # StringName -> son çalma zamanı (min_gap_of)
+static var _last_ms: Dictionary = {}  # StringName -> son çalma zamanı (MIN_GAP_MS)
 static var _combo: int = 0
 static var _last_pickup_ms: int = -100000
 
@@ -53,34 +83,9 @@ static func teardown() -> void:
 	_last_ms.clear()
 
 
-## Kimliğin eşzamanlı çalma sınırı (kuralda yoksa havuz boyu).
-static func limit_of(id: StringName) -> int:
-	return int(_rule_table("limits").get(String(id), POOL_SIZE))
-
-
-## Kimliğin en kısa tekrar aralığı, ms (kuralda yoksa 0: sınırsız).
-static func min_gap_of(id: StringName) -> int:
-	return int(_rule_table("min_gap_ms").get(String(id), 0))
-
-
-## Test: kural ve akış önbelleklerini sıfırlar (bir sonraki çağrıda diskten yeniden okunur).
-static func clear_caches() -> void:
-	_rules.clear()
-	clear_registered()
-	_last_ms.clear()
-
-
-static func _rule_table(key: String) -> Dictionary:
-	if _rules.is_empty():
-		var f := FileAccess.open(RULES_PATH, FileAccess.READ)
-		var parsed: Variant = JSON.parse_string(f.get_as_text()) if f != null else null
-		_rules = parsed if parsed is Dictionary else {"limits": {}, "min_gap_ms": {}}
-	return _rules.get(key, {})
-
-
 ## Kimliğin en kısa tekrar aralığı dolmadı mı (true: bu çağrı yutulur). Aralık tanımsızsa false.
 static func gap_blocked(id: StringName, now_ms: int) -> bool:
-	var gap := min_gap_of(id)
+	var gap: int = MIN_GAP_MS.get(id, 0)
 	return gap > 0 and now_ms - int(_last_ms.get(id, -1000000)) < gap
 
 
@@ -135,10 +140,10 @@ static func play(id: StringName, opts: Dictionary = {}) -> void:
 	var stream := pick_stream(id)
 	if stream == null:
 		return
-	if min_gap_of(id) > 0:
+	if MIN_GAP_MS.has(id):
 		_last_ms[id] = now
 	_clock += 1
-	var limit := limit_of(id)
+	var limit: int = LIMITS.get(id, POOL_SIZE)
 	var same := 0
 	var oldest_same := -1
 	for i in _players.size():

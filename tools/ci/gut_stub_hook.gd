@@ -18,7 +18,5 @@ func run() -> void:
 	for path in UserLeak.allowed_leaks():
 		gut.logger.info("USER_LEAK izinli (bulgu, tools/ci/user_leak_allow.txt): %s" % path)
 	UserLeak.cleanup_and_restore()
-	UiKit.clear_caches()
-	ArtLoader.clear_caches()
 	if failed:
 		set_exit_code(1)

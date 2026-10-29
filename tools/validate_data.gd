@@ -11,12 +11,9 @@ func _init() -> void:
 	var complete := FileAccess.get_file_as_string("res://tools/slice.txt").strip_edges() == "2"
 	var g := GameData.load_dir(root)
 	var errs := g.validate({}, complete)
-	errs.append_array(AssetCheck.validate(g))  # rig şerit doku boyutu (Texture2D sim dışında)
-	# v2.1: run_profiles.json. Kökte run_modes/ varsa (R7 katalog biçimi) GameData.validate'in RunCatalogValidator eklentisi
-	# zaten denetler; yoksa eski tek dosyalık biçim burada denetlenir. Asıl veri kökünde dosya ZORUNLU; başka kökte varsa denetlenir.
+	# v2.1: run_profiles.json (GameData'dan bağımsız doğrulayıcı). Asıl veri kökünde dosya ZORUNLU; başka kökte varsa denetlenir.
 	var profile_path := root.path_join("run_profiles.json")
-	var has_catalog := DirAccess.dir_exists_absolute(root.path_join(RunCatalog.MODES_DIR))
-	if not has_catalog and (root == "res://data" or FileAccess.file_exists(profile_path)):
+	if root == "res://data" or FileAccess.file_exists(profile_path):
 		errs.append_array(PackedStringArray(RunProfiles.load_file(profile_path)["errors"]))
 	for e in errs:
 		print("VERİ HATASI: ", e)

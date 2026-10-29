@@ -242,5 +242,5 @@ func test_contract_lord_bound_tier_ids_name_real_tiers_with_the_planned_threshol
 
 
 func test_contract_validator_does_not_touch_game_data() -> void:
-	# R7: GameData.validate katalogu RunCatalogValidator eklentisiyle denetler (kökte run_modes/ varsa); data_bad_* kökleri görmez. Geçerli veri temiz kalır.
+	# GameData.validate ve data_bad_* setleri run_profiles.json'u görmez: dosya bozuk olsa bile veri geçerli kalır.
 	assert_eq(GameData.load_default().validate({}, false), PackedStringArray())

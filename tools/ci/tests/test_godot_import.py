@@ -4,7 +4,6 @@ import pathlib
 import subprocess
 
 SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "godot_import.sh"
-SCRIPT_SH = SCRIPT.as_posix()  # Windows: bash -c içinde ters bölü kaçış sayılır
 
 # Sahte Godot: sayaç dosyasına satır ekler; davranış dizisi FAKE_PLAN ("abrt,ok" gibi) sırayla uygulanır.
 FAKE = r"""#!/usr/bin/env bash
@@ -32,7 +31,7 @@ def run(tmp_path, plan, umask="022", summary=True, evidence=False):
     (tmp_path / "proj" / ".godot" / "yarim.bin").write_text("yarim yazilmis")
     env = {
         "PATH": os.environ["PATH"], "GODOT_BIN": str(fake), "FAKE_PLAN": plan,
-        "FAKE_COUNT": str(tmp_path / "count"), "FAKE_SEEN": str(tmp_path / "seen"), "IMPORT_BACKOFF_SECS": "0",
+        "FAKE_COUNT": str(tmp_path / "count"), "FAKE_SEEN": str(tmp_path / "seen"),
     }
     if summary:
         env["GITHUB_STEP_SUMMARY"] = str(tmp_path / "summary.md")
@@ -40,7 +39,7 @@ def run(tmp_path, plan, umask="022", summary=True, evidence=False):
         env["ASHEN_EVIDENCE_DIR"] = str(tmp_path / "evid")
     (tmp_path / "proj" / ".gate").mkdir(exist_ok=True)
     r = subprocess.run(
-        ["bash", "-c", f"umask {umask}; bash {SCRIPT_SH} .gate/import.log"],
+        ["bash", "-c", f"umask {umask}; bash {SCRIPT} .gate/import.log"],
         cwd=tmp_path / "proj", env=env, capture_output=True, text=True,
     )
     count = len((tmp_path / "count").read_text().split()) if (tmp_path / "count").exists() else 0
@@ -66,26 +65,10 @@ def test_single_sigabrt_is_retried_once_and_reported(tmp_path):
     assert (tmp_path / "seen").read_text().split() == ["godot_var_1", "godot_yok_2"]
 
 
-def test_two_sigabrts_then_ok_succeeds_on_third_attempt(tmp_path):
+def test_second_sigabrt_stays_red_and_no_third_attempt(tmp_path):
     r, n = run(tmp_path, "abrt,abrt,ok")
-    assert r.returncode == 0 and n == 3
-    note = (tmp_path / "proj" / ".gate" / "import_retry.txt").read_text()
-    assert "deneme 1" in note and "deneme 2" in note and "deneme 3 başarılı" in note
-    assert (tmp_path / "seen").read_text().split() == ["godot_var_1", "godot_yok_2", "godot_yok_3"]
-    assert (tmp_path / "proj" / ".gate" / "import.log.deneme1").exists() and (tmp_path / "proj" / ".gate" / "import.log.deneme2").exists()
-
-
-def test_third_sigabrt_stays_red_and_no_fourth_attempt(tmp_path):
-    r, n = run(tmp_path, "abrt,abrt,abrt,ok")
-    assert r.returncode == 134 and n == 3
+    assert r.returncode == 134 and n == 2
     assert "yeniden deneme yok, gate kırmızı" in r.stderr
-
-
-def test_backoff_grows_between_attempts_and_is_reported(tmp_path):
-    # geri çekilme: deneme k'den sonra k * IMPORT_BACKOFF_SECS sn bekler; not'a yazılır (süre iddiası yok, yalnız bildirim)
-    r, n = run(tmp_path, "abrt,abrt,ok")
-    note = (tmp_path / "proj" / ".gate" / "import_retry.txt").read_text()
-    assert note.count("geri çekilme 0 sn") == 2
 
 
 def test_sigabrt_with_content_error_is_not_retried(tmp_path):
@@ -109,7 +92,7 @@ def test_works_under_restrictive_umask_and_stdin_script(tmp_path):
     fake = tmp_path / "fake_godot.sh"
     env = {"PATH": os.environ["PATH"], "GODOT_BIN": str(fake), "FAKE_PLAN": "ok",
            "FAKE_COUNT": str(tmp_path / "c2"), "FAKE_SEEN": str(tmp_path / "s2")}
-    src = f"bash {SCRIPT_SH} .gate/import.log\necho SONRAKI_SATIR\n"
+    src = f"bash {SCRIPT} .gate/import.log\necho SONRAKI_SATIR\n"
     r = subprocess.run(["bash", "-s"], input=src, cwd=tmp_path / "proj", env=env, capture_output=True, text=True)
     assert "SONRAKI_SATIR" in r.stdout
 
@@ -127,9 +110,3 @@ def test_evidence_is_collected_on_crash_even_when_retry_succeeds(tmp_path):
 def test_no_evidence_dir_means_nothing_written(tmp_path):
     r, n = run(tmp_path, "abrt,ok")
     assert r.returncode == 0 and not (tmp_path / "evid").exists()
-
-
-def test_retry_then_non_signature_failure_stops_with_that_code(tmp_path):
-    r, n = run(tmp_path, "abrt,fail,ok")
-    assert r.returncode == 1 and n == 2
-    assert "imza dışı hatayla düştü" in r.stderr

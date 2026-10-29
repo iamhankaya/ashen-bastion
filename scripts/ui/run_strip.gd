@@ -2,12 +2,28 @@ class_name RunStrip
 extends Button
 ## v2.1 koşu şeridi (docs/design/v2.1/DESIGN.md §2): ana sayfada OYNA'nın üstünde seçili (mod, zorluk) özeti; tüm şerit tek
 ## dokunma hedefidir ve KOŞU ekranını açar. Aynı dosya KOŞU ekranının ve duraklatma çiplerinin ortak metin/glif kaynağıdır:
-## sayılar ve süreler `data/run_profiles.json`'dan (V21Runs.profiles) gelir, burada sabit sayı yoktur. Mod/zorluk kimlikleri,
-## adları, açıklamaları ve kalkan sayıları RunCatalog'tan (`data/run_modes`, `data/difficulties`) okunur (R7).
+## sayılar ve süreler `data/run_profiles.json`'dan (V21Runs.profiles) gelir, burada sabit sayı yoktur.
 
 const H := 132.0
 const NO_DATA := -2  # profil dosyası okunamadı: süre/Lord dakikası yazılmaz
 const H_BIG := 168.0
+const MODE_ORDER: Array[StringName] = [&"quick", &"normal", &"endless"]
+const DIFF_ORDER: Array[StringName] = [&"easy", &"normal", &"hard"]
+const MODE_NAMES := {&"quick": "HIZLI", &"normal": "NORMAL", &"endless": "SONSUZ"}
+const MODE_TITLES := {&"quick": "Hızlı", &"normal": "Normal", &"endless": "Sonsuz"}
+const DIFF_NAMES := {&"easy": "KOLAY", &"normal": "NORMAL", &"hard": "ZOR"}
+const DIFF_TITLES := {&"easy": "Kolay", &"normal": "Normal", &"hard": "Zor"}
+const SHIELDS := {&"easy": 1, &"normal": 2, &"hard": 3}
+const MODE_DESC := {
+	&"quick": "Kısa koşu. Lord %d. dakikada gelir.",
+	&"normal": "Klasik koşu. Lord %d. dakikada gelir.",
+	&"endless": "Lord devrilince koşu sürer; ölene kadar.",
+}
+const DIFF_DESC := {
+	&"easy": "Daha az ve zayıf düşman.",
+	&"normal": "Dengeli koşu.",
+	&"hard": "Yoğun ve sert düşman.",
+}
 ## Ayrıntı levhası satırları: [etiket, RunProfiles zorluk alanı].
 const DETAIL_ROWS := [
 	["Düşman canı", "enemy_hp"],
@@ -15,7 +31,12 @@ const DETAIL_ROWS := [
 	["Düşman sayısı", "spawn_density"],
 	["Kazanılan XP", "xp"],
 ]
-## TalkBack için küçük harfli metinler (Türkçe i/İ tuzağı: dönüşüm işlevi kullanılmaz; zorluk metni katalogda `spoken`).
+## TalkBack için küçük harfli metinler (Türkçe i/İ tuzağı: dönüşüm işlevi kullanılmaz).
+const DIFF_SPOKEN := {
+	&"easy": "daha az ve zayıf düşman",
+	&"normal": "dengeli koşu",
+	&"hard": "yoğun ve sert düşman",
+}
 const DETAIL_SPOKEN := {
 	"enemy_hp": "düşman canı",
 	"enemy_dmg": "düşman hasarı",
@@ -54,7 +75,7 @@ class ModeGlyph:
 	func _draw() -> void:
 		var c := size * 0.5
 		var r := minf(size.x, size.y) * 0.5
-		match RunStrip.icon_key(mode):
+		match mode:
 			&"quick":
 				for dx in [-0.42, 0.42]:
 					draw_colored_polygon(
@@ -207,59 +228,10 @@ func show_selection(mode: StringName, diff: StringName, cfg: Dictionary) -> void
 	_glyph_slot.custom_minimum_size = Vector2(gs, gs)
 	_glyph_slot.add_child(ModeGlyph.new(mode, UiKit.BRONZ_300, gs))
 	_title.text = title_text(mode, cfg)
-	_sub.text = "Zorluk: %s" % diff_title(diff)
-	_shields.count = shields(diff)
+	_sub.text = "Zorluk: %s" % DIFF_TITLES.get(diff, "")
+	_shields.count = int(SHIELDS.get(diff, 0))
 	_shields.queue_redraw()
 	accessibility_name = strip_a11y(mode, diff, cfg)
-
-
-# --- katalog okuyucuları (R7): bilinmeyen kimlik => ""/0/boş, hata YOK ------------------------------------------
-
-
-## Sekme/liste sırası (katalog `order`).
-static func mode_order() -> Array[StringName]:
-	return _ids(RunCatalog.default().mode_ids())
-
-
-static func diff_order() -> Array[StringName]:
-	return _ids(RunCatalog.default().difficulty_ids())
-
-
-## Büyük harfli ad ("HIZLI"); başlık biçimi ("Hızlı"): mode_title.
-static func mode_name(mode: StringName) -> String:
-	return str(RunCatalog.default().mode(String(mode)).get("label", ""))
-
-
-static func mode_title(mode: StringName) -> String:
-	return str(RunCatalog.default().mode(String(mode)).get("name", ""))
-
-
-static func diff_name(diff: StringName) -> String:
-	return str(RunCatalog.default().difficulty(String(diff)).get("label", ""))
-
-
-static func diff_title(diff: StringName) -> String:
-	return str(RunCatalog.default().difficulty(String(diff)).get("name", ""))
-
-
-static func diff_desc(diff: StringName) -> String:
-	return str(RunCatalog.default().difficulty(String(diff)).get("description", ""))
-
-
-static func shields(diff: StringName) -> int:
-	return int(RunCatalog.default().difficulty(String(diff)).get("shields", 0))
-
-
-## ModeGlyph çizim anahtarı; verisi olmayan mod kendi kimliğiyle çizilir (bilinmeyen anahtar kum saatine düşer).
-static func icon_key(mode: StringName) -> StringName:
-	return StringName(str(RunCatalog.default().mode(String(mode)).get("icon_key", mode)))
-
-
-static func _ids(ids: PackedStringArray) -> Array[StringName]:
-	var out: Array[StringName] = []
-	for id in ids:
-		out.append(StringName(id))
-	return out
 
 
 # --- saf metin kaynağı (testler ağaçsız çağırır) ---------------------------------------------------------------
@@ -286,13 +258,13 @@ static func duration_text(mode: StringName, cfg: Dictionary) -> String:
 ## Şerit başlığı: "NORMAL · 20 DK"; Sonsuz'da süre yazılmaz ("SONSUZ").
 static func title_text(mode: StringName, cfg: Dictionary) -> String:
 	var mins := minutes(mode, cfg)
-	var n := mode_name(mode)
+	var n: String = MODE_NAMES.get(mode, "")
 	return n if mins < 0 else "%s · %d DK" % [n, mins]
 
 
 ## Mod açıklaması (Hızlı/Normal'de Lord dakikası profildeki süreden).
 static func mode_desc(mode: StringName, cfg: Dictionary) -> String:
-	var d := str(RunCatalog.default().mode(String(mode)).get("description", ""))
+	var d: String = MODE_DESC.get(mode, "")
 	if not d.contains("%d"):
 		return d
 	var mins := minutes(mode, cfg)
@@ -323,7 +295,7 @@ static func rule_lines(mode: StringName, diff: StringName) -> Array:
 	var out := [{"text": RULE_BASE, "warn": false}]
 	if diff == &"easy":
 		out.append({"text": RULE_EASY, "warn": true})
-	if RunCatalog.default().mode(String(mode)).get("ending", "") == GameSim.END_MODE_ENDLESS:
+	if mode == &"endless":
 		out.append({"text": RULE_ENDLESS, "warn": true})
 	return out
 
@@ -343,11 +315,11 @@ static func _minutes_spoken(mode: StringName, cfg: Dictionary) -> String:
 
 
 static func strip_a11y(mode: StringName, diff: StringName, cfg: Dictionary) -> String:
-	var m := mode_title(mode)
+	var m: String = MODE_TITLES.get(mode, "")
 	var span := _minutes_spoken(mode, cfg)
 	return (
 		"Koşu: %s%s. Zorluk: %s. Değiştirmek için çift dokun."
-		% [m, ", " + span if span != "" else "", diff_title(diff)]
+		% [m, ", " + span if span != "" else "", DIFF_TITLES.get(diff, "")]
 	)
 
 
@@ -355,12 +327,15 @@ static func mode_a11y(mode: StringName, cfg: Dictionary, selected: bool) -> Stri
 	var state := "seçili" if selected else "seçili değil"
 	var mins := minutes(mode, cfg)
 	if mins == NO_DATA:
-		return "%s mod, %s" % [mode_title(mode), state]
+		return "%s mod, %s" % [MODE_TITLES.get(mode, ""), state]
 	if mins < 0:
-		return "%s mod, Lord devrilince koşu sürer, ölene kadar, %s" % [mode_title(mode), state]
+		return (
+			"%s mod, Lord devrilince koşu sürer, ölene kadar, %s"
+			% [MODE_TITLES.get(mode, ""), state]
+		)
 	return (
 		"%s mod, %s dakika, Lord %s dakikada gelir, %s"
-		% [mode_title(mode), spoken(mins), spoken(mins), state]
+		% [MODE_TITLES.get(mode, ""), spoken(mins), spoken(mins), state]
 	)
 
 
@@ -368,9 +343,9 @@ static func diff_a11y(diff: StringName, selected: bool) -> String:
 	return (
 		"%s zorluk, %s kalkan üç üzerinden, %s, %s"
 		% [
-			diff_title(diff),
-			spoken(shields(diff)),
-			str(RunCatalog.default().difficulty(String(diff)).get("spoken", "")),
+			DIFF_TITLES.get(diff, ""),
+			spoken(int(SHIELDS.get(diff, 0))),
+			DIFF_SPOKEN.get(diff, ""),
 			"seçili" if selected else "seçili değil",
 		]
 	)
@@ -386,7 +361,7 @@ static func detail_a11y(diff: StringName, cfg: Dictionary) -> String:
 			parts.append("%s %s" % [what, "aynı" if r[1] == "xp" else "tam"])
 		else:
 			parts.append("%s yüzde %s %s" % [what, spoken(absi(pct)), "fazla" if pct > 0 else "az"])
-	return "%s zorluk ayrıntıları: %s." % [diff_title(diff), ", ".join(parts)]
+	return "%s zorluk ayrıntıları: %s." % [DIFF_TITLES.get(diff, ""), ", ".join(parts)]
 
 
 # --- bilgi çipi (duraklatma; sonuç ekranı U4b'de aynı bileşeni kullanır) ------------------------------------------
@@ -425,13 +400,14 @@ static func make_chips(mode: StringName, diff: StringName, cfg: Dictionary) -> H
 	mode_chip.name = "ModeChip"
 	var span := _minutes_spoken(mode, cfg)
 	mode_chip.accessibility_name = (
-		"Mod: %s%s." % [mode_title(mode), ", " + span if span != "" else ""]
+		"Mod: %s%s." % [MODE_TITLES.get(mode, ""), ", " + span if span != "" else ""]
 	)
 	row.add_child(mode_chip)
 	var diff_chip := make_chip(
-		Shields.new(shields(diff), UiKit.BRONZ_300, Vector2(63, 21)), diff_name(diff)
+		Shields.new(int(SHIELDS.get(diff, 0)), UiKit.BRONZ_300, Vector2(63, 21)),
+		DIFF_NAMES.get(diff, "")
 	)
 	diff_chip.name = "DiffChip"
-	diff_chip.accessibility_name = "Zorluk: %s." % diff_title(diff)
+	diff_chip.accessibility_name = "Zorluk: %s." % DIFF_TITLES.get(diff, "")
 	row.add_child(diff_chip)
 	return row

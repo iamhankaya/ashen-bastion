@@ -50,41 +50,14 @@ var scores_screen: HighscoreScreen
 var pickup_renderer: PickupRenderer
 var enemy_shadows: EnemyShadowLayer
 var ghosts: AshGhostRenderer
+var _pickup_sim: GameSim = null
 var _escape_label: Label = null
 var _bounce_label: Label = null
 
 var audio: AudioDirector
 ## D1: vuruş donması (sim adımlanmaz, _accum artmaz), Lord ölümü yavaş çekimi ve ardışık patlamaları.
 var hit_stop: HitStop = HitStop.new()
-## Sim olay bağlantı tabloları (hedefler bu sınıfın metotları: sinyal üçlüsü karakterizasyonu).
-var _core_signals := (
-	SimSignalBinder
-	. new(
-		[
-			[&"run_ended", Callable(self, &"_on_run_ended")],
-			[&"player_damaged", Callable(self, &"_on_player_damaged")],
-		]
-	)
-)
-var _player_signals := (
-	SimSignalBinder
-	. new(
-		[
-			[&"shot_fired", Callable(self, &"_on_shot_for_shell")],
-			[&"player_damaged", Callable(self, &"_on_damage_shake")],
-			[&"enemy_killed", Callable(self, &"_on_enemy_killed_fx")],
-		]
-	)
-)
-var _pickup_signals := (
-	SimSignalBinder
-	. new(
-		[
-			[&"pickup_collected", Callable(self, &"_on_pickup_collected")],
-			[&"bomb_exploded", Callable(self, &"_on_bomb_exploded")],
-		]
-	)
-)
+var _v11_sim: GameSim = null
 var _lord_slow_left: float = 0.0
 var _lord_blast_t := PackedFloat32Array()
 var _lord_blast_pos := PackedVector2Array()
@@ -104,8 +77,8 @@ var _result_record: Dictionary = {}
 func _ready() -> void:
 	get_tree().quit_on_go_back = false  # geri tuşunu kendimiz yönetiriz
 	v2 = V2Flow.new(v2_opts)
-	WorldBuilder.build_world(self)
-	WorldBuilder.build_ui(self)
+	_build_world()
+	_build_ui()
 	_v11_build_world()  # world ve ui kuruldu
 	audio = AudioDirector.new()
 	audio.name = "Audio"
@@ -121,6 +94,87 @@ func _exit_tree() -> void:
 	v2.release()
 
 
+func _build_world() -> void:
+	world = Node2D.new()
+	world.name = "World"
+	add_child(world)
+	ground = GroundView.new()
+	ground.name = "Ground"
+	world.add_child(ground)
+	gem_renderer = GemRenderer.new()
+	gem_renderer.name = "Gems"
+	world.add_child(gem_renderer)
+	# Düşman MultiMesh'i oyuncu (y-sıralı aktör) katmanının ALTINDA (plan: kasıtlı sınır).
+	enemy_renderer = EnemyRenderer.new()
+	enemy_renderer.name = "Enemies"
+	world.add_child(enemy_renderer)
+	actors = Node2D.new()
+	actors.name = "Actors"
+	actors.y_sort_enabled = true
+	world.add_child(actors)
+	player_view = PlayerView.new()
+	player_view.name = "Player"
+	actors.add_child(player_view)
+	projectile_renderer = ProjectileRenderer.new()
+	projectile_renderer.name = "Projectiles"
+	world.add_child(projectile_renderer)
+	fx_renderer = FxRenderer.new()
+	fx_renderer.name = "Fx"
+	world.add_child(fx_renderer)
+	camera = CameraRig.new()
+	camera.name = "Camera"
+	world.add_child(camera)
+	var atmo_layer := CanvasLayer.new()
+	atmo_layer.name = "AtmosphereLayer"
+	atmo_layer.layer = 5
+	add_child(atmo_layer)
+	atmosphere = Atmosphere.new()
+	atmosphere.name = "Atmosphere"
+	atmo_layer.add_child(atmosphere)
+	world.visible = false
+
+
+func _build_ui() -> void:
+	ui = CanvasLayer.new()
+	ui.name = "UI"
+	ui.layer = 10
+	add_child(ui)
+	# Joystick HUD'ın ALTINDA çizilir: köşede tamburu örtmez (ara denetim #7).
+	joystick = JoystickView.new()
+	joystick.name = "Joystick"
+	ui.add_child(joystick)
+	hud = Hud.new()
+	hud.name = "Hud"
+	ui.add_child(hud)
+	hud.pause_pressed.connect(pause_game)
+	level_up = LevelUpScreen.new()
+	level_up.name = "LevelUp"
+	ui.add_child(level_up)
+	level_up.chosen.connect(_on_choice)
+	pause_screen = PauseScreen.new()
+	pause_screen.name = "Pause"
+	ui.add_child(pause_screen)
+	pause_screen.resume_requested.connect(resume_game)
+	pause_screen.restart_confirmed.connect(start_run)
+	pause_screen.menu_confirmed.connect(go_menu)
+	pause_screen.sound_toggled.connect(_on_sound)
+	pause_screen.vibration_toggled.connect(_on_vibration)
+	pause_screen.settings_requested.connect(open_settings)
+	result_screen = ResultScreen.new()
+	result_screen.name = "Result"
+	ui.add_child(result_screen)
+	result_screen.replay_requested.connect(start_run)
+	result_screen.menu_requested.connect(go_menu)
+	menu = MainMenu.new()
+	menu.name = "Menu"
+	ui.add_child(menu)
+	menu.play_requested.connect(start_run)
+	menu.settings_requested.connect(open_settings)
+	_build_settings_screen()
+	menu.debug_stress_requested.connect(start_stress)
+	_build_render_debug()
+
+
 ## F-ashen-bastion-002 (B): yalnız debug derlemede. Düşman/taş görünür-sayı etiketi; dokunmak kesme
 ## dikdörtgeni düzeltmesini (RenderFix) açar/kapatır. Cihazda iki durum karşılaştırılır.
 func _build_render_debug() -> void:
@@ -130,7 +184,18 @@ func _build_render_debug() -> void:
 
 
 func render_debug_text() -> String:
-	return RunPresentation.render_text(sim, enemy_renderer, gem_renderer)
+	if sim == null:
+		return ""
+	return (
+		"düşman %d/%d  taş %d/%d\nkesme düzeltmesi: %s (dokun)"
+		% [
+			enemy_renderer.visible_count(),
+			sim.enemies.count,
+			gem_renderer.visible_count(),
+			sim.gems.count,
+			"AÇIK" if RenderFix.enabled else "KAPALI",
+		]
+	)
 
 
 func toggle_cull_fix() -> void:
@@ -261,7 +326,9 @@ func _set_screen(next: int) -> void:
 
 
 func _bind(new_sim: GameSim) -> void:
-	_core_signals.release()
+	if sim != null and sim.bus.run_ended.is_connected(_on_run_ended):
+		sim.bus.run_ended.disconnect(_on_run_ended)
+		sim.bus.player_damaged.disconnect(_on_player_damaged)
 	sim = new_sim
 	_run_stats = {}
 	_run_won = false
@@ -277,7 +344,8 @@ func _bind(new_sim: GameSim) -> void:
 	hud.bind(sim)
 	if sim != null:
 		audio.bind(sim.bus, sim.data, sim.character, sim.fx)
-	_core_signals.attach(sim)
+		sim.bus.run_ended.connect(_on_run_ended)
+		sim.bus.player_damaged.connect(_on_player_damaged)
 	_v11_bind(sim)
 	v2.bind(null if _stress != null else sim)  # stres koşusu başarım saymaz
 
@@ -399,7 +467,62 @@ func _show_result() -> void:
 ## Açılışta bir kez, `world` ve `ui` kurulduktan sonra: yeni görünümleri ve ekranı kurar.
 ## D1: enemy_shadows, ghosts (+ oyuncu rig kurulumu). D2: pickup_renderer. D3: scores_screen, highscores.load_file.
 func _v11_build_world() -> void:
-	WorldBuilder.build_v11_world(self)
+	enemy_shadows = EnemyShadowLayer.new()
+	enemy_shadows.name = "Shadows"
+	world.add_child(enemy_shadows)
+	ghosts = AshGhostRenderer.new()
+	ghosts.name = "Ghosts"
+	world.add_child(ghosts)
+	enemy_renderer.shadows = enemy_shadows
+	enemy_renderer.set_ghosts(ghosts)
+	enemy_renderer.set_effects(fx_renderer, camera)
+	enemy_renderer.apply_cull_fix()
+	enemy_renderer.lord_enraged.connect(_on_lord_enraged)
+	enemy_renderer.lord_slammed.connect(_on_lord_slammed)
+	fx_renderer.char_layer.reparent(world)  # kömür zemin ile gölgeler arasında (normal karışım)
+	_v11_order_world()
+	highscores.load_file()
+	scores_screen = HighscoreScreen.new()
+	scores_screen.name = "Scores"
+	ui.add_child(scores_screen)
+	scores_screen.back_requested.connect(go_menu)
+	scores_screen.store = highscores
+	scores_screen.play_with_requested.connect(play_with)
+	run_screen = RunScreen.new()  # v2.1 KOŞU ekranı (U4a)
+	run_screen.name = "RunScreen"
+	ui.add_child(run_screen)
+	run_screen.back_requested.connect(go_menu)
+	menu.run_requested.connect(open_run_screen)
+	menu.scores_requested.connect(open_scores)
+	menu.characters_requested.connect(open_characters)
+	menu.achievements_requested.connect(open_achievements)
+	result_screen.record_stamped.connect(_on_record_stamped)
+	get_viewport().size_changed.connect(_apply_safe_areas)
+	_apply_safe_areas()
+
+
+## Katman sırası (plan A3): zemin → kömür → gölgeler → taşlar → eklentiler → düşmanlar → hayaletler → aktörler → mermiler → FX.
+## Adlarla yerleştirir; var olmayan düğüm atlanır (D2 `Pickups` ekleyince bu işlevden sonra çağırır ya da adı korur).
+func _v11_order_world() -> void:
+	var names: Array[StringName] = [
+		&"Ground",
+		&"CharLayer",
+		&"Shadows",
+		&"Gems",
+		&"Pickups",
+		&"Enemies",
+		&"Ghosts",
+		&"Actors",
+		&"Projectiles",
+		&"Fx",
+		&"Camera"
+	]
+	var idx := 0
+	for n in names:
+		var node := world.get_node_or_null(NodePath(n))
+		if node != null:
+			world.move_child(node, idx)
+			idx += 1
 
 
 ## Yeni ekranların güvenli alanı (çentik, yuvarlak köşe); pencere boyutu değişince yenilenir.
@@ -451,14 +574,22 @@ func _v11_bind(new_sim: GameSim) -> void:
 
 ## D1: oyuncu olayları (shot_fired, reload_*, player_damaged, level_up, run_ended).
 func _v11_bind_player(new_sim: GameSim) -> void:
-	_player_signals.release()
+	if _v11_sim != null and _v11_sim.bus.shot_fired.is_connected(_on_shot_for_shell):
+		_v11_sim.bus.shot_fired.disconnect(_on_shot_for_shell)
+		_v11_sim.bus.player_damaged.disconnect(_on_damage_shake)
+		_v11_sim.bus.enemy_killed.disconnect(_on_enemy_killed_fx)
+	_v11_sim = new_sim
 	hit_stop.left = 0.0
 	_lord_slow_left = 0.0
 	_lord_blast_t.clear()
 	_lord_blast_pos.clear()
 	_lord_ember_acc = 0.0
 	ghosts.bind(new_sim, enemy_renderer)
-	_player_signals.attach(new_sim)
+	if new_sim == null:
+		return
+	new_sim.bus.shot_fired.connect(_on_shot_for_shell)
+	new_sim.bus.player_damaged.connect(_on_damage_shake)
+	new_sim.bus.enemy_killed.connect(_on_enemy_killed_fx)
 
 
 ## D2: eklenti olayları ve FX (pickup_*, buff_*, bomb_*; bomb_exploded -> kamera + HitStop).
@@ -468,7 +599,10 @@ func _v11_bind_pickups(new_sim: GameSim) -> void:
 		pickup_renderer.name = "Pickups"
 		world.add_child(pickup_renderer)
 		world.move_child(pickup_renderer, gem_renderer.get_index() + 1)  # taşlardan sonra, düşmanlardan önce
-	_pickup_signals.release()
+	if _pickup_sim != null and _pickup_sim.bus.pickup_collected.is_connected(_on_pickup_collected):
+		_pickup_sim.bus.pickup_collected.disconnect(_on_pickup_collected)
+		_pickup_sim.bus.bomb_exploded.disconnect(_on_bomb_exploded)
+	_pickup_sim = new_sim
 	pickup_renderer.bind(new_sim)
 	_v11_build_escape_debug()
 	_bounce_label = BounceDebug.ensure(_bounce_label, ui, BounceDebug.on_input)
@@ -476,7 +610,9 @@ func _v11_bind_pickups(new_sim: GameSim) -> void:
 		_escape_label.visible = false
 	if _bounce_label != null and new_sim == null:
 		_bounce_label.visible = false
-	_pickup_signals.attach(new_sim)
+	if new_sim != null:
+		new_sim.bus.pickup_collected.connect(_on_pickup_collected)
+		new_sim.bus.bomb_exploded.connect(_on_bomb_exploded)
 
 
 ## D3: skor olayları (score_changed, streak_changed).
@@ -498,8 +634,18 @@ func _v11_update_player(view_dt: float) -> void:
 	var vdt := view_dt * (Motion.LORD_SLOWMO_SCALE if _lord_slow_left > 0.0 else 1.0)
 	_lord_slow_left = maxf(0.0, _lord_slow_left - view_dt)
 	ghosts.update_ghosts(vdt)
-	RunPresentation.tick_blasts(self, view_dt)  # gerçek süre: 900 ms içinde 3 patlama, yavaş çekimden bağımsız
-	RunPresentation.lord_embers(self, vdt, LORD_EMBER_RATE)
+	_tick_lord_blasts(view_dt)  # gerçek süre: 900 ms içinde 3 patlama, yavaş çekimden bağımsız
+	if enemy_renderer.lord_enraged_now and vdt > 0.0:
+		_lord_ember_acc += vdt * LORD_EMBER_RATE
+		while _lord_ember_acc >= 1.0:
+			_lord_ember_acc -= 1.0
+			var a := randf() * TAU
+			fx_renderer.add_particle(
+				&"ember",
+				enemy_renderer.lord_pos + Vector2.from_angle(a) * 70.0,
+				Vector2(cos(a) * 25.0, -50.0),
+				0.8
+			)
 
 
 ## A4: oyuncu/FX/hayalet görünüm süresi. Yalnız PLAYING iken dt (sonuç gecikmesi dönemleri dahil), aksi halde 0;
@@ -530,7 +676,11 @@ func _v11_build_escape_debug() -> void:
 
 
 func escape_debug_text() -> String:
-	return RunPresentation.escape_text(sim)
+	var live := EnemyEscape.escaping_count(sim) if sim != null else 0
+	return (
+		"kaçışta %d  girilen %d\nçıkmaz kaçışı: %s (dokun)"
+		% [live, EnemyEscape.begun_total, "AÇIK" if EnemyEscape.enabled else "KAPALI"]
+	)
 
 
 func toggle_escape_fix() -> void:
@@ -559,7 +709,13 @@ func _on_escape_label_input(event: InputEvent) -> void:
 func _on_pickup_collected(kind_id: StringName, _pos: Vector2) -> void:
 	if sim == null:
 		return
-	RunPresentation.pickup_toast(self, kind_id)
+	var def := sim.data.get_pickup(kind_id)
+	if def == null or def.toast == "":
+		return
+	var screen_pos := (
+		get_viewport().get_canvas_transform() * (sim.player_pos + Vector2(0.0, -140.0))
+	)
+	hud.float_text.show_text(UiKit.upper_tr(def.toast), screen_pos)
 
 
 ## Bomba patlaması: kamera 18 px + vuruş donması 0,06 sn (FX halkası/ses mevcut `explosion` yolundan gelir).
@@ -668,7 +824,26 @@ func _on_damage_shake(amount: float, _hp: float) -> void:
 func _on_enemy_killed_fx(type_id: StringName, pos: Vector2) -> void:
 	if type_id != LORD_ID:
 		return
-	RunPresentation.lord_killed(self, pos)
+	hit_stop.request(Motion.sec(Motion.HITSTOP_LORD_DEATH))
+	camera.shake(18.0)
+	_lord_slow_left = Motion.sec(Motion.LORD_SLOWMO)
+	for k in 3:
+		_lord_blast_t.append(0.1 + 0.3 * float(k) + randf() * 0.1)
+		_lord_blast_pos.append(
+			pos + Vector2(randf_range(-120.0, 120.0), randf_range(-120.0, 120.0))
+		)
+
+
+func _tick_lord_blasts(vdt: float) -> void:
+	var k := 0
+	while k < _lord_blast_t.size():
+		_lord_blast_t[k] -= vdt
+		if _lord_blast_t[k] <= 0.0:
+			fx_renderer.add_explosion(_lord_blast_pos[k], 150.0)
+			_lord_blast_t.remove_at(k)
+			_lord_blast_pos.remove_at(k)
+		else:
+			k += 1
 
 
 ## Lord öfkesi (E9): vuruş donması 80 ms, kamera 16 px, halka.
@@ -707,6 +882,15 @@ func _notification(what: int) -> void:
 		_on_back()
 	elif PauseLogic.should_auto_pause(what, screen):
 		pause_game()
+
+
+## v2.0.1: ayarlar ekranı menü ve duraklatma üstünde bir katmandır (ekran durumu değişmez); geri onu kapatır.
+func _build_settings_screen() -> void:
+	settings_screen = SettingsScreen.new()
+	settings_screen.name = "Settings"
+	ui.add_child(settings_screen)
+	settings_screen.vibration_toggled.connect(_on_vibration)
+	settings_screen.sound_toggled.connect(_on_sound)
 
 
 func open_settings() -> void:

@@ -336,6 +336,20 @@ func test_p19_pickups_on_off_leave_the_four_old_rng_streams_and_enemies_equal() 
 	assert_eq(summaries[0], summaries[1], "eklentili/eklentisiz: eski dört akış ve düşmanlar eşit")
 
 
+func test_p20_invariants_empty_every_60_steps_for_all_policies() -> void:
+	if V11Slice.require(self, SLICE):
+		return
+	var all: Array[StringName] = Bots.POLICIES.duplicate()
+	all.append_array(Bots.PICKUP_POLICIES)
+	for pol in all:
+		var sim := SimKit.make(51, {"data_kind": "real", "log_events": false})
+		var rng := Bots.make_rng(51)
+		var r := Bots.play(sim, pol, 240 * HZ, rng, 60)
+		assert_eq(
+			(r["violations"] as PackedStringArray).size(), 0, "%s: %s" % [pol, str(r["violations"])]
+		)
+
+
 func test_p21_start_time_does_not_grant_free_pickups() -> void:
 	if V11Slice.require(self, SLICE):
 		return

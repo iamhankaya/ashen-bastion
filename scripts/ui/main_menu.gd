@@ -46,6 +46,7 @@ const GHOST_FONT := 30  # "EN İYİ SKORLAR" ikonla çakışmadan 454 px düğme
 const HALF_W := 454.0
 const SUB_FONT := 26  # alt satır (seçili karakter adı, açılan/toplam)
 const NAME_MAX := 24  # alt satırdaki karakter adı (taşarsa "…")
+const DEFAULT_CHARACTER := "Gunslinger"
 const DEFAULT_ACH_TOTAL := 53  # yayımlanan kademe toplamı; denetleyici gerçek toplamı yazar
 const TAPS_FOR_STRESS := 3
 const TAP_WINDOW := 1.2
@@ -92,7 +93,7 @@ var _mini: TextureRect
 var _mini_ring: Control
 var _characters_sub: Label
 var _achievements_sub: Label
-var _char_name: String = _default_character_name()
+var _char_name: String = DEFAULT_CHARACTER
 var _taps: int = 0
 var _tap_left: float = 0.0
 var _t: float = 0.0
@@ -540,12 +541,6 @@ func _ghost_button(title: String, glyph: StringName, node_name: String) -> Butto
 	return b
 
 
-## Seçim bildirilene dek alt satırda gösterilen ad: veri varsayılanının (`CharacterRoster.DEFAULT_ID`) adı.
-static func _default_character_name() -> String:
-	var c := GameData.load_default().get_character(CharacterRoster.DEFAULT_ID)
-	return c.display_name if c != null else ""
-
-
 ## KARAKTERLER alt satırı (seçili karakter adı; en çok NAME_MAX harf, taşarsa "…").
 func set_character_name(p_name: String) -> void:
 	_char_name = p_name
@@ -711,3 +706,5 @@ func _on_version_input(event: InputEvent) -> void:
 	)
 	if tap and register_version_tap() and OS.is_debug_build():
 		debug_stress_requested.emit()
+
+# prova yaması (a): ölçüm sentetik iş yükü

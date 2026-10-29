@@ -3,7 +3,7 @@
 Veri **dosya başına kayıt** biçimindedir (birleşme çakışması yok): `data/characters/<id>.json`,
 `data/skills/<id>.json`, `data/enemies/<id>.json`, `data/waves.json` (U2: `data/ruins.json`;
 v1.1: `data/pickups.json`, `data/score.json`; v2.0: `data/achievements.json`). Dosya adı = `id`.
-Yükleme ve doğrulama: `scripts/sim/game_data.gd` (`GameData`, autoload DEĞİL; yapı için `## Yapı`). Komut satırı:
+Yükleme ve doğrulama: `scripts/sim/game_data.gd` (`GameData`, autoload DEĞİL). Komut satırı:
 `godot --headless -s res://tools/validate_data.gd [-- <kök>]` (gate adım 4). `tools/slice.txt = 2` ise "içerik
 tamamlandı" kuralları da denetlenir.
 
@@ -25,91 +25,6 @@ g.get_achievement(id) -> AchievementDef        # null olabilir
 `test/fixtures/data_bad_<kod>/` bindirme fixture'ı vardır (`behavior_base` hariç: `test_game_data.gd` içinde sınanır).
 
 **Dikkat:** `StringName` sıralaması adres bazlıdır, kararsızdır. Sonuca etki eden sıralamada `String` kullan.
-
-## Yapı: yükleme, doğrulama, paylaşım (R6a)
-
-Bu bölümün başlık yapısını yalnız R6a değiştirir; sonraki fazlar yalnız kendi `###` bölümünü doldurur.
-
-### Dosya yapısı
-
-| Dosya | Sorumluluk |
-|---|---|
-| `scripts/sim/game_data.gd` | Cephe: önbellek (`load_default`), `load_dir`, erişimciler, `validate()` sırası, ortak doğrulama yardımcıları (`_err`, `_num`, `_str`, `_pair`, `_unknown_keys`, `_asset_ok`, `_screen`) |
-| `scripts/sim/catalog_loader.gd` | `CatalogLoader`: dizin/JSON okuma, kayıtları tanımlara çevirme; okuma hataları `load_errors` |
-| `scripts/sim/schema_validators.gd` | `SchemaValidators`: beceri, düşman, karakter, rig şeması |
-| `scripts/sim/cross_ref_validator.gd` | `CrossRefValidator`: evrim `requires`/`dup_evolution`, "içerik tamamlandı" kuralları |
-| `scripts/sim/validators/*.gd` | Eklenti doğrulayıcılar (aşağıda) |
-
-`validate()` sırası (hata sırası bununla aynıdır): `load_errors` → beceri → evrim çapraz referansı → düşman → karakter → dalga → v1.1 → v2.0 → v2.0.2 havuz → harabe → (`complete` ise) içerik tamamlandı → **eklentiler**.
-
-### Doğrulayıcı eklentileri
-
-Yeni doğrulama = `scripts/sim/validators/` altına yeni bir `extends DataValidator` dosyası; hiçbir kayıt dosyasına ve mevcut koda dokunulmaz.
-
-- `validator_order() -> int` (varsayılan 1000), `validator_id() -> StringName` (benzersiz ad), `run(g: GameData, out: PackedStringArray, complete: bool)`: hataları `"[kod] bağlam: açıklama"` biçiminde `out`'a ekler.
-- Keşif: `GameData._discover_validators()` `ProjectSettings.get_global_class_list()`'te tabanı `DataValidator` olan, yolu `validators/` altında olan sınıfları bulur; **doğrudan** alt sınıf olmalı (ara sınıf keşfedilmez). Merkezi liste yoktur.
-- Sıra: `(order, id, yol)` artan; sınıf listesi sırasından bağımsızdır. Eklenti hataları çekirdek hatalarından sonra gelir.
-- Bağımlılık sınırı: eklenti yalnız sim katmanına ve `GameData` cephesine bağlanır; başka eklentiye ya da `ctrl/ui/view/store/domain/autoload/debug/validate` dizinlerine başvurmaz (`test_data_validator_protocol`).
-- Yeni hata kodu eklenirse `GameData.ERROR_CODES`'a girer ve `test/fixtures/data_bad_<kod>/` fixture'ı eklenir (mevcut kural).
-
-### Paylaşılan veri (salt okunur)
-
-`GameData.load_default()` tek paylaşılan örnektir (`_default`); döndürdüğü nesneler (`CharacterDef`, `SkillDef`, `EnemyDef`, `PickupDef`, `AchievementDef`, `ScoreTable`, `waves`, `pickup_cfg`, `ruins`, karakter `rig` sözlükleri) **salt okunur** sayılır: üretim kodu yazmaz.
-
-- Veriyi değiştiren test `DataKit.copy()` ile kendi kopyasını alır ve `GameSim.new(seed, id, {"data": kopya})` ile verir (`test/helpers/data_kit.gd`); önbelleğe yazıp geri alma yok.
-- Önbelleği sıfırlaması gereken test `DataKit.use_fresh()` çağırır, `after_each`'te `DataKit.release()` çağırır.
-- `GameSim` zaten `opts["data"]` kabul eder; `fresh_copy()` gibi yeni üretim API'si yoktur.
-
-### Mod kataloğu (R7)
-
-Koşu modları ve zorlukları **dosya başına bir kayıt**tır: `data/run_modes/<id>.json`, `data/difficulties/<id>.json` (dosya adı = `id`).
-`RunCatalog.default()` (`scripts/sim/catalog/run_catalog.gd`) bunları okur; `RunProfiles`, `RunStrip`, `Settings`, `Highscores`,
-`AchievementRules` ve `V21Runs.set_selection` kimlik kümesini buradan alır (sabit `quick|normal|endless` / `easy|normal|hard` listesi yok).
-Sıralama `(order, id)`; varsayılan `"default": true` olan kayıt (yoksa sıradaki ilk).
-
-- Mod: `id`, `order`, `name` ("Hızlı"), `label` ("HIZLI", büyük harf elle yazılır: Türkçe i/İ), `description` (Lord dakikası için `%d`),
-  `ending` (`lord|endless`), `icon_key` (`quick|normal|endless` çizimi; bilinmeyen anahtar kum saati), `profile` (`time_scale`, `xp_mult`,
-  `lord_hp_mult`, `rate_mult`; `ending=endless` ise Sonsuz alanları). Aralıklar yukarıdaki `modes.<ad>` kurallarıyla aynıdır.
-- Zorluk: `id`, `order`, `name`, `label`, `description`, `spoken` (TalkBack metni), `shields` (0..3 dolu kalkan), `values` (`enemy_hp`,
-  `enemy_dmg`, `spawn_density`, `xp`, `lord_hp`), `achievements` (`block_lord_bound`, `totals`).
-- `data/run_profiles.json` yalnız `v` ve `achievements.lord_bound_tier_ids` taşır. `RunProfiles.load_default/load_dir` katalogu eski tek dosyalık
-  biçime ({v, default, modes, difficulties, achievements}) birleştirir; eski biçim `load_file` ile (kusurlu fixture setleri) okunmaya devam eder.
-- Yeni mod/zorluk **yalnız veri dosyası** ekleyerek gelir (`test_catalog_add_mode_data_only`). Yeni **bitiş türü** (`RunCatalog.ENDING_KINDS`)
-  sim kodu gerektirir: kabulden ayrıdır. `RunStrip.rule_lines` Kolay notu hâlâ `easy` kimliğine bağlıdır.
-- Doğrulama: `RunCatalog.validate()` (`RUN_CATALOG: <id>: <neden>`) + `RunProfiles.validate(raw, true)`. `GameData.validate` bunları
-  `scripts/sim/validators/run_catalog_validator.gd` eklentisiyle çalıştırır (kökte `run_modes/` yoksa sessiz geçer); çekirdek dosya adını anmaz.
-
-### Başarım metrik kaydı (R8)
-
-`data/achievements/<stat>.json` = bir stat'ın **nereden beslendiği** ve **nereye yazıldığı** (21 dosya, dosya adı = `stat`). Aile/kademe
-tanımları (`achievements.json`: ad, açıklama, `steps`, `group`, `legacy`, ikon) ayrı kalır; kademe eşikleri tek yerde (aile kaydı) durur.
-Şema kuralları `scripts/sim/catalog/metric_schema.gd` (`MetricSchema`), doğrulayıcı eklenti `scripts/sim/validators/stat_metrics_validator.gd`
-(hata kodu `metric_schema`), okuyucu `AchievementMetricRegistry` (`scripts/ctrl/`; `test_b9` sim dizininde başarım sınıf adlarını yasakladığı
-için sim tarafı bu adları anmaz, F-ashen-bastion-121). Tracker (`AchievementTracker`) olay kodu taşımaz, bu kayıttan kurulur.
-
-| Alan | Anlam |
-|---|---|
-| `stat` | Kimlik; `achievements.json` ailesinin `stat`ı bununla eşleşir. `total_*` = koşular arası toplam, aksi halde koşu kapsamı. |
-| `order` | Aynı olayı/poll'u/finish'i işleyen statların sırası (küçük önce). Kademe açılış sırasını (`run_unlocked`) belirler; değiştirmek anlık görüntüyü değiştirir. |
-| `icon_family` | `AchievementIcons.FAMILY` ile aynı (ikon adı). |
-| `persist` | `{"total": anahtar, "best": anahtar}` (`null` = tutmaz). `total` → kayıtta `totals[anahtar]`, `best` → `best[anahtar]`. Anahtarlar `AchievementDef.TOTAL_KEY/BEST_KEY` ve `AchievementStore.TOTAL_KEYS/BEST_KEYS` ile birebir (`test_catalog_achievement_real`); çakışan anahtar hata. |
-| `source` + `aggregate` | **Yerleşik** metrik. `source` = `{"event": <SimBus sinyali>, "filter": {<etiket alanı>: [değer]}, "value": "one"\|"payload.<alan>"}` ya da `{"poll": "time"\|"active_slots"}` ya da `{"finish": "always"\|"won", "value": "one"\|"result.time"}`; `aggregate` = `sum` \| `max` \| `count`. |
-| `result_max` | `time`/`level`/`score`: koşu sonunda `finish(stats)` değeriyle en büyüğe yükselt. |
-| `reducer` + `events` [+ `poll`, `finish`] | **Eklenti** metrik: `AchievementReducer` alt sınıfı (`scripts/ctrl/achievement_reducers/`), `source/aggregate` ile birlikte olmaz. `events` = dinlenen sinyaller, `poll: true` = her poll'da, `finish: true` = koşu sonunda çağrılır. |
-| `tiers`, `group`, `goal_text` | İsteğe bağlı; `tiers` varsa artan pozitif tamsayılar. |
-
-Olay alanları (`MetricSchema.EVENTS`): `enemy_killed{type_id}`, `level_up{level}`, `score_changed{score,mult,gain}`, `reload_started`,
-`streak_changed{mult}`, `pickup_collected{kind_id}`, `player_damaged`, `evolution_gained{evo_id}`, `buff_started{kind}`, `buff_ended{kind}`,
-`bomb_hits{hits}`. Süzgeç anahtarı olayın etiket alanı (parantezsiz ilk ad) olmalıdır; değer ifadesi tamsayı alanlardan biridir.
-
-**Veriyle eklemek** (kod yok): mevcut bir olaya bağlı yerleşik toplam için `data/achievements/<yeni_stat>.json` + `achievements.json`'a o stat'lı
-aile. **Yeni reducer** (durumlu/koşullu): `scripts/ctrl/achievement_reducers/` altına `extends AchievementReducer` yeni bir dosya + metrik JSON'u;
-mevcut `.gd` değişmez. İki yol da `test_catalog_achievement_dry_run` ile kuru denenir. Yeni olay türü (sim kodu) ve depoya yeni kalıcı
-anahtar (`totals`/`best` listeleri) hâlâ kod ister (aşağıda).
-
-Sınırlar: kalıcı `totals`/`best` anahtarları `AchievementStore.TOTAL_KEYS/BEST_KEYS` ve `AchievementDef.TOTAL_KEY/BEST_KEY`'de kapalı kümedir
-(kayıt dosyası biçimi sabit); veriyle eklenen stat bugün `persist: null` (yalnız koşu içi) kullanır. `AchievementDef.STATS` ve tracker `S_*`
-dizinleri yerleşik 21 stat için sabittir; kayıttaki yeni statlar bunların ardına eklenir.
 
 ## Karakter — `characters/<id>.json`
 
@@ -323,7 +238,7 @@ tamamlanan aile "TAMAM". Açılma animasyonu yok (anlık). `group` alanı olmaya
   Kasırga Patlaması 7, Tufan 8).
 - `cast_sfx` (isteğe bağlı, aktif ve evrimde; pasifte `unknown_key`): becerinin ateşlenme/doğuş sesi (`SimFx.skill_sfx`
   ile çalar). Tek dosya ya da `_1..N` varyasyon; yoksa `asset_missing`. Sürekli bölgeler (hortum, tufan) doğuşta tek
-  seferlik, Girdap 4 sn'de bir; `data/sfx_rules.json` `min_gap_ms` (Sfx.min_gap_of) aynı sesin en kısa tekrar aralığını sınırlar.
+  seferlik, Girdap 4 sn'de bir; `Sfx.MIN_GAP_MS` aynı sesin en kısa tekrar aralığını sınırlar.
 - `tags`: metin dizisi. `rhythm` = şarjör ritmiyle etkileşir. **İçerik tamamlandı (slice 2)** modunda `rhythm` etiketli
   **aktif** sayısı ≥ 2 (`rhythm_count`).
 - `levels[i]` sayısal değerlerden oluşan nesnedir; **tüm seviyelerde aynı anahtar kümesi** (`levels_keys`). İstisna: `target_mode` (Hortum/Tufan, `"cluster"`) metindir; hız/hedefleme düğmeleri `speed`, `retarget_every` (sn; yoksa türe göre yedek), `max_dist` (kullanılmaz), `min_spawn_dist` (doğuşta oyuncudan en az uzaklık, px), `keep_out` (oyuncuya en fazla yaklaşma, px; `min_spawn_dist >= keep_out`), `boss_mult` sayıdır.
@@ -446,7 +361,7 @@ boştur. Doğrulama: `scripts/sim/ruins_validator.gd`; sprite ve ölçüler `too
 
 ## Koşu profilleri — `run_profiles.json` (v2.1)
 
-Tek kaynak (R7'den beri iki parça: `data/run_profiles.json` + `data/run_modes/`, `data/difficulties/`; bkz. `### Mod kataloğu (R7)`; `run_profiles.json` yoksa HATA, yerleşik varsayılan yok). Aşağıdaki kurallar birleşik ve eski tek dosyalık biçim içindir. Okuyucu/doğrulayıcı `scripts/sim/run_profiles.gd`
+Tek kaynak: `data/run_profiles.json` (dosya yoksa HATA, yerleşik varsayılan yok). Okuyucu/doğrulayıcı `scripts/sim/run_profiles.gd`
 (`RunProfiles`; `GameData`'dan bağımsız; `tools/validate_data.gd` çağırır). Satır başına bir anahtar (birleştirilebilir). Kimlikler
 İngilizce küçük harf: modlar `quick|normal|endless`, zorluklar `easy|normal|hard`. Hata satırı `[kod] bağlam: açıklama`.
 

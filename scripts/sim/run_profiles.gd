@@ -1,14 +1,11 @@
 class_name RunProfiles
 extends RefCounted
-## Koşu profili okuyucusu ve alan bazlı doğrulayıcısı (v2.1). R7'den beri modlar/zorluklar `data/run_modes/` ve
-## `data/difficulties/` dosyalarından (RunCatalog), `v` ve Lord'a bağlı kademeler `data/run_profiles.json`'dan gelir;
-## `load_default`/`load_dir` ikisini eski tek dosyalık biçimde ({v, default, modes, difficulties, achievements}) birleştirir.
-## `load_file` eski tek dosyalık biçimi okur (kusurlu fixture setleri). Dosya yoksa HATA (yerleşik varsayılan yok).
+## data/run_profiles.json okuyucusu ve alan bazlı doğrulayıcısı (v2.1; tek kaynak). GameData'dan bağımsızdır:
+## GameData.validate ve data_bad_* fixture setleri bunu görmez. Dosya yoksa HATA (yerleşik varsayılan yok).
 ## Hata satırı GameData ile aynı biçim: "[kod] bağlam: açıklama". Kurallar: docs/data-schema.md "run_profiles.json".
 
 const PATH := "res://data/run_profiles.json"
 const VERSION := 1
-## Yerleşik (gönderilen) kimlikler: `load_file` biçiminin sabit adları ve testler. Çalışma zamanı kimlik kümesi RunCatalog'tur.
 const MODES: PackedStringArray = ["quick", "normal", "endless"]
 const DIFFS: PackedStringArray = ["easy", "normal", "hard"]
 const END_MODES: PackedStringArray = ["lord", "endless"]
@@ -53,25 +50,7 @@ const FILE_CTX := "run_profiles.json"
 
 ## {"profiles": Dictionary (doğrulanmış ham veri; hata varsa {}), "errors": Array}.
 static func load_default() -> Dictionary:
-	return load_dir("res://data", RunCatalog.default())
-
-
-## Veri kökünden birleşik profil: katalog (`run_modes/`, `difficulties/`) + `<kök>/run_profiles.json` ({v, achievements}).
-## Kimlik kümesi katalogdan gelir (açık adlar); katalog ve alan hataları birlikte döner.
-static func load_dir(root: String, cat: RunCatalog = null) -> Dictionary:
-	var path := root.path_join("run_profiles.json")
-	if not FileAccess.file_exists(path):
-		return {"profiles": {}, "errors": ["[profile_file_missing] %s: dosya yok" % path]}
-	var json := JSON.new()
-	if json.parse(FileAccess.get_file_as_string(path)) != OK or not (json.data is Dictionary):
-		return {"profiles": {}, "errors": ["[profile_type] %s: JSON ayrıştırılamadı" % path]}
-	var c := cat if cat != null else RunCatalog.load_dir(root)
-	var raw: Dictionary = (json.data as Dictionary).duplicate(true)
-	var extra: Variant = raw.get("achievements", {})
-	raw.merge(c.to_profiles_dict(extra if extra is Dictionary else {}), true)
-	var errs := c.validate()
-	errs.append_array(validate(raw, true))
-	return {"profiles": raw if errs.is_empty() else {}, "errors": Array(errs)}
+	return load_file(PATH)
 
 
 static func load_file(path: String) -> Dictionary:
@@ -84,9 +63,8 @@ static func load_file(path: String) -> Dictionary:
 	return {"profiles": json.data if errs.is_empty() else {}, "errors": Array(errs)}
 
 
-## Ham veriyi doğrular (saf; dosyaya dokunmaz). Boş dönüş = geçerli. `open_names`: mod/zorluk adları yerleşik üçlü değil,
-## verideki anahtarlardır (katalog biçimi); kapalıyken (eski tek dosya) adlar MODES/DIFFS ile birebir olmalıdır.
-static func validate(raw: Variant, open_names: bool = false) -> PackedStringArray:
+## Ham veriyi doğrular (saf; dosyaya dokunmaz). Boş dönüş = geçerli.
+static func validate(raw: Variant) -> PackedStringArray:
 	var out := PackedStringArray()
 	if not (raw is Dictionary):
 		_err(out, "profile_type", FILE_CTX, "kök nesne olmalı")
@@ -103,19 +81,16 @@ static func validate(raw: Variant, open_names: bool = false) -> PackedStringArra
 		_err(out, "profile_range", FILE_CTX, "'v' = %d olmalı" % VERSION)
 	var modes := _object(out, d, "modes")
 	var diffs := _object(out, d, "difficulties")
-	var mode_names := PackedStringArray(modes.keys()) if open_names else MODES
-	var diff_names := PackedStringArray(diffs.keys()) if open_names else DIFFS
-	if not open_names:
-		_names(out, "modes", modes, MODES)
-		_names(out, "difficulties", diffs, DIFFS)
-	for name in mode_names:
+	_names(out, "modes", modes, MODES)
+	_names(out, "difficulties", diffs, DIFFS)
+	for name in MODES:
 		if modes.has(name):
 			_mode(out, name, modes[name])
-	for name in diff_names:
+	for name in DIFFS:
 		if diffs.has(name):
 			_diff(out, name, diffs[name])
 	_default(out, d, modes, diffs)
-	_achievements(out, d, diffs, diff_names)
+	_achievements(out, d, diffs)
 	return out
 
 
@@ -192,9 +167,7 @@ static func _default(
 			_err(out, "profile_default", "default", "'%s' = '%s' tanımlı değil" % [key, def[key]])
 
 
-static func _achievements(
-	out: PackedStringArray, d: Dictionary, diffs: Dictionary, diff_names: PackedStringArray
-) -> void:
+static func _achievements(out: PackedStringArray, d: Dictionary, diffs: Dictionary) -> void:
 	if not d.has("achievements"):
 		_err(out, "profile_missing_key", FILE_CTX, "'achievements' yok")
 		return
@@ -203,13 +176,13 @@ static func _achievements(
 		return
 	var a: Dictionary = d["achievements"]
 	for k in a.keys():
-		if k != "lord_bound_tier_ids" and not diff_names.has(str(k)):
+		if k != "lord_bound_tier_ids" and not DIFFS.has(str(k)):
 			_err(out, "profile_unknown_key", "achievements", "bilinmeyen anahtar '%s'" % k)
 	_tier_ids(out, a)
 	for name in diffs.keys():
 		if not a.has(name):
 			_err(out, "profile_cross", "achievements", "zorluk '%s' için kural yok" % name)
-	for name in diff_names:
+	for name in DIFFS:
 		if not a.has(name):
 			continue
 		var ctx := "achievements.%s" % name

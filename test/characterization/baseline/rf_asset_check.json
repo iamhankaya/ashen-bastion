@@ -1,7 +1,0 @@
-{
- "real_data": [],
- "strip_placeholder": [],
- "strip_size_mismatch": [
-  "[bad_type] characters/zyfen.json rig walk: şerit 1024x1536, beklenen 5700x320"
- ]
-}

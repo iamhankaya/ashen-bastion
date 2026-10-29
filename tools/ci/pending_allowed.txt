@@ -1,2 +1,0 @@
-# Çalışma anında (dilimden bağımsız) pending olan bilinen testler (check_test_ids.py). Biçim: id | gerekçe | görev/bulgu
-test/acceptance/test_acc_v11_enemy_anim.gd::test_a19_crawl_frame_follows_distance_stationary_holds_teleport_is_clamped | piyade atlasında kare yok: test koşulda pending() döner (CI JUnit 40667450006) | T20261028-36

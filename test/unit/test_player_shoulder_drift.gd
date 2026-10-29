@@ -12,25 +12,31 @@ const CELL := Vector2i(40, 80)
 
 var _tier_backup: int = PlayerAnim.bounce_tier
 var _rig_ref: Dictionary
+var _walk_backup: Variant = null
+var _backed_up := false
 
 
 func after_each() -> void:
 	PlayerAnim.bounce_tier = _tier_backup
-	_rig_ref = {}
+	if _rig_ref.size() > 0:  # GameData önbelleği paylaşımlıdır: geri al
+		_rig_ref["walk"] = _walk_backup
+		_rig_ref = {}
+		_backed_up = false
 	if FileAccess.file_exists(STRIP):
 		DirAccess.remove_absolute(STRIP)
 	ArtLoader._cache.clear()
 
 
 func _view(frames: int = 0) -> PlayerView:
-	var sim := GameSim.new(
-		11, &"gunslinger", {"end_mode": "timer", "end_time": 480.0, "data": DataKit.copy()}
-	)
+	var sim := GameSim.new(11, &"gunslinger", {"end_mode": "timer", "end_time": 480.0})
 	if frames > 0:
 		var img := Image.create(CELL.x * (frames + 1), CELL.y, false, Image.FORMAT_RGBA8)
 		img.fill(Color(0.3, 0.4, 0.3, 1.0))
 		img.save_png(STRIP)
 		_rig_ref = sim.character.rig
+		if not _backed_up:  # bir testte birden çok _view(n): yalnız ilk (özgün) değer yedeklenir
+			_walk_backup = _rig_ref.get("walk", null)
+			_backed_up = true
 		_rig_ref["walk"] = {
 			"frames": frames,
 			"stride": 136,

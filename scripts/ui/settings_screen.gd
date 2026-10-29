@@ -139,13 +139,17 @@ func _build() -> void:
 	glow.offset_bottom = 600.0
 	add_child(glow)
 
-	scroll = UiKit.make_scroll(UiKit.SCROLL_AXIS_VERTICAL, {"name": "Scroll"})
+	scroll = ScrollContainer.new()
+	scroll.name = "Scroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	scroll.anchor_left = 0.5
 	scroll.anchor_right = 0.5
 	scroll.offset_left = -W * 0.5
 	scroll.offset_right = W * 0.5
 	scroll.offset_top = LIST_TOP
 	scroll.offset_bottom = BACK_TOP - 24.0
+	UiKit.touch_scroll(scroll)
 	add_child(scroll)
 	column = VBoxContainer.new()
 	column.name = "Column"
@@ -332,13 +336,16 @@ func _build_licenses() -> void:
 	_lic_title.add_child(t)
 	licenses.add_child(_lic_title)
 	# Kaydırılır (ara denetim #2): GERİ sabit, kart içeriği taşarsa kayar.
-	_lic_card = UiKit.make_scroll(UiKit.SCROLL_AXIS_VERTICAL, {"name": "LicScroll"})
+	_lic_card = ScrollContainer.new()
+	_lic_card.name = "LicScroll"
+	_lic_card.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_lic_card.anchor_left = 0.5
 	_lic_card.anchor_right = 0.5
 	_lic_card.offset_left = -W * 0.5
 	_lic_card.offset_right = W * 0.5
 	_lic_card.offset_top = LIST_TOP + 10.0
 	_lic_card.offset_bottom = BACK_TOP - 24.0
+	UiKit.touch_scroll(_lic_card)
 	var lic_panel := PanelContainer.new()
 	lic_panel.add_theme_stylebox_override(&"panel", UiKit.skin_box("levha", 40, UiKit.TAS_800))
 	lic_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -112,7 +112,7 @@ static func _read(g: GameData, file: String, key: String) -> Variant:
 	if not FileAccess.file_exists(path):
 		return null
 	var before := g.load_errors.size()
-	var data: Variant = CatalogLoader.read_json(g, path, file).get("data")
+	var data: Variant = g._read_json(path, file).get("data")
 	g._v11[key] = data
 	g._v11[key + "_failed"] = g.load_errors.size() > before  # bad_json zaten bildirildi
 	return data

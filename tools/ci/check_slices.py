@@ -6,7 +6,7 @@
 
 Parametreler (v2.0.2 genellemesi; hiçbiri verilmezse v2.0 davranışı BİREBİR aynıdır, tools/ci/tests/slice_snapshot_v2.json):
   --file <yol>          dilim dosyası (konumsal bağımsız değişkenin eşdeğeri)
-  --symbols "K B M"     geçerli simgeler (boşluk/virgül ayraçlı); TEST_RE bunlardan türer: test_<simge küçük><N>[harf]_…
+  --symbols "K B M"     geçerli simgeler (boşluk/virgül ayraçlı); TEST_RE bunlardan türer: test_<simge küçük><N>_…
   --force-env AD        işareti zorlayan ortam değişkeni (varsayılan V2_SLICES_FORCE; v2.0.2: V202_SLICES_FORCE)
   --classname-re RE     yalnız sınıf adı (test dosyası yolu) RE ile eşleşen test durumları sayılır (v2.0.2: v202; eski
                         v1.1 testlerindeki test_p20_ gibi adlarla çakışmayı önler)
@@ -49,7 +49,7 @@ class Profile:
         self.force_env = force_env
         self.classname_re = re.compile(classname_re) if classname_re else None
         self.sliceless = set(sliceless)
-        self.test_re = re.compile(r"^test_([%s])(\d+)[a-z]?_" % "".join(t.lower() for t in self.symbols))
+        self.test_re = re.compile(r"^test_([%s])(\d+)_" % "".join(t.lower() for t in self.symbols))
 
 
 # v2.1 K/M/B testleri de test_k/m/b<N>_ adlıdır; v2.0 kapısı v21 sınıflarını saymaz (tek adlandırma kuralı, T-tur 1).
