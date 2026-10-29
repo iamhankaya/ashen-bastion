@@ -11,7 +11,9 @@ func after_each() -> void:
 
 
 func _errors(g: GameData) -> Array:
-	return Array(g.validate({}, true))
+	var errs := g.validate({}, true)
+	errs.append_array(AssetCheck.validate(g))
+	return Array(errs)
 
 
 ## res://data kopyası; zyfen.walk.strip değiştirilir.
