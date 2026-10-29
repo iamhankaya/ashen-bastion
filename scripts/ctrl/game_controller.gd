@@ -52,7 +52,7 @@ var enemy_shadows: EnemyShadowLayer
 var ghosts: AshGhostRenderer
 var _escape_label: Label = null
 ## F-021 anahtarı oturum kapsamlıdır: her yeni sim'e uygulanır; sayaç koşu kapsamlıdır, biten koşuların toplamı tabanda birikir.
-var escape_enabled: bool = true
+var _escape_enabled: bool = true
 var _escape_base: int = 0
 var _bounce_label: Label = null
 
@@ -268,7 +268,7 @@ func _bind(new_sim: GameSim) -> void:
 	if sim != null and sim != new_sim:
 		_escape_base += sim.enemies.escape_begun
 	if new_sim != null:
-		new_sim.enemies.escape_enabled = escape_enabled
+		new_sim.enemies.escape_enabled = _escape_enabled
 	sim = new_sim
 	_run_stats = {}
 	_run_won = false
@@ -537,13 +537,13 @@ func _v11_build_escape_debug() -> void:
 
 
 func escape_debug_text() -> String:
-	return RunPresentation.escape_text(sim, _escape_base, escape_enabled)
+	return RunPresentation.escape_text(sim, _escape_base, _escape_enabled)
 
 
 func toggle_escape_fix() -> void:
-	escape_enabled = not escape_enabled
+	_escape_enabled = not _escape_enabled
 	if sim != null:
-		sim.enemies.escape_enabled = escape_enabled
+		sim.enemies.escape_enabled = _escape_enabled
 
 
 func _v11_update_escape_debug() -> void:
