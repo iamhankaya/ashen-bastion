@@ -76,8 +76,61 @@ end_step() {
   echo "$((SECONDS - STEP_START)) sn  $STEP_NAME" >> .gate/times.log
   STEP_NAME=""
 }
-fail() { end_step; echo "GATE FAIL: $*" >&2; exit 1; }
+# Eşzamanlı denetimler (T20261029-30): tam gate'te (PART=all, hızlı değil, GUT paralel) lint ve pytest tek çekirdekte sıralı
+# koşarken 3 çekirdek boştaydı. Bu kipte ikisi ARKA PLANDA GUT ile birlikte koşar; HİÇBİR denetim atlanmaz ve kısa devre yoktur:
+# her birinin çıkış kodu toplanır, hepsi bitince çıktıları (ayrı log, sırayla) basılır, biri kırmızıysa gate kırmızıdır.
+# GATE_SERIAL=1 eski sıralı yolu korur. Süre denetimi eşzamanlı GUT için zaten --contended (yalnız uyarı) kullanır.
+CONC=0
+if [ "$PART" = "all" ] && [ $FAST -eq 0 ] && [ "$JOBS" -gt 1 ] && [ "${GATE_SERIAL:-0}" != "1" ]; then CONC=1; fi
+# --- eşzamanlı denetimler (başla)
+BG_PIDS=(); BG_NAMES=(); BG_SAFE=()
+bg_start() { # bg_start <ad> <işlev> : işlevi arka planda koşar; çıktı .gate/bg-<ad>.log, çıkış kodu .gate/bg-<ad>.rc
+  local name="$1" fn="$2" safe
+  safe="$(printf '%s' "$name" | tr -c 'A-Za-z0-9' _)"
+  ( t0=$SECONDS; "$fn"; rc=$?; echo "$((SECONDS - t0))" > ".gate/bg-$safe.sec"; echo "$rc" > ".gate/bg-$safe.rc"; exit "$rc" )     > ".gate/bg-$safe.log" 2>&1 < /dev/null &
+  BG_PIDS+=($!); BG_NAMES+=("$name"); BG_SAFE+=("$safe")
+}
+reap_bg() { # hepsini bekler, çıktılarını sırayla basar; biri kırmızıysa 1 (idempotent: ikinci çağrı 0)
+  local i bad=0 safe rc sec
+  for i in "${!BG_PIDS[@]}"; do
+    wait "${BG_PIDS[$i]}" 2>/dev/null
+    safe="${BG_SAFE[$i]}"; rc="$(cat ".gate/bg-$safe.rc" 2>/dev/null || echo 1)"; sec="$(cat ".gate/bg-$safe.sec" 2>/dev/null || echo 0)"
+    echo "=== ${BG_NAMES[$i]} (eşzamanlı)"
+    cat ".gate/bg-$safe.log"
+    echo "    süre: $sec sn" >&2
+    echo "(eşzamanlı) $sec sn  ${BG_NAMES[$i]}" >> .gate/times.log
+    [ "$rc" = "0" ] || bad=1
+  done
+  BG_PIDS=(); BG_NAMES=(); BG_SAFE=()
+  return $bad
+}
+# --- eşzamanlı denetimler (bitti)
+fail() { end_step; reap_bg || true; echo "GATE FAIL: $*" >&2; exit 1; }
 step() { end_step; STEP_NAME="$*"; STEP_START=$SECONDS; echo "=== $*"; }
+
+lint_body() { # biçim + lint + yasaklı çağrı denetimi; başarısızlıkta çıktıyı ve GATE FAIL satırını yazıp 1 döner
+  if [ $FAST -eq 1 ]; then
+    # Hızlı mod: yalnız değişen .gd dosyaları (gdformat/gdlint dosya başınadır; o dosyalar için sonuç tam lint ile aynıdır)
+    LINT_ARGS=()
+    while read -r f; do [ -f "$f" ] && LINT_ARGS+=("$f"); done < <(grep -E '\.gd$' .gate/changed.txt || true)
+    LINT_UP=("${LINT_ARGS[@]}")
+  else
+    LINT_ARGS=(scripts tools test)
+    LINT_UP=(scripts tools)
+  fi
+  if [ ${#LINT_ARGS[@]} -gt 0 ]; then
+    gdformat --check "${LINT_ARGS[@]}" > .gate/gdformat.log 2>&1 || { cat .gate/gdformat.log >&2; echo "GATE FAIL: gdformat" >&2; return 1; }
+    gdlint "${LINT_ARGS[@]}" > .gate/gdlint.log 2>&1 || { cat .gate/gdlint.log >&2; echo "GATE FAIL: gdlint" >&2; return 1; }
+    if grep -rnE --include='*.gd' "to_upper|to_lower" "${LINT_UP[@]}"; then echo "GATE FAIL: to_upper/to_lower yasak (Türkçe i/İ tuzağı)" >&2; return 1; fi
+  fi
+  return 0
+}
+pytest_body() { # PYDIRS üzerinde pytest; başarısızlıkta günlüğü ve GATE FAIL satırını yazıp 1 döner
+  python3 -m pytest -q -p no:cacheprovider $PYDIRS > .gate/pytest.log 2>&1; py_rc=$?
+  tail -n 5 .gate/pytest.log
+  [ $py_rc -eq 0 ] || { cat .gate/pytest.log >&2; echo "GATE FAIL: pytest" >&2; return 1; }
+  echo "PYTHON_TESTS: $(grep -oE '[0-9]+ passed' .gate/pytest.log | tail -1 | grep -oE '[0-9]+')"
+}
 
 # Kimlik kapısının tabanı (check_test_ids.py): GATE_BASE_REF ya da merge-base(HEAD, origin/main); git'siz kopyada (selftest)
 # GATE_BASE_DECLARED=<dosya> (taban declared kimlikleri); ikisi de yoksa LOST denetimi atlanır ve bu AÇIKÇA yazılır.
@@ -159,20 +212,7 @@ fi
 
 if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
   step "3. Lint"
-  if [ $FAST -eq 1 ]; then
-    # Hızlı mod: yalnız değişen .gd dosyaları (gdformat/gdlint dosya başınadır; o dosyalar için sonuç tam lint ile aynıdır)
-    LINT_ARGS=()
-    while read -r f; do [ -f "$f" ] && LINT_ARGS+=("$f"); done < <(grep -E '\.gd$' .gate/changed.txt || true)
-    LINT_UP=("${LINT_ARGS[@]}")
-  else
-    LINT_ARGS=(scripts tools test)
-    LINT_UP=(scripts tools)
-  fi
-  if [ ${#LINT_ARGS[@]} -gt 0 ]; then
-    gdformat --check "${LINT_ARGS[@]}" > .gate/gdformat.log 2>&1 || { cat .gate/gdformat.log >&2; fail "gdformat"; }
-    gdlint "${LINT_ARGS[@]}" > .gate/gdlint.log 2>&1 || { cat .gate/gdlint.log >&2; fail "gdlint"; }
-    if grep -rnE --include='*.gd' "to_upper|to_lower" "${LINT_UP[@]}"; then fail "to_upper/to_lower yasak (Türkçe i/İ tuzağı)"; fi
-  fi
+  if [ $CONC -eq 1 ]; then bg_start "3. Lint" lint_body; else lint_body || { end_step; exit 1; }; fi
 
   step "3b. Yasaklı ad denetimi (public repo; desen GATE_FORBIDDEN_RE secret'ından)"
   bash tools/ci/check_forbidden_names.sh || fail "yasaklı ad denetimi (tools/ci/check_forbidden_names.sh)"
@@ -197,10 +237,7 @@ if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
     PYDIRS="$PYDIRS $d"
   done
   if [ -n "$PYDIRS" ]; then
-    python3 -m pytest -q -p no:cacheprovider $PYDIRS > .gate/pytest.log 2>&1; py_rc=$?
-    tail -n 5 .gate/pytest.log
-    [ $py_rc -eq 0 ] || { cat .gate/pytest.log >&2; fail "pytest"; }
-    echo "PYTHON_TESTS: $(grep -oE '[0-9]+ passed' .gate/pytest.log | tail -1 | grep -oE '[0-9]+')"
+    if [ $CONC -eq 1 ]; then bg_start "5. Python testleri" pytest_body; else pytest_body || { end_step; exit 1; }; fi
   fi
 fi
 
@@ -240,6 +277,11 @@ if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; t
   [ $gut_rc -eq 0 ] || fail "GUT çıkış kodu $gut_rc"
   scan_log "$GUT_LOG"
   fi
+fi
+
+if [ ${#BG_PIDS[@]} -gt 0 ]; then
+  step "6a. Eşzamanlı denetimlerin (lint, pytest) sonucu"
+  reap_bg || fail "eşzamanlı denetim kırmızı (lint ve/veya pytest; yukarıdaki GATE FAIL satırları)"
 fi
 
 if [ "$PART" = "verify" ]; then
