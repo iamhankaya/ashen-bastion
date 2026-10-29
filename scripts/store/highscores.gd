@@ -29,6 +29,8 @@ var _write_blocked: bool = false
 var corrupt: bool = false
 
 var _path: String = DEFAULT_PATH
+## Geçerli mod/zorluk kimlikleri kaynağı; null = RunCatalog.default() (testler sahte katalog verir).
+var catalog: RunCatalog = null
 
 
 func _init(p_path: String = DEFAULT_PATH) -> void:
@@ -86,12 +88,7 @@ func submit(entry: Dictionary) -> Dictionary:
 	}
 	var mode: Variant = entry.get("mode", "normal")
 	var diff: Variant = entry.get("diff", "normal")
-	if not (
-		mode is String
-		and diff is String
-		and RunProfiles.MODES.has(mode)
-		and RunProfiles.DIFFS.has(diff)
-	):
+	if not (mode is String and diff is String and _known(str(mode), str(diff))):
 		result["error"] = "mode_diff_unknown"
 		return result
 	var key := key_of(StringName(mode), StringName(diff))
@@ -181,15 +178,20 @@ static func _valid_root(data: Variant) -> bool:
 
 
 ## Bilinen ("mod:zorluk") anahtarın listesi mi: {"mode","diff"} ya da boş sözlük.
-static func _split_key(key: String) -> Dictionary:
+func _split_key(key: String) -> Dictionary:
 	var parts := key.split(":")
-	if parts.size() == 2 and RunProfiles.MODES.has(parts[0]) and RunProfiles.DIFFS.has(parts[1]):
+	if parts.size() == 2 and _known(parts[0], parts[1]):
 		return {"mode": parts[0], "diff": parts[1]}
 	return {}
 
 
+func _known(mode: String, diff: String) -> bool:
+	var cat := catalog if catalog != null else RunCatalog.default()
+	return not cat.mode(mode).is_empty() and not cat.difficulty(diff).is_empty()
+
+
 ## Anahtar otoritedir: girişlerdeki mode/diff anahtardan yazılır.
-static func _with_names(key: String, list: Array) -> Array:
+func _with_names(key: String, list: Array) -> Array:
 	var names := _split_key(key)
 	var out: Array = []
 	for e: Dictionary in list:

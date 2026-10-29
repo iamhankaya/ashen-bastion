@@ -265,8 +265,12 @@ static func _validate_legacy(
 
 ## int ya da tamsayı değerli float -> int (1..TARGET_MAX dışı ve diğer her şey -1).
 static func _step_int(v: Variant) -> int:
-	var iv: Variant = StoreIo.int_of(v, false)
-	return iv if iv != null and iv >= 1 and iv <= TARGET_MAX else -1
+	var n := -1
+	if v is int:
+		n = v
+	elif v is float and v == floorf(v) and absf(v) <= TARGET_MAX:
+		n = int(v)  # NaN: v == floorf(v) yanlış; inf: absf sınırı geçer
+	return n if n >= 1 and n <= TARGET_MAX else -1
 
 
 static func _validate_id(

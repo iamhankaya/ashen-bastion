@@ -19,6 +19,7 @@ static func profiles() -> Dictionary:
 ## Testler için önbelleği boşaltır.
 static func reset_cache() -> void:
 	_profiles = {}
+	RunCatalog.reset_default_cache()
 
 
 ## {"mode": StringName, "diff": StringName}: Settings'teki seçim; Settings yoksa dosya varsayılanı (Normal/Normal).
@@ -32,7 +33,8 @@ static func selection() -> Dictionary:
 ## Seçimi kaydeder ve yazar. Bilinmeyen mod/zorluk adı sessizce yok sayılır.
 static func set_selection(mode: StringName, diff: StringName) -> void:
 	var st := _settings()
-	if st == null or not RunProfiles.MODES.has(mode) or not RunProfiles.DIFFS.has(diff):
+	var cat := RunCatalog.default()
+	if st == null or cat.mode(String(mode)).is_empty() or cat.difficulty(String(diff)).is_empty():
 		return
 	st.run_mode = String(mode)
 	st.run_diff = String(diff)

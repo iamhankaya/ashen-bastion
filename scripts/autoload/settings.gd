@@ -24,6 +24,8 @@ var buyuk_yazi: bool = false
 ## v2.1: seçili koşu modu/zorluğu (RunProfiles adları; taze kurulum Normal/Normal). Bilinmeyen ad yükte varsayılana döner.
 var run_mode: String = "normal"
 var run_diff: String = "normal"
+## Geçerli mod/zorluk kimlikleri kaynağı; null = RunCatalog.default() (testler sahte katalog verir).
+var catalog: RunCatalog = null
 ## AudioDirector'ın Music kanalına eklediği anlık pay (duraklatma/duck, dB); kullanıcı seviyesinin ÜSTÜNE eklenir.
 var music_extra_db: float = 0.0
 
@@ -53,9 +55,12 @@ func load_settings(path: String = "") -> void:
 	hareket_azalt = bool(d.get("hareket_azalt", false))
 	buyuk_yazi = bool(d.get("buyuk_yazi", false))
 	var rm: Variant = d.get("kosu_modu", "normal")
-	run_mode = rm if rm is String and RunProfiles.MODES.has(rm) else "normal"
+	var cat := catalog if catalog != null else RunCatalog.default()
+	run_mode = rm if rm is String and not cat.mode(str(rm)).is_empty() else cat.default_mode()
 	var rd: Variant = d.get("kosu_zorluk", "normal")
-	run_diff = rd if rd is String and RunProfiles.DIFFS.has(rd) else "normal"
+	run_diff = (
+		rd if rd is String and not cat.difficulty(str(rd)).is_empty() else cat.default_difficulty()
+	)
 	RenderFix.enabled = cull_fix
 
 

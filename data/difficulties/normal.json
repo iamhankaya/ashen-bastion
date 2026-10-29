@@ -1,0 +1,12 @@
+{
+"id": "normal",
+"order": 2,
+"name": "Normal",
+"label": "NORMAL",
+"description": "Dengeli koşu.",
+"spoken": "dengeli koşu",
+"shields": 2,
+"default": true,
+"values": {"enemy_hp": 0.85, "enemy_dmg": 0.50, "spawn_density": 0.80, "xp": 1.00, "lord_hp": 0.85},
+"achievements": {"block_lord_bound": false, "totals": "all"}
+}
