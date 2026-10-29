@@ -139,9 +139,12 @@ def check_root(root: Path) -> Path:
     return real
 
 
-def reset_tree(root: Path) -> None:
-    git(root, "checkout", "-q", "--", ".")
-    git(root, "clean", "-fdq", "--", "data", "scripts")
+def reset_tree(root: Path, created: list[str]) -> None:
+    """Yalnız senaryonun yazdıklarını geri alır: izlenen veri dosyaları checkout, oluşturulan dosyalar silinir.
+    (İçe aktarmanın ürettiği izlenmeyen .uid dosyalarına dokunulmaz; durum farkı başlangıç görüntüsüne göre alınır.)"""
+    git(root, "checkout", "-q", "--", "data")
+    for rel in created:
+        (root / rel).unlink(missing_ok=True)
 
 
 def run_godot(godot: str, root: Path, *args: str, timeout: int = 1800) -> str:
@@ -160,24 +163,27 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     root = check_root(Path(a.root))
     names = list(SCENARIOS) if a.scenario == "all" else [a.scenario]
-    imported = False
+    if not a.no_run:
+        if not a.godot:
+            raise SystemExit("Godot yolu yok (--godot ya da GODOT_BIN)")
+        run_godot(a.godot, root, "--import")  # senaryodan ÖNCE: üretilen .uid/.import ön duruma girer, deltada görünmez
+    created: list[str] = []
+    base_new, base_changed = classify_status(git(root, "status", "--porcelain"))
     for name in names:
-        reset_tree(root)
+        reset_tree(root, created)
+        created = []
         for rel, body in scenario_files(root, name).items():
             p = root / rel
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(body, encoding="utf-8", newline="\n")
+            created.append(rel)
         if a.with_family and name == "ach_data":
             (root / "data/achievements.json").write_text(family_edit(root), encoding="utf-8", newline="\n")
         new, changed = classify_status(git(root, "status", "--porcelain"))
+        new, changed = [x for x in new if x not in base_new], [x for x in changed if x not in base_changed]
         print(f"SCENARIO {name}: yeni={len(new)} degisen={len(changed)} {json.dumps({'yeni': new, 'degisen': changed}, ensure_ascii=False)}")
         if a.no_run:
             continue
-        if not a.godot:
-            raise SystemExit("Godot yolu yok (--godot ya da GODOT_BIN)")
-        if not imported:
-            run_godot(a.godot, root, "--import")
-            imported = True
         v = run_godot(a.godot, root, "-s", "res://tools/validate_data.gd")
         verr = [l for l in ANSI.sub("", v).splitlines() if "VERİ HATASI" in l]
         print(f"VALIDATE {name}: {'ok' if not verr else 'hata'}")
@@ -190,7 +196,7 @@ def main(argv=None) -> int:
             for f in fails:
                 print(f"FAIL {name}: {f}")
         sys.stdout.flush()
-    reset_tree(root)
+    reset_tree(root, created)
     return 0
 
 
