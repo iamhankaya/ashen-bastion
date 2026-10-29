@@ -141,6 +141,8 @@ jobs:
           key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
       - # H1: taban_yesil yalnız altyapı yolları değiştiyse (main/nightly/dispatch/diff hatası/shallow: HER ZAMAN) koşar; negatif senaryolar süzülmez.
         id: taban
+        env:
+          PATH_FILTER_BASE: ${{ github.event.before }}  # GEÇİCİ (T20261029-30 ölçümü; geri alınacak)
         run: bash tools/ci/path_filter.sh 'tools/|\.github/|project\.godot$|\.gutconfig\.json$|\.godot-version$|export_presets\.cfg$|addons/|scripts/ci'
       - run: bash tools/ci/selftest_gate.sh --group ${{ matrix.group }}
         env:
