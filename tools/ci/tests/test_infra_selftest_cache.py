@@ -72,3 +72,49 @@ def test_no_cache_dir_still_works(tmp_path):
 def test_unknown_scenario_is_usage_error(tmp_path):
     repo = mini_repo(tmp_path, "exit 0\n")
     assert run(repo, "yok_boyle").returncode == 2
+
+
+# --- F-119: soğuk koşu yavaşlaması. Soğuk selftest işinde her senaryo kopyası --import'u sıfırdan yapıyordu (~60 sn/senaryo) ve iş
+# .godot/imported'ı hiç doldurmadığından actions/cache de yazılmıyordu. Düzeltme: önbellek yoksa kökte BİR kez ısınma (SELFTEST_WARMUP_CMD).
+def warm_cmd(tmp_path, gc, counter, fail=False):
+    c = tmp_path / "warm.sh"
+    body = f'echo x >> "{counter.as_posix()}"\n' + ("exit 7\n" if fail else f'mkdir -p "{gc.as_posix()}/imported"; echo m > "{gc.as_posix()}/imported/marker.ctex"; echo u > "{gc.as_posix()}/uid_cache.bin"\n')
+    c.write_text("#!/usr/bin/env bash\n" + body, newline="\n")
+    return f'bash "{c.as_posix()}"'
+
+
+MARKER_GATE = "[ -f .godot/imported/marker.ctex ] && exit 0\nexit 9\n"
+
+
+def test_cold_cache_triggers_one_warmup_and_scenarios_get_the_result(tmp_path):
+    repo = mini_repo(tmp_path, MARKER_GATE)
+    gc, counter = tmp_path / "gc", tmp_path / "count"
+    r = run(repo, "taban_yesil", SELFTEST_GODOT_CACHE=str(gc), SELFTEST_WARMUP_CMD=warm_cmd(tmp_path, gc, counter))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert counter.read_text().split() == ["x"]
+
+
+def test_warm_cache_skips_the_warmup(tmp_path):
+    repo = mini_repo(tmp_path, MARKER_GATE)
+    gc, counter = tmp_path / "gc", tmp_path / "count"
+    (gc / "imported").mkdir(parents=True)
+    (gc / "imported" / "marker.ctex").write_text("x")
+    r = run(repo, "taban_yesil", SELFTEST_GODOT_CACHE=str(gc), SELFTEST_WARMUP_CMD=warm_cmd(tmp_path, gc, counter))
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert not counter.exists(), "önbellek sıcakken ısınma koşmamalı"
+
+
+def test_warmup_failure_is_not_fatal_and_is_reported(tmp_path):
+    repo = mini_repo(tmp_path, "exit 0\n")
+    gc, counter = tmp_path / "gc", tmp_path / "count"
+    r = run(repo, "taban_yesil", SELFTEST_GODOT_CACHE=str(gc), SELFTEST_WARMUP_CMD=warm_cmd(tmp_path, gc, counter, fail=True))
+    assert r.returncode == 0, r.stdout + r.stderr  # senaryolar kendi import'larını yapar; ısınma yalnız hızlandırıcı
+    assert "ısınma" in r.stdout + r.stderr
+
+
+def test_list_never_warms_up(tmp_path):
+    repo = mini_repo(tmp_path, "exit 0\n")
+    gc, counter = tmp_path / "gc", tmp_path / "count"
+    env = {"PATH": os.environ["PATH"], "SELFTEST_ROOT": str(repo), "SELFTEST_GODOT_CACHE": str(gc), "SELFTEST_WARMUP_CMD": warm_cmd(tmp_path, gc, counter)}
+    r = subprocess.run(["bash", str(SCRIPT), "--list"], capture_output=True, text=True, encoding="utf-8", env=env)
+    assert r.returncode == 0 and not counter.exists()
