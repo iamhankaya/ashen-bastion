@@ -19,7 +19,7 @@ Yeni ses üretmez, lisansı belirsiz ses eklemezsin; belirsizlik açık noktaya.
 `tools/audio/{sfx_manifest.json,process_sfx.py,audio_manifest.json,process_audio.py,check_music.py}`, `assets/audio/sfx/`, `LICENSES-audio.md`, `data/characters/<id>.json` `sfx`, `data/skills/<id>.json` `cast_sfx`.
 
 ## Doğrulama
-`python3 -m pytest -q -p no:cacheprovider tools/audio/tests`; `bash tools/gate.sh` (adım 4 veri doğrulama bilinmeyen ses kimliğini yakalar); cihaz listesi (SFX kalabalığı) kendi bölüm dosyanda.
+`python3 -m pytest -q -p no:cacheprovider tools/audio/tests`; `bash tools/precheck.sh` + CI tam kapı (adım 4 veri doğrulama bilinmeyen ses kimliğini yakalar); cihaz listesi (SFX kalabalığı) kendi bölüm dosyanda.
 
 ## Kontrol listesi
 - [ ] Lisans kaydı eklendi; belirsiz lisans yok.

@@ -10,7 +10,7 @@ Amaç: gate/CI süresini **doğruluktan ödün vermeden** düşürmek. Kapsam az
 
 Bu kuralın uygulanışı:
 
-- `.github/workflows/ci.yml` `push` **ve** `pull_request` üzerinde koşar; tam suite üç parçalı işle koşulur (bölüm 2). Hiçbir
+- `.github/workflows/ci.yml` yalnız `push` (`main`, `vlad/**`) üzerinde koşar (altyapı-A H3: `pull_request` tetiği kalktı, PR'ın `test` bağlamı dal ucundaki push koşusundan gelir); tam suite üç parçalı işle koşulur (bölüm 2). Hiçbir
   CI adımı `--changed` kullanmaz; `tools/ci/tests/test_ci_workflow.py` bunu denetler.
 - `tools/gate.sh --changed`, `CI` ya da `GITHUB_ACTIONS` ortam değişkeni doluysa çıkış 2 ile **reddeder** (aynı testte
   kanıtlanır).
@@ -45,12 +45,14 @@ selftest ×6, export-debug, release-prova      değişmedi
 
 ## 3. Hızlı mod (yalnız yerel geri bildirim)
 
+Push öncesi sıra: `bash tools/precheck.sh` (Godot'suz sınıflar) → yerel Godot varsa `precheck.sh --godot` (= bu hızlı mod + USER_LEAK) → push. Kurulum ve ölçülen süreler: `docs/dev/setup.md`, sınıf listesi `.claude/skills/ab-test-ve-kapi/SKILL.md`.
+
 ```
 bash tools/gate.sh --changed [--base REF]     # REF yoksa origin/HEAD ya da origin/main ya da HEAD
 ```
 
 Değişen dosyalar = `git diff --name-only $(git merge-base HEAD REF)` (çalışma ağacı dahil) + izlenmeyen dosyalar.
-`tools/ci/test_map.py` (eşleme: `tools/ci/test_map.json`, `python3 tools/ci/test_map.py generate` ile üretilir) seçer:
+`tools/ci/test_map.py` (eşleme: `tools/ci/test_map.json`, izlenmez; `python3 tools/ci/test_map.py ensure` ile üretilir) seçer:
 
 | Değişen dosya | Sonuç |
 |---|---|
@@ -63,7 +65,7 @@ Değişen dosyalar = `git diff --name-only $(git merge-base HEAD REF)` (çalış
 
 Karışık değişiklikte tek bir paylaşılan/eşlemesiz dosya tam gate'e düşürür. Şüphede tam suite. Hızlı modda lint yalnız değişen
 `.gd` dosyalarına, Python testleri yalnız değişen araç dizinine (`tools/art`, `tools/audio`) uygulanır; veri doğrulaması her
-zaman koşar; adım 7'de asgari test sayısı seçilen dosyalar için, tek test süre sınırı aynen denetlenir. Dilim/pending denetimi
+zaman koşar; adım 7'de test kimliği kapısı seçilen dosyalar için (`--mode selected`), tek test süre sınırı aynen denetlenir. Dilim/pending denetimi
 tam JUnit ister ve yalnız tam gate'tedir.
 
 Eşleme bakımı: `tools/ci/test_map.json` izlenmez; hızlı mod başında `python3 tools/ci/test_map.py ensure` üretir (elle commit yok).
@@ -165,7 +167,7 @@ Godot sürecinde** koşar. N = `GATE_JOBS` (varsayılan `min(4, çekirdek)`; `GA
 - **Kendi `XDG_DATA_HOME`'u:** `user://` süreç başına ayrıdır. Ortak olsaydı USER_LEAK denetimi (kanca taban/son karşılaştırır)
   başka parçanın geçici dosyalarını sızıntı sayardı.
 - Kapsam kanıtı CI `test` işiyle aynı: `shard.py check-merge --require-all` (eksik/yinelenen/bilinmeyen dosya = kırmızı), sonra
-  `shard.py merge` -> `.gate/junit.xml`; adım 7 (asgari sayı, 75 sn, dilim/pending) birleşik JUnit üstünde aynen koşar.
+  `shard.py merge` -> `.gate/junit.xml`; adım 7 (test kimliği kapısı MISSING/LOST, 75 sn, dilim/pending) birleşik JUnit üstünde aynen koşar.
 - Hızlı mod (`--changed`) ve `GATE_PART=gut|static|verify` yolları değişmedi; CI işleri değişmedi (`ci.yml` aynı).
 - Saat eşiği yok: testler yalnız ms'i raporlar (`test_acc_perf_counters`, `test_ver_crowd_perf`), duvar saatine iddia etmez;
   paralel yük sonuçları değiştirmez. Tek-test 75 sn sınırı yük altında tek test için daha riskli olabilir (en yavaş test 105 sn'lik
@@ -179,6 +181,10 @@ Godot sürecinde** koşar. N = `GATE_JOBS` (varsayılan `min(4, çekirdek)`; `GA
 
 `test/long`'a taşıma (>20 sn testler) **yapılmadı**: `test/long` `.gutconfig.json` kümesinde değildir, taşıma gate kapsamını
 düşürür; görev kuralı (kapsam aynı kalır) ile çelişir.
+
+## CI izleme ve kırmızıda JUnit
+
+İzleme: push sonrası **tek** `gh run watch <run-id> --interval 60 --exit-status` (sık yoklama GitHub API ikincil sınırına takılıp 403 verir); yoklama döngüsü kurulmaz. Kapı GUT günlüğünün yalnız son 30 satırını gösterir, bu yüzden başarısız test adı/mesajı günlükte olmayabilir: `gh run download <run-id> -n gut-junit-<K>` (K = 1..4 GUT parçası) ile JUnit'i indirip `<failure>` içeren `testcase`'e bak. Kimlik kapısı (`check_test_ids.py`) kırmızısı `test` işindedir (birleşik JUnit).
 
 ## Altyapı-A: tetik, süzgeç, önbellek, kanca (T20261028-34; plan T20261028-33 Faz 3)
 

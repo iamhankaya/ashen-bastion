@@ -21,7 +21,7 @@ Efektler **kodla ve katmanlı dokularla** çizilir; her parçanın animasyonu si
 7. **Cihaz ince ayarı:** kendi bölüm dosyan `docs/dev/user-verify/<sürüm>-fx-tuning.md` kalıbı; ortak listeye yazma.
 
 ## Doğrulama
-`python3 -m pytest -q -p no:cacheprovider tools/art/tests/test_process_zyfen_fx.py`; GUT `test/unit/test_v202_a2a_assets.gd`, `test_v202_wind_renderer.gd`, `test_v202_wind_perf.gd`; `GATE_RENDER=1 bash tools/gate.sh`; cihaz maddeleri.
+`python3 -m pytest -q -p no:cacheprovider tools/art/tests/test_process_zyfen_fx.py`; GUT `test/unit/test_v202_a2a_assets.gd`, `test_v202_wind_renderer.gd`, `test_v202_wind_perf.gd`; `bash tools/precheck.sh`; render duman testi `GATE_RENDER=1 bash tools/gate.sh` (Linux/xvfb ya da WSL2) ve CI; renderer dosyaları ≤ 800 satır, `view` katmanı ui/ctrl'e bağlanmaz (`ab-test-ve-kapi`); cihaz maddeleri.
 
 ## Kontrol listesi
 - [ ] Cihazda görülebilecek görsel hata için debug APK bayrağı + sayaç etiketi (ör. "düzeltme AÇIK/KAPALI").

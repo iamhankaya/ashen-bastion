@@ -14,6 +14,7 @@ Botlar bot dengesini ölçer; kullanıcının cihaz geri bildirimi ("oyun zor") 
 4. **Karşılaştır:** `python3 tools/balance/compare_baseline.py <taban> <yeni> --noise <B> --nodyn <nodyn>` (taban dosyaları `docs/design/v2.0.2/balance/baseline-v201-A400.jsonl`, `…-B400.jsonl`, `…-nodyn-A400.jsonl`; `<yeni>` = `mid_all.sh` çıktı dizini); Gunslinger farkı ±%5 içinde olmalı.
 5. **Yeni karakter bandı:** `tools/balance/dps_density.gd`, `test/long/test_ver_v202_band.gd`, `tools/balance/lord_budget.gd`; A/B: `tools/balance/ab_all.sh`.
 6. **Rapor:** `docs/design/<sürüm>/balance/` (örnek `docs/design/v2.0.2/balance/`). Ham çıktı klasörü (`.mid/` vb.) **aynı commit'te** `.gitignore`'a.
+7. **Güvenlik ağı:** denge `data/**` değişikliği altın hash'i (`test/fixtures/golden_hashes.json`, `test/fixtures/golden_v20_ref/ref.json`) ve karakterizasyon bazlarını (`test/characterization/baseline/`, özellikle `rf_trail_*`, `rf_sim_*`) kaydırır; kayma beklenen ise yalnız ilgili kaydı yenile ve baz için `tools/ci/baseline_changes.txt` gerekçesini yaz (`BASELINE_CHANGED`, `ab-test-ve-kapi` adım 7). Yerel Godot yoksa ölçüm koşulamaz: raporda "ölçüm koşulmadı" yaz. `tools/balance/baseline_run.sh` çıktı dizini `DEST` ortam değişkeniyle verilir; hangi taban kümesinin (v201 B400 mi, `balance` workflow v2.1 matrisi mi) baz sayılacağı açık bir karardır, kendin seçme.
 
 ## Dokunulan dosyalar
 `test/helpers/bots.gd`, `tools/balance/*`, `scripts/sim/difficulty.gd`, `data/waves.json`, `data/skills/*.json`, `test/fixtures/golden_hashes.json`.

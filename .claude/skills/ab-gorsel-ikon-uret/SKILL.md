@@ -23,7 +23,7 @@ Kural (kararlar 2026-10-25, 2026-10-26): görsel ve ikon **Codex ile üretilir**
 4. **Veri bağlama:** `data/skills/*.json` `icon`; yedek arama `scripts/ui/ui_kit.gd` `skill_icon`.
 5. **İçe aktarma:** `godot --headless --import`; `.import` dosyaları commit'lenir; başarım ikonu `mipmaps/generate=true`.
 6. **Boyut:** kaynak PNG toplamını raporla; `art/` ve `docs/` APK dışında mı `export_presets.cfg` `exclude_filter`'dan doğrula (doğrulayamazsan "doğrulanmadı" yaz).
-7. `python3 -m pytest -q -p no:cacheprovider tools/art/tests`, `process_art.py --verify`, `bash tools/gate.sh`, ekran görüntüsü (`tools/capture/`).
+7. `python3 -m pytest -q -p no:cacheprovider tools/art/tests`, `process_art.py --verify`, `bash tools/precheck.sh` (+ CI; `ab-test-ve-kapi`), ekran görüntüsü (`tools/capture/`).
 
 ## Dokunulan dosyalar
 `tools/art/{process_art.py,art_manifest.json,process_zyfen_fx.py,process_gunslinger_icons.py,make_icons.py}`, `tools/art/tests/`, `assets/gfx/manifest.json`, `assets/ui/icons/`, `assets/ui/achievements/`, `scripts/ui/ui_kit.gd`, `.gitignore`.

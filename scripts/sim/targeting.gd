@@ -4,9 +4,6 @@ extends RefCounted
 ## Silah 0: menzildeki en yakın. Silah 1: menzilde elit/boss varsa onların en yakını, yoksa silah 0'ın hedefi dışındaki
 ## en yakın (ikinci); tek düşman varsa aynı hedef.
 
-## Sıcak yolda tahsis olmasın diye ortak sorgu tamponu (sim tek iş parçacığında, çağrı içinde tüketilir).
-static var _ids: PackedInt32Array = PackedInt32Array()
-
 
 static func pick(
 	gun: int,
@@ -16,8 +13,8 @@ static func pick(
 	grid: SpatialHash,
 	other_target: int
 ) -> int:
-	grid.query_circle(from, attack_range, _ids)
-	var ids := _ids
+	grid.query_circle(from, attack_range, enemies.pick_ids)
+	var ids := enemies.pick_ids
 	var best := -1
 	var best_d := INF
 	var best_elite := -1
