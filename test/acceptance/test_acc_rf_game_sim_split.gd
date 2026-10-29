@@ -12,6 +12,7 @@ const CHARS := [&"gunslinger", &"zyfen"]
 class PhaseProbe:
 	extends GameSim
 	var acc: Array = []
+	var max_proj: int = 0
 
 	func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void:
 		super(p_seed, character_id, opts)
@@ -78,6 +79,7 @@ class PhaseProbe:
 		return hash(h)
 
 	func _projectile_sub() -> int:
+		max_proj = maxi(max_proj, projectiles.count)
 		var h := PackedInt64Array([projectiles.count])
 		for i in projectiles.count:
 			h.append(GameSim._q(projectiles.pos[i].x))
@@ -126,6 +128,7 @@ func _sim(seed_value: int = 11) -> GameSim:
 
 func test_rf_phase_sub_hash_trail() -> void:
 	var out := {}
+	var data := GameData.load_default()
 	for c in CHARS:
 		for s in SEEDS:
 			var sim := _probe(s, c)
@@ -136,10 +139,13 @@ func test_rf_phase_sub_hash_trail() -> void:
 					continue
 				sim.step(GoldenKit.move_at(n))
 				n += 1
+				if n == 5:  # erken hedef: mermi havuzu fazlarda dolsun
+					sim.debug_fill(data.enemy_ids[0], 10, 250.0)
 			out["%s_%d" % [c, s]] = {
 				"steps": sim.step_count, "phases": sim.acc, "hash": sim.state_hash()
 			}
 			assert_gt(sim.step_count, 0, "sim ilerlemeli (karakter bulundu): %s" % c)
+			assert_gt(sim.max_proj, 0, "mermi havuzu doldu: %s_%d" % [c, s])
 	RfBaseline.check(self, "rf_sim_phase_sub_hash", out)
 
 
