@@ -1,13 +1,13 @@
-diff --git a/scripts/sim/game_sim.gd b/scripts/sim/game_sim.gd
-index 7cb29ce..60c1135 100644
---- a/scripts/sim/game_sim.gd
-+++ b/scripts/sim/game_sim.gd
-@@ -415,7 +415,7 @@ func state_hash() -> int:
- ## time monoton, şarjör 0..cap, yuva sayısı, taş XP korunumu.
- func check_invariants() -> PackedStringArray:
- 	var out := PackedStringArray()
--	if hp > max_hp:
-+	if hp >= max_hp:
+diff --git a/scripts/sim/sim_invariants.gd b/scripts/sim/sim_invariants.gd
+index b2cb2d4..fa1ee4a 100644
+--- a/scripts/sim/sim_invariants.gd
++++ b/scripts/sim/sim_invariants.gd
+@@ -10,7 +10,7 @@ static func check(sim: GameSim) -> PackedStringArray:
+ 	var enemies := sim.enemies
+ 	var magazine := sim.magazine
+ 	var gems := sim.gems
+-	if sim.hp > sim.max_hp:
++	if sim.hp >= sim.max_hp:
  		out.append("hp > max_hp")
- 	if not (is_finite(hp) and is_finite(max_hp) and is_finite(time)):
+ 	if not (is_finite(sim.hp) and is_finite(sim.max_hp) and is_finite(sim.time)):
  		out.append("hp/max_hp/time sonlu değil")

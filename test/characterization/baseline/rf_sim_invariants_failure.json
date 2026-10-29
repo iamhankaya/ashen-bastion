@@ -1,0 +1,32 @@
+{
+ "gem_conservation": [
+  "taş XP korunumu bozuldu"
+ ],
+ "healthy": [],
+ "hp_nan": [
+  "hp/max_hp/time sonlu değil"
+ ],
+ "hp_over": [
+  "hp > max_hp"
+ ],
+ "magazine_range": [
+  "magazine.count aralık dışı"
+ ],
+ "multi": [
+  "hp > max_hp",
+  "xp < 0",
+  "time geriye gitti"
+ ],
+ "pos_inf": [
+  "player_pos sonlu değil"
+ ],
+ "time_regressed": [
+  "time geriye gitti"
+ ],
+ "xp_negative": [
+  "xp < 0"
+ ],
+ "xp_over": [
+  "xp >= xp_to_next (LEVEL_UP dışında)"
+ ]
+}

@@ -365,93 +365,14 @@ func spawn_enemy(type_id: StringName, pos: Vector2, hp_mult_extra: float = 1.0) 
 # --- gözlem kancaları (testler/bot/gate; üretim mantığı çağırmaz) ------------------------------
 
 
-## step_count, oyuncu (konum/hp/xp/seviye), canlı düşman (indeks, konum, hp), mermi/taş sayısı + toplam taş XP,
-## şarjör, loadout seviyeleri, 4 RNG durumu. Konumlar 1/64 px nicemlenir. Aynı ikili + aynı tohum => aynı değer.
+## Gövde: SimHash.compute (alan sırası ve nicemleme değişmez).
 func state_hash() -> int:
-	var h := PackedInt64Array()
-	h.append(step_count)
-	h.append(state)
-	h.append(_q(player_pos.x))
-	h.append(_q(player_pos.y))
-	h.append(_q(hp))
-	h.append(xp)
-	h.append(level)
-	h.append(pending_levels)
-	h.append(1 if lord_killed else 0)
-	h.append(spawn_director.progress_hash())
-	for id in enemies.alive_ids():
-		var i := EnemyPool.index_of(id)
-		h.append(i)
-		h.append(_q(enemies.pos[i].x))
-		h.append(_q(enemies.pos[i].y))
-		h.append(_q(enemies.hp[i]))
-		h.append(_q(enemies.ai_timer[i]))
-		h.append(_q(enemies.ai_aux[i]))
-		h.append(_q(enemies.ai_dir[i].x))
-		h.append(_q(enemies.ai_dir[i].y))
-	h.append(projectiles.count)
-	h.append(gems.count)
-	h.append(gems.total_value())
-	h.append(magazine.count)
-	h.append(1 if magazine.reloading else 0)
-	h.append(_q(magazine.reload_left))
-	for s in loadout.actives():
-		h.append(hash(String(s.id)))
-		h.append(s.level)
-	for s in loadout.passives():
-		h.append(hash(String(s.id)))
-		h.append(s.level)
-	h.append(rng_spawn.state)
-	h.append(rng_choice.state)
-	h.append(rng_map.state)
-	h.append(rng_combat.state)
-	h.append_array(V11State.hash_items(self))  # v1.1: sona eklenir, mevcut sıra değişmez
-	h.append_array(zones.hash_items())  # v2.0.2: bölge yokken boş (Gunslinger hash'i değişmez)
-	h.append_array(V21Sim.hash_items(self))  # v2.1: legacy/profilsizde boş
-	return hash(h)
+	return SimHash.compute(self)
 
 
-## Boşsa sağlam. Denetler: hp<=max_hp, NaN/inf yok, havuz CAP'leri, xp aralığı, canlı kimlik/nesil uyumu,
-## time monoton, şarjör 0..cap, yuva sayısı, taş XP korunumu.
+## Boşsa sağlam. Gövde: SimInvariants.check.
 func check_invariants() -> PackedStringArray:
-	var out := PackedStringArray()
-	if hp > max_hp:
-		out.append("hp > max_hp")
-	if not (is_finite(hp) and is_finite(max_hp) and is_finite(time)):
-		out.append("hp/max_hp/time sonlu değil")
-	if not (is_finite(player_pos.x) and is_finite(player_pos.y)):
-		out.append("player_pos sonlu değil")
-	if enemies.count > EnemyPool.CAP:
-		out.append("enemies.count > CAP")
-	if projectiles.count > ProjectilePool.CAP:
-		out.append("projectiles.count > CAP")
-	if gems.count > GemPool.CAP:
-		out.append("gems.count > CAP")
-	if xp < 0:
-		out.append("xp < 0")
-	if state != State.LEVEL_UP and xp >= xp_to_next:
-		out.append("xp >= xp_to_next (LEVEL_UP dışında)")
-	for id in enemies.alive_ids():
-		var i := EnemyPool.index_of(id)
-		if not enemies.is_alive(id):
-			out.append("canlı kimlik nesil uyumsuz: %d" % id)
-		elif not (
-			is_finite(enemies.pos[i].x) and is_finite(enemies.pos[i].y) and is_finite(enemies.hp[i])
-		):
-			out.append("düşman %d konum/hp sonlu değil" % i)
-	if _time_regressed:
-		out.append("time geriye gitti")
-	if magazine.count < 0 or magazine.count > magazine.cap:
-		out.append("magazine.count aralık dışı")
-	if (
-		loadout.actives().size() > Loadout.ACTIVE_SLOTS
-		or loadout.passives().size() > Loadout.PASSIVE_SLOTS
-	):
-		out.append("yuva sayısı sınırı aşıldı")
-	if gems.dropped_total - gems.collected_total != gems.total_value():
-		out.append("taş XP korunumu bozuldu")
-	V11State.check(self, out)
-	return out
+	return SimInvariants.check(self)
 
 
 ## Canlı düşman kimlikleri, artan sırayla.
@@ -461,16 +382,7 @@ func alive_ids() -> PackedInt32Array:
 
 ## Yuva sınırına uyar; evrim kimliği verilirse koşulsuz uygulanır.
 func debug_grant(skill_id: StringName, lvl: int = 1) -> void:
-	var def := data.get_skill(skill_id)
-	if def == null:
-		return
-	if def.kind == SkillDef.KIND_EVOLUTION:
-		loadout.apply_evolution(skill_id)
-		evolved_log.append(skill_id)
-	else:
-		for k in lvl:
-			loadout.add_or_upgrade(skill_id)
-	_refresh_stats()
+	SimDebug.grant(self, skill_id, lvl)
 
 
 ## enemy_id veya -1.
@@ -480,22 +392,12 @@ func debug_spawn(type_id: StringName, pos: Vector2) -> int:
 
 ## Stres/perf: n düşmanı halkaya koyar; doğan sayıyı döndürür.
 func debug_fill(type_id: StringName, n: int, ring_radius: float) -> int:
-	var made := 0
-	for k in n:
-		var a := TAU * float(k) / float(maxi(n, 1))
-		if spawn_enemy(type_id, player_pos + Vector2.from_angle(a) * ring_radius) >= 0:
-			made += 1
-	return made
+	return SimDebug.fill(self, type_id, n, ring_radius)
 
 
 ## Yalnızca ileri atlama; atlanan aralıktaki `at` olayları tetiklenmez.
 func debug_set_time(t: float) -> void:
-	if t <= time:
-		return
-	time = t
-	_last_time = t
-	spawn_director.skip_to(t)
-	pickup_director.skip_to(step_count)
+	SimDebug.set_time(self, t)
 
 
 func debug_add_xp(n: int) -> void:
