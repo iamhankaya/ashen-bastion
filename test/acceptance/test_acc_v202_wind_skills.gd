@@ -460,7 +460,7 @@ func test_z9_pocket_reserve_blocks_spawn_and_counts_the_drop() -> void:
 func _waves(sim: GameSim) -> Array:
 	var out: Array = []
 	# weakref: lambda sim'i yakalarsa sim.fx -> lambda -> sim döngüsü çıkışta sızar (gate günlük taraması).
-	var wr := weakref(sim)
+	var wr: WeakRef = weakref(sim)
 	sim.fx.wind_wave.connect(
 		func(o: Vector2, r: float, big: bool) -> void:
 			out.append({"step": wr.get_ref().step_count, "origin": o, "radius": r, "big": big})
