@@ -13,6 +13,7 @@ var _saved_big := false
 
 
 func before_each() -> void:
+	CatalogFixtures.pin_default(CatalogFixtures.shipped_trio())  # baz yerleşik 3 modla; yeni veri-yalnız mod bazı değiştirmez
 	var s: Node = get_node("/root/Settings")
 	_saved_path = s.store_path
 	_saved_big = s.buyuk_yazi
@@ -21,6 +22,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	CatalogFixtures.unpin_default()
 	var s: Node = get_node("/root/Settings")
 	s.store_path = _saved_path
 	s.buyuk_yazi = _saved_big
@@ -135,7 +137,8 @@ func test_rf_characters_screen_rects() -> void:
 		var host := _host(vp)
 		var s := CharactersScreen.new()
 		host.add_child(s)
-		var data := AchKit.data()
+		# Baz yalnız gunslinger+zyfen: yeni karakter bu altın düzeni kaydırmaz (sözleşme: yerleşim, katalog boyu değil).
+		var data := AchKit.data_with_characters([&"gunslinger", &"zyfen"])
 		s.open(data, AchKit.store(), &"gunslinger")
 		s.apply_safe_area(SAFE)
 		await _settle()

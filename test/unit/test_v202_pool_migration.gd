@@ -35,7 +35,9 @@ func _resolved_from_settings(text: String) -> StringName:
 
 func test_barutcu_is_not_a_character_any_more() -> void:
 	assert_null(_data.get_character(&"barutcu"))
-	assert_eq(CharacterRoster.ids(_data), [&"gunslinger", &"zyfen"] as Array[StringName])
+	var ids := CharacterRoster.ids(_data)
+	assert_false(ids.has(&"barutcu"), "barutcu listede yok")
+	assert_true(ids.has(&"gunslinger") and ids.has(&"zyfen"), "mevcut karakterler listede")
 
 
 func test_saved_barutcu_in_any_spelling_resolves_to_gunslinger() -> void:

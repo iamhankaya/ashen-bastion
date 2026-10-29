@@ -10,11 +10,13 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[3]
 IN_GIT = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--git-dir"], capture_output=True).returncode == 0  # selftest kopyası git'siz
+DRY_TREE = (ROOT / "data/characters/zz_dry.json").exists()  # kuru deneme ağacı: sahte dosyalar commit'li, "temiz ağaç" varsayımı geçersiz
 spec = importlib.util.spec_from_file_location("prova_dry_run", ROOT / "tools" / "ci" / "prova_dry_run.py")
 pdr = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(pdr)
 
 
+@pytest.mark.skipif(DRY_TREE, reason="kuru deneme ağacı: sahte dosyalar zaten var")
 def test_scenarios_only_create_new_files_under_data_or_reducer_dir():
     for name in pdr.SCENARIOS:
         files = pdr.scenario_files(ROOT, name)
@@ -73,7 +75,7 @@ def test_root_guard_refuses_outside_tempdir(tmp_path, monkeypatch):
         pdr.check_root(d)
 
 
-@pytest.mark.skipif(not IN_GIT, reason="git deposu değil (selftest kopyası)")
+@pytest.mark.skipif(not IN_GIT or DRY_TREE, reason="git deposu değil (selftest kopyası) ya da kuru deneme ağacı")
 def test_no_run_reports_files_and_leaves_tree_clean(tmp_path):
     wt = tmp_path / "wt"
     subprocess.run(["git", "-C", str(ROOT), "worktree", "add", "--detach", "-q", str(wt), "HEAD"], check=True)

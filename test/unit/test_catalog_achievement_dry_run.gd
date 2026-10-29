@@ -45,10 +45,11 @@ func test_dry_run_data_only_metric_unlocks_a_new_family() -> void:
 		"source": {"event": "pickup_collected", "filter": {"kind_id": ["zz_kind"]}, "value": "one"},
 		"aggregate": "count",
 	}
+	var before := GameData.load_default()._stat_metrics.size()
 	var root := _root("run_zz_dry", metric, _family("zz_dry", "run_zz_dry", [2, 4]))
 	var g := GameData.load_dir(root)
 	assert_eq(Array(g.validate()), [], "yeni metrik ve aile doğrulayıcıdan temiz geçer")
-	assert_eq(g._stat_metrics.size(), AchievementDef.STATS.size() + 1)
+	assert_eq(g._stat_metrics.size(), before + 1, "kayıt tam bir metrik büyüdü")
 	var r := AchKit.rig(&"gunslinger", AchKit.FIXED_UNIX, g)
 	var bus: SimBus = r["bus"]
 	var store: AchievementStore = r["store"]
@@ -85,6 +86,42 @@ func test_dry_run_new_reducer_file_drives_a_new_family() -> void:
 	assert_false(store.is_unlocked(&"zz_streak"), "hasar seriyi böler")
 	AchKit.kills(bus, 1)
 	assert_true(store.is_unlocked(&"zz_streak"))
+
+
+func test_synthetic_same_event_metrics_unlock_in_order_not_file_name_order() -> void:
+	# Sıra sözleşmesi sentetik: dosya adı sırası (zz_a < zz_b) ile `order` sırası (b önce) ters seçilir.
+	var fam_a := _family("zz_fam_a", "run_zz_a", [1])
+	var root := _root("run_zz_a", _kill_metric("run_zz_a", 902), fam_a)
+	var mf := FileAccess.open(root.path_join("achievements/run_zz_b.json"), FileAccess.WRITE)
+	mf.store_string(JSON.stringify(_kill_metric("run_zz_b", 901)))
+	mf.close()
+	var fams: Array = JSON.parse_string(
+		FileAccess.get_file_as_string(root.path_join("achievements.json"))
+	)
+	fams.append(_family("zz_fam_b", "run_zz_b", [1]))
+	var ff := FileAccess.open(root.path_join("achievements.json"), FileAccess.WRITE)
+	ff.store_string(JSON.stringify(fams))
+	ff.close()
+	var g := GameData.load_dir(root)
+	assert_eq(Array(g.validate()), [])
+	var r := AchKit.rig(&"gunslinger", AchKit.FIXED_UNIX, g)
+	var tracker: AchievementTracker = r["tracker"]
+	var got: Array = []
+	tracker.unlocked.connect(func(d: AchievementDef) -> void: got.append(String(d.id)))
+	AchKit.kills(r["bus"], 1)
+	var ours := got.filter(func(i: String) -> bool: return i.begins_with("zz_fam_"))
+	assert_eq(ours, ["zz_fam_b", "zz_fam_a"], "küçük `order` önce")
+
+
+func _kill_metric(stat: String, order: int) -> Dictionary:
+	return {
+		"stat": stat,
+		"order": order,
+		"icon_family": "hud-oldurme",
+		"persist": {"total": null, "best": null},
+		"source": {"event": "enemy_killed", "filter": {}, "value": "one"},
+		"aggregate": "count",
+	}
 
 
 func test_unknown_reducer_class_is_a_schema_error() -> void:

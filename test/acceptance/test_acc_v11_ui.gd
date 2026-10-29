@@ -21,6 +21,10 @@ func before_each() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_dir))
 
 
+func after_each() -> void:
+	CatalogFixtures.unpin_default()  # test yarıda kalsa da daraltılmış katalog sonrakilere sızmaz
+
+
 func after_all() -> void:
 	_rm(ProjectSettings.globalize_path(ROOT))
 
@@ -886,6 +890,8 @@ func _assert_inside_safe(root: Node, extra: Vector4, what: String) -> void:
 func test_u15_safe_area_extra_moves_highscore_screen_content_inside() -> void:
 	if V11Slice.require(self, "D3"):
 		return
+	# Sekme sırası yerleşik 3 modla ölçülür: HighscoreScreen._layout ilk 3 sekmeyi yerleştirir (4+ mod için kod gerekir).
+	CatalogFixtures.pin_default(CatalogFixtures.shipped_trio())
 	var extra := Vector4(0, 100, 0, 150)
 	var s := _scores_screen(10, extra)
 	await _frames(3)
@@ -893,6 +899,7 @@ func test_u15_safe_area_extra_moves_highscore_screen_content_inside() -> void:
 	var e := _scores_screen(0, extra)
 	await _frames(3)
 	_assert_inside_safe(e, extra, "En İyi Skorlar (boş)")
+	CatalogFixtures.unpin_default()
 
 
 func test_u15_safe_area_extra_moves_result_screen_content_inside() -> void:

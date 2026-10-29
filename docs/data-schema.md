@@ -81,7 +81,7 @@ Sıralama `(order, id)`; varsayılan `"default": true` olan kayıt (yoksa sırad
 
 ### Başarım metrik kaydı (R8)
 
-`data/achievements/<stat>.json` = bir stat'ın **nereden beslendiği** ve **nereye yazıldığı** (21 dosya, dosya adı = `stat`). Aile/kademe
+`data/achievements/<stat>.json` = bir stat'ın **nereden beslendiği** ve **nereye yazıldığı** (yerleşik 21 stat + veriyle eklenenler; dosya adı = `stat`). Aile/kademe
 tanımları (`achievements.json`: ad, açıklama, `steps`, `group`, `legacy`, ikon) ayrı kalır; kademe eşikleri tek yerde (aile kaydı) durur.
 Şema kuralları `scripts/sim/catalog/metric_schema.gd` (`MetricSchema`), doğrulayıcı eklenti `scripts/sim/validators/stat_metrics_validator.gd`
 (hata kodu `metric_schema`), okuyucu `AchievementMetricRegistry` (`scripts/ctrl/`; `test_b9` sim dizininde başarım sınıf adlarını yasakladığı
@@ -109,7 +109,19 @@ anahtar (`totals`/`best` listeleri) hâlâ kod ister (aşağıda).
 
 Sınırlar: kalıcı `totals`/`best` anahtarları `AchievementStore.TOTAL_KEYS/BEST_KEYS` ve `AchievementDef.TOTAL_KEY/BEST_KEY`'de kapalı kümedir
 (kayıt dosyası biçimi sabit); veriyle eklenen stat bugün `persist: null` (yalnız koşu içi) kullanır. `AchievementDef.STATS` ve tracker `S_*`
-dizinleri yerleşik 21 stat için sabittir; kayıttaki yeni statlar bunların ardına eklenir.
+dizinleri yerleşik 21 stat için sabittir; kayıttaki yeni statlar bunların ardına eklenir. Testler bu kümeyi veriden eşitlemez: "STATS kayıtta
+var, fazlası geçerli" (`test_catalog_achievement_real`, `test_data_v2`); sıra/sınır sözleşmeleri sentetik fixture ile sınanır.
+
+Kuru deneme sınıflandırması (`tools/ci/prova_dry_run.py --scenario ach_data|ach_reducer`):
+
+| Ekleme | Sınıf | Kod / mevcut dosya |
+|---|---|---|
+| Yerleşik toplam, `persist: null`, mevcut olay | Yalnız veri | yok (yeni `data/achievements/<stat>.json`) |
+| Yeni reducer | Yeni dosya | yeni `.gd` + JSON; mevcut `.gd` değişmez |
+| Yeni stat'lı aile satırı | Mevcut dosya değişir (açık nokta) | `data/achievements.json`; metrik dizinine taşıma tasarım kararı, yapılmadı; araç varsayılan olarak eklemez |
+| Kalıcı `totals`/`best` anahtarı | Kod eklentisi | `AchievementDef.TOTAL_KEY/BEST_KEY`, `AchievementStore.TOTAL_KEYS/BEST_KEYS` (+ kayıt göçü), `AchievementProgress.of` |
+| Yeni SimBus olayı/poll/finish | Kod eklentisi | sim kodu, `MetricSchema.EVENTS/POLLS`, tracker `LISTENED` |
+| Özel hedef cümlesi / ikon adı tablosu | Kozmetik kod | `AchievementRow.GOAL_TEXT` ("Hedef N" yedeği), `AchievementIcons.FAMILY` (aile `icon` alanı yedeği) |
 
 ## Karakter — `characters/<id>.json`
 

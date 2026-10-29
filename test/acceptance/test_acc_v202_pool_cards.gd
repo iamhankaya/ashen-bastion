@@ -186,10 +186,17 @@ func test_p9_pool_assignments_match_the_plan_counts() -> void:
 	if V202Slice.require(self, "P"):
 		return
 	var by_pool := {"common": [], "gunslinger": [], "zyfen": []}
+	var others := 0  # yeni karakterlerin havuzları (sayıları bu plana ait değil)
 	for d in _all_skills():
-		assert_true(by_pool.has(str(d.pool)), "%s bilinmeyen havuz %s" % [d.id, d.pool])
-		if by_pool.has(str(d.pool)):
-			by_pool[str(d.pool)].append(str(d.id))
+		var pool := str(d.pool)
+		if by_pool.has(pool):
+			by_pool[pool].append(str(d.id))
+		else:
+			others += 1
+			assert_true(
+				_data.get_character(StringName(pool)) != null,
+				"%s: havuz %s ne ortak ne katalogdaki karakter" % [d.id, pool]
+			)
 	assert_eq(by_pool["common"].size(), 7, "ortak pasif sayısı")
 	assert_eq(by_pool["gunslinger"].size(), 12, "Gunslinger'a özel (8 beceri + 4 evrim)")
 	assert_eq(by_pool["zyfen"].size(), 13, "Zyfen'e özel")
@@ -198,7 +205,9 @@ func test_p9_pool_assignments_match_the_plan_counts() -> void:
 	var got: Array = by_pool["gunslinger"].duplicate()
 	got.sort()
 	assert_eq(got, want, "Gunslinger havuzu planla aynı kimlikler")
-	assert_eq(_all_skills().size(), 32, "toplam beceri (dinamit çıkmış)")
+	assert_eq(
+		_all_skills().size(), 32 + others, "toplam beceri (dinamit çıkmış; yeni havuzlar eklenir)"
+	)
 	assert_null(_data.get_skill(&"dinamit"), "dinamit kaldırıldı")
 
 

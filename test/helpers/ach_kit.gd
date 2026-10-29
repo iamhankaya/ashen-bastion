@@ -87,6 +87,17 @@ static func data() -> GameData:
 	return GameData.load_default()
 
 
+## Gerçek katalog, ama karakter listesi yalnız `ids` (sırası gerçek `order` sırasıdır). Altın/baz (golden) ekran testleri
+## yeni karakter eklenince kaymasın diye: yeni örnek (paylaşılan önbelleği değiştirmez).
+static func data_with_characters(ids: Array) -> GameData:
+	var g := GameData.load_dir("res://data")
+	for id in g.character_ids.duplicate():
+		if not ids.has(id):
+			g.character_ids.erase(id)
+			g._characters.erase(id)
+	return g
+
+
 static func legacy_data() -> GameData:
 	if _legacy == null:
 		_legacy = GameData.load_dir("res://data")

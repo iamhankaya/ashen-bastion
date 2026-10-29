@@ -14,6 +14,8 @@ const LEGACY_WAIVERS := {&"zyfen": "res://docs/design/v2.0.2/walk-waiver.md"}
 const PINNED_CELLS := {&"zyfen": 19}
 
 var _rigs: Dictionary = {}
+## id -> art/source sahibi (AccV202.art_owner): veri-yalnız karakter paylaşılan şeridin sahibine bakar
+var _owner: Dictionary = {}
 
 
 func before_all() -> void:
@@ -22,6 +24,7 @@ func before_all() -> void:
 		var c := data.get_character(id)
 		if c.armless:
 			_rigs[id] = c.rig
+			_owner[id] = AccV202.art_owner(id, c.rig)
 
 
 func _json(path: String) -> Dictionary:
@@ -30,15 +33,16 @@ func _json(path: String) -> Dictionary:
 
 
 func _quality(id: StringName) -> Dictionary:
-	return _json("res://art/source/%s/quality.json" % id)
+	return _json("res://art/source/%s/quality.json" % _owner.get(id, id))
 
 
 func _manifest(id: StringName) -> Dictionary:
-	return _json("res://art/source/%s/strip_manifest.json" % id)
+	return _json("res://art/source/%s/strip_manifest.json" % _owner.get(id, id))
 
 
 func _waiver_path(id: StringName) -> String:
-	return LEGACY_WAIVERS.get(id, "res://docs/design/walk-waiver-%s.md" % id)
+	var o: StringName = _owner.get(id, id)
+	return LEGACY_WAIVERS.get(o, "res://docs/design/walk-waiver-%s.md" % o)
 
 
 func _waived(id: StringName) -> bool:

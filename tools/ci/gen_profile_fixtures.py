@@ -13,10 +13,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "test" / "fixtures"
+# Fixture'lar yerleşik üçlüden üretilir (RunProfiles.MODES/DIFFS): veri-yalnız eklenen yeni mod/zorluk dosyası çıktıyı değiştirmez.
+KNOWN = {"run_modes": ("quick", "normal", "endless"), "difficulties": ("easy", "normal", "hard")}
 
 
 def _entries(sub):
-    files = sorted((ROOT / "data" / sub).glob("*.json"))
+    files = sorted(f for f in (ROOT / "data" / sub).glob("*.json") if f.stem in KNOWN[sub])
     rows = [json.loads(f.read_text(encoding="utf-8")) for f in files]
     return sorted(rows, key=lambda e: (e["order"], e["id"]))
 
