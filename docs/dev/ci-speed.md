@@ -210,3 +210,34 @@ Kapsam değişmedi: PR/entegrasyon/main'de TAM kapsam koşar. Değişen yalnız 
 - `tools/ci/prova_conflict.py --clone <boş geçici dizin>`: iki paralel dalın birleşimi; `merge=union` kontrolü.
 - `tools/ci/prova_precheck.py --root <geçici worktree> [--godot BIN]`: her precheck kırmızı sınıfı gerçek araçla kasıtlı ihlalle denenir.
 - Süzgeç provası: `tools/ci/tests/test_infra_prova_path_filter.py` (ci.yml desenleri).
+
+## Eşzamanlı pytest, `GATE_SERIAL=1` ve selftest grupları (T20261029-30)
+
+Kök neden: her tam-gate selftest senaryosu tek başına 270–400 sn sürüyordu (lint 35–50 + pytest 67–89 sn tek çekirdekte sıralı, sonra
+GUT 164–253 sn dört süreçte). Gruplama tek başına en kötü işi ≈0,73–0,75 oranının altına indiremiyordu. Kapsam azaltılmadı; pytest atlanmadı.
+
+- **Eşzamanlı pytest (`tools/gate.sh`, `CONC=1`):** `GATE_PART=all`, hızlı mod değil, GUT paralel (`GATE_JOBS>1`) ve `GATE_SERIAL!=1` iken
+  pytest arka planda GUT ile birlikte koşar (`bg_start`/`reap_bg`). Hiçbir denetim atlanmaz ve kısa devre yoktur: her denetimin çıkış
+  kodu toplanır, GUT kırmızı olsa da pytest beklenir, çıktılar ayrı log olarak sırayla basılır (`=== 5. Python testleri (eşzamanlı)`),
+  biri kırmızıysa gate kırmızıdır; adım 7 eşzamanlı sonuçlar toplanmadan koşmaz. Lint sıralı kalır (ucuz ve erken kırmızı verir).
+  Küçük davranış farkı: pytest kırmızıysa GUT yine koşar ve iki çıktı da basılır.
+- **`GATE_SERIAL=1`** eski sıralı yolu korur. `GATE_JOBS=1`, `--changed` ve `GATE_PART!=all` da sıralı yoldur. Eşzamanlı kipte
+  yarıştan şüpheleniliyorsa (pytest'in `.gate/` ya da izlenen dosyaya yazması) `GATE_SERIAL=1` ile yeniden koş.
+- **Selftest grup tablosu** (`tools/ci/selftest_gate.sh`, `GROUP[...]`; matris `group: [1..6]` değişmedi, 11 senaryo aynen):
+
+| Grup | Senaryo |
+|---|---|
+| 1 | `taban_yesil` (tam gate; yol süzgecinde `SKIPPED_BY_FILTER` olabilir) |
+| 2 | `anlamsal_hata` |
+| 3 | `test_kimligi_kaybi` |
+| 4 | `stub_todo` |
+| 5 | `kosmayan_test` |
+| 6 | `gut_error`, `bozuk_gd`, `bos_test_dizisi`, `to_upper`, `veri_hatasi`, `ag_yok` |
+
+  Her tam-gate senaryosu kendi grubunda tek başınadır (`test_selftest_gate_groups.py` denetler). Her senaryo sonucundan sonra gate adım
+  süreleri tek satırda yazılır (`adımlar: …`); ölçüm kaynağıdır, sonucu etkilemez.
+- **Ölçüm** (T20261029-30 raporu; sentetik yük, sıcak-sıcak, `measure_ci.py compare`, `Tson ≤ 0,70 × Tönce`):
+  (a) `scripts/ui/main_menu.gd` yorum satırı: medyan duvar 585,5 → 383 sn, oran **0,654** (kritik yol 0,648), 6+6 koşu, karşılandı;
+  (b) `tools/ci/check_junit.py` yorum satırı: 587 → 382 sn, oran **0,651**, 5+5 koşu, rapor. Nihai ağaç CI: 40884166561 (14/14 yeşil).
+  Parite: 9 negatif senaryo + taban her sürümde aynı çıkış kodu. Ölçüm paylaşılan runner havuzunda yapıldı; aykırı koşular dışarıda bırakılmadı.
+- **Sonraki hız adayı:** `test_kimligi_kaybi`/`kosmayan_test` GUT süresi (≈160–300 sn) ya da `gut` parça sayısını (4) artırmak.
