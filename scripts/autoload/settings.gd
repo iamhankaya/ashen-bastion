@@ -35,7 +35,7 @@ func _ready() -> void:
 	apply_audio()
 
 
-## Dosya yoksa ya da bozuksa varsayılanlar korunur. Biçim: JSON (ayrıştırma hatası motor günlüğüne düşmez).
+## Dosya yoksa ya da bozuksa varsayılanlar korunur (koşu modu/zorluğu katalog varsayılanına döner). Biçim: JSON (ayrıştırma hatası motor günlüğüne düşmez).
 func load_settings(path: String = "") -> void:
 	if path == "":
 		path = store_path
