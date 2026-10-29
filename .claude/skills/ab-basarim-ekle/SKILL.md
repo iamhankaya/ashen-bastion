@@ -39,4 +39,4 @@ description: Ashen Bastion'a başarım eklerken veya karakter kilidi bağlarken 
 - [ ] Başarım ekranı yeni öğe için `apply_safe_area` kapsamında; ekran görüntüsü (`tools/capture/shots_ach.gd`).
 - [ ] İngilizce adlar sabit büyük harf; `to_upper`/`upper_tr` kullanılmadı.
 - [ ] İkon `.import` commit'li; lisansı belirsiz görsel yok.
-- [ ] `baseline/` değişmedi ya da gerekçeli (`baseline_changes.txt`); `scripts/**` dosyaları ≤ 800 satır (`achievement_tracker.gd` ~470).
+- [ ] `baseline/` değişmedi ya da gerekçeli (`baseline_changes.txt`); `scripts/**` dosyaları ≤ 800 satır (`achievement_tracker.gd` ~560).

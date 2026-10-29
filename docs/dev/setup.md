@@ -36,7 +36,7 @@ Yedek sürüm `4.6.3-stable` kullanılmadı: 4.7.2 indirilebildi ve çalıştı.
 
 0. ön denetim kancası (`tools/ci/run_checks.sh`, `tools/ci/checks.d/NN-ad.sh`: satır tavanı, test kimlikleri, katman, UI kuralı; yalnız static/all; ilk kırmızıda `GATE FAIL`) 1. `ensure_godot.sh` 2. `--import` 3. `gdformat --check` + `gdlint` + `to_upper/to_lower` grep 4. `tools/validate_data.gd` 5. pytest 6. GUT (`test/unit`, `test/acceptance`) 7. günlük taraması, JUnit test kimliği kapısı (`tools/ci/check_test_ids.py`: bildirilen her `func test_*` koşmalı, tabandan kimlik kaybolmamalı; silinen/taşınan test `tools/ci/removed_tests.txt` / `moved_tests.txt`'e yazılır, el ile sayı güncellenmez).
 
-Öz-test: `bash tools/ci/selftest_gate.sh` (bozuk `.gd`, anlamsal hata, boş test dizisi, asgari sayı altı, `Stub.todo`, ağ yok → 3).
+Öz-test: `bash tools/ci/selftest_gate.sh` (bozuk `.gd`, anlamsal hata, boş test dizisi, test kimliği kaybı (`LOST`), koşmayan test (`MISSING`), `Stub.todo`, ağ yok → 3).
 11 senaryo `GROUP[...]=N` tablosuyla 6 gruba bölünmüştür (F-028): `selftest_gate.sh --group N` yalnız o grubu, `--list` tabloyu yazar;
 `ci.yml` `selftest` işi `matrix.group` ile her grubu ayrı iş olarak koşar (`fail-fast: false`, `timeout-minutes: 20`). Tam-gate senaryoları
 (≈340 s) ayrı gruplardadır; en uzun grup ≈ 409 s (S0 ölçümü). Yeni senaryo = `scenario_<ad>()` + `GROUP[<ad>]=N` (tablo ↔ işlev uyumsuzluğunda çıkış 2;

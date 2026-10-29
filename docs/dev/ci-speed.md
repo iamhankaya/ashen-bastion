@@ -65,7 +65,7 @@ Değişen dosyalar = `git diff --name-only $(git merge-base HEAD REF)` (çalış
 
 Karışık değişiklikte tek bir paylaşılan/eşlemesiz dosya tam gate'e düşürür. Şüphede tam suite. Hızlı modda lint yalnız değişen
 `.gd` dosyalarına, Python testleri yalnız değişen araç dizinine (`tools/art`, `tools/audio`) uygulanır; veri doğrulaması her
-zaman koşar; adım 7'de asgari test sayısı seçilen dosyalar için, tek test süre sınırı aynen denetlenir. Dilim/pending denetimi
+zaman koşar; adım 7'de test kimliği kapısı seçilen dosyalar için (`--mode selected`), tek test süre sınırı aynen denetlenir. Dilim/pending denetimi
 tam JUnit ister ve yalnız tam gate'tedir.
 
 Eşleme bakımı: `tools/ci/test_map.json` izlenmez; hızlı mod başında `python3 tools/ci/test_map.py ensure` üretir (elle commit yok).
@@ -167,7 +167,7 @@ Godot sürecinde** koşar. N = `GATE_JOBS` (varsayılan `min(4, çekirdek)`; `GA
 - **Kendi `XDG_DATA_HOME`'u:** `user://` süreç başına ayrıdır. Ortak olsaydı USER_LEAK denetimi (kanca taban/son karşılaştırır)
   başka parçanın geçici dosyalarını sızıntı sayardı.
 - Kapsam kanıtı CI `test` işiyle aynı: `shard.py check-merge --require-all` (eksik/yinelenen/bilinmeyen dosya = kırmızı), sonra
-  `shard.py merge` -> `.gate/junit.xml`; adım 7 (asgari sayı, 75 sn, dilim/pending) birleşik JUnit üstünde aynen koşar.
+  `shard.py merge` -> `.gate/junit.xml`; adım 7 (test kimliği kapısı MISSING/LOST, 75 sn, dilim/pending) birleşik JUnit üstünde aynen koşar.
 - Hızlı mod (`--changed`) ve `GATE_PART=gut|static|verify` yolları değişmedi; CI işleri değişmedi (`ci.yml` aynı).
 - Saat eşiği yok: testler yalnız ms'i raporlar (`test_acc_perf_counters`, `test_ver_crowd_perf`), duvar saatine iddia etmez;
   paralel yük sonuçları değiştirmez. Tek-test 75 sn sınırı yük altında tek test için daha riskli olabilir (en yavaş test 105 sn'lik
