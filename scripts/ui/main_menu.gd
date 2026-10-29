@@ -711,3 +711,5 @@ func _on_version_input(event: InputEvent) -> void:
 	)
 	if tap and register_version_tap() and OS.is_debug_build():
 		debug_stress_requested.emit()
+
+# prova yaması (a): ölçüm sentetik iş yükü
