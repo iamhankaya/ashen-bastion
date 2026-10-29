@@ -71,6 +71,8 @@ kaydırarak PNG üretir. `placeholder: true` yazın. Yer tutucu yalnız portre/v
 bash tools/precheck.sh        # + --godot (yerel Godot varsa); tam kapı CI'da: ab-test-ve-kapi
 ```
 
+Tam kapı `bash tools/gate.sh` (Linux/WSL2) ya da CI'dır; precheck onun yerine geçmez.
+
 Tam kapı, veri doğrulamasını (`validate_data`: bozuk alan → hata kodu, dosya ve alan adıyla), karakter kabul testlerini (her karakter 15 adım koşar,
 başlangıç becerisi `kind: active`) ve her kolsuz karakter için şerit testlerini (`test/acceptance/test_acc_v202_rig_manifest.gd`,
 `test_acc_v202_rig_walk_gate.gd`: manifest ↔ rig, `palm` ↔ `cast_point`, yürüme kalite kapısı, CastAnim kare seçimi) koşar. Bu testler
