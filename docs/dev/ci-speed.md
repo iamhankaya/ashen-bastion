@@ -202,3 +202,5 @@ Kapsam değişmedi: PR/entegrasyon/main'de TAM kapsam koşar. Değişen yalnız 
 ### Prova araçları (T20261029-19)
 - `tools/ci/prova_dry_run.py --root <geçici worktree>`: sahte karakter/mod/başarım yalnız YENİ dosyalarla; mevcut dosya değişimi ve sabit listeli test kırıkları raporlanır.
 - `tools/ci/prova_conflict.py --clone <boş geçici dizin>`: iki paralel dalın birleşimi; `merge=union` kontrolü.
+- `tools/ci/prova_precheck.py --root <geçici worktree> [--godot BIN]`: her precheck kırmızı sınıfı gerçek araçla kasıtlı ihlalle denenir.
+- Süzgeç provası: `tools/ci/tests/test_infra_prova_path_filter.py` (ci.yml desenleri).
