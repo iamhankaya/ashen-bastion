@@ -1,0 +1,15 @@
+{
+ "id": "zz_dry",
+ "order": 9,
+ "name": "ZzDry",
+ "label": "ZZDRY",
+ "description": "Kısa koşu. Lord %d. dakikada gelir.",
+ "ending": "lord",
+ "icon_key": "quick",
+ "profile": {
+  "time_scale": 0.5,
+  "xp_mult": 1.5,
+  "lord_hp_mult": 0.5,
+  "rate_mult": 1.0
+ }
+}
