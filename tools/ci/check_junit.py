@@ -23,3 +23,4 @@ if __name__ == "__main__":
         print("kullanım: check_junit.py JUNIT.xml", file=sys.stderr)
         sys.exit(2)
     sys.exit(main(sys.argv[1]))
+# ölçüm yaması (b) 1 (T20261029-30)
