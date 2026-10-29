@@ -102,12 +102,11 @@ static func place_chip_parts(
 ## Büyük yazıda sığmayan içerik için: `host`un `keep` dışındaki tüm çocukları, host'u dolduran bir ScrollContainer'ın
 ## içerik düğümüne (ilk çocuk) taşır; tembel kurulur, böylece 1× düğüm ağacı değişmez. Kaydırma tıklamaları host'a geçirir (PASS).
 static func wrap_in_scroll(host: Control, keep: Array) -> ScrollContainer:
-	var scroll := ScrollContainer.new()
-	scroll.name = "ResultScroll"
-	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := UiKit.make_scroll(
+		UiKit.SCROLL_AXIS_VERTICAL,
+		{"name": "ResultScroll", "mouse_filter": Control.MOUSE_FILTER_PASS}
+	)
 	UiKit.fill(scroll)
-	UiKit.touch_scroll(scroll)
 	var content := Control.new()
 	content.name = "ResultContent"
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE

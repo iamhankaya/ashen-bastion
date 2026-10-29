@@ -6,6 +6,11 @@ extends RefCounted
 static var _cache: Dictionary = {}
 
 
+## Önbelleği boşaltır (test sızıntı koruması: gut_stub_hook).
+static func clear_caches() -> void:
+	_cache.clear()
+
+
 ## Gerçek dosya yolu mu (placeholder: değil ve var).
 static func exists(path: String) -> bool:
 	return path != "" and not path.begins_with("placeholder:") and ResourceLoader.exists(path)

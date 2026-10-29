@@ -65,6 +65,11 @@ static var _theme: Theme = null
 static var _tex_cache: Dictionary = {}
 
 
+## Doku/yazı tipi önbelleğini boşaltır (test sızıntı koruması: gut_stub_hook).
+static func clear_caches() -> void:
+	_tex_cache.clear()
+
+
 ## Cihaz güvenli alanının (DisplayServer.get_display_safe_area) varsayılan boşlukların ÖTESİNDE kalan payı,
 ## görünüm (viewport) pikseli cinsinden: (sol, üst, sağ, alt). Güvenli alan bilinmiyorsa (boş) sıfır.
 ## win: pencere piksel boyutu; safe: pencere pikselinde güvenli dikdörtgen; view: viewport boyutu.
