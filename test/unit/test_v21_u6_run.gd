@@ -71,8 +71,8 @@ func test_a60_big_strip_keeps_the_change_label_and_fits_every_selection() -> voi
 	host.add_child(strip)
 	strip.set_big(true)
 	strip.size = Vector2(STRIP_W, RunStrip.H_BIG)
-	for mode in RunStrip.MODE_ORDER:
-		for diff in RunStrip.DIFF_ORDER:
+	for mode in RunStrip.mode_order():
+		for diff in RunStrip.diff_order():
 			strip.show_selection(mode, diff, cfg)
 			await _settle()
 			var ch: Label = strip._change
@@ -109,11 +109,11 @@ func test_a61_mode_glyph_is_bronz_300_only_when_selected() -> void:
 	_host().add_child(s)
 	s.visible = true
 	await _settle()
-	for m in RunStrip.MODE_ORDER:
+	for m in RunStrip.mode_order():
 		var want := UiKit.BRONZ_300 if m == &"quick" else UiKit.BRONZ_500
 		assert_eq((s._glyphs[m] as RunStrip.ModeGlyph).color, want, "ilk durum %s" % m)
 	s._select_mode(&"endless")
-	for m in RunStrip.MODE_ORDER:
+	for m in RunStrip.mode_order():
 		var want2 := UiKit.BRONZ_300 if m == &"endless" else UiKit.BRONZ_500
 		assert_eq((s._glyphs[m] as RunStrip.ModeGlyph).color, want2, "seçim sonrası %s" % m)
 	s.set_font_scale(2.0)
@@ -136,7 +136,7 @@ func test_a62_seal_never_overlaps_the_duration_text_at_1x() -> void:
 	s.visible = true
 	await _settle()
 	s.set_font_scale(1.0)
-	for m in RunStrip.MODE_ORDER:
+	for m in RunStrip.mode_order():
 		s._select_mode(m)
 		await _settle()
 		var b: Button = s.mode_buttons[m]

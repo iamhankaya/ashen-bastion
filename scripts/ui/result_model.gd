@@ -16,11 +16,10 @@ const DISPLAY_CAP := 99999999
 
 ## Sıra satırı: "Normal · Zor listesinde 3. sıra" (Mod · Zorluk); mod/zorluk bilinmiyorsa boş.
 static func rank_line(mode: StringName, diff: StringName, rank: int) -> String:
-	if rank <= 0 or not RunStrip.MODE_TITLES.has(mode) or not RunStrip.DIFF_TITLES.has(diff):
+	if rank <= 0 or RunStrip.mode_title(mode) == "" or RunStrip.diff_title(diff) == "":
 		return ""
 	return (
-		"%s · %s listesinde %d. sıra"
-		% [RunStrip.MODE_TITLES[mode], RunStrip.DIFF_TITLES[diff], rank]
+		"%s · %s listesinde %d. sıra" % [RunStrip.mode_title(mode), RunStrip.diff_title(diff), rank]
 	)
 
 

@@ -250,7 +250,9 @@ static func build_run_info(host) -> void:
 static func fill_run(host, profiles: Callable) -> void:
 	host.run_mode = StringName(str(host.stats.get("mode", "")))
 	host.run_diff = StringName(str(host.stats.get("diff", "")))
-	var known := RunStrip.MODE_ORDER.has(host.run_mode) and RunStrip.DIFF_ORDER.has(host.run_diff)
+	var known := (
+		RunStrip.mode_order().has(host.run_mode) and RunStrip.diff_order().has(host.run_diff)
+	)
 	if host._run_chips != null:
 		host.chip_holder.remove_child(host._run_chips)
 		host._run_chips.queue_free()
@@ -369,8 +371,8 @@ static func prefix_rank_line(host, rank: int) -> void:
 	host.record_note.accessibility_name = (
 		"%s modda, %s listesinde %s sıra."
 		% [
-			RunStrip.MODE_TITLES[host.run_mode],
-			RunStrip.DIFF_TITLES[host.run_diff],
+			RunStrip.mode_title(host.run_mode),
+			RunStrip.diff_title(host.run_diff),
 			ResultLayout.spoken_rank(rank)
 		]
 	)
