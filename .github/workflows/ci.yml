@@ -144,7 +144,7 @@ jobs:
         run: bash tools/ci/path_filter.sh 'tools/|\.github/|project\.godot$|\.gutconfig\.json$|\.godot-version$|export_presets\.cfg$|addons/|scripts/ci'
       - run: bash tools/ci/selftest_gate.sh --group ${{ matrix.group }}
         env:
-          SELFTEST_SKIP_TABAN: '1'  # PROVA-GEÇİCİ (parite): filtre AÇIK taklidi; geri alınacak
+          SELFTEST_SKIP_TABAN: ${{ steps.taban.outputs.run == '0' && '1' || '0' }}
       - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
         if: always()
         uses: actions/upload-artifact@v4
