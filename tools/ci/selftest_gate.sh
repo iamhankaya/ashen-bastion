@@ -171,6 +171,16 @@ if [ -n "$ONLY" ] && ! printf '%s\n' "${GROUP[@]}" | grep -qx "$ONLY"; then
 fi
 
 if [ -n "$ONE" ] && [ -z "${GROUP[$ONE]:-}" ]; then echo "SELFTEST: senaryo $ONE tabloda yok" >&2; exit 2; fi
+# F-119 (soğuk koşu): önbellek yoksa her senaryo kopyası --import'u sıfırdan yapar (~60 sn/senaryo) ve iş .godot/imported'ı doldurmadığından
+# actions/cache da yazılmaz. Kökte BİR kez ısın (ensure_godot + godot_import); fresh() sonucu her kopyaya aktarır, cache post-adımı da yazar.
+# Başarısızlık ölümcül değil (senaryolar kendi import'larını yapar); mutasyon sonrası import doğrulaması etkilenmez (class cache aktarılmaz).
+GC="${SELFTEST_GODOT_CACHE:-$ROOT/.godot}"
+if [ ! -d "$GC/imported" ]; then
+  echo "SELFTEST: önbellek yok, tek seferlik ısınma (--import)"
+  if ! (cd "$ROOT" && eval "${SELFTEST_WARMUP_CMD:-bash tools/ci/selftest_warmup.sh}") > "$TMP/warmup.log" 2>&1; then
+    echo "SELFTEST: ısınma başarısız (senaryolar kendi import'unu yapar); son satırlar:"; tail -n 5 "$TMP/warmup.log"
+  fi
+fi
 ran=0
 for n in $(printf '%s\n' "${!GROUP[@]}" | sort); do
   if [ -n "$ONE" ] && [ "$n" != "$ONE" ]; then continue; fi

@@ -27,6 +27,8 @@ jobs:
       GATE_FORBIDDEN_RE: ${{ secrets.GATE_FORBIDDEN_RE }}  # yoksa denetim "atlandı" der
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # F-124: kimlik kapısı tabanı merge-base(HEAD, origin/main) (gate.sh adım 7); shallow klonda LOST denetimi sessizce atlanırdı
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

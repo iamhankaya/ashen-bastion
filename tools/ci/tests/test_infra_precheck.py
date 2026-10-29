@@ -263,3 +263,79 @@ def test_test_map_with_ensure_command_uses_ensure(repo, tmp_path):
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
+
+
+def _base_with_old_violation(repo):
+    (repo / "scripts").mkdir()
+    (repo / "scripts" / "old.gd").write_text("func f(s):\n\treturn s.to_upper()\n\n\nfunc g():\n\treturn 1\n")
+    git(repo, "checkout", "-q", "main")
+    commit_all(repo, "old")
+    git(repo, "checkout", "-q", "-b", "work2")
+
+
+def test_f131_touching_file_with_old_violation_elsewhere_is_not_red(repo, tmp_path):
+    """F-131: dosyada TABANDAN kalan to_upper, başka satır değişince kırmızı vermez (gate.sh de yalnız yeni ihlali kırar)."""
+    _base_with_old_violation(repo)
+    p = repo / "scripts" / "old.gd"
+    p.write_text(p.read_text().replace("return 1", "return 2"))
+    commit_all(repo)
+    r = run(repo, "--base", "main", tmp_path=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert "UPPER_LOWER" not in r.stderr
+
+
+def test_f131_added_violation_line_in_old_file_is_red(repo, tmp_path):
+    _base_with_old_violation(repo)
+    p = repo / "scripts" / "old.gd"
+    p.write_text(p.read_text() + "\n\nfunc h(s):\n\treturn s.to_lower()\n")
+    commit_all(repo)
+    r = run(repo, "--base", "main", tmp_path=tmp_path)
+    assert r.returncode == 1
+    assert "PRECHECK_FAIL: UPPER_LOWER: scripts/old.gd" in r.stderr
+
+
+GUARD = ROOT / "tools" / "ci" / "tests" / "test_rf_baseline_guard.py"
+
+
+def _with_guard(repo):
+    d = repo / "tools" / "ci" / "tests"
+    d.mkdir(parents=True)
+    shutil.copy(GUARD, d / "test_rf_baseline_guard.py")
+    (repo / "tools" / "ci" / "baseline_changes.txt").write_text("# kayıt\n", encoding="utf-8")
+    commit_all(repo, "guard")
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "-q", "work")
+    git(repo, "checkout", "-q", "-b", "work3")
+
+
+def test_baseline_change_without_record_is_red_even_where_pytest_class_is_skipped(repo, tmp_path):
+    """Prova bulgusu: Windows'ta PYTEST sınıfı atlandığından BASELINE_CHANGED yerelde hiç görünmüyordu."""
+    _with_guard(repo)
+    b = repo / "test" / "characterization" / "baseline"
+    b.mkdir(parents=True)
+    (b / "x.json").write_text('{"a": 1}\n', encoding="utf-8")
+    r = run(repo, "--base", "main", tmp_path=tmp_path)
+    assert r.returncode == 1
+    assert "PRECHECK_FAIL: BASELINE:" in r.stderr and "BASELINE_CHANGED" in r.stderr
+
+
+def test_baseline_change_with_matching_record_is_green(repo, tmp_path):
+    import hashlib
+    _with_guard(repo)
+    b = repo / "test" / "characterization" / "baseline"
+    b.mkdir(parents=True)
+    body = b'{"a": 1}\n'
+    (b / "x.json").write_bytes(body)
+    sha = hashlib.sha256(body).hexdigest()
+    with open(repo / "tools" / "ci" / "baseline_changes.txt", "a", encoding="utf-8", newline="\n") as f:
+        f.write(f"test/characterization/baseline/x.json | {sha} | prova | T-test\n")
+    r = run(repo, "--base", "main", tmp_path=tmp_path)
+    assert r.returncode == 0, r.stderr
+
+
+def test_baseline_guard_not_run_when_baseline_untouched(repo, tmp_path):
+    _with_guard(repo)
+    (repo / "README.md").write_text("x\n")
+    r = run(repo, "--base", "main", tmp_path=tmp_path)
+    assert r.returncode == 0, r.stderr
+    assert "BASELINE" not in r.stderr

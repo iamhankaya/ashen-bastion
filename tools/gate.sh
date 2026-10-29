@@ -23,6 +23,8 @@ if [ "$(basename -- "$0")" != "gate.sh" ] || [ ! -f "$0" ]; then
 fi
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
+# shellcheck source=tools/ci/py_shim.sh
+source tools/ci/py_shim.sh  # Windows: python3 Store kısayolu yerine python (çalışan python3 varsa etkisiz)
 
 FAST=0; FAST_BASE="${GATE_BASE:-}"
 while [ $# -gt 0 ]; do

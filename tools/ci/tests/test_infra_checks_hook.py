@@ -58,3 +58,41 @@ def test_gate_goes_red_at_step_0_on_deliberate_violation(tmp_path):
     assert r.returncode == 1
     assert "KASITLI_IHLAL" in r.stderr and "ön denetim kırmızı" in r.stderr
     assert "ensure_godot" not in r.stderr  # Godot kurulumuna hiç gelinmedi
+
+
+def _fake_bin(tmp_path):
+    """PATH başına: çalışmayan `python3` (Windows Store kısayolu: çıkış 49) + çalışan `python`."""
+    import sys
+    b = tmp_path / "fakebin"
+    b.mkdir()
+    (b / "python3").write_text('#!/usr/bin/env bash\necho "Python bulunamad" >&2\nexit 49\n', encoding="utf-8", newline="\n")
+    (b / "python").write_text(f'#!/usr/bin/env bash\nexec "{Path(sys.executable).as_posix()}" "$@"\n', encoding="utf-8", newline="\n")
+    for f in b.iterdir():
+        f.chmod(0o755)
+    return b
+
+
+def _env_with(b):
+    import os
+    return {**os.environ, "PATH": f"{b.as_posix()}{os.pathsep}{os.environ['PATH']}"}
+
+
+def test_py_shim_routes_broken_python3_to_python_and_exports_it_to_children(tmp_path):
+    """Prova bulgusu: Windows'ta `python3` Store kısayolu gate.sh adım 0'ı (40-ui-rules) kırıyordu ('Python bulunamad', çıkış 49)."""
+    b = _fake_bin(tmp_path)
+    shim = ROOT / "tools" / "ci" / "py_shim.sh"
+    r = subprocess.run(["bash", "-c", f'source "{shim.as_posix()}"; python3 -c "print(7)"; bash -c \'python3 -c "print(8)"\''],
+                       capture_output=True, text=True, env=_env_with(b))
+    assert r.returncode == 0, r.stderr
+    assert r.stdout.split() == ["7", "8"]
+
+
+def test_py_shim_is_noop_when_python3_works(tmp_path):
+    r = subprocess.run(["bash", "-c", f'source "{(ROOT / "tools/ci/py_shim.sh").as_posix()}"; type -t python3 || true'], capture_output=True, text=True)
+    # çalışan python3 olan ortamda (CI/Linux) işlev tanımlanmaz; yoksa (bu Windows) tanımlı olabilir: yalnız hata vermemeli
+    assert r.returncode == 0, r.stderr
+
+
+def test_gate_and_ui_rules_hook_source_the_shim():
+    assert 'source tools/ci/py_shim.sh' in GATE
+    assert 'py_shim.sh' in (ROOT / "tools/ci/checks.d/40-ui-rules.sh").read_text(encoding="utf-8")

@@ -85,7 +85,15 @@ if [ ${#GD_FILES[@]} -gt 0 ]; then
   # --- 3. to_upper/to_lower yasak (Türkçe i/İ); gate.sh yalnız scripts/tools/test tarar, burada değişen her .gd
   for f in "${GD_FILES[@]}"; do
     case "$f" in scripts/*|tools/*|test/*) ;; *) continue ;; esac
-    if grep -nE 'to_upper|to_lower' "$f" > "$TMP/ul.out"; then
+    # F-131: tabanda izlenen dosyada yalnız EKLENEN satırlar taranır (eski ihlal bu dalın işi değil; gate.sh de yeni ihlali kırar).
+    # Tabanda olmayan (yeni/izlenmeyen) dosya baştan sona taranır.
+    if git cat-file -e "$MB:$f" 2>/dev/null; then
+      git diff -U0 "$MB" -- "$f" | grep -E '^\+[^+]|^\+$' | grep -E 'to_upper|to_lower' > "$TMP/ul.out" || true
+      [ -s "$TMP/ul.out" ] && rc=0 || rc=1
+    else
+      grep -nE 'to_upper|to_lower' "$f" > "$TMP/ul.out" && rc=0 || rc=1
+    fi
+    if [ $rc -eq 0 ]; then
       cat "$TMP/ul.out" >&2
       fail UPPER_LOWER "$f (to_upper/to_lower yasak: Türkçe i/İ tuzağı)"
     fi
@@ -114,6 +122,17 @@ if [ -d tools/ci/tests ]; then
   fi
 else
   skip PYTEST "tools/ci/tests yok"
+fi
+
+# --- 5b. BASELINE: karakterizasyon bazı değişti mi (kayıt sha256 ile eşleşmeli). Windows'ta PYTEST sınıfı atlandığından bu tek dosya
+#         ayrıca koşar (prova bulgusu: BASELINE_CHANGED yerelde hiç görünmüyordu). Baz/kayıt değişmediyse koşmaz. -------------------
+if grep -E '^(test/characterization/baseline/|tools/ci/baseline_changes\.txt$)' "$TMP/changed.txt" > "$TMP/baseline_changed.out"; then
+  if [ -f tools/ci/tests/test_rf_baseline_guard.py ] && [ -n "$PY" ]; then
+    "$PY" -m pytest -q -p no:cacheprovider tools/ci/tests/test_rf_baseline_guard.py > "$TMP/baseline.log" 2>&1 \
+      || { tail -n 20 "$TMP/baseline.log" >&2; fail BASELINE "BASELINE_CHANGED: baz dosyası baseline_changes.txt kaydıyla uyuşmuyor (rf_extract_baselines.py)"; }
+  else
+    skip BASELINE "test_rf_baseline_guard.py ya da çalışan python yok"
+  fi
 fi
 
 # --- 6. Sözleşme denetleyicileri (sözleşme fazları ekledikçe devreye girer; yoksa açıkça atlanır) -------------------------
