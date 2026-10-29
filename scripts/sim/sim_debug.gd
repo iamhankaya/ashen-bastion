@@ -1,6 +1,6 @@
 class_name SimDebug
 extends RefCounted
-## GameSim.debug_* kancalarının mantıklı olanları (R9a çıkarımı; testler/bot/araçlar GameSim.debug_* üzerinden çağırır).
+## GameSim.debug_* kancalarının mantık içeren gövdeleri (R9a çıkarımı; testler/bot/araçlar GameSim.debug_* üzerinden çağırır).
 
 
 ## Yuva sınırına uyar; evrim kimliği verilirse koşulsuz uygulanır.
