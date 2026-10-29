@@ -99,7 +99,7 @@ static func _validate_strip(
 		return
 	var path: Variant = wd["strip"]
 	if path is String and g._asset_ok(path) and not (path as String).begins_with("placeholder:"):
-		# Doku boyutu sim'de okunmaz (Texture2D yok): AssetCheck.validate(g) bu kayıtları denetler.
+		# Doku boyutu sim'de okunmaz (doku yüklemek sim dışı): AssetCheck.validate(g) bu kayıtları denetler.
 		g.strip_probes.append(
 			{"ctx": ctx + " walk", "path": path, "w": cells * int(cell[0]), "h": int(cell[1])}
 		)
