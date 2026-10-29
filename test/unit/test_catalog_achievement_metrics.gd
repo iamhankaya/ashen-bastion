@@ -43,7 +43,7 @@ func test_unknown_aggregate_event_and_reducer_fail() -> void:
 	m[2]["reducer"] = "YokReducer"
 	var e := _errs(m)
 	assert_string_contains(e, "ACH_METRIC: zz_stat0: aggregate 'avg' bilinmiyor")
-	assert_string_contains(e, "ACH_METRIC: zz_stat1: olay 'yok_olay' SimEvents'te yok")
+	assert_string_contains(e, "ACH_METRIC: zz_stat1: olay 'yok_olay' SimBus'ta yok")
 	assert_string_contains(e, "ACH_METRIC: zz_stat2: reducer 'YokReducer' yok")
 
 
@@ -86,7 +86,7 @@ func test_bad_value_expression_fails() -> void:
 func test_reducer_base_class_has_noop_contract() -> void:
 	var r := AchievementReducer.new()
 	var state := {"x": 1}
-	r.on_event(&"kill", {}, state)
+	r.on_event(&"enemy_killed", {}, state)
 	r.poll(null, state)
 	r.reset(state)
 	assert_eq(r.finish({}, state), 0)
@@ -96,3 +96,29 @@ func test_reducer_base_class_has_noop_contract() -> void:
 func test_default_registry_is_valid() -> void:
 	var r := AchievementMetricRegistry.default()
 	assert_eq(r.validate().size(), 0, str(r.validate()))
+	assert_eq(r.stats().size(), AchievementDef.STATS.size())
+	for st in AchievementDef.STATS:
+		assert_false(r.metric(st).is_empty(), st)
+
+
+func test_tiers_are_optional_but_checked_when_present() -> void:
+	var m := CatalogFixtures.metrics(1)
+	m[0].erase("tiers")
+	assert_eq(_errs(m), "")
+	m[0]["tiers"] = []
+	assert_string_contains(_errs(m), "tiers boş")
+
+
+func test_event_value_and_filter_follow_the_event_signature() -> void:
+	var m := CatalogFixtures.metrics(3)
+	m[0]["source"]["value"] = "payload.level"  # enemy_killed'ın tamsayı alanı yok
+	m[1]["source"]["filter"] = {"kind": ["x"]}  # enemy_killed'ın etiketi type_id
+	m[2]["source"] = {"poll": "yok"}
+	var e := _errs(m)
+	assert_string_contains(e, "zz_stat0: value 'payload.level' olay 'enemy_killed' alanı değil")
+	assert_string_contains(e, "zz_stat1: filter 'kind' olay 'enemy_killed' için geçersiz")
+	assert_string_contains(e, "zz_stat2: poll 'yok' bilinmiyor")
+	m[0]["source"]["value"] = "one"
+	m[1]["source"]["filter"] = {"type_id": ["elit_piyade"]}
+	m[2]["source"] = {"finish": "won", "value": "result.time"}
+	assert_eq(_errs(m), "")

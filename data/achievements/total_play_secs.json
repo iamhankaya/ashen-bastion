@@ -1,0 +1,14 @@
+{
+  "stat": "total_play_secs",
+  "order": 220,
+  "icon_family": "hud-sure",
+  "persist": {
+    "total": "play_secs",
+    "best": null
+  },
+  "source": {
+    "finish": "always",
+    "value": "result.time"
+  },
+  "aggregate": "sum"
+}

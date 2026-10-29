@@ -89,7 +89,7 @@ static func metrics(n: int) -> Array:
 					"tiers": [10, 20, 30],
 					"goal_text": "ZZ %d" % i,
 					"icon_family": "zz",
-					"source": {"event": "kill", "filter": {}, "value": "one"},
+					"source": {"event": "enemy_killed", "filter": {}, "value": "one"},
 					"aggregate": "sum",
 					"persist": {"total": "zz_total%d" % i, "best": null},
 				}

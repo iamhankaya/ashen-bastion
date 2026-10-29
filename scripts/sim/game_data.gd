@@ -201,6 +201,8 @@ const ERROR_CODES: PackedStringArray = [
 	# v2.0.3
 	"steps_invalid",
 	"legacy_unknown",
+	# R8
+	"metric_schema",
 ]
 
 var root_dir: String = ""
@@ -217,6 +219,8 @@ var pickup_ids: Array[StringName] = []  # `kinds` DİZİ sırasında (PickupPool
 var score_table: ScoreTable = ScoreTable.new()  # v1.1 score.json; dosya yoksa varsayılan tablo
 var achievement_ids: Array[StringName] = []  # v2.0 achievements.json, dosya sırası
 var achievements: Array[AchievementDef] = []  # achievement_ids ile aynı sırada
+## data/achievements/<stat>.json metrik kayıtları (R8), dosya adı sırası; dizin yoksa boş.
+var _stat_metrics: Array[Dictionary] = []
 
 var _characters: Dictionary = {}  # StringName -> CharacterDef
 var _skills: Dictionary = {}  # StringName -> SkillDef
@@ -225,6 +229,7 @@ var _enemies: Dictionary = {}  # StringName -> EnemyDef
 var _raw_characters: Array[Dictionary] = []
 var _raw_skills: Array[Dictionary] = []
 var _raw_enemies: Array[Dictionary] = []
+var _raw_metrics: Array[Dictionary] = []
 var _raw_waves: Variant = null
 var _waves_failed: bool = false
 var _raw_ruins: Variant = null
