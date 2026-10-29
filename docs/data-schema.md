@@ -3,7 +3,7 @@
 Veri **dosya başına kayıt** biçimindedir (birleşme çakışması yok): `data/characters/<id>.json`,
 `data/skills/<id>.json`, `data/enemies/<id>.json`, `data/waves.json` (U2: `data/ruins.json`;
 v1.1: `data/pickups.json`, `data/score.json`; v2.0: `data/achievements.json`). Dosya adı = `id`.
-Yükleme ve doğrulama: `scripts/sim/game_data.gd` (`GameData`, autoload DEĞİL). Komut satırı:
+Yükleme ve doğrulama: `scripts/sim/game_data.gd` (`GameData`, autoload DEĞİL; yapı için `## Yapı`). Komut satırı:
 `godot --headless -s res://tools/validate_data.gd [-- <kök>]` (gate adım 4). `tools/slice.txt = 2` ise "içerik
 tamamlandı" kuralları da denetlenir.
 
@@ -25,6 +25,48 @@ g.get_achievement(id) -> AchievementDef        # null olabilir
 `test/fixtures/data_bad_<kod>/` bindirme fixture'ı vardır (`behavior_base` hariç: `test_game_data.gd` içinde sınanır).
 
 **Dikkat:** `StringName` sıralaması adres bazlıdır, kararsızdır. Sonuca etki eden sıralamada `String` kullan.
+
+## Yapı: yükleme, doğrulama, paylaşım (R6a)
+
+Bu bölümün başlık yapısını yalnız R6a değiştirir; sonraki fazlar yalnız kendi `###` bölümünü doldurur.
+
+### Dosya yapısı
+
+| Dosya | Sorumluluk |
+|---|---|
+| `scripts/sim/game_data.gd` | Cephe: önbellek (`load_default`), `load_dir`, erişimciler, `validate()` sırası, ortak doğrulama yardımcıları (`_err`, `_num`, `_str`, `_pair`, `_unknown_keys`, `_asset_ok`, `_screen`) |
+| `scripts/sim/catalog_loader.gd` | `CatalogLoader`: dizin/JSON okuma, kayıtları tanımlara çevirme; okuma hataları `load_errors` |
+| `scripts/sim/schema_validators.gd` | `SchemaValidators`: beceri, düşman, karakter, rig şeması |
+| `scripts/sim/cross_ref_validator.gd` | `CrossRefValidator`: evrim `requires`/`dup_evolution`, "içerik tamamlandı" kuralları |
+| `scripts/sim/validators/*.gd` | Eklenti doğrulayıcılar (aşağıda) |
+
+`validate()` sırası (hata sırası bununla aynıdır): `load_errors` → beceri → evrim çapraz referansı → düşman → karakter → dalga → v1.1 → v2.0 → v2.0.2 havuz → harabe → (`complete` ise) içerik tamamlandı → **eklentiler**.
+
+### Doğrulayıcı eklentileri
+
+Yeni doğrulama = `scripts/sim/validators/` altına yeni bir `extends DataValidator` dosyası; hiçbir kayıt dosyasına ve mevcut koda dokunulmaz.
+
+- `validator_order() -> int` (varsayılan 1000), `validator_id() -> StringName` (benzersiz ad), `run(g: GameData, out: PackedStringArray, complete: bool)`: hataları `"[kod] bağlam: açıklama"` biçiminde `out`'a ekler.
+- Keşif: `GameData._discover_validators()` `ProjectSettings.get_global_class_list()`'te tabanı `DataValidator` olan, yolu `validators/` altında olan sınıfları bulur; **doğrudan** alt sınıf olmalı (ara sınıf keşfedilmez). Merkezi liste yoktur.
+- Sıra: `(order, id, yol)` artan; sınıf listesi sırasından bağımsızdır. Eklenti hataları çekirdek hatalarından sonra gelir.
+- Bağımlılık sınırı: eklenti yalnız sim katmanına ve `GameData` cephesine bağlanır; başka eklentiye ya da `ctrl/ui/view/store/domain/autoload/debug/validate` dizinlerine başvurmaz (`test_data_validator_protocol`).
+- Yeni hata kodu eklenirse `GameData.ERROR_CODES`'a girer ve `test/fixtures/data_bad_<kod>/` fixture'ı eklenir (mevcut kural).
+
+### Paylaşılan veri (salt okunur)
+
+`GameData.load_default()` tek paylaşılan örnektir (`_default`); döndürdüğü nesneler (`CharacterDef`, `SkillDef`, `EnemyDef`, `PickupDef`, `AchievementDef`, `ScoreTable`, `waves`, `pickup_cfg`, `ruins`, karakter `rig` sözlükleri) **salt okunur** sayılır: üretim kodu yazmaz.
+
+- Veriyi değiştiren test `DataKit.copy()` ile kendi kopyasını alır ve `GameSim.new(seed, id, {"data": kopya})` ile verir (`test/helpers/data_kit.gd`); önbelleğe yazıp geri alma yok.
+- Önbelleği sıfırlaması gereken test `DataKit.use_fresh()` çağırır, `after_each`'te `DataKit.release()` çağırır.
+- `GameSim` zaten `opts["data"]` kabul eder; `fresh_copy()` gibi yeni üretim API'si yoktur.
+
+### Mod kataloğu (R7)
+
+(R7 yazar.)
+
+### Başarım metrik kaydı (R8)
+
+(R8 yazar.)
 
 ## Karakter — `characters/<id>.json`
 
