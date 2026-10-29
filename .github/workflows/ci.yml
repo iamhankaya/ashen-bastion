@@ -46,7 +46,7 @@ jobs:
           path: |
             .godot/imported
             .godot/uid_cache.bin
-          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+          key: godot-import-coldA-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
       - run: GATE_PART=static bash tools/gate.sh
       - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
         if: always()
@@ -76,7 +76,7 @@ jobs:
           path: |
             .godot/imported
             .godot/uid_cache.bin
-          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+          key: godot-import-coldA-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
       - run: GATE_PART=gut GATE_SHARD=${{ matrix.shard }}/4 bash tools/gate.sh
       - uses: actions/upload-artifact@v4
         if: always()
@@ -138,7 +138,7 @@ jobs:
           path: |
             .godot/imported
             .godot/uid_cache.bin
-          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+          key: godot-import-coldA-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
       - # H1: taban_yesil yalnız altyapı yolları değiştiyse (main/nightly/dispatch/diff hatası/shallow: HER ZAMAN) koşar; negatif senaryolar süzülmez.
         id: taban
         env:
