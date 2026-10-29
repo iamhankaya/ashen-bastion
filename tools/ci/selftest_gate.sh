@@ -35,6 +35,10 @@ expect() { # expect <ad> <beklenen_kod> <dizin> [env...]
   (cd "$dir" && env "$@" bash tools/gate.sh > "$TMP/$name.log" 2>&1)
   local got=$?
   if [ "$got" = "$want" ]; then echo "OK   $name (çıkış $got)"; else echo "FAIL $name: beklenen $want, gelen $got"; tail -n 15 "$TMP/$name.log"; FAILS=$((FAILS+1)); fi
+  step_times "$TMP/$name.log"
+}
+step_times() { # gate günlüğündeki "=== adım" + "süre: N sn" çiftleri tek satırda (grup dengeleme ölçümü; sonucu etkilemez)
+  awk '/^=== /{n=substr($0,5)} /^ +süre: /{printf "%s%s=%ss", (c++?" | ":""), n, $2} END{if(c)print ""}' "$1" | sed 's/^/     adımlar: /'
 }
 
 # --- senaryo -> grup tablosu (en uzun grup ≈ 409 s; tam-gate senaryoları ayrı gruplarda) ---------------------------------
