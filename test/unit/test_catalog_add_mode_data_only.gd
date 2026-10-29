@@ -57,11 +57,24 @@ func _diff(id: String) -> Dictionary:
 	}
 
 
+func _json_count(sub: String) -> int:
+	var n := 0
+	for f in DirAccess.get_files_at("res://data/" + sub):
+		if f.ends_with(".json"):
+			n += 1
+	return n
+
+
 func test_shipped_catalog_dirs_load_clean() -> void:
 	var c := RunCatalog.load_dir(_dir)
 	assert_eq(c.validate().size(), 0, str(c.validate()))
-	assert_eq(c.mode_ids(), PackedStringArray(["quick", "normal", "endless"]))
-	assert_eq(c.difficulty_ids(), PackedStringArray(["easy", "normal", "hard"]))
+	# Sözleşme: yerleşik kimlikler katalogda ve `order` sırasında; fazlası veri-yalnız eklenen moddur (sayı dosyalardan).
+	var known_modes := CatalogFixtures.known_in_order(c.mode_ids(), RunProfiles.MODES)
+	var known_diffs := CatalogFixtures.known_in_order(c.difficulty_ids(), RunProfiles.DIFFS)
+	assert_eq(known_modes, RunProfiles.MODES)
+	assert_eq(known_diffs, RunProfiles.DIFFS)
+	assert_eq(c.mode_ids().size(), _json_count("run_modes"))
+	assert_eq(c.difficulty_ids().size(), _json_count("difficulties"))
 	assert_eq(c.default_mode(), "normal")
 	assert_eq(c.default_difficulty(), "normal")
 

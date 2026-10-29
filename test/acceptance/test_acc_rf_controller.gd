@@ -12,6 +12,7 @@ var _n := 0
 
 
 func before_each() -> void:
+	CatalogFixtures.pin_default(CatalogFixtures.shipped_trio())  # baz yerleşik 3 modla; yeni veri-yalnız mod bazı değiştirmez
 	_n += 1
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(TMP))
 	var s: Node = get_node("/root/Settings")
@@ -20,6 +21,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	CatalogFixtures.unpin_default()
 	var s: Node = get_node("/root/Settings")
 	s.store_path = _settings_path
 	var abs_dir := ProjectSettings.globalize_path(TMP)

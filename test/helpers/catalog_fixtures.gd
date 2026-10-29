@@ -98,6 +98,38 @@ static func metrics(n: int) -> Array:
 	return out
 
 
+## Yerleşik üçlü katalog (RunProfiles.MODES x DIFFS; girdiler res://data kayıtlarından): golden/baz testleri ekranı
+## ve profil sözlüğünü bununla kurar, böylece veri-yalnız eklenen modlar bazı değiştirmez. Baz elle değil veriden gelir.
+static func shipped_trio() -> RunCatalog:
+	var full := RunCatalog.load_dir("res://data")
+	var modes: Array = []
+	for id in RunProfiles.MODES:
+		modes.append(full.mode(id))
+	var diffs: Array = []
+	for id in RunProfiles.DIFFS:
+		diffs.append(full.difficulty(id))
+	return RunCatalog.from_dicts(modes, diffs)
+
+
+## `RunCatalog.default()` önbelleğini `cat`a sabitler (ekran/RunStrip bunu okur); geri almak için `unpin_default()`.
+static func pin_default(cat: RunCatalog) -> void:
+	RunCatalog._default = cat
+
+
+static func unpin_default() -> void:
+	RunCatalog.reset_default_cache()
+
+
+## `ids` içinden yalnız `known` kimlikleri, `ids` sırasıyla (yeni veri-yalnız kimlikler beklentiyi bozmasın:
+## sözleşme "bilinen kimlikler katalogda ve `order` sırasında").
+static func known_in_order(ids: PackedStringArray, known: PackedStringArray) -> PackedStringArray:
+	var out := PackedStringArray()
+	for id in ids:
+		if known.has(id):
+			out.append(id)
+	return out
+
+
 static func _rm_rf(abs_dir: String) -> void:
 	if not DirAccess.dir_exists_absolute(abs_dir):
 		return
