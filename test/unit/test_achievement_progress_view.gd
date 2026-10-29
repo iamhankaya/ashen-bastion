@@ -41,3 +41,11 @@ func test_of_accepts_view_store_or_null() -> void:
 	assert_same(AchievementProgressView.of(v), v)
 	assert_true(AchievementProgressView.of(_store([&"a"])).is_unlocked(&"a"))
 	assert_true(AchievementProgressView.of(null).corrupt)
+
+
+func test_view_reads_the_unlocked_dictionary_of_a_plain_store() -> void:
+	var s := AchievementStore.new()
+	s.unlocked[&"a"] = 1
+	var v := AchievementProgressView.of_store(s)
+	assert_true(v.is_unlocked(&"a"))
+	assert_false(v.is_unlocked(&"b"))

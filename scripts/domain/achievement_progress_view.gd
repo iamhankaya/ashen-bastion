@@ -4,14 +4,14 @@ extends RefCounted
 ## Null depo = bozuk görünüm (güvenli yön: hiçbir şey açık değil).
 
 var corrupt: bool = true
-var _unlocked: Callable = Callable()
+var _store: AchievementStore = null
 
 
 static func of_store(store: AchievementStore) -> AchievementProgressView:
 	var v := AchievementProgressView.new()
 	if store != null:
 		v.corrupt = store.corrupt
-		v._unlocked = store.is_unlocked
+		v._store = store
 	return v
 
 
@@ -23,4 +23,4 @@ static func of(source: Variant) -> AchievementProgressView:
 
 
 func is_unlocked(achievement_id: StringName) -> bool:
-	return not corrupt and _unlocked.is_valid() and bool(_unlocked.call(achievement_id))
+	return not corrupt and _store != null and _store.is_unlocked(achievement_id)
