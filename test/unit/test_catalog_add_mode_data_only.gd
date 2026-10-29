@@ -166,7 +166,9 @@ func test_settings_fill_missing_selection_from_catalog_default_and_keep_saved() 
 	st.run_mode = "normal"
 	st.run_diff = "normal"
 	st.load_settings(path)
-	assert_eq([st.run_mode, st.run_diff], ["zz_turbo", "zz_hard"], "anahtar yok: katalog varsayılanı")
+	assert_eq(
+		[st.run_mode, st.run_diff], ["zz_turbo", "zz_hard"], "anahtar yok: katalog varsayılanı"
+	)
 	AchKit.write_text(path, JSON.stringify({"kosu_modu": "zz_saved", "kosu_zorluk": "zz_easy"}))
 	st.load_settings(path)
 	assert_eq([st.run_mode, st.run_diff], ["zz_saved", "zz_easy"], "kayıtlı geçerli seçim korunur")
