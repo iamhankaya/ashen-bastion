@@ -124,6 +124,16 @@ else
   skip PYTEST "tools/ci/tests yok"
 fi
 
+# --- 5b. BASELINE: karakterizasyon bazı değişti mi (kayıt sha256 ile eşleşmeli). Windows'ta PYTEST sınıfı atlandığından bu tek dosya
+#         ayrıca koşar (prova bulgusu: BASELINE_CHANGED yerelde hiç görünmüyordu). Baz/kayıt değişmediyse koşmaz. -------------------
+if grep -E '^(test/characterization/baseline/|tools/ci/baseline_changes\.txt$)' "$TMP/changed.txt" > "$TMP/baseline_changed.out"; then
+  if [ -f tools/ci/tests/test_rf_baseline_guard.py ] && [ -n "$PY" ]; then
+    "$PY" -m pytest -q -p no:cacheprovider tools/ci/tests/test_rf_baseline_guard.py > "$TMP/baseline.log" 2>&1       || { tail -n 20 "$TMP/baseline.log" >&2; fail BASELINE "BASELINE_CHANGED: baz dosyası baseline_changes.txt kaydıyla uyuşmuyor (rf_extract_baselines.py)"; }
+  else
+    skip BASELINE "test_rf_baseline_guard.py ya da çalışan python yok"
+  fi
+fi
+
 # --- 6. Sözleşme denetleyicileri (sözleşme fazları ekledikçe devreye girer; yoksa açıkça atlanır) -------------------------
 run_check() { # run_check <ETİKET> <betik> [argümanlar...]
   local label="$1" script="$2"; shift 2
