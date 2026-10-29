@@ -65,6 +65,23 @@ func test_dry_run_data_only_metric_unlocks_a_new_family() -> void:
 	assert_eq(store.totals["kills"], 0, "yerleşik statlar etkilenmedi")
 
 
+func test_metric_with_null_persist_still_registers_and_progresses() -> void:
+	var metric := {
+		"stat": "run_zz_nullp",
+		"order": 920,
+		"icon_family": "hud-oldurme",
+		"persist": null,
+		"source": {"event": "pickup_collected", "filter": {}, "value": "one"},
+		"aggregate": "count",
+	}
+	var root := _root("run_zz_nullp", metric, _family("zz_nullp", "run_zz_nullp", [1]))
+	var g := GameData.load_dir(root)
+	assert_eq(Array(g.validate()), [], "persist: null doğrulayıcıdan geçer")
+	var r := AchKit.rig(&"gunslinger", AchKit.FIXED_UNIX, g)
+	(r["bus"] as SimBus).pickup_collected.emit(&"x", Vector2.ZERO)
+	assert_true((r["store"] as AchievementStore).is_unlocked(&"zz_nullp"))
+
+
 func test_dry_run_new_reducer_file_drives_a_new_family() -> void:
 	var metric := {
 		"stat": "run_zz_streak",

@@ -150,6 +150,29 @@ func test_settings_accept_catalog_modes_only() -> void:
 	st.free()
 
 
+func test_settings_fill_missing_selection_from_catalog_default_and_keep_saved() -> void:
+	var m := _mode("zz_turbo")
+	m["default"] = true
+	var d := _diff("zz_hard")
+	d["default"] = true
+	var saved_m := _mode("zz_saved")
+	var saved_d := _diff("zz_easy")
+	var st: Node = load("res://scripts/autoload/settings.gd").new()
+	st.catalog = RunCatalog.from_dicts([saved_m, m], [saved_d, d])
+	var path := AchKit.tmp_path("catdef")
+	st.load_settings(path)
+	assert_eq([st.run_mode, st.run_diff], ["zz_turbo", "zz_hard"], "dosya yok: katalog varsayılanı")
+	AchKit.write_text(path, JSON.stringify({"ses": true}))
+	st.run_mode = "normal"
+	st.run_diff = "normal"
+	st.load_settings(path)
+	assert_eq([st.run_mode, st.run_diff], ["zz_turbo", "zz_hard"], "anahtar yok: katalog varsayılanı")
+	AchKit.write_text(path, JSON.stringify({"kosu_modu": "zz_saved", "kosu_zorluk": "zz_easy"}))
+	st.load_settings(path)
+	assert_eq([st.run_mode, st.run_diff], ["zz_saved", "zz_easy"], "kayıtlı geçerli seçim korunur")
+	st.free()
+
+
 func test_game_data_validate_reports_catalog_errors_via_plugin() -> void:
 	_write("run_modes/zz_orbit.json", JSON.stringify(_mode("zz_orbit", "orbit")))
 	var joined := "\n".join(GameData.load_dir(_dir).validate())
