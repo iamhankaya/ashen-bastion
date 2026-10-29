@@ -9,16 +9,16 @@ func _probe(path: String, w: int, h: int) -> Dictionary:
 
 
 func test_matching_size_gives_no_error() -> void:
-	var img := (load(TEX) as Texture2D)
+	var img := load(TEX) as Texture2D
 	var g := GameData.load_dir("res://data")
-	g.strip_probes.append(_probe(TEX, img.get_width(), img.get_height()))
+	g._strip_probes.append(_probe(TEX, img.get_width(), img.get_height()))
 	assert_eq(AssetCheck.validate(g), PackedStringArray())
 
 
 func test_size_mismatch_reports_bad_type_with_both_sizes() -> void:
-	var img := (load(TEX) as Texture2D)
+	var img := load(TEX) as Texture2D
 	var g := GameData.load_dir("res://data")
-	g.strip_probes.append(_probe(TEX, img.get_width() + 1, img.get_height()))
+	g._strip_probes.append(_probe(TEX, img.get_width() + 1, img.get_height()))
 	var errs := AssetCheck.validate(g)
 	assert_eq(errs.size(), 1)
 	assert_eq(
@@ -33,10 +33,10 @@ func test_size_mismatch_reports_bad_type_with_both_sizes() -> void:
 func test_validate_resets_probes_each_call() -> void:
 	var g := GameData.load_dir("res://data")
 	g.validate({}, true)
-	var n := g.strip_probes.size()
+	var n := g._strip_probes.size()
 	assert_gt(n, 0, "gerçek veride şerit denetimi kaydedilir")
 	g.validate({}, true)
-	assert_eq(g.strip_probes.size(), n, "ikinci çağrı yinelemez")
+	assert_eq(g._strip_probes.size(), n, "ikinci çağrı yinelemez")
 	assert_eq(AssetCheck.validate(g), PackedStringArray(), "gerçek veri şerit boyutları uyumlu")
 
 
