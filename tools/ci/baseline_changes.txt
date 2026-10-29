@@ -30,3 +30,4 @@ test/characterization/baseline/rf_ui_characters_rects.json | 7c88c6680381024ef0b
 test/characterization/baseline/rf_sim_debug_hooks.json | 9a0cd4ede7fcbf10424ac7b346db1b075ec50dcd133c0790b1c0d474a5e101e0 | ilk baz: refactor öncesi kod (ci 40795802883) | T20261029-13
 test/characterization/baseline/rf_sim_invariants_failure.json | 4f33867df349e13bbfa0058d04ce65acac507044ad397ea5aca04b01e94b5c0e | ilk baz: refactor öncesi kod (ci 40795802883) | T20261029-13
 test/characterization/baseline/rf_sim_phase_sub_hash.json | 5411b4597cca9467d20548f3ec5de08a0d28a4a5f46d209632fa2d39daf10fb1 | ilk baz: refactor öncesi kod (ci 40818717045) | T20261029-13
+test/characterization/baseline/rf_asset_check.json | 24e698267c2b122d2131c59d284d6c9a5fdc60694932a7220e0045bf304e5366 | ilk baz: refactor öncesi kod (ci 40819252590) | T20261029-14

@@ -62,7 +62,22 @@ Yeni doğrulama = `scripts/sim/validators/` altına yeni bir `extends DataValida
 
 ### Mod kataloğu (R7)
 
-(R7 yazar.)
+Koşu modları ve zorlukları **dosya başına bir kayıt**tır: `data/run_modes/<id>.json`, `data/difficulties/<id>.json` (dosya adı = `id`).
+`RunCatalog.default()` (`scripts/sim/catalog/run_catalog.gd`) bunları okur; `RunProfiles`, `RunStrip`, `Settings`, `Highscores`,
+`AchievementRules` ve `V21Runs.set_selection` kimlik kümesini buradan alır (sabit `quick|normal|endless` / `easy|normal|hard` listesi yok).
+Sıralama `(order, id)`; varsayılan `"default": true` olan kayıt (yoksa sıradaki ilk).
+
+- Mod: `id`, `order`, `name` ("Hızlı"), `label` ("HIZLI", büyük harf elle yazılır: Türkçe i/İ), `description` (Lord dakikası için `%d`),
+  `ending` (`lord|endless`), `icon_key` (`quick|normal|endless` çizimi; bilinmeyen anahtar kum saati), `profile` (`time_scale`, `xp_mult`,
+  `lord_hp_mult`, `rate_mult`; `ending=endless` ise Sonsuz alanları). Aralıklar yukarıdaki `modes.<ad>` kurallarıyla aynıdır.
+- Zorluk: `id`, `order`, `name`, `label`, `description`, `spoken` (TalkBack metni), `shields` (0..3 dolu kalkan), `values` (`enemy_hp`,
+  `enemy_dmg`, `spawn_density`, `xp`, `lord_hp`), `achievements` (`block_lord_bound`, `totals`).
+- `data/run_profiles.json` yalnız `v` ve `achievements.lord_bound_tier_ids` taşır. `RunProfiles.load_default/load_dir` katalogu eski tek dosyalık
+  biçime ({v, default, modes, difficulties, achievements}) birleştirir; eski biçim `load_file` ile (kusurlu fixture setleri) okunmaya devam eder.
+- Yeni mod/zorluk **yalnız veri dosyası** ekleyerek gelir (`test_catalog_add_mode_data_only`). Yeni **bitiş türü** (`RunCatalog.ENDING_KINDS`)
+  sim kodu gerektirir: kabulden ayrıdır. `RunStrip.rule_lines` Kolay notu hâlâ `easy` kimliğine bağlıdır.
+- Doğrulama: `RunCatalog.validate()` (`RUN_CATALOG: <id>: <neden>`) + `RunProfiles.validate(raw, true)`. `GameData.validate` bunları
+  `scripts/sim/validators/run_catalog_validator.gd` eklentisiyle çalıştırır (kökte `run_modes/` yoksa sessiz geçer); çekirdek dosya adını anmaz.
 
 ### Başarım metrik kaydı (R8)
 
@@ -403,7 +418,7 @@ boştur. Doğrulama: `scripts/sim/ruins_validator.gd`; sprite ve ölçüler `too
 
 ## Koşu profilleri — `run_profiles.json` (v2.1)
 
-Tek kaynak: `data/run_profiles.json` (dosya yoksa HATA, yerleşik varsayılan yok). Okuyucu/doğrulayıcı `scripts/sim/run_profiles.gd`
+Tek kaynak (R7'den beri iki parça: `data/run_profiles.json` + `data/run_modes/`, `data/difficulties/`; bkz. `### Mod kataloğu (R7)`; `run_profiles.json` yoksa HATA, yerleşik varsayılan yok). Aşağıdaki kurallar birleşik ve eski tek dosyalık biçim içindir. Okuyucu/doğrulayıcı `scripts/sim/run_profiles.gd`
 (`RunProfiles`; `GameData`'dan bağımsız; `tools/validate_data.gd` çağırır). Satır başına bir anahtar (birleştirilebilir). Kimlikler
 İngilizce küçük harf: modlar `quick|normal|endless`, zorluklar `easy|normal|hard`. Hata satırı `[kod] bağlam: açıklama`.
 

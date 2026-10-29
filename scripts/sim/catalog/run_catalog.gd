@@ -1,59 +1,46 @@
 class_name RunCatalog
 extends RefCounted
-## Koşu modu / zorluk kataloğu iskeleti (sözleşme-B): mod, zorluk, bitiş türü ve varsayılanların tek kaynağı olacak.
-## Bu aşamada tüketici YOK (RunProfiles/RunStrip/Settings/Highscores dönüşümü R7); `default()` bugünkü
-## data/run_profiles.json'u sarar. Saf veri: store/ui/ctrl bilmez. Bilinmeyen kimlik => boş/null, hata YOK (push_error yok).
-## Mod girdisi: {id, order, name, description, profile:{çarpanlar}, ending, icon_key, default?}.
-## Zorluk girdisi: {id, order, name, description, values:{enemy_hp, enemy_dmg, spawn_density, xp, lord_hp}, default?}.
+## Koşu modu / zorluk kataloğu (R7): mod, zorluk, bitiş türü ve varsayılanların tek kaynağı. Veri `data/run_modes/<id>.json` ve
+## `data/difficulties/<id>.json` dosyalarından gelir (`load_dir`); tüketiciler (RunProfiles, RunStrip, Settings, Highscores,
+## AchievementRules) `default()` üzerinden okur. Saf veri: store/ui/ctrl bilmez. Bilinmeyen kimlik => boş/null, hata YOK.
+## Mod girdisi: {id, order, name, label, description, profile:{çarpanlar}, ending, icon_key, default?}.
+## Zorluk girdisi: {id, order, name, label, description, spoken, shields, values:{enemy_hp, enemy_dmg, spawn_density, xp, lord_hp},
+## achievements:{block_lord_bound, totals}, default?}. Alan kuralları: docs/data-schema.md `### Mod kataloğu (R7)`.
 
 ## Bitiş türü kapalı küme: yeni tür sim kodu gerektirir (kabul veriyle eklenmez).
 const ENDING_KINDS: PackedStringArray = ["lord", "endless"]
 
+const MODES_DIR := "run_modes"
+const DIFFS_DIR := "difficulties"
+
+static var _default: RunCatalog = null
+
+var load_errors: PackedStringArray = PackedStringArray()  # okuma hataları; validate() çıktısının başına girer
 var _modes: Array = []  # (order, id) sıralı ham girdiler (yinelenenler dahil; validate bildirir)
 var _diffs: Array = []
 
 
+## `res://data` kataloğu (ilk çağrıda yüklenir, paylaşılır, salt okunur).
 static func default() -> RunCatalog:
-	var raw: Dictionary = RunProfiles.load_default().get("profiles", {})
-	var dflt: Dictionary = raw.get("default", {})
-	var modes: Array = []
-	var diffs: Array = []
-	var i := 0
-	for id in raw.get("modes", {}):
-		var m: Dictionary = raw["modes"][id]
-		i += 1
-		(
-			modes
-			. append(
-				{
-					"id": id,
-					"order": i,
-					"name": String(id).capitalize(),
-					"description": "",
-					"profile": m,
-					"ending": str(m.get("end_mode", "lord")),
-					"icon_key": id,
-					"default": id == str(dflt.get("mode", "")),
-				}
-			)
-		)
-	i = 0
-	for id in raw.get("difficulties", {}):
-		i += 1
-		(
-			diffs
-			. append(
-				{
-					"id": id,
-					"order": i,
-					"name": String(id).capitalize(),
-					"description": "",
-					"values": raw["difficulties"][id],
-					"default": id == str(dflt.get("diff", "")),
-				}
-			)
-		)
-	return from_dicts(modes, diffs)
+	if _default == null:
+		_default = load_dir("res://data")
+	return _default
+
+
+## Testler için: sonraki `default()` diskten yeniden okur.
+static func reset_default_cache() -> void:
+	_default = null
+
+
+## `<kök>/run_modes/*.json` ve `<kök>/difficulties/*.json` (dosya adı = kimlik). Eksik dizin = boş katalog.
+static func load_dir(root: String) -> RunCatalog:
+	var errs := PackedStringArray()
+	var c := from_dicts(
+		_read_entries(root.path_join(MODES_DIR), MODES_DIR, errs),
+		_read_entries(root.path_join(DIFFS_DIR), DIFFS_DIR, errs)
+	)
+	c.load_errors = errs
+	return c
 
 
 static func from_dicts(modes: Array, difficulties: Array) -> RunCatalog:
@@ -65,7 +52,7 @@ static func from_dicts(modes: Array, difficulties: Array) -> RunCatalog:
 
 ## Hata mesajları ("RUN_CATALOG: <id>: <neden>"); boş = geçerli. Sıra deterministiktir ((order, id) sırası).
 func validate() -> PackedStringArray:
-	var out := PackedStringArray()
+	var out := PackedStringArray(load_errors)
 	if _modes.is_empty():
 		out.append("RUN_CATALOG: modes: en az bir mod gerekir")
 	if _diffs.is_empty():
@@ -130,6 +117,56 @@ func build_profile(mode_id: String, difficulty_id: String) -> RunProfile:
 	profile["end_mode"] = str(m.get("ending", GameSim.END_MODE_LORD))
 	var cfg := {"modes": {mode_id: profile}, "difficulties": {difficulty_id: d.get("values", {})}}
 	return RunProfile.make(StringName(mode_id), StringName(difficulty_id), cfg)
+
+
+## `RunProfiles` doğrulayıcısının beklediği ham biçim: {default, modes:{id: profil+end_mode}, difficulties:{id: değerler},
+## achievements:{<zorluk>: kural}}. `extra_achievements` (run_profiles.json "achievements") ile birleşir.
+func to_profiles_dict(extra_achievements: Dictionary = {}) -> Dictionary:
+	var modes := {}
+	for m in _modes:
+		var p := _dict(m, "profile")
+		p["end_mode"] = str(m.get("ending", ""))
+		modes[_id(m)] = p
+	var diffs := {}
+	var ach := extra_achievements.duplicate(true)
+	for d in _diffs:
+		diffs[_id(d)] = _dict(d, "values")
+		if d.get("achievements", null) is Dictionary:
+			ach[_id(d)] = _dict(d, "achievements")
+	return {
+		"default": {"mode": default_mode(), "diff": default_difficulty()},
+		"modes": modes,
+		"difficulties": diffs,
+		"achievements": ach,
+	}
+
+
+static func _dict(e: Dictionary, key: String) -> Dictionary:
+	var v: Variant = e.get(key, null)
+	return (v as Dictionary).duplicate(true) if v is Dictionary else {}
+
+
+static func _read_entries(dir: String, label: String, errs: PackedStringArray) -> Array:
+	var out: Array = []
+	if not DirAccess.dir_exists_absolute(dir):
+		return out
+	var names: Array[String] = []
+	for f in DirAccess.get_files_at(dir):
+		if f.ends_with(".json"):
+			names.append(f)
+	names.sort()
+	for f in names:
+		var rel := "%s/%s" % [label, f]
+		var json := JSON.new()
+		if json.parse(FileAccess.get_file_as_string(dir.path_join(f))) != OK:
+			errs.append("RUN_CATALOG: %s: JSON ayrıştırılamadı" % rel)
+		elif not (json.data is Dictionary):
+			errs.append("RUN_CATALOG: %s: kök nesne olmalı" % rel)
+		else:
+			if str((json.data as Dictionary).get("id", "")) != f.trim_suffix(".json"):
+				errs.append("RUN_CATALOG: %s: kimlik dosya adıyla aynı olmalı" % rel)
+			out.append(json.data)
+	return out
 
 
 static func _sorted(entries: Array) -> Array:

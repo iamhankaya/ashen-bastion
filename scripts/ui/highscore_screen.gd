@@ -322,19 +322,19 @@ func _build() -> void:
 
 
 func _build_tabs() -> void:
-	for m: StringName in RunStrip.MODE_ORDER:
+	for m: StringName in RunStrip.mode_order():
 		var tab := SegTab.new()
 		tab.name = "ModeTab_%s" % m
-		tab.setup(RunStrip.ModeGlyph.new(m, UiKit.BRONZ_500, 40.0), RunStrip.MODE_NAMES[m])
+		tab.setup(RunStrip.ModeGlyph.new(m, UiKit.BRONZ_500, 40.0), RunStrip.mode_name(m))
 		tab.pressed.connect(func() -> void: select_tab(m, sel_diff))
 		add_child(tab)
 		mode_tabs.append(tab)
-	for d: StringName in RunStrip.DIFF_ORDER:
+	for d: StringName in RunStrip.diff_order():
 		var tab := SegTab.new()
 		tab.name = "DiffTab_%s" % d
 		tab.setup(
-			RunStrip.Shields.new(int(RunStrip.SHIELDS[d]), UiKit.BRONZ_500, Vector2(60.0, 20.0)),
-			RunStrip.DIFF_NAMES[d]
+			RunStrip.Shields.new(RunStrip.shields(d), UiKit.BRONZ_500, Vector2(60.0, 20.0)),
+			RunStrip.diff_name(d)
 		)
 		tab.pressed.connect(func() -> void: select_tab(sel_mode, d))
 		add_child(tab)
@@ -360,30 +360,40 @@ func _mark_tabs(mode: StringName, diff: StringName) -> void:
 	sel_mode = mode
 	sel_diff = diff
 	for i in mode_tabs.size():
-		var m: StringName = RunStrip.MODE_ORDER[i]
+		var m: StringName = RunStrip.mode_order()[i]
 		mode_tabs[i].set_selected(m == mode)
 		mode_tabs[i].accessibility_name = (
-			"Mod sekmesi, %s, %s, üç sekmeden %s"
-			% [RunStrip.MODE_TITLES[m], "seçili" if m == mode else "seçili değil", _ordinal(i)]
+			"Mod sekmesi, %s, %s, %s sekmeden %s"
+			% [
+				RunStrip.mode_title(m),
+				"seçili" if m == mode else "seçili değil",
+				RunStrip.spoken(mode_tabs.size()),
+				_ordinal(i)
+			]
 		)
 	for i in diff_tabs.size():
-		var d: StringName = RunStrip.DIFF_ORDER[i]
+		var d: StringName = RunStrip.diff_order()[i]
 		diff_tabs[i].set_selected(d == diff)
 		diff_tabs[i].accessibility_name = (
-			"Zorluk sekmesi, %s, %s, üç sekmeden %s"
-			% [RunStrip.DIFF_TITLES[d], "seçili" if d == diff else "seçili değil", _ordinal(i)]
+			"Zorluk sekmesi, %s, %s, %s sekmeden %s"
+			% [
+				RunStrip.diff_title(d),
+				"seçili" if d == diff else "seçili değil",
+				RunStrip.spoken(diff_tabs.size()),
+				_ordinal(i)
+			]
 		)
 
 
 static func _ordinal(i: int) -> String:
-	return ["birincisi", "ikincisi", "üçüncüsü"][i]
+	return ["birincisi", "ikincisi", "üçüncüsü"][i] if i < 3 else "%d." % (i + 1)
 
 
 ## Boş sekme metni: "Sonsuz · Zor listesinde kayıt yok." + yönlendirme (DESIGN §7 `04b`).
 static func empty_text_for(mode: StringName, diff: StringName) -> String:
 	return (
 		"%s · %s listesinde kayıt yok.\nBu ayarla oynayıp ilk skoru yaz."
-		% [RunStrip.MODE_TITLES.get(mode, ""), RunStrip.DIFF_TITLES.get(diff, "")]
+		% [RunStrip.mode_title(mode), RunStrip.diff_title(diff)]
 	)
 
 
@@ -491,7 +501,7 @@ func _fill(entries: Array[Dictionary], highlight_index: int) -> void:
 	empty_text.text = empty_text_for(sel_mode, sel_diff)
 	play_button.accessibility_name = (
 		"%s modda, %s zorlukta oyna"
-		% [RunStrip.MODE_TITLES[sel_mode], RunStrip.DIFF_TITLES[sel_diff]]
+		% [RunStrip.mode_title(sel_mode), RunStrip.diff_title(sel_diff)]
 	)
 	play_button.visible = empty
 	_slide_t = 0.0 if highlight >= 0 else 1.0
