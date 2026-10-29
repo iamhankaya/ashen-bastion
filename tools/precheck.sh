@@ -128,7 +128,7 @@ fi
 #         ayrıca koşar (prova bulgusu: BASELINE_CHANGED yerelde hiç görünmüyordu). Baz/kayıt değişmediyse koşmaz. -------------------
 if grep -E '^(test/characterization/baseline/|tools/ci/baseline_changes\.txt$)' "$TMP/changed.txt" > "$TMP/baseline_changed.out"; then
   if [ -f tools/ci/tests/test_rf_baseline_guard.py ] && [ -n "$PY" ]; then
-    "$PY" -m pytest -q -p no:cacheprovider tools/ci/tests/test_rf_baseline_guard.py > "$TMP/baseline.log" 2>&1       || { tail -n 20 "$TMP/baseline.log" >&2; fail BASELINE "BASELINE_CHANGED: baz dosyası baseline_changes.txt kaydıyla uyuşmuyor (rf_extract_baselines.py)"; }
+    "$PY" -m pytest -q -p no:cacheprovider tools/ci/tests/test_rf_baseline_guard.py > "$TMP/baseline.log" 2>&1 \n      || { tail -n 20 "$TMP/baseline.log" >&2; fail BASELINE "BASELINE_CHANGED: baz dosyası baseline_changes.txt kaydıyla uyuşmuyor (rf_extract_baselines.py)"; }
   else
     skip BASELINE "test_rf_baseline_guard.py ya da çalışan python yok"
   fi
