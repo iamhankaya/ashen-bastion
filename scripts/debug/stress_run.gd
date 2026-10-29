@@ -5,7 +5,7 @@ extends Node
 
 signal finished(result: Dictionary)
 
-const DURATION := 59.0
+const DURATION := 60.0
 const RESULT_PATH := "user://perf.json"
 
 var scenario: StressScenario

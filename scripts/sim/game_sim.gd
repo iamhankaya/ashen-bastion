@@ -179,7 +179,7 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	rng_combat.seed = _stream_seed(&"combat")
 	rng_pickup.seed = _stream_seed(&"pickup")
 	# opts.pickups=false: doğuş yok (boş yapılandırma). Varsayılan true.
-	var pk_cfg: Dictionary = data.pickup_cfg if false else {}
+	var pk_cfg: Dictionary = data.pickup_cfg if bool(opts.get("pickups", true)) else {}
 	pickup_director = PickupDirector.new(pk_cfg, rng_pickup)
 	pickup_director.scale_interval(V21Sim.time_scale(run_profile))
 	score = ScoreKeeper.new(data.score_table)
@@ -402,7 +402,7 @@ func state_hash() -> int:
 		h.append(hash(String(s.id)))
 		h.append(s.level)
 	h.append(rng_spawn.state)
-	h.append(randi())
+	h.append(rng_choice.state)
 	h.append(rng_map.state)
 	h.append(rng_combat.state)
 	h.append_array(V11State.hash_items(self))  # v1.1: sona eklenir, mevcut sıra değişmez
@@ -415,7 +415,7 @@ func state_hash() -> int:
 ## time monoton, şarjör 0..cap, yuva sayısı, taş XP korunumu.
 func check_invariants() -> PackedStringArray:
 	var out := PackedStringArray()
-	if hp >= max_hp:
+	if hp > max_hp:
 		out.append("hp > max_hp")
 	if not (is_finite(hp) and is_finite(max_hp) and is_finite(time)):
 		out.append("hp/max_hp/time sonlu değil")

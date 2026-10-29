@@ -122,7 +122,7 @@ static func on_lord_killed(sim: GameSim) -> void:
 ## Lord tekrarı (GameSim._phase_spawn): `warn` sn önce uyarı, süre dolunca doğuş; başarısızsa her adım yeniden denenir.
 static func step(sim: GameSim) -> void:
 	var v := sim.v21
-	if v == null:
+	if v == null or v.next_lord_t < 0.0:
 		return
 	if not v.warned and sim.time >= v.next_lord_t - v.lord_warn:
 		v.warned = true
