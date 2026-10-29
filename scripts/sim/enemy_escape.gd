@@ -7,10 +7,8 @@ extends RefCounted
 ## giden yol açılınca (ya da `ESC_MAX` sn dolunca) normal harekete döner. Durum EnemyPool.esc_* / push_n / stuck_n alanlarında;
 ## hepsi tam sayı adım/sabit sürelerle ilerler, RNG kullanmaz (deterministik).
 
-## Debug APK'da kapatılabilir (karşılaştırma bayrağı); testler ve oyun varsayılanı açık. Sim durumu değil, saf anahtar.
-static var enabled: bool = true
-## Debug sayacı: bu oturumda kaç kez kaçışa girildi.
-static var begun_total: int = 0
+## Anahtar (`sim.enemies.escape_enabled`, debug APK'da kapatılabilir) ve debug sayacı (`escape_begun`) sim örneğindedir;
+## controller anahtarı her yeni sim'e uygular ve oturum toplamını `taban + escape_begun` olarak gösterir.
 
 const ESC_AFTER := 2  # ardışık ilerlemesiz denetim sayısı
 const ESC_PROGRESS := 40.0  # px; denetim aralığında hedefe bundan az yaklaşma = ilerleme yok
@@ -41,7 +39,7 @@ static func begin(sim: GameSim, i: int, to: Vector2) -> void:
 	e.esc_side[i] = side
 	e.esc_left[i] = ESC_MAX
 	e.stuck_n[i] = 0
-	begun_total += 1
+	e.escape_begun += 1
 
 
 ## Kaçış yönü: yüzeye teğet (taraf sabit) + yüzeye hafif yaslanma.
@@ -88,7 +86,7 @@ static func blocked(sim: GameSim, p: Vector2, reach: float) -> bool:
 ## Denetimde ilerleme sayacı: dolanma sürüyor ve hedefe yeterince yaklaşılmadıysa +1, aksi halde 0. Eşik dolduysa kaçışa geçer.
 static func check(sim: GameSim, i: int, to: Vector2, target: Vector2) -> void:
 	var e := sim.enemies
-	if not enabled or e.esc_left[i] > 0.0:
+	if not e.escape_enabled or e.esc_left[i] > 0.0:
 		return
 	if e.ai_timer[i] <= 0.0:
 		e.stuck_n[i] = 0

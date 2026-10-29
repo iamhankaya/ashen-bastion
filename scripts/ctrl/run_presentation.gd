@@ -19,11 +19,12 @@ static func render_text(sim: GameSim, enemies: EnemyRenderer, gems: GemRenderer)
 	)
 
 
-static func escape_text(sim: GameSim) -> String:
+static func escape_text(sim: GameSim, begun_base: int, enabled: bool) -> String:
 	var live := EnemyEscape.escaping_count(sim) if sim != null else 0
+	var begun := begun_base + (sim.enemies.escape_begun if sim != null else 0)
 	return (
 		"kaçışta %d  girilen %d\nçıkmaz kaçışı: %s (dokun)"
-		% [live, EnemyEscape.begun_total, "AÇIK" if EnemyEscape.enabled else "KAPALI"]
+		% [live, begun, "AÇIK" if enabled else "KAPALI"]
 	)
 
 
