@@ -1,7 +1,0 @@
-{
-  "stat": "zz_bad",
-  "order": 10,
-  "persist": { "total": null, "best": null },
-  "source": { "event": "yok_olay", "filter": {}, "value": "one" },
-  "aggregate": "sum"
-}
