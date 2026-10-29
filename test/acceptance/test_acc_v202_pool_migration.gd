@@ -49,7 +49,9 @@ func test_p1_barutcu_is_gone_from_data_roster_and_files() -> void:
 	if V202Slice.require(self, "P"):
 		return
 	assert_null(_data.get_character(&"barutcu"), "veride yok")
-	assert_eq(CharacterRoster.ids(_data), [&"gunslinger", &"zyfen"] as Array[StringName])
+	var ids := CharacterRoster.ids(_data)
+	assert_false(ids.has(&"barutcu"), "barutcu listede yok")
+	assert_true(ids.has(&"gunslinger") and ids.has(&"zyfen"), "mevcut karakterler listede")
 	assert_false(
 		FileAccess.file_exists("res://data/characters/barutcu.json"), "barutcu.json silindi"
 	)

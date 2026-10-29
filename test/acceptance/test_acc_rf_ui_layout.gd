@@ -135,7 +135,8 @@ func test_rf_characters_screen_rects() -> void:
 		var host := _host(vp)
 		var s := CharactersScreen.new()
 		host.add_child(s)
-		var data := AchKit.data()
+		# Baz yalnız gunslinger+zyfen: yeni karakter bu altın düzeni kaydırmaz (sözleşme: yerleşim, katalog boyu değil).
+		var data := AchKit.data_with_characters([&"gunslinger", &"zyfen"])
 		s.open(data, AchKit.store(), &"gunslinger")
 		s.apply_safe_area(SAFE)
 		await _settle()

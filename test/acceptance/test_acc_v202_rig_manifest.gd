@@ -9,6 +9,7 @@ const DT := 1.0 / 60.0
 const PINNED := {&"zyfen": [19, 8, 9, 15]}
 
 var _rigs: Dictionary = {}
+var _owner: Dictionary = {}  # id -> art/source sahibi (AccV202.art_owner)
 
 
 func before_all() -> void:
@@ -17,10 +18,11 @@ func before_all() -> void:
 		var c := data.get_character(id)
 		if c.armless:
 			_rigs[id] = c.rig.duplicate(true)
+			_owner[id] = AccV202.art_owner(id, c.rig)
 
 
 func _manifest(id: StringName) -> Dictionary:
-	var path := "res://art/source/%s/strip_manifest.json" % id
+	var path := "res://art/source/%s/strip_manifest.json" % _owner.get(id, id)
 	var v: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return v if v is Dictionary else {}
 
