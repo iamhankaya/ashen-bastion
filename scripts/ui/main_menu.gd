@@ -711,4 +711,3 @@ func _on_version_input(event: InputEvent) -> void:
 	)
 	if tap and register_version_tap() and OS.is_debug_build():
 		debug_stress_requested.emit()
-# ölçüm yaması (T20261029-30)
