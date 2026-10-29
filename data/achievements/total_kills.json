@@ -1,0 +1,15 @@
+{
+  "stat": "total_kills",
+  "order": 10,
+  "icon_family": "hud-oldurme",
+  "persist": {
+    "total": "kills",
+    "best": null
+  },
+  "source": {
+    "event": "enemy_killed",
+    "filter": {},
+    "value": "one"
+  },
+  "aggregate": "sum"
+}

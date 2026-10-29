@@ -1,5 +1,5 @@
 extends GutTest
-## v2.0.3 sözleşme (C ad alanı): aşamalı başarım şeması. Dosya adındaki `zz`, ortak kayıt dosyalarında (gate_min_tests,
+## v2.0.3 sözleşme (C ad alanı): aşamalı başarım şeması. Dosya adındaki `zz`, ortak kayıt dosyalarında (asgari-sayı tablosu,
 ## shard_weights) C fazının satırlarını A/B/D'nin satırlarından ayrı tutan ayırıcıdır (N4); C kendi testlerini
 ## `test_v203_c_<ad>.gd` diye ekler, bu dosyayı yeniden adlandırmaz.
 
@@ -63,7 +63,7 @@ func _errs(records: Array, complete: bool = false) -> PackedStringArray:
 
 
 func test_stats_gains_total_boss_kills_at_the_end() -> void:
-	assert_eq(AchievementDef.STATS.size(), 21)
+	assert_eq(AchievementDef.STATS.size(), AchievementMetricRegistry.default().stats().size())
 	assert_eq(AchievementDef.STATS[20], "total_boss_kills")
 	assert_eq(AchievementDef.scope_of(&"total_boss_kills"), &"total")
 

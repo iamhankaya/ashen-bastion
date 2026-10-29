@@ -1,0 +1,14 @@
+{
+  "stat": "run_won",
+  "order": 240,
+  "icon_family": "kiyamet-mermisi",
+  "persist": {
+    "total": null,
+    "best": null
+  },
+  "source": {
+    "finish": "won",
+    "value": "one"
+  },
+  "aggregate": "max"
+}

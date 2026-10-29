@@ -23,7 +23,7 @@ func _init(sim_opts: Dictionary = {}, p_death_load: bool = false) -> void:
 	death_load = p_death_load
 	var o := {"end_mode": "timer", "end_time": 3600.0, "start_time": 900.0}
 	o.merge(sim_opts, true)
-	sim = GameSim.new(SEED, &"gunslinger", o)
+	sim = GameSim.new(SEED, CharacterRoster.DEFAULT_ID, o)
 	_rng.seed = SEED + 1
 	top_up()
 

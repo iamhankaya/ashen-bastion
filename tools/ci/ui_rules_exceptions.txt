@@ -1,0 +1,2 @@
+# check_ui_rules.py geçiş istisnası: her satır bir ScrollContainer.new() yeri (dosya yolu). YALNIZ AZALIR (R2 boşalttı).
+# Yeni satır eklemek, tekrarlamak ya da bayat bırakmak kırmızıdır (UI_RULE_NEW_EXCEPTION / UI_RULE_STALE). merge=union YOK.

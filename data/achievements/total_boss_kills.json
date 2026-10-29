@@ -1,0 +1,21 @@
+{
+  "stat": "total_boss_kills",
+  "order": 30,
+  "icon_family": "hud-oldurme",
+  "persist": {
+    "total": "boss_kills",
+    "best": null
+  },
+  "source": {
+    "event": "enemy_killed",
+    "filter": {
+      "type_id": [
+        "elit_piyade",
+        "elit_sovalye",
+        "elit_karga"
+      ]
+    },
+    "value": "one"
+  },
+  "aggregate": "sum"
+}

@@ -1,0 +1,34 @@
+{
+  "limits": {
+    "shot_right": 4,
+    "shot_left": 4,
+    "hit": 3,
+    "explosion": 3,
+    "enemy_die": 3,
+    "xp_pickup": 2,
+    "zyfen_cast": 3,
+    "zyfen_wind_hit": 3,
+    "zyfen_gather": 1,
+    "hava_bicaklari": 2,
+    "delen_ruzgar": 2,
+    "hortum": 2,
+    "girdap": 1,
+    "tufan": 1,
+    "hava_cebi": 2,
+    "nefes_dalgasi": 1,
+    "kasirga_patlamasi": 1
+  },
+  "min_gap_ms": {
+    "zyfen_wind_hit": 70,
+    "hava_bicaklari": 150,
+    "delen_ruzgar": 100,
+    "gogun_mizragi": 400,
+    "ay_oragi": 200,
+    "hava_cebi": 120,
+    "nefes_dalgasi": 300,
+    "kasirga_patlamasi": 500,
+    "hortum": 400,
+    "tufan": 800,
+    "girdap": 3000
+  }
+}

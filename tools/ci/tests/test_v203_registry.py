@@ -61,11 +61,8 @@ def test_video_output_dir_is_ignored():
 
 
 def test_sentinel_rows_exist_in_registries():
-    mins = json.loads(_read("tools/gate_min_tests.json"))
     weights = json.loads(_read("tools/ci/shard_weights.json"))
     for s in SENTINELS:
-        assert mins.get(s, 0) >= 1, s
+        assert (ROOT / s).is_file(), s
+        assert re.search(r"^func test_\w+\(", _read(s), re.M), f"{s}: kimlik kapısı için en az bir test işlevi"
         assert s in weights, s
-    keys = sorted(mins)
-    pos = {s: keys.index(s) for s in SENTINELS}
-    assert pos[SENTINELS[0]] < pos[SENTINELS[1]] < pos[SENTINELS[2]] < pos[SENTINELS[4]], "a < b < c < d sırası"

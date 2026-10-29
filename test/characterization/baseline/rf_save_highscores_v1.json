@@ -1,0 +1,149 @@
+{
+ "v1_empty.json": {
+  "corrupt": false,
+  "loaded": true,
+  "saved": {
+   "lists": {},
+   "v": 2.0
+  }
+ },
+ "v1_full.json": {
+  "corrupt": false,
+  "loaded": true,
+  "saved": {
+   "lists": {
+    "normal:normal": [
+     {
+      "diff": "normal",
+      "level": 30.0,
+      "mode": "normal",
+      "score": 100000.0,
+      "time": 1200.0,
+      "unix": 1700000000.0,
+      "won": true
+     },
+     {
+      "diff": "normal",
+      "level": 29.0,
+      "mode": "normal",
+      "score": 93000.0,
+      "time": 1140.0,
+      "unix": 1700000001.0,
+      "won": true
+     },
+     {
+      "diff": "normal",
+      "level": 28.0,
+      "mode": "normal",
+      "score": 86000.0,
+      "time": 1080.0,
+      "unix": 1700000002.0,
+      "won": false
+     },
+     {
+      "diff": "normal",
+      "level": 27.0,
+      "mode": "normal",
+      "score": 79000.0,
+      "time": 1020.0,
+      "unix": 1700000003.0,
+      "won": false
+     },
+     {
+      "diff": "normal",
+      "level": 26.0,
+      "mode": "normal",
+      "score": 72000.0,
+      "time": 960.0,
+      "unix": 1700000004.0,
+      "won": false
+     },
+     {
+      "diff": "normal",
+      "level": 25.0,
+      "mode": "normal",
+      "score": 65000.0,
+      "time": 900.0,
+      "unix": 1700000005.0,
+      "won": false
+     },
+     {
+      "diff": "normal",
+      "level": 24.0,
+      "mode": "normal",
+      "score": 58000.0,
+      "time": 840.0,
+      "unix": 1700000006.0,
+      "won": false
+     },
+     {
+      "diff": "normal",
+      "level": 23.0,
+      "mode": "normal",
+      "score": 51000.0,
+      "time": 780.0,
+      "unix": 1700000007.0,
+      "won": false
+     },
+     {
+      "diff": "normal",
+      "level": 22.0,
+      "mode": "normal",
+      "score": 44000.0,
+      "time": 720.0,
+      "unix": 1700000008.0,
+      "won": false
+     },
+     {
+      "diff": "normal",
+      "level": 21.0,
+      "mode": "normal",
+      "score": 37000.0,
+      "time": 660.0,
+      "unix": 1700000009.0,
+      "won": false
+     }
+    ]
+   },
+   "v": 2.0
+  }
+ },
+ "v1_mixed.json": {
+  "corrupt": false,
+  "loaded": true,
+  "saved": {
+   "lists": {
+    "normal:normal": [
+     {
+      "diff": "normal",
+      "level": 9.0,
+      "mode": "normal",
+      "score": 99999999.0,
+      "time": 50.0,
+      "unix": 1700000005.0,
+      "won": true
+     },
+     {
+      "diff": "normal",
+      "level": 3.0,
+      "mode": "normal",
+      "score": 5000.0,
+      "time": 90.0,
+      "unix": 1699999990.0,
+      "won": false
+     },
+     {
+      "diff": "normal",
+      "level": 3.0,
+      "mode": "normal",
+      "score": 5000.0,
+      "time": 100.0,
+      "unix": 1700000000.0,
+      "won": false
+     }
+    ]
+   },
+   "v": 2.0
+  }
+ }
+}

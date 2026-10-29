@@ -96,6 +96,20 @@ def test_v202_slice_of_uses_all_six_prefixes():
     assert check_slices.slice_of("test_p1_x", check_slices.V2) is None  # v2.0 profili P'yi bilmez
 
 
+def test_slice_of_accepts_letter_suffix():
+    """F-ashen-bastion-123: test_e5b_ gibi harf soneki ad önekini bozmaz (check_test_ids ile aynı kural)."""
+    assert check_slices.slice_of("test_e5b_tufan_pulls", check_slices.V202) == "E"
+    assert check_slices.slice_of("test_m8a_flow", check_slices.V2) == "M"
+    assert check_slices.slice_of("test_e5bc_x", check_slices.V202) is None  # tek harf
+    assert check_slices.slice_of("test_e5_", check_slices.V202) == "E"
+
+
+def test_v202_marked_slice_counts_suffixed_test(tmp_path):
+    r = _run202(tmp_path, "E\n", _junit(_case("test_e5b_x")))
+    assert r.returncode == 0, r.stderr
+    assert _run202(tmp_path, "E\n", _junit(_case("test_e5b_x", "pending"))).returncode == 1
+
+
 def test_v202_unmarked_pending_is_fine(tmp_path):
     assert _run202(tmp_path, "# yok\n", _junit(_case("test_p1_x", "pending"))).returncode == 0
 

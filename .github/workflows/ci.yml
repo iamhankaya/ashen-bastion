@@ -1,9 +1,16 @@
 name: ci
 on:
+  # H3: tek tetik. pull_request kaldırıldı (aynı commit için çift koşu); PR'ın "test" bağlamı dal ucundaki push koşusundan gelir.
   push:
-  pull_request:
+    branches: [main, 'vlad/**']
+  # nightly.yml `full` işi bunu çağırır: push dışı olayda yol süzgeci (path_filter.sh) HER ZAMAN tam koşu verir.
+  workflow_call:
 permissions:
   contents: read
+concurrency:
+  # Aynı ref'te yeni push eskisini iptal eder; main hiçbir zaman iptal edilmez (son kapı kanıtı).
+  group: ci-${{ github.ref }}-${{ github.event_name }}  # event eki: nightly çağrısı aynı ref'teki push CI'ını iptal etmesin
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   # F-044: tam gate (tools/gate.sh) üç parçaya bölündü; BİRLEŞİMLERİ tam gate ile aynı kapsamdır ve PR CI'ında, entegrasyon
   # merge'ünde ve son kapıda (main) HER ZAMAN tam kapsam koşar. Hızlı mod (`gate.sh --changed`) CI'da yasaktır (gate.sh reddeder)
@@ -20,6 +27,8 @@ jobs:
       GATE_FORBIDDEN_RE: ${{ secrets.GATE_FORBIDDEN_RE }}  # yoksa denetim "atlandı" der
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # F-124: kimlik kapısı tabanı merge-base(HEAD, origin/main) (gate.sh adım 7); shallow klonda LOST denetimi sessizce atlanırdı
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -32,8 +41,11 @@ jobs:
           key: godot-${{ hashFiles('.godot-version') }}
       - uses: actions/cache@v4
         with:
-          # Yalnız TAM eşleşen anahtar (restore-keys yok): içe aktarma girdileri aynıysa önbellek aynıdır; içe aktarma adımı yine koşar.
-          path: .godot
+          # H2: yalnız imported/ + uid_cache.bin. global_script_class_cache.cfg önbelleğe GİRMEZ; her koşuda artımlı --import yeniden üretir.
+          # Yalnız TAM eşleşen anahtar (restore-keys yok); anahtarda audio/** korunur, scripts/** karması yok (ana iş yükü önbelleği boşa çıkarmasın).
+          path: |
+            .godot/imported
+            .godot/uid_cache.bin
           key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
       - run: GATE_PART=static bash tools/gate.sh
       - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
@@ -61,7 +73,9 @@ jobs:
           key: godot-${{ hashFiles('.godot-version') }}
       - uses: actions/cache@v4
         with:
-          path: .godot
+          path: |
+            .godot/imported
+            .godot/uid_cache.bin
           key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
       - run: GATE_PART=gut GATE_SHARD=${{ matrix.shard }}/4 bash tools/gate.sh
       - uses: actions/upload-artifact@v4
@@ -85,6 +99,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # kimlik kapısı tabanı: merge-base(HEAD, origin/main) (tools/ci/check_test_ids.py, gate.sh adım 7)
       - uses: actions/download-artifact@v4
         with:
           pattern: gut-junit-*
@@ -104,6 +120,8 @@ jobs:
         group: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # yol süzgeci için ortak ata
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -114,7 +132,19 @@ jobs:
         with:
           path: ~/.cache/ashen-bastion
           key: godot-${{ hashFiles('.godot-version') }}
+      - uses: actions/cache@v4
+        with:
+          # H2: selftest_gate.sh bunu her senaryo kopyasına aktarır (SELFTEST_GODOT_CACHE varsayılanı $ROOT/.godot)
+          path: |
+            .godot/imported
+            .godot/uid_cache.bin
+          key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
+      - # H1: taban_yesil yalnız altyapı yolları değiştiyse (main/nightly/dispatch/diff hatası/shallow: HER ZAMAN) koşar; negatif senaryolar süzülmez.
+        id: taban
+        run: bash tools/ci/path_filter.sh 'tools/|\.github/|project\.godot$|\.gutconfig\.json$|\.godot-version$|export_presets\.cfg$|addons/|scripts/ci'
       - run: bash tools/ci/selftest_gate.sh --group ${{ matrix.group }}
+        env:
+          SELFTEST_SKIP_TABAN: ${{ steps.taban.outputs.run == '0' && '1' || '0' }}
       - # F-042: yeniden deneme olduysa (iş yeşil olsa bile) ya da iş düştüyse içe aktarma çöküş kanıtı (günlük, core, bt).
         if: always()
         uses: actions/upload-artifact@v4
@@ -124,16 +154,24 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
   export-debug:
+    # H10: yalnız dışa aktarma yolları değiştiyse ya da main/push dışı olayda; atlanırsa iş yeşil (adımlar atlanır, SKIPPED_BY_FILTER).
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v4
+        with:
+          fetch-depth: 0
+      - id: pf
+        run: bash tools/ci/path_filter.sh 'tools/ci/(export_|ensure_|write_editor)|export_presets\.cfg$|project\.godot$|\.godot-version$|android/|\.github/workflows/ci\.yml$'
+      - if: steps.pf.outputs.run == '1'
+        uses: actions/cache@v4
         with:
           path: ~/.cache/ashen-bastion
           key: godot-export-${{ hashFiles('.godot-version') }}
-      - run: bash tools/ci/export_debug.sh
-      - uses: actions/upload-artifact@v4
+      - if: steps.pf.outputs.run == '1'
+        run: bash tools/ci/export_debug.sh
+      - if: steps.pf.outputs.run == '1'
+        uses: actions/upload-artifact@v4
         with:
           name: ashen-bastion-debug-apk
           path: build/ab-debug.apk
@@ -144,4 +182,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - run: bash tools/ci/prova_release.sh --fast
+        with:
+          fetch-depth: 0
+      - id: pf  # H10
+        run: bash tools/ci/path_filter.sh 'tools/ci/(prova_release|export_release)|\.github/workflows/(ci|release)\.yml$'
+      - if: steps.pf.outputs.run == '1'
+        run: bash tools/ci/prova_release.sh --fast

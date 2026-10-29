@@ -11,7 +11,7 @@ Yeni ses üretmez, lisansı belirsiz ses eklemezsin; belirsizlik açık noktaya.
 1. **Kaynak + lisans:** kaynak WAV `audio/sfx/` (müzik `audio/muzik/`); lisans kaydı `LICENSES-audio.md` (ve `audio/sfx/README.txt` varsa oraya).
 2. **Manifest:** `tools/audio/sfx_manifest.json` satırı eklenir.
 3. **İşle:** `python3 tools/audio/process_sfx.py [--only <id>] [--verify] [--report]` → `assets/audio/sfx/<id>.ogg`. Müzik: `tools/audio/process_audio.py`, `check_music.py`, `tools/audio/audio_manifest.json`.
-4. **Bağla:** karakter `sfx{shot,hit,reload_start,reload_end,dry}` sözlüğü (`scripts/sim/data_v2.gd` `SFX_EVENTS`); sözlük varsa anahtarı olmayan olay sessiz kalır. Beceri `cast_sfx`; evrim `sfx: evolution_N`. Varyasyon seçimi sunum RNG'sinde (sim RNG'sine dokunma).
+4. **Bağla:** karakter `sfx{shot,hit,reload_start,reload_end,dry}` sözlüğü (`scripts/sim/data_v2.gd` `SFX_EVENTS`); sözlük varsa anahtarı olmayan olay sessiz kalır. Beceri `cast_sfx`; evrim `sfx: evolution_N`. Eşzamanlı sınır / en kısa tekrar aralığı gerekiyorsa `data/sfx_rules.json` (`limits`, `min_gap_ms`); `sfx.gd` düzenlenmez. Varyasyon seçimi sunum RNG'sinde (sim RNG'sine dokunma).
 5. **İçe aktar:** `godot --headless --import`; `.import` dosyaları commit'lenir.
 6. Araç geçici çıktısı varsa aynı commit'te `.gitignore`.
 
