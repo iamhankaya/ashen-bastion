@@ -51,11 +51,12 @@ func _codes(errs: PackedStringArray) -> Array[String]:
 
 
 func test_stats_set_is_closed_and_has_21_names() -> void:
-	assert_eq(AchievementDef.STATS.size(), 21)
+	var want := AchievementMetricRegistry.default().stats().size()
+	assert_eq(AchievementDef.STATS.size(), want, "kapalı küme = metrik kaydındaki stat sayısı")
 	var seen := {}
 	for s in AchievementDef.STATS:
 		seen[s] = true
-	assert_eq(seen.size(), 21, "yinelenen stat yok")
+	assert_eq(seen.size(), want, "yinelenen stat yok")
 
 
 func test_scope_of_total_prefix_run_otherwise_unknown_empty() -> void:

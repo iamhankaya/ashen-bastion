@@ -1,0 +1,21 @@
+# Katman istisnaları (check_layers.py). Biçim: kaynak_dosya -> hedef_sınıf_veya_yol. YALNIZ AZALIR (union yok):
+# yeni satır LAYER_NEW_EXCEPTION, ihlali kalkmış satır LAYER_STALE. İlk liste --emit-baseline ile üretilmiştir.
+scripts/autoload/settings.gd -> AudioMix
+scripts/autoload/settings.gd -> RenderFix
+scripts/store/achievement_migration.gd -> AchievementProgress
+scripts/store/achievement_migration.gd -> AchievementStep
+scripts/store/achievement_store.gd -> AchievementStep
+scripts/ui/achievement_row.gd -> AchievementStore
+scripts/ui/achievement_row.gd -> Highscores
+scripts/ui/achievements_screen.gd -> AchievementStore
+scripts/ui/characters_screen.gd -> AchievementStore
+scripts/ui/highscore_screen.gd -> Highscores
+scripts/ui/hud.gd -> DebugLabels
+scripts/ui/main_menu.gd -> V21Runs
+scripts/ui/pause_screen.gd -> V21Runs
+scripts/ui/result_screen.gd -> V21Runs
+scripts/ui/run_screen.gd -> V21Runs
+scripts/ui/virtual_joystick.gd -> InputGate
+scripts/view/gem_renderer.gd -> Settings
+scripts/view/pickup_renderer.gd -> UiKit
+scripts/view/player_view.gd -> UiKit

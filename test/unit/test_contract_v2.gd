@@ -62,8 +62,8 @@ const METHODS := {
 	"CharacterRoster":
 	{
 		"ids": ["data", A],
-		"is_unlocked": ["c,store", B],
-		"resolve": ["saved,data,store", SN],
+		"is_unlocked": ["c,progress", B],
+		"resolve": ["saved,data,progress", SN],
 		"lock_reason": ["c,data", TYPE_STRING],
 		"step": ["list,current,dir", SN],
 	},

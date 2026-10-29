@@ -1,0 +1,14 @@
+{
+  "stat": "run_clean_secs",
+  "order": 110,
+  "icon_family": "hud-can",
+  "persist": {
+    "total": null,
+    "best": "clean_secs"
+  },
+  "reducer": "CleanSecsReducer",
+  "events": [
+    "player_damaged"
+  ],
+  "poll": true
+}

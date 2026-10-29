@@ -15,50 +15,12 @@ const MAX_STEPS_ENDLESS := 216000  # 3600 sn
 const LORD_BAND_MIN := 250.0
 const LORD_BAND_MAX := 400.0
 const STRONG_POLICIES: Array[String] = ["strong", "strong_lord"]
-## Karakter başına kart önceliği (v2.0.2). Evrim kartı her zaman en üstte (`_choose`); listede olmayan kimlik sona,
-## 0-3 rastgele payla. Bilinmeyen karakter Gunslinger listesini kullanır (v2.0.1 ölçümleriyle birebir aynı).
-const PRIORITY_BY_CHAR: Dictionary = {
-	&"gunslinger":
-	[
-		&"zincirleme_patlama",
-		&"kiyamet_mermisi",
-		&"mermi_firtinasi",
-		&"gurleyen_yelpaze",
-		&"seken_mermi",
-		&"barut_kesesi",
-		&"son_mermi_patlar",
-		&"hizli_doldurma",
-		&"doldurma_sacilmasi",
-		&"fazladan_mermi",
-		&"agir_kursun",
-		&"hizli_parmak",
-		&"saglam_yelek",
-		&"cevik_cizme",
-		&"miknatis",
-	],
-	&"zyfen":
-	[
-		&"ay_oragi",
-		&"tufan",
-		&"kasirga_patlamasi",
-		&"gogun_mizragi",
-		&"furtina_gozu",
-		&"hortum",
-		&"bolunen_kesik",
-		&"nefes_dalgasi",
-		&"delen_ruzgar",
-		&"girdap",
-		&"hava_cebi",
-		&"hava_bicaklari",
-		&"agir_kursun",
-		&"hizli_parmak",
-		&"hizli_doldurma",
-		&"fazladan_mermi",
-		&"saglam_yelek",
-		&"cevik_cizme",
-		&"miknatis",
-	],
-}
+## Karakter başına kart önceliği (v2.0.2; veri: tools/balance/card_priority.json, yeni karakter yalnız veriyle eklenir).
+## Evrim kartı her zaman en üstte (`_choose`); listede olmayan kimlik sona, 0-3 rastgele payla. Listesi olmayan karakter
+## Gunslinger listesini kullanır (v2.0.1 ölçümleriyle birebir aynı).
+const PRIORITY_PATH := "res://tools/balance/card_priority.json"
+
+static var _priority: Dictionary = {}
 
 
 func _initialize() -> void:
@@ -294,8 +256,24 @@ static func move_for(sim: GameSim, policy: String, lord: int = -1) -> Vector2:
 	return g if g != Vector2.ZERO else threat
 
 
+## Karakterin kart öncelik listesi (kimlikler StringName); listesi yoksa varsayılan karakterinki.
+static func priority_of(character: StringName) -> Array:
+	if _priority.is_empty():
+		var f := FileAccess.open(PRIORITY_PATH, FileAccess.READ)
+		var parsed: Variant = JSON.parse_string(f.get_as_text()) if f != null else null
+		var table: Dictionary = parsed if parsed is Dictionary else {}
+		if table.is_empty():
+			push_error("kart önceliği okunamadı: %s" % PRIORITY_PATH)
+		for k in table:
+			var ids: Array = []
+			for id in table[k]:
+				ids.append(StringName(id))
+			_priority[StringName(k)] = ids
+	return _priority.get(character, _priority.get(CharacterRoster.DEFAULT_ID, []))
+
+
 static func _choose(sim: GameSim, rng: RandomNumberGenerator, character: StringName) -> void:
-	var priority: Array = PRIORITY_BY_CHAR.get(character, PRIORITY_BY_CHAR[&"gunslinger"])
+	var priority := priority_of(character)
 	var cards := sim.pending_choices()
 	var best := 0
 	var best_rank := 1 << 20

@@ -30,8 +30,8 @@ selftest ×6, export-debug, release-prova      değişmedi
   (dosya -> sn, tam gate JUnit'inden) ağırlıklarıyla açgözlü en-uzun-önce (LPT) atanır; ağırlığı olmayan yeni dosya medyan
   ağırlık alır, yani **yeni test otomatik bir parçaya düşer**. Her dosya tam bir parçada olur (`tools/ci/tests/test_shard.py`).
 - **Kapsam kanıtı (verify işi)**: parça sayısı beklenenle eşit olmalı; `shard.py check-merge --require-all` her test dosyasının
-  bir parçada koştuğunu (eksik/yinelenen/bilinmeyen dosya = kırmızı) denetler; birleşik JUnit üzerinde adım 7 (asgari test sayısı
-  `tools/gate_min_tests.json`, tek test ≤ 75 sn, dilim/pending denetimleri) **aynen** koşar. Parçası düşen ya da hiç koşmayan
+  bir parçada koştuğunu (eksik/yinelenen/bilinmeyen dosya = kırmızı) denetler; birleşik JUnit üzerinde adım 7 (test kimliği kapısı
+  `tools/ci/check_test_ids.py`: bildirilen her test koştu mu + tabana göre kimlik kaybı yok, tek test ≤ 75 sn, dilim/pending denetimleri) **aynen** koşar. Parçası düşen ya da hiç koşmayan
   bir iş `test` işini kırmızı yapar.
 - `test` işi adını korur: dal koruması bu bağlamı bekliyor olabilir.
 - Parça sayısını değiştirmek: `ci.yml` (`matrix.shard`, `/N`, `GATE_SHARD_COUNT`) ve `tools/ci/tests/test_shard.py::SHARD_COUNT`
@@ -59,15 +59,14 @@ Değişen dosyalar = `git diff --name-only $(git merge-base HEAD REF)` (çalış
 | `docs/**.md` hiçbir testin bağımlılığı değilse | test yok (lint/veri doğrulama yine koşar) |
 | **paylaşılan**: `scripts/sim/*`, `scripts/autoload/*`, `data/*`, `test/helpers/*`, `test/fixtures/*`, `test/long/*`, `tools/gate*`, `tools/ci/*`, `tools/*.{gd,json,txt,sh}`, `project.godot`, `.gutconfig.json`, `export_presets.cfg`, `addons/*`, `.github/*`, `assets/*`, `art/*`, `audio/*`, `themes/*`, `scenes/*` | **TAM GATE** |
 | eşlemede yeri olmayan dosya (yeni betik, bilinmeyen dizin, kök dosyaları) | **TAM GATE** |
-| eşleme güncel değil (`test_map.py check` kırmızı), taban bulunamadı, seçim hatası | **TAM GATE** |
+| eşleme üretilemedi (`test_map.py ensure` hata), taban bulunamadı, seçim hatası | **TAM GATE** |
 
 Karışık değişiklikte tek bir paylaşılan/eşlemesiz dosya tam gate'e düşürür. Şüphede tam suite. Hızlı modda lint yalnız değişen
 `.gd` dosyalarına, Python testleri yalnız değişen araç dizinine (`tools/art`, `tools/audio`) uygulanır; veri doğrulaması her
 zaman koşar; adım 7'de asgari test sayısı seçilen dosyalar için, tek test süre sınırı aynen denetlenir. Dilim/pending denetimi
 tam JUnit ister ve yalnız tam gate'tedir.
 
-Eşleme bakımı: yeni betik/test eklenince `python3 tools/ci/test_map.py generate`; `tools/ci/tests/test_test_map.py`
-güncel olmayan eşlemeyi kırmızı yapar (bu test tam gate'in Python adımında koşar).
+Eşleme bakımı: `tools/ci/test_map.json` izlenmez; hızlı mod başında `python3 tools/ci/test_map.py ensure` üretir (elle commit yok).
 
 ### Eşlemenin doğruluğu
 
@@ -180,3 +179,28 @@ Godot sürecinde** koşar. N = `GATE_JOBS` (varsayılan `min(4, çekirdek)`; `GA
 
 `test/long`'a taşıma (>20 sn testler) **yapılmadı**: `test/long` `.gutconfig.json` kümesinde değildir, taşıma gate kapsamını
 düşürür; görev kuralı (kapsam aynı kalır) ile çelişir.
+
+## Altyapı-A: tetik, süzgeç, önbellek, kanca (T20261028-34; plan T20261028-33 Faz 3)
+
+Kapsam değişmedi: PR/entegrasyon/main'de TAM kapsam koşar. Değişen yalnız *ne zaman ve kaç kez* koşulduğu.
+
+| Önlem | Ne yapar | Güvenlik kuralı |
+|---|---|---|
+| H3 tek tetik | `ci.yml` yalnız `push: [main, 'vlad/**']`; `pull_request` kalktı (aynı commit için çift koşu bitti). `concurrency: ci-<ref>-<olay>`, `cancel-in-progress` main dışında açık | Zorunlu bağlam adı `test` korunur. Dal koruması yok (`gh api .../protection` 404, ruleset boş). PR'ın `test` bağlamı dal ucundaki push koşusundan gelir (bağlam SHA'ya bağlı). Olay eki: nightly'nin `workflow_call` çağrısı aynı ref'teki push CI'ını iptal etmesin |
+| H2 önbellek | Yalnız `.godot/imported` + `.godot/uid_cache.bin`; `global_script_class_cache.cfg` girmez, her koşuda artımlı `--import` çalışır. Anahtar `audio/**` içerir, `scripts/**` karması yok (UI/sim değişikliği önbelleği boşa çıkarmaz) | Tam eşleşme (restore-keys yok). `selftest_gate.sh` senaryo kopyasına `imported/` + `uid_cache.bin` açıkça aktarır (`SELFTEST_GODOT_CACHE`); class cache aktarılmaz |
+| H1 selftest süzgeci | `taban_yesil` yalnız `tools/**`, `.github/**`, `project.godot`, `.gutconfig.json`, `.godot-version`, `export_presets.cfg`, `addons/**`, `scripts/ci*` değişince koşar | **Negatif senaryolar (bozuk_gd, bos_test_dizisi, …) her zaman koşar.** `tools/ci/path_filter.sh`: main, push dışı olay, shallow klon, taban ref'i yok, ortak ata yok, diff hatası ⇒ TAM koşu. Atlama `SKIPPED_BY_FILTER` ile etiketlenir |
+| H10 | `export-debug`, `release-prova` yalnız ilgili yollar ya da main/dispatch/nightly'de | Aynı `path_filter.sh` |
+| Nightly `full` | `nightly.yml` → `ci.yml`'i `workflow_call` ile çağırır; push dışı olay ⇒ süzgeçsiz TAM koşu (kapsam kanıtı). Yeni workflow dosyası yok (D4) | `gh workflow run nightly.yml --ref <dal>` |
+| `import` yeniden denemesi | `godot_import.sh`: SIGABRT imzasında 3 deneme, k·5 sn geri çekilme; her çöken deneme günlüğü `.denemeK`, kanıt `ASHEN_EVIDENCE_DIR` artifact'ında (F-042/F-115) | İmza dışı hata (çıkış ≠134 ya da içerik hatası) yeniden denenmez |
+| Kanca `checks.d` | `gate.sh` adım 0 `tools/ci/run_checks.sh` ile `tools/ci/checks.d/NN-ad.sh` betiklerini ad sırasıyla koşar (yalnız static/all; ilk kırmızı kapıyı düşürür) | Sözleşme fazları `gate.sh`'e dokunmadan denetim ekler |
+| Satır sonu | `.gitattributes` (LF), 4 `.sh` dosyası 100755 | Windows `autocrlf` bash betiklerini bozuyordu |
+| Timeout | Tüm workflow işlerinde `timeout-minutes` zorunlu (`test_infra_workflows.py`) | |
+
+### Ölçüm aracı
+`python tools/ci/measure_ci.py run <koşu-id>` (duvar, kritik yol, runner-dk, günlükten kaydedilen soğuk/sıcak etiketi, `SKIPPED_BY_FILTER` sayısı) ve `compare --before id,… --after id,…` (aynı etikette medyan oranı, kabul Tson ≤ 0,70·Tönce, taraf başına ≥5 koşu, aykırı değerler raporlanır ama dışarıda bırakılmaz).
+
+### Prova araçları (T20261029-19)
+- `tools/ci/prova_dry_run.py --root <geçici worktree>`: sahte karakter/mod/başarım yalnız YENİ dosyalarla; mevcut dosya değişimi ve sabit listeli test kırıkları raporlanır.
+- `tools/ci/prova_conflict.py --clone <boş geçici dizin>`: iki paralel dalın birleşimi; `merge=union` kontrolü.
+- `tools/ci/prova_precheck.py --root <geçici worktree> [--godot BIN]`: her precheck kırmızı sınıfı gerçek araçla kasıtlı ihlalle denenir.
+- Süzgeç provası: `tools/ci/tests/test_infra_prova_path_filter.py` (ci.yml desenleri).

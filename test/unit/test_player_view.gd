@@ -218,8 +218,10 @@ func test_reload_ring_follows_magazine_and_pulses_after_finish() -> void:
 
 
 func test_frame_mode_without_a_strip_falls_back_to_procedural() -> void:
-	var sim := _sim()
-	var walk: Dictionary = sim.character.rig["walk"]  # GameData önbelleği paylaşımlıdır: işin sonunda geri al
+	var sim := GameSim.new(
+		11, &"gunslinger", {"end_mode": "timer", "end_time": 480.0, "data": DataKit.copy()}
+	)
+	var walk: Dictionary = sim.character.rig["walk"]  # yazan test kendi veri kopyasını kullanır (DataKit)
 	walk["frames"] = 6
 	var v := _view(sim)
 	for i in 30:
@@ -228,7 +230,6 @@ func test_frame_mode_without_a_strip_falls_back_to_procedural() -> void:
 	assert_gt(v.anim.bob_px + v.anim.walk_phase, 0.0)
 	assert_eq(float(_shader_param(v, "cells")), 1.0)
 	assert_eq(v.anim.frame_a, 0, "şerit yok: kare indeksi yedek (0)")
-	walk["frames"] = 0
 
 
 func test_walk_does_not_flicker_when_the_sim_skips_render_frames() -> void:

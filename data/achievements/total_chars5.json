@@ -1,0 +1,12 @@
+{
+  "stat": "total_chars5",
+  "order": 230,
+  "icon_family": "cift-tabanca",
+  "persist": {
+    "total": null,
+    "best": null
+  },
+  "reducer": "CharsFiveReducer",
+  "events": [],
+  "finish": true
+}

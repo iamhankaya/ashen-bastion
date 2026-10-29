@@ -1,0 +1,13 @@
+diff --git a/scripts/sim/v21_sim.gd b/scripts/sim/v21_sim.gd
+index 5293661..a5e8648 100644
+--- a/scripts/sim/v21_sim.gd
++++ b/scripts/sim/v21_sim.gd
+@@ -122,7 +122,7 @@ static func on_lord_killed(sim: GameSim) -> void:
+ ## Lord tekrarı (GameSim._phase_spawn): `warn` sn önce uyarı, süre dolunca doğuş; başarısızsa her adım yeniden denenir.
+ static func step(sim: GameSim) -> void:
+ 	var v := sim.v21
+-	if v == null or v.next_lord_t < 0.0:
++	if v == null:
+ 		return
+ 	if not v.warned and sim.time >= v.next_lord_t - v.lord_warn:
+ 		v.warned = true

@@ -1,0 +1,10 @@
+{
+"id": "endless",
+"order": 3,
+"name": "Sonsuz",
+"label": "SONSUZ",
+"description": "Lord devrilince koşu sürer; ölene kadar.",
+"ending": "endless",
+"icon_key": "endless",
+"profile": {"time_scale": 1.0, "xp_mult": 1.0, "lord_hp_mult": 1.0, "rate_mult": 1.0, "lord_repeat_sec": 300, "lord_repeat_hp_mult": 1.5, "lord_hp_cap_mult": 8, "enrage_after_sec": 1200, "enrage_dmg_per_min": 1.0}
+}

@@ -23,6 +23,8 @@ if [ "$(basename -- "$0")" != "gate.sh" ] || [ ! -f "$0" ]; then
 fi
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
+# shellcheck source=tools/ci/py_shim.sh
+source tools/ci/py_shim.sh  # Windows: python3 Store kısayolu yerine python (çalışan python3 varsa etkisiz)
 
 FAST=0; FAST_BASE="${GATE_BASE:-}"
 while [ $# -gt 0 ]; do
@@ -77,6 +79,18 @@ end_step() {
 fail() { end_step; echo "GATE FAIL: $*" >&2; exit 1; }
 step() { end_step; STEP_NAME="$*"; STEP_START=$SECONDS; echo "=== $*"; }
 
+# Kimlik kapısının tabanı (check_test_ids.py): GATE_BASE_REF ya da merge-base(HEAD, origin/main); git'siz kopyada (selftest)
+# GATE_BASE_DECLARED=<dosya> (taban declared kimlikleri); ikisi de yoksa LOST denetimi atlanır ve bu AÇIKÇA yazılır.
+IDS_BASE=()
+ids_base_args() {
+  local b
+  if [ -n "${GATE_BASE_DECLARED:-}" ]; then IDS_BASE=(--base-declared "$GATE_BASE_DECLARED"); return; fi
+  b="${GATE_BASE_REF:-$(git merge-base HEAD origin/main 2>/dev/null || true)}"
+  if [ -n "$b" ]; then IDS_BASE=(--base "$b"); return; fi
+  echo "not: taban bulunamadı (git merge-base HEAD origin/main yok, GATE_BASE_REF/GATE_BASE_DECLARED verilmedi): LOST denetimi atlandı; yalnız bildirilen testlerin koşması denetlenir" >&2
+  IDS_BASE=(--no-base)
+}
+
 # Günlük taraması: izin listesi YOK. ANSI renk kodları atılır.
 scan_log() { # scan_log <dosya>
   if sed 's/\x1b\[[0-9;]*m//g' "$1" | grep -nE '^(SCRIPT ERROR|Parse Error|ERROR:|\[GUT ERROR\])|^Errors +[1-9]' > .gate/scan.out; then
@@ -96,9 +110,9 @@ if [ $FAST -eq 1 ]; then
   MB="$(git merge-base HEAD "$FAST_BASE" 2>/dev/null)" || MB=""
   if [ -z "$MB" ]; then
     echo "hızlı mod: '$FAST_BASE' ile ortak ata bulunamadı => TAM GATE" >&2; FAST=0
-  elif ! python3 tools/ci/test_map.py check > .gate/map_check.log 2>&1; then
+  elif ! python3 tools/ci/test_map.py ensure > .gate/map_check.log 2>&1; then
     cat .gate/map_check.log >&2
-    echo "hızlı mod: tools/ci/test_map.json güncel/tutarlı değil => TAM GATE" >&2; FAST=0
+    echo "hızlı mod: tools/ci/test_map.json üretilemedi => TAM GATE" >&2; FAST=0
   else
     { git diff --name-only "$MB"; git ls-files -o --exclude-standard; } | sort -u > .gate/changed.txt
     if python3 tools/ci/test_map.py select < .gate/changed.txt > .gate/selected.txt 2> .gate/select.why; then
@@ -115,6 +129,15 @@ if [ $FAST -eq 1 ]; then
   fi
 fi
 
+# --- Kanca: tools/ci/checks.d/NN-ad.sh (sözleşme fazları gate.sh'e dokunmadan Godot'suz denetim ekler) ----------------------
+# Yalnız static/all: gut parçaları ve verify aynı denetimi yinelemez. Koşucu: tools/ci/run_checks.sh (ad sırası, ilk kırmızı durdurur).
+if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
+  if compgen -G "tools/ci/checks.d/*.sh" > /dev/null; then
+    step "0. Ön denetimler (tools/ci/checks.d)"
+    bash tools/ci/run_checks.sh tools/ci/checks.d || fail "ön denetim kırmızı (bkz. yukarıdaki satırlar)"
+  fi
+fi
+
 if [ "$PART" != "verify" ]; then
   step "1. Godot kurulumu"
   GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"; rc=$?
@@ -128,7 +151,7 @@ if [ "$PART" != "verify" ]; then
   step "2. İçe aktarma"
   # Önceden var olan .godot önbelleği bozuksa --import çıkış 0 verip yalnız ERROR: satırı yazar (prova: tools/ci/prova_import_cache.sh).
   HAD_CACHE=0; [ -d .godot ] && HAD_CACHE=1
-  # F-042: aralıklı SIGABRT çöküşüne karşı en çok 1 bilinen-imzalı yeniden deneme (tools/ci/godot_import.sh; sessiz değil).
+  # F-042: aralıklı SIGABRT çöküşüne karşı en çok 3 deneme (2 bilinen-imzalı yeniden deneme, geri çekilmeli) (tools/ci/godot_import.sh; sessiz değil).
   bash tools/ci/godot_import.sh .gate/import.log || fail "--import başarısız (bkz. .gate/import.log, .gate/import_retry.txt)"
   [ $HAD_CACHE -eq 1 ] && echo "not: .godot önbelleği önceden vardı; içe aktarma günlüğü hata verirse önce 'rm -rf .godot' dene" >&2
   scan_log .gate/import.log
@@ -231,17 +254,21 @@ fi
 if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then
   step "7. Sahte yeşil korumaları"
   [ -f .gate/junit.xml ] || fail "JUnit çıktısı yok"
-  python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
+  python3 tools/ci/check_junit.py .gate/junit.xml || fail "JUnit'te çalışan test yok"
+  ids_base_args
+  python3 tools/ci/check_test_ids.py --mode full --junit .gate/junit.xml "${IDS_BASE[@]}" || fail "test kimliği kapısı (tools/ci/check_test_ids.py: MISSING = bildirilen test koşmadı, LOST = kimlik kayboldu)"
   python3 tools/ci/check_durations.py .gate/junit.xml $DUR_FLAGS || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
   python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v202_slices.txt)"
   python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v203_slices.txt)"
   python3 tools/ci/check_slices.py --v21 tools/v21_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v21_slices.txt)"
 elif [ $FAST -eq 1 ] && [ -n "$GUT_CONFIG" ]; then
-  # Hızlı mod: asgari sayı yalnız seçilen dosyalar için; tek test süre sınırı aynı; dilim/pending denetimi tam JUnit ister
-  # (yalnız tam gate'te koşar).
+  # Hızlı mod: kimlik kapısı yalnız seçilen dosyalar için (--mode selected); tek test süre sınırı aynı; dilim/pending denetimi
+  # tam JUnit ister (yalnız tam gate'te koşar).
   step "7. Sahte yeşil korumaları (hızlı mod: kısmi)"
-  python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json --only .gate/selected.txt || fail "asgari test sayısı (hızlı mod)"
+  python3 tools/ci/check_junit.py .gate/junit.xml || fail "JUnit'te çalışan test yok (hızlı mod)"
+  ids_base_args
+  python3 tools/ci/check_test_ids.py --mode selected --files .gate/selected.txt --junit .gate/junit.xml "${IDS_BASE[@]}" || fail "test kimliği kapısı (hızlı mod; tools/ci/check_test_ids.py)"
   python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
 fi
 

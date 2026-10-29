@@ -1,0 +1,15 @@
+{
+  "stat": "run_best_mult",
+  "order": 330,
+  "icon_family": "mermi-firtinasi",
+  "persist": {
+    "total": null,
+    "best": "mult"
+  },
+  "source": {
+    "event": "streak_changed",
+    "filter": {},
+    "value": "payload.mult"
+  },
+  "aggregate": "max"
+}

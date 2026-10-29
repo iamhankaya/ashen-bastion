@@ -96,17 +96,13 @@ func _build() -> void:
 	glow.offset_bottom = 600.0
 	add_child(glow)
 
-	scroll = ScrollContainer.new()
-	scroll.name = "Scroll"
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll = UiKit.make_scroll(UiKit.SCROLL_AXIS_VERTICAL, {"name": "Scroll"})
 	scroll.anchor_left = 0.5
 	scroll.anchor_right = 0.5
 	scroll.offset_left = -W * 0.5
 	scroll.offset_right = W * 0.5
 	scroll.offset_top = LIST_TOP
 	scroll.offset_bottom = BACK_TOP - 24.0
-	UiKit.touch_scroll(scroll)
 	add_child(scroll)
 	column = VBoxContainer.new()
 	column.name = "Column"
@@ -152,7 +148,7 @@ func _build_list() -> void:
 	modes.name = "Modes"
 	modes.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	modes.add_theme_constant_override(&"separation", MODE_GAP)
-	for m in RunStrip.MODE_ORDER:
+	for m in RunStrip.mode_order():
 		var b := _mode_row(m)
 		mode_buttons[m] = b
 		modes.add_child(b)
@@ -162,7 +158,7 @@ func _build_list() -> void:
 	cards.name = "Difficulties"
 	cards.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cards.add_theme_constant_override(&"separation", MODE_GAP if _big else CARD_GAP)
-	for d in RunStrip.DIFF_ORDER:
+	for d in RunStrip.diff_order():
 		var b := _diff_card(d)
 		diff_buttons[d] = b
 		cards.add_child(b)
@@ -253,7 +249,7 @@ func _mode_row(m: StringName) -> Button:
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_child(UiKit.label(RunStrip.MODE_NAMES[m], &"LabelAccent", _fs(44), UiKit.KEMIK_100))
+	v.add_child(UiKit.label(RunStrip.mode_name(m), &"LabelAccent", _fs(44), UiKit.KEMIK_100))
 	var d := UiKit.label(RunStrip.mode_desc(m, V21Runs.profiles()), &"", _fs(28), UiKit.KEMIK_300)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(d)
@@ -280,10 +276,10 @@ func _diff_card(d: StringName) -> Button:
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_skin(b, false)
 	var shields := RunStrip.Shields.new(
-		int(RunStrip.SHIELDS[d]), UiKit.BRONZ_300, Vector2(126, 42) if _big else Vector2(84, 28)
+		RunStrip.shields(d), UiKit.BRONZ_300, Vector2(126, 42) if _big else Vector2(84, 28)
 	)
-	var name_l := UiKit.label(RunStrip.DIFF_NAMES[d], &"LabelAccent", _fs(40), UiKit.KEMIK_100)
-	var desc := UiKit.label(RunStrip.DIFF_DESC[d], &"", _fs(26), UiKit.KEMIK_300)
+	var name_l := UiKit.label(RunStrip.diff_name(d), &"LabelAccent", _fs(40), UiKit.KEMIK_100)
+	var desc := UiKit.label(RunStrip.diff_desc(d), &"", _fs(26), UiKit.KEMIK_300)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var box: BoxContainer = HBoxContainer.new() if _big else VBoxContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
