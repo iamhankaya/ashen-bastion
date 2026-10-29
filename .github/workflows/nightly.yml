@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 jobs:
+  full:
+    # Kapsam kanıtı (ölçüm protokolü): ci.yml'in TAM hali, yol süzgeçsiz (push dışı olay => path_filter.sh run=1; taban_yesil dahil).
+    # Yeni workflow dosyası yok (D4): ci.yml workflow_call ile yeniden kullanılır. Elle: gh workflow run nightly.yml --ref <dal>.
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
   long:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
@@ -20,6 +25,8 @@ jobs:
           key: godot-${{ hashFiles('.godot-version') }}
       - uses: actions/cache@v4
         with:
-          path: .godot
+          path: |
+            .godot/imported
+            .godot/uid_cache.bin
           key: godot-import-${{ hashFiles('.godot-version', 'project.godot', 'assets/**', 'art/**', 'audio/**', '**/*.import') }}
       - run: bash tools/verify_long.sh

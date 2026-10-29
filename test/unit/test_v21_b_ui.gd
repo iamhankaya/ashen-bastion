@@ -240,30 +240,52 @@ func test_b16_worst_case_blocks_do_not_overlap_and_buttons_fit() -> void:
 
 
 func test_b17_two_tab_rows_with_three_tabs_each_and_open_on_the_given_pair() -> void:
+	# Adı tarihsel: sekme sayısı katalogdan türer (her mod/zorluk için bir sekme), seçili sekme çiftin indeksidir.
 	var s := _scores([], &"endless", &"hard")
-	assert_eq([s.mode_tabs.size(), s.diff_tabs.size()], [3, 3])
+	var modes := RunStrip.mode_order()
+	var diffs := RunStrip.diff_order()
+	assert_eq([s.mode_tabs.size(), s.diff_tabs.size()], [modes.size(), diffs.size()])
 	assert_eq([s.sel_mode, s.sel_diff], [&"endless", &"hard"])
-	assert_true(s.mode_tabs[2].selected)
-	assert_false(s.mode_tabs[0].selected)
-	assert_true(s.diff_tabs[2].selected)
+	for i in modes.size():
+		assert_eq(s.mode_tabs[i].selected, modes[i] == &"endless", "mod sekmesi %s" % modes[i])
+	for i in diffs.size():
+		assert_eq(s.diff_tabs[i].selected, diffs[i] == &"hard", "zorluk sekmesi %s" % diffs[i])
 	assert_eq(s.mode_tabs[0].position.y, HighscoreScreen.Y_TAB_MODE)
 	assert_eq(s.diff_tabs[0].position.y, HighscoreScreen.Y_TAB_DIFF)
 	assert_eq(s.mode_tabs[0].size.y, HighscoreScreen.TAB_H)
-	assert_lte(s.diff_tabs[2].position.x + s.diff_tabs[2].size.x, 1080.0 - 72.0 + 0.01)
+	var last_diff := s.diff_tabs[diffs.size() - 1]
+	assert_lte(last_diff.position.x + last_diff.size.x, 1080.0 - 72.0 + 0.01)
 	assert_lt(s.diff_tabs[0].position.y + HighscoreScreen.TAB_H, s.rows[0].position.y)
 
 
+func _tab_name(kind: String, title: String, on: bool, total: int, i: int) -> String:
+	var ord: String = ["birincisi", "ikincisi", "üçüncüsü"][i] if i < 3 else "%d." % (i + 1)
+	return (
+		"%s sekmesi, %s, %s, %s sekmeden %s"
+		% [kind, title, "seçili" if on else "seçili değil", RunStrip.spoken(total), ord]
+	)
+
+
 func test_b18_tab_labels_and_a11y() -> void:
+	# Sayı sözcüğü ve sıra katalogdan türer: Normal'in/Zor'un sırası `order`dan okunur (sabit "üç" yok).
 	var s := _scores([], &"normal", &"hard")
+	var modes := RunStrip.mode_order()
+	var diffs := RunStrip.diff_order()
+	var mi := modes.find(&"normal")
+	var ni := diffs.find(&"normal")
+	var hi := diffs.find(&"hard")
 	assert_eq(
-		s.mode_tabs[1].accessibility_name, "Mod sekmesi, Normal, seçili, üç sekmeden ikincisi"
+		s.mode_tabs[mi].accessibility_name, _tab_name("Mod", "Normal", true, modes.size(), mi)
 	)
 	assert_eq(
-		s.diff_tabs[1].accessibility_name,
-		"Zorluk sekmesi, Normal, seçili değil, üç sekmeden ikincisi"
+		s.diff_tabs[ni].accessibility_name, _tab_name("Zorluk", "Normal", false, diffs.size(), ni)
 	)
 	assert_eq(
-		s.diff_tabs[2].accessibility_name, "Zorluk sekmesi, Zor, seçili, üç sekmeden üçüncüsü"
+		s.diff_tabs[hi].accessibility_name, _tab_name("Zorluk", "Zor", true, diffs.size(), hi)
+	)
+	# Biçim sabiti (katalogdan bağımsız): üçlü katalogda üçüncü sekme.
+	assert_eq(
+		_tab_name("Zorluk", "Zor", true, 3, 2), "Zorluk sekmesi, Zor, seçili, üç sekmeden üçüncüsü"
 	)
 
 

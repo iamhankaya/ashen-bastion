@@ -165,6 +165,7 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	v21 = V21Sim.create(self)
 	character = data.get_character(character_id)
 	enemies.bind(data)
+	enemies.escape_enabled = bool(opts.get("escape_enabled", true))
 	for eid in data.enemy_ids:
 		_max_enemy_radius = maxf(_max_enemy_radius, data.get_enemy(eid).radius)
 	spawn_director = SpawnDirector.new(V21Sim.waves_for(data.waves, run_profile))
@@ -365,93 +366,14 @@ func spawn_enemy(type_id: StringName, pos: Vector2, hp_mult_extra: float = 1.0) 
 # --- gözlem kancaları (testler/bot/gate; üretim mantığı çağırmaz) ------------------------------
 
 
-## step_count, oyuncu (konum/hp/xp/seviye), canlı düşman (indeks, konum, hp), mermi/taş sayısı + toplam taş XP,
-## şarjör, loadout seviyeleri, 4 RNG durumu. Konumlar 1/64 px nicemlenir. Aynı ikili + aynı tohum => aynı değer.
+## Gövde: SimHash.compute (alan sırası ve nicemleme değişmez).
 func state_hash() -> int:
-	var h := PackedInt64Array()
-	h.append(step_count)
-	h.append(state)
-	h.append(_q(player_pos.x))
-	h.append(_q(player_pos.y))
-	h.append(_q(hp))
-	h.append(xp)
-	h.append(level)
-	h.append(pending_levels)
-	h.append(1 if lord_killed else 0)
-	h.append(spawn_director.progress_hash())
-	for id in enemies.alive_ids():
-		var i := EnemyPool.index_of(id)
-		h.append(i)
-		h.append(_q(enemies.pos[i].x))
-		h.append(_q(enemies.pos[i].y))
-		h.append(_q(enemies.hp[i]))
-		h.append(_q(enemies.ai_timer[i]))
-		h.append(_q(enemies.ai_aux[i]))
-		h.append(_q(enemies.ai_dir[i].x))
-		h.append(_q(enemies.ai_dir[i].y))
-	h.append(projectiles.count)
-	h.append(gems.count)
-	h.append(gems.total_value())
-	h.append(magazine.count)
-	h.append(1 if magazine.reloading else 0)
-	h.append(_q(magazine.reload_left))
-	for s in loadout.actives():
-		h.append(hash(String(s.id)))
-		h.append(s.level)
-	for s in loadout.passives():
-		h.append(hash(String(s.id)))
-		h.append(s.level)
-	h.append(rng_spawn.state)
-	h.append(rng_choice.state)
-	h.append(rng_map.state)
-	h.append(rng_combat.state)
-	h.append_array(V11State.hash_items(self))  # v1.1: sona eklenir, mevcut sıra değişmez
-	h.append_array(zones.hash_items())  # v2.0.2: bölge yokken boş (Gunslinger hash'i değişmez)
-	h.append_array(V21Sim.hash_items(self))  # v2.1: legacy/profilsizde boş
-	return hash(h)
+	return SimHash.compute(self)
 
 
-## Boşsa sağlam. Denetler: hp<=max_hp, NaN/inf yok, havuz CAP'leri, xp aralığı, canlı kimlik/nesil uyumu,
-## time monoton, şarjör 0..cap, yuva sayısı, taş XP korunumu.
+## Boşsa sağlam. Gövde: SimInvariants.check.
 func check_invariants() -> PackedStringArray:
-	var out := PackedStringArray()
-	if hp > max_hp:
-		out.append("hp > max_hp")
-	if not (is_finite(hp) and is_finite(max_hp) and is_finite(time)):
-		out.append("hp/max_hp/time sonlu değil")
-	if not (is_finite(player_pos.x) and is_finite(player_pos.y)):
-		out.append("player_pos sonlu değil")
-	if enemies.count > EnemyPool.CAP:
-		out.append("enemies.count > CAP")
-	if projectiles.count > ProjectilePool.CAP:
-		out.append("projectiles.count > CAP")
-	if gems.count > GemPool.CAP:
-		out.append("gems.count > CAP")
-	if xp < 0:
-		out.append("xp < 0")
-	if state != State.LEVEL_UP and xp >= xp_to_next:
-		out.append("xp >= xp_to_next (LEVEL_UP dışında)")
-	for id in enemies.alive_ids():
-		var i := EnemyPool.index_of(id)
-		if not enemies.is_alive(id):
-			out.append("canlı kimlik nesil uyumsuz: %d" % id)
-		elif not (
-			is_finite(enemies.pos[i].x) and is_finite(enemies.pos[i].y) and is_finite(enemies.hp[i])
-		):
-			out.append("düşman %d konum/hp sonlu değil" % i)
-	if _time_regressed:
-		out.append("time geriye gitti")
-	if magazine.count < 0 or magazine.count > magazine.cap:
-		out.append("magazine.count aralık dışı")
-	if (
-		loadout.actives().size() > Loadout.ACTIVE_SLOTS
-		or loadout.passives().size() > Loadout.PASSIVE_SLOTS
-	):
-		out.append("yuva sayısı sınırı aşıldı")
-	if gems.dropped_total - gems.collected_total != gems.total_value():
-		out.append("taş XP korunumu bozuldu")
-	V11State.check(self, out)
-	return out
+	return SimInvariants.check(self)
 
 
 ## Canlı düşman kimlikleri, artan sırayla.
@@ -461,16 +383,7 @@ func alive_ids() -> PackedInt32Array:
 
 ## Yuva sınırına uyar; evrim kimliği verilirse koşulsuz uygulanır.
 func debug_grant(skill_id: StringName, lvl: int = 1) -> void:
-	var def := data.get_skill(skill_id)
-	if def == null:
-		return
-	if def.kind == SkillDef.KIND_EVOLUTION:
-		loadout.apply_evolution(skill_id)
-		evolved_log.append(skill_id)
-	else:
-		for k in lvl:
-			loadout.add_or_upgrade(skill_id)
-	_refresh_stats()
+	SimDebug.grant(self, skill_id, lvl)
 
 
 ## enemy_id veya -1.
@@ -480,22 +393,12 @@ func debug_spawn(type_id: StringName, pos: Vector2) -> int:
 
 ## Stres/perf: n düşmanı halkaya koyar; doğan sayıyı döndürür.
 func debug_fill(type_id: StringName, n: int, ring_radius: float) -> int:
-	var made := 0
-	for k in n:
-		var a := TAU * float(k) / float(maxi(n, 1))
-		if spawn_enemy(type_id, player_pos + Vector2.from_angle(a) * ring_radius) >= 0:
-			made += 1
-	return made
+	return SimDebug.fill(self, type_id, n, ring_radius)
 
 
 ## Yalnızca ileri atlama; atlanan aralıktaki `at` olayları tetiklenmez.
 func debug_set_time(t: float) -> void:
-	if t <= time:
-		return
-	time = t
-	_last_time = t
-	spawn_director.skip_to(t)
-	pickup_director.skip_to(step_count)
+	SimDebug.set_time(self, t)
 
 
 func debug_add_xp(n: int) -> void:
@@ -692,102 +595,11 @@ func _phase_skills() -> void:
 	wind.step(self)
 
 
-## (6) mermi hareketi + çarpışma + hit_ids.
+## (6) mermi hareketi + çarpışma + hit_ids. Gövde: SimProjectiles.step (R9b).
 func _phase_projectiles() -> void:
 	_trace(5)
-	var pr := projectiles
-	var i := pr.count - 1
-	while i >= 0:
-		w_proj_updates += 1
-		pr.pos[i] += pr.vel[i] * STEP
-		pr.life[i] -= STEP
-		var consumed := false
-		_scratch.clear()
-		if (pr.flags[i] & ProjectilePool.FLAG_LOB) == 0:
-			grid.query_circle(pr.pos[i], pr.rad[i] + SMALL_ENEMY_RADIUS, _scratch)
-			for id in _scratch:
-				if not enemies.is_alive(id) or pr.has_hit(i, id):
-					continue
-				w_collision_tests += 1
-				var ei := EnemyPool.index_of(id)
-				var reach := pr.rad[i] + enemies.radius[ei]
-				if enemies.pos[ei].distance_squared_to(pr.pos[i]) <= reach * reach:
-					if _projectile_hit(i, id):
-						consumed = true
-						break
-			if not consumed and not _big_ids.is_empty():
-				consumed = _projectile_vs(i, _big_ids)  # elit/Lord: ızgara sorgusu dışında doğrudan denetlenir
-		if not consumed and pr.life[i] <= 0.0:
-			if pr.flags[i] & ProjectilePool.FLAG_EXPLODE_ON_EXPIRE:
-				explode(pr.pos[i], pr.ex_radius[i], pr.ex_dmg[i], &"projectile")
-			consumed = true
-		kill_source_flags = 0
-		if consumed:
-			pr.remove(i)
-		i -= 1
+	SimProjectiles.step(self)
 	_tick_bombs()
-
-
-## Mermi `pi` aday düşmanlara (artan id sırası) çarpıyor mu; true = mermi tükendi.
-func _projectile_vs(pi: int, ids: PackedInt32Array) -> bool:
-	var pr := projectiles
-	for id in ids:
-		if not enemies.is_alive(id) or pr.has_hit(pi, id):
-			continue
-		w_collision_tests += 1
-		var ei := EnemyPool.index_of(id)
-		var reach := pr.rad[pi] + enemies.radius[ei]
-		if enemies.pos[ei].distance_squared_to(pr.pos[pi]) <= reach * reach:
-			if _projectile_hit(pi, id):
-				return true
-	return false
-
-
-## Mermi düşmana değdi. true = mermi tükendi.
-func _projectile_hit(pi: int, id: int) -> bool:
-	var pr := projectiles
-	kill_source_flags = pr.flags[pi]
-	damage.damage_enemy(self, id, pr.dmg[pi], &"bullet")
-	pr.mark_hit(pi, id)
-	for st in loadout.actives():
-		if st.behavior != null:
-			st.behavior.on_hit(id, pi)
-	var f := pr.flags[pi]
-	if pr.push[pi] > 0.0 and enemies.is_alive(id) and not enemies.is_elite(EnemyPool.index_of(id)):
-		var ei := EnemyPool.index_of(id)
-		enemies.pos[ei] += pr.vel[pi].normalized() * pr.push[pi]
-	if f & ProjectilePool.FLAG_EXPLODES:
-		explode(pr.pos[pi], pr.ex_radius[pi], pr.ex_dmg[pi], &"projectile")
-	if pr.pierce[pi] > 0:
-		pr.pierce[pi] -= 1
-		return false
-	if (f & ProjectilePool.FLAG_RICOCHET) and pr.bounces[pi] > 0:
-		var nxt := _nearest_unhit(pi, BOUNCE_RANGE)
-		if nxt >= 0:
-			var ni := EnemyPool.index_of(nxt)
-			var dir := (enemies.pos[ni] - pr.pos[pi]).normalized()
-			pr.vel[pi] = dir * pr.vel[pi].length()
-			pr.bounces[pi] -= 1
-			pr.life[pi] = maxf(pr.life[pi], 0.5)
-			if f & ProjectilePool.FLAG_EXPLODE_ON_BOUNCE:
-				explode(pr.pos[pi], pr.ex_radius[pi], pr.ex_dmg[pi], &"projectile")
-			return false
-	return true
-
-
-## Mermi için vurulmamış en yakın canlı düşman (eşitlikte en düşük indeks); yoksa -1.
-func _nearest_unhit(pi: int, range_px: float) -> int:
-	grid.query_circle(projectiles.pos[pi], range_px, _bounce_buf)
-	var best := -1
-	var best_d := INF
-	for id in _bounce_buf:
-		if not enemies.is_alive(id) or projectiles.has_hit(pi, id):
-			continue
-		var d := enemies.pos[EnemyPool.index_of(id)].distance_squared_to(projectiles.pos[pi])
-		if d < best_d or (d == best_d and EnemyPool.index_of(id) < EnemyPool.index_of(best)):
-			best = id
-			best_d = d
-	return best
 
 
 ## (7) düşman AI + temas hasarı.

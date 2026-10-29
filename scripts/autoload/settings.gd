@@ -24,6 +24,8 @@ var buyuk_yazi: bool = false
 ## v2.1: seçili koşu modu/zorluğu (RunProfiles adları; taze kurulum Normal/Normal). Bilinmeyen ad yükte varsayılana döner.
 var run_mode: String = "normal"
 var run_diff: String = "normal"
+## Geçerli mod/zorluk kimlikleri kaynağı; null = RunCatalog.default() (testler sahte katalog verir).
+var catalog: RunCatalog = null
 ## AudioDirector'ın Music kanalına eklediği anlık pay (duraklatma/duck, dB); kullanıcı seviyesinin ÜSTÜNE eklenir.
 var music_extra_db: float = 0.0
 
@@ -33,14 +35,16 @@ func _ready() -> void:
 	apply_audio()
 
 
-## Dosya yoksa ya da bozuksa varsayılanlar korunur. Biçim: JSON (ayrıştırma hatası motor günlüğüne düşmez).
+## Dosya yoksa ya da bozuksa varsayılanlar korunur (koşu modu/zorluğu katalog varsayılanına döner). Biçim: JSON (ayrıştırma hatası motor günlüğüne düşmez).
 func load_settings(path: String = "") -> void:
 	if path == "":
 		path = store_path
 	if not FileAccess.file_exists(path):
+		_load_run_selection({})
 		return
 	var json := JSON.new()
 	if json.parse(FileAccess.get_file_as_string(path)) != OK or not json.data is Dictionary:
+		_load_run_selection({})
 		return
 	var d: Dictionary = json.data
 	sound_on = bool(d.get("ses", true))
@@ -52,11 +56,19 @@ func load_settings(path: String = "") -> void:
 	sfx_pct = _pct_from(d.get("efekt_yuzde"), SFX_DEFAULT)
 	hareket_azalt = bool(d.get("hareket_azalt", false))
 	buyuk_yazi = bool(d.get("buyuk_yazi", false))
-	var rm: Variant = d.get("kosu_modu", "normal")
-	run_mode = rm if rm is String and RunProfiles.MODES.has(rm) else "normal"
-	var rd: Variant = d.get("kosu_zorluk", "normal")
-	run_diff = rd if rd is String and RunProfiles.DIFFS.has(rd) else "normal"
+	_load_run_selection(d)
 	RenderFix.enabled = cull_fix
+
+
+## Kayıtlı geçerli seçim korunur; eksik/bilinmeyen olan katalog varsayılanına döner.
+func _load_run_selection(d: Dictionary) -> void:
+	var cat := catalog if catalog != null else RunCatalog.default()
+	var rm: Variant = d.get("kosu_modu")
+	run_mode = rm if rm is String and not cat.mode(str(rm)).is_empty() else cat.default_mode()
+	var rd: Variant = d.get("kosu_zorluk")
+	run_diff = (
+		rd if rd is String and not cat.difficulty(str(rd)).is_empty() else cat.default_difficulty()
+	)
 
 
 ## Yazılamazsa false döner (üretim kodunda push_error kullanılmaz).

@@ -51,11 +51,16 @@ func _codes(errs: PackedStringArray) -> Array[String]:
 
 
 func test_stats_set_is_closed_and_has_21_names() -> void:
-	assert_eq(AchievementDef.STATS.size(), 21)
+	# Yerleşik kapalı küme 21 addır (davranış sabiti); veriyle eklenen statlar buna girmez, kayıtta fazladan bulunur.
+	assert_eq(AchievementDef.STATS.size(), 21, "yerleşik kapalı küme")
 	var seen := {}
 	for s in AchievementDef.STATS:
 		seen[s] = true
 	assert_eq(seen.size(), 21, "yinelenen stat yok")
+	var reg := AchievementMetricRegistry.default()
+	for s in AchievementDef.STATS:
+		assert_false(reg.metric(s).is_empty(), "%s: kayıtta metrik dosyası var" % s)
+	assert_gte(reg.stats().size(), 21, "kayıt kapalı kümeyi kapsar")
 
 
 func test_scope_of_total_prefix_run_otherwise_unknown_empty() -> void:
@@ -157,8 +162,20 @@ func test_gunslinger_gets_portrait_and_blurb_unchanged_stats() -> void:
 
 
 func test_character_ids_follow_order_field() -> void:
-	# F-030: `order` (gunslinger 1, zyfen 2); eşitlikte dosya adı sırası.
-	assert_eq(GameData.load_dir(REAL).character_ids, [&"gunslinger", &"zyfen"] as Array[StringName])
+	# F-030: `order` artan; eşitlikte dosya adı sırası. Bilinen kimlikler katalogda ve bu sırada (yeni karakter araya girebilir).
+	var ids := GameData.load_dir(REAL).character_ids
+	assert_gte(ids.find(&"gunslinger"), 0, "gunslinger katalogda")
+	assert_gt(ids.find(&"zyfen"), ids.find(&"gunslinger"), "gunslinger zyfen'den önce")
+	var g := CatalogFixtures.characters(3)
+	g.get_character(&"zz_c0").order = 2
+	g.get_character(&"zz_c1").order = 2
+	g.get_character(&"zz_c2").order = 1
+	g._sort_character_ids()
+	assert_eq(
+		g.character_ids,
+		[&"zz_c2", &"zz_c0", &"zz_c1"] as Array[StringName],
+		"eşitlikte dosya sırası"
+	)
 
 
 func test_character_def_defaults_for_missing_v2_fields() -> void:

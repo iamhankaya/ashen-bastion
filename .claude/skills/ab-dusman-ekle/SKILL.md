@@ -13,7 +13,8 @@ Düşmanlar **tek sabit görsel + kodla hareket**tir (kare animasyonu yok).
 3. **Atlas sınırı:** en çok 16 hücre (`ATLAS_CELLS_MAX`, `scripts/sim/data_v2.gd`; `scripts/view/enemy_atlas.gd`, shader `cell_rect[16]`). Son ekleme v1'de bu sınırın tuzağıdır; 17. düşman veri doğrulamada kırmızı verir.
 4. **Dalga:** `data/waves.json` satırı (`rate|group|burst`); elit `at < end_time`, Lord `at == end_time`.
 5. **Test:** tablo testleri + `test/acceptance/test_acc_waves.gd`; botlar (`test/helpers/bots.gd`) ve kısa koşular; denge → `ab-denge-olcumu`.
-6. `bash tools/gate.sh`.
+6. **Doğrulayıcı:** Veri kuralı gerekiyorsa (yeni alan, çapraz başvuru) `GameData` çekirdeğini değiştirme: `scripts/sim/validators/` altına `extends DataValidator` yeni bir dosya ekle (doğrudan alt sınıf; `GameData._discover_validators()` keşfeder, merkezi liste yok; `validator_order()`/`validator_id()`/`run(g, out, complete)`; hata `[kod] bağlam: açıklama`; örnek `run_catalog_validator.gd`, `stat_metrics_validator.gd`; sim dışı katmana bağımlı olamaz). `docs/data-schema.md` "Doğrulayıcı eklentileri".
+7. **Doğrulama:** `bash tools/precheck.sh` (+ `--godot`), push, CI (`ab-test-ve-kapi`). Kod ekliyorsan kurallar: her `scripts/**/*.gd` ≤ 800 satır, sim → store/ui/ctrl bağımlılığı yasak (`check_layers`; `layer_exceptions.txt` yalnız azalır); `precheck.sh` ikisini de yakalar (`ab-test-ve-kapi`).
 
 ## Dokunulan dosyalar
 `data/enemies/<id>.json`, `data/waves.json`, `assets/gfx/enemies/`, `assets/gfx/manifest.json`, `tools/art/art_manifest.json`, `test/acceptance/test_acc_waves.gd`, `test/helpers/bots.gd`.

@@ -1,0 +1,530 @@
+{
+ "char_bad_base_gun": [
+  "[missing_file] waves.json: dosya yok",
+  "[unknown_key] characters/gunslinger.json: bilinmeyen anahtar 'base_gun'",
+  "[requires_ref] characters/gunslinger.json: starting_skill 'cift_tabanca' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "char_bad_blurb_long": [
+  "[missing_file] waves.json: dosya yok",
+  "[out_of_range] characters/gunslinger.json: 'blurb' > 120 karakter",
+  "[requires_ref] characters/gunslinger.json: starting_skill 'cift_tabanca' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "char_bad_placeholder_type": [
+  "[missing_file] waves.json: dosya yok",
+  "[bad_type] characters/gunslinger.json: 'placeholder' bool olmalı",
+  "[requires_ref] characters/gunslinger.json: starting_skill 'cift_tabanca' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "char_bad_portrait_missing": [
+  "[missing_file] waves.json: dosya yok",
+  "[asset_missing] characters/gunslinger.json: 'portrait' = 'res://assets/gfx/char/yok_boyle_portre.png' bulunamadı (placeholder: öneki kullan)",
+  "[requires_ref] characters/gunslinger.json: starting_skill 'cift_tabanca' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "char_bad_portrait_video_missing": [
+  "[missing_file] waves.json: dosya yok",
+  "[asset_missing] characters/gunslinger.json: 'portrait_video' = 'res://assets/video/portrait/yok_boyle_video.ogv' bulunamadı (placeholder: öneki kullan)",
+  "[requires_ref] characters/gunslinger.json: starting_skill 'cift_tabanca' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "char_bad_unlock_key": [
+  "[missing_file] waves.json: dosya yok",
+  "[unknown_key] characters/gunslinger.json unlock: bilinmeyen anahtar 'extra'",
+  "[unknown_ref] characters/gunslinger.json: unlock.achievement 'ilk_kan' yok",
+  "[requires_ref] characters/gunslinger.json: starting_skill 'cift_tabanca' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "char_bad_unlock_unknown": [
+  "[missing_file] waves.json: dosya yok",
+  "[unknown_ref] characters/gunslinger.json: unlock.achievement 'olmayan_basarim' yok",
+  "[requires_ref] characters/gunslinger.json: starting_skill 'cift_tabanca' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_ach_count": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[ach_count] achievements.json: 3 başarım, beklenen 12..30",
+  "[tier_missing] achievements.json: 'orta' kademesinde başarım yok",
+  "[tier_missing] achievements.json: 'zor' kademesinde başarım yok",
+  "[tier_missing] achievements.json: 'cok_zor' kademesinde başarım yok",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_asset_missing": [
+  "[missing_file] waves.json: dosya yok",
+  "[asset_missing] enemies/curumus_piyade.json: 'sprite' = 'gfx/yok/olmayan' bulunamadı (placeholder: öneki kullan)",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_atlas_cells": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_bad_ai": [
+  "[missing_file] waves.json: dosya yok",
+  "[bad_ai] enemies/curumus_piyade.json: 'ai' ground|air|ghost|elite|lord olmalı",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_bad_json": [
+  "[bad_json] skills/seken_mermi.json: JSON okunamadı (satır 0)",
+  "[missing_file] waves.json: dosya yok",
+  "[not_object] skills/seken_mermi.json: kök nesne olmalı",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_bad_kind": [
+  "[missing_file] waves.json: dosya yok",
+  "[bad_kind] skills/barut_kesesi.json: 'kind' active|passive|evolution olmalı",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_bad_type": [
+  "[missing_file] waves.json: dosya yok",
+  "[bad_type] enemies/curumus_piyade.json: 'hp' sayı olmalı",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_behavior_missing": [
+  "[missing_file] waves.json: dosya yok",
+  "[behavior_missing] skills/cift_tabanca.json: 'yok_boyle_bir' SkillRegistry'de yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_dup_evolution": [
+  "[missing_file] waves.json: dosya yok",
+  "[requires_ref] skills/baska_evrim.json: requires.active 'seken_mermi' yok",
+  "[requires_ref] skills/baska_evrim.json: requires.passive 'barut_kesesi' yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_dup_id": [
+  "[missing_file] waves.json: dosya yok",
+  "[id_filename] skills/dup_seken.json: id 'seken_mermi' dosya adıyla eşleşmeli",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 1 < 2"
+ ],
+ "data_bad_id_filename": [
+  "[missing_file] waves.json: dosya yok",
+  "[id_filename] enemies/les_kargasi.json: id 'karga_x' dosya adıyla eşleşmeli",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_legacy_unknown": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[legacy_unknown] achievements.json[0]: eski kimlik 'yok_boyle_eski' tanımsız",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_levels_keys": [
+  "[missing_file] waves.json: dosya yok",
+  "[levels_keys] skills/seken_mermi.json: levels[2] anahtar kümesi levels[0] ile aynı olmalı",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 1 < 2"
+ ],
+ "data_bad_levels_length": [
+  "[missing_file] waves.json: dosya yok",
+  "[levels_length] skills/seken_mermi.json: levels 4 eleman, max_level 5",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 1 < 2"
+ ],
+ "data_bad_levels_monotonic": [
+  "[missing_file] waves.json: dosya yok",
+  "[levels_monotonic] skills/cift_tabanca.json: 'damage' levels[2] yönü bozuyor",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_missing_field": [
+  "[missing_file] waves.json: dosya yok",
+  "[missing_field] enemies/curumus_piyade.json: 'hp' yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_missing_file": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_no_character": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_not_object": [
+  "[missing_file] waves.json: dosya yok",
+  "[not_object] enemies/les_kargasi.json: kök nesne olmalı",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_out_of_range": [
+  "[missing_file] waves.json: dosya yok",
+  "[out_of_range] enemies/curumus_piyade.json: 'hp' = -5.0, aralık [1.0, 1000000.0]",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_passive_key": [
+  "[missing_file] waves.json: dosya yok",
+  "[passive_key] skills/barut_kesesi.json: bilinmeyen pasif anahtarı 'luck'",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_pickup_weight": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[pickup_weight] pickups.json kinds: ağırlık toplamı > 0 olmalı",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_requires_kind": [
+  "[missing_file] waves.json: dosya yok",
+  "[requires_ref] skills/zincirleme_patlama.json: requires.active 'seken_mermi' yok",
+  "[requires_ref] skills/zincirleme_patlama.json: requires.passive 'seken_mermi' yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_requires_level": [
+  "[missing_file] waves.json: dosya yok",
+  "[requires_ref] skills/zincirleme_patlama.json: requires.active 'seken_mermi' yok",
+  "[requires_ref] skills/zincirleme_patlama.json: requires.passive 'barut_kesesi' yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_requires_ref": [
+  "[missing_file] waves.json: dosya yok",
+  "[requires_ref] skills/zincirleme_patlama.json: requires.active 'olmayan' yok",
+  "[requires_ref] skills/zincirleme_patlama.json: requires.passive 'barut_kesesi' yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_requires_unexpected": [
+  "[missing_file] waves.json: dosya yok",
+  "[requires_unexpected] skills/seken_mermi.json: 'requires' yalnız evrimde olur",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 1 < 2"
+ ],
+ "data_bad_rhythm_count": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_scope_mismatch": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[scope_mismatch] achievements.json[0]: scope 'run' stat 'total_kills' kapsamıyla uyuşmuyor",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_score_tiers": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[unknown_enemy] score.json kill_points: düşman 'curumus_piyade' yok",
+  "[unknown_enemy] score.json kill_points: düşman 'elit_piyade' yok",
+  "[unknown_enemy] score.json kill_points: düşman 'kale_lordu' yok",
+  "[unknown_enemy] score.json kill_points: düşman 'les_kargasi' yok",
+  "[score_tiers] score.json streak: tiers[2]: eşikler ve çarpanlar kesin artan olmalı",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_steps_invalid": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[steps_invalid] achievements.json[0]: 'steps' kesin artan 1..999999999 tamsayı olmalı",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_tier_missing": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[tier_missing] achievements.json: 'cok_zor' kademesinde başarım yok",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_unknown_enemy": [
+  "[no_character] characters: en az bir karakter gerekli",
+  "[unknown_enemy] waves.json rows[0]: tür 'hayalet' yok",
+  "[unknown_enemy] waves.json rows[1]: tür 'les_kargasi' yok",
+  "[unknown_enemy] waves.json rows[2]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[3]: tür 'elit_piyade' yok",
+  "[unknown_enemy] waves.json rows[4]: tür 'kale_lordu' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_unknown_key": [
+  "[missing_file] waves.json: dosya yok",
+  "[unknown_key] enemies/les_kargasi.json: bilinmeyen anahtar 'sped'",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_unknown_ref": [
+  "[missing_file] waves.json: dosya yok",
+  "[unknown_ref] characters/gunslinger.json: unlock.achievement 'olmayan_basarim' yok",
+  "[requires_ref] characters/gunslinger.json: starting_skill 'cift_tabanca' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_unknown_stat": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[unknown_stat] achievements.json[0]: bilinmeyen stat 'bilinmeyen_stat'",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_wave_boss_time": [
+  "[no_character] characters: en az bir karakter gerekli",
+  "[unknown_enemy] waves.json rows[0]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[1]: tür 'les_kargasi' yok",
+  "[unknown_enemy] waves.json rows[2]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[3]: tür 'elit_piyade' yok",
+  "[unknown_enemy] waves.json rows[4]: tür 'kale_lordu' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_wave_enemy_ai": [
+  "[no_character] characters: en az bir karakter gerekli",
+  "[unknown_enemy] waves.json rows[0]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[1]: tür 'les_kargasi' yok",
+  "[unknown_enemy] waves.json rows[2]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[3]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[4]: tür 'kale_lordu' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_wave_kind": [
+  "[no_character] characters: en az bir karakter gerekli",
+  "[wave_kind] waves.json rows[0]: 'kind' rate|group|burst|boss olmalı",
+  "[unknown_enemy] waves.json rows[1]: tür 'les_kargasi' yok",
+  "[unknown_enemy] waves.json rows[2]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[3]: tür 'elit_piyade' yok",
+  "[unknown_enemy] waves.json rows[4]: tür 'kale_lordu' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_wave_range": [
+  "[no_character] characters: en az bir karakter gerekli",
+  "[unknown_enemy] waves.json rows[0]: tür 'curumus_piyade' yok",
+  "[wave_range] waves.json rows[0]: 'from' < 'to' olmalı",
+  "[unknown_enemy] waves.json rows[1]: tür 'les_kargasi' yok",
+  "[unknown_enemy] waves.json rows[2]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[3]: tür 'elit_piyade' yok",
+  "[unknown_enemy] waves.json rows[4]: tür 'kale_lordu' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_bad_wave_unknown_key": [
+  "[no_character] characters: en az bir karakter gerekli",
+  "[wave_unknown_key] waves.json: bilinmeyen anahtar 'extra'",
+  "[unknown_enemy] waves.json rows[0]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[1]: tür 'les_kargasi' yok",
+  "[unknown_enemy] waves.json rows[2]: tür 'curumus_piyade' yok",
+  "[unknown_enemy] waves.json rows[3]: tür 'elit_piyade' yok",
+  "[unknown_enemy] waves.json rows[4]: tür 'kale_lordu' yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "data_valid": [],
+ "pool_bad_evo_pool": [
+  "[missing_file] waves.json: dosya yok",
+  "[requires_ref] skills/zincirleme_patlama.json: requires.active 'seken_mermi' yok",
+  "[requires_ref] skills/zincirleme_patlama.json: requires.passive 'barut_kesesi' yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[unknown_ref] skills/zincirleme_patlama.json: pool 'gunslinger' bilinen karakter değil",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "pool_bad_pool_type": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[bad_type] skills/seken_mermi.json: 'pool' boş olmayan metin olmalı",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 1 < 2"
+ ],
+ "pool_bad_starting": [
+  "[missing_file] waves.json: dosya yok",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[unknown_ref] skills/cift_tabanca.json: pool 'gunslinger' bilinen karakter değil",
+  "[requires_ref] characters/zyfen.json: starting_skill 'cift_tabanca' havuzu 'gunslinger' (karakter 'zyfen')",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "pool_bad_unknown_pool": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[unknown_ref] skills/seken_mermi.json: pool 'olmayan' bilinen karakter değil",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 1 < 2"
+ ],
+ "pool_bad_variant_char": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[unknown_ref] skills/hizli_doldurma.json variants.olmayan: 'olmayan' bilinen karakter değil",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "pool_bad_variant_desc": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[unknown_ref] skills/hizli_doldurma.json variants.gunslinger: 'gunslinger' bilinen karakter değil",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "pool_bad_variant_name": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[unknown_ref] skills/hizli_doldurma.json variants.gunslinger: 'gunslinger' bilinen karakter değil",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ],
+ "pool_bad_variants_special": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[unknown_ref] skills/seken_mermi.json: pool 'gunslinger' bilinen karakter değil",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 1 < 2"
+ ],
+ "pool_bad_variants_type": [
+  "[missing_file] waves.json: dosya yok",
+  "[no_character] characters: en az bir karakter gerekli",
+  "[missing_file] achievements.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[bad_type] skills/hizli_doldurma.json: 'variants' nesne olmalı",
+  "[missing_file] pickups.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[missing_file] score.json: dosya yok (içerik tamamlandı modunda zorunlu)",
+  "[rhythm_count] skills: 'rhythm' etiketli aktif 0 < 2"
+ ]
+}

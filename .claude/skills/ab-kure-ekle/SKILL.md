@@ -21,10 +21,10 @@ Küre tipi XP değerinden türer (`GemTiers.tier_of`); görünüm sınıfıdır,
    - `test/unit/test_v203_b_orbs.gd`: üç-tip varsayımları (`tiers.size() == 3`, atlas `TILE_PX * 3`, kutu döngüleri).
    - `test/acceptance/test_acc_v203_orbs.gd` **tester'ındır**: `ORB_PX` değer sabiti (`[44, 48, 80]`), `_distinct` çiftleri (normal–elit, elit–boss, normal–boss), boyut oranı `>= 1,8` ve boss koyultmama. Değişmesi gerekiyorsa `vlad task ask` ile "Test itirazı" aç; kendin değiştirme. Kural: her çift ΔL* ≥ 15 **veya** boyut oranı ≥ 1,8 + IoU ≤ 0,6; ölçüm kuralı sabit (ORB_PX'e indir, 80 px tuvale ortala, opak = alfa ≥ 0,5). Not: `ORB_PX` en büyüğü ölçüm tuvaline (`CANVAS`, şu an 80) sığmalı; boss büyürse `CANVAS` da güncellenir.
    - Dokümanlar: `docs/data-schema.md:209` (`GemTiers` satırı: eşikler, `tier_of` sınıfları) ve `docs/design/v2.0.3/DESIGN.md` §5 (tip sayısı, px değerleri, ölçüm sonuçları).
-   - Kayıt dosyaları: yeni test dosyası eklersen `ab-test-ve-kapi` (`tools/v2_slices.txt`, `gate_min_tests.json`, `test_map.json` yeniden üretimi).
+   - Kayıt dosyaları: yeni test dosyası eklersen `ab-test-ve-kapi` (`tools/v2_slices.txt`; test kimliği kapısı yeni testi otomatik görür, sayı güncellenmez).
 7. **Kuru deneme (zorunlu):** sahte tip ekle (ör. `DRYRUN`, ≥ 200 xp, 80 px, `ara_boss.png` kopyası), `python tools/art/process_gem_orbs.py --check` + ilgili GUT dosyalarını koş, kırılan listeyi çıkar, sonra **tümünü geri al** (repoya girmez). T20261026-66'daki denemede kırılanlar: `COUNT`/`ORB_PX` sabitleri, `tier_of` (3 test), atlas boyutu (512×128 ≠ 384×128), sayım testleri.
 8. **Ekran görüntüsü:** `tools/capture/shots_orbs.gd` (xvfb, 1080×2400; `orbs_three`, `orbs_crowd` 300 küre, `orbs_still`) ile önce/sonra al; **kullanıcıya göster, onaydan sonra kesinleştir.** Çıktıyı commit'leme. Küre sayısı arttıkça `refresh` µs/kare çıktısına bak (perf).
-9. `bash tools/gate.sh`.
+9. **Doğrulama:** `bash tools/precheck.sh` (+ `--godot`), push, CI (`ab-test-ve-kapi`). `gem_tiers.gd` ve `gem_renderer.gd` 800 satır tavanının altında kalmalı; `scripts/view` → ui/ctrl katman kuralı geçerli (`check_layers`).
 
 ## Kontrol listesi
 - [ ] Görünen (opak) boyut ölçüldü; ana küre 1080 genişlikte ≥ ~20 px görünür.

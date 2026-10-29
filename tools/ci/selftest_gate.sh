@@ -3,11 +3,15 @@
 # Kullanım: selftest_gate.sh [--group N] [--list]
 #   --group N : yalnız GROUP tablosunda N numaralı gruba atanmış senaryolar (CI matrisi; F-028). Verilmezse hepsi.
 #   --list    : "<senaryo> <grup>" satırlarını yazar ve çıkar.
+#   --scenario AD : yalnız o senaryo (hata ayıklama / prova).
+# Ortam: SELFTEST_SKIP_TABAN=1 yalnız `taban_yesil` senaryosunu atlar (H1: ci.yml yol süzgeci; negatif senaryolar HER ZAMAN koşar).
+#        SELFTEST_GODOT_CACHE=<.godot> (varsayılan $ROOT/.godot) içindeki imported/ + uid_cache.bin her senaryo kopyasına aktarılır (H2).
 # Senaryo -> grup tablosu AŞAĞIDADIR (GROUP[...]=N); her senaryo `scenario_<ad>` işlevidir ve tam bir grupta olmalıdır
 # (başlangıçta denetlenir; uyumsuzluk çıkış 2). ci.yml selftest matrisi group değerleri = tablodaki gruplar.
 # Süreler (S0 ölçümü, docs/dev/v2.0-s0-measure.md §2): tam-gate senaryosu ≈ 340 s, hafifler 1–40 s.
 set -uo pipefail
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# SELFTEST_ROOT yalnız prova içindir (tools/ci/tests/test_infra_selftest_cache.py): sahte depo ile senaryo mekaniğini sınar.
+ROOT="${SELFTEST_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 FAILS=0
@@ -17,6 +21,13 @@ fresh() { # fresh <ad> : kopya oluşturur, yolu yazar
   mkdir -p "$d"
   # Temiz checkout'u taklit: yalnız izlenen + izlenmeyen-ama-ignore-edilmemiş DOSYALAR (boş dizinler taşınmaz)
   (cd "$ROOT" && git ls-files -co --exclude-standard -z | tar --null -T - -cf -) | tar -xf - -C "$d"
+  # H2: .godot gitignore'ludur, kopyaya girmez; yalnız imported/ + uid_cache.bin AÇIKÇA aktarılır (class cache aktarılmaz:
+  # gate.sh her koşuda --import çalıştırır ve sınıf önbelleğini kendisi üretir; mutasyon sonrası import doğrulaması korunur).
+  local gc="${SELFTEST_GODOT_CACHE:-$ROOT/.godot}"
+  if [ -d "$gc/imported" ]; then
+    mkdir -p "$d/.godot" && cp -a "$gc/imported" "$d/.godot/imported"
+    [ -f "$gc/uid_cache.bin" ] && cp -a "$gc/uid_cache.bin" "$d/.godot/uid_cache.bin"
+  fi
   echo "$d"
 }
 expect() { # expect <ad> <beklenen_kod> <dizin> [env...]
@@ -24,23 +35,30 @@ expect() { # expect <ad> <beklenen_kod> <dizin> [env...]
   (cd "$dir" && env "$@" bash tools/gate.sh > "$TMP/$name.log" 2>&1)
   local got=$?
   if [ "$got" = "$want" ]; then echo "OK   $name (çıkış $got)"; else echo "FAIL $name: beklenen $want, gelen $got"; tail -n 15 "$TMP/$name.log"; FAILS=$((FAILS+1)); fi
+  step_times "$TMP/$name.log"
+}
+step_times() { # gate günlüğündeki "=== adım" + "süre: N sn" çiftleri tek satırda (grup dengeleme ölçümü; sonucu etkilemez)
+  awk '/^=== /{n=substr($0,5)} /^ +süre: /{printf "%s%s=%ss", (c++?" | ":""), n, $2} END{if(c)print ""}' "$1" | sed 's/^/     adımlar: /'
 }
 
-# --- senaryo -> grup tablosu (en uzun grup ≈ 409 s; tam-gate senaryoları ayrı gruplarda) ---------------------------------
+# --- senaryo -> grup tablosu (tam-gate senaryoları ≈270-400 s HER BİRİ KENDİ grubunda yalnız; hafifler ve gut_error grup 6'da ≈215 s; ölçüm: CI 40865703918) ---------------------------------
 declare -A GROUP=()
 GROUP[taban_yesil]=1
-GROUP[bozuk_gd]=1
-GROUP[bos_test_dizisi]=1
 GROUP[anlamsal_hata]=2
-GROUP[to_upper]=2
-GROUP[veri_hatasi]=2
-GROUP[asgari_sayi_alti]=3
+GROUP[test_kimligi_kaybi]=3
 GROUP[stub_todo]=4
-GROUP[pending_sayilmaz]=5
-GROUP[ag_yok]=5
+GROUP[kosmayan_test]=5
 GROUP[gut_error]=6
+GROUP[bozuk_gd]=6
+GROUP[bos_test_dizisi]=6
+GROUP[to_upper]=6
+GROUP[veri_hatasi]=6
+GROUP[ag_yok]=6
 
-scenario_taban_yesil() { local d; d=$(fresh base); expect "taban yeşil" 0 "$d" X=1; }
+scenario_taban_yesil() {
+  if [ "${SELFTEST_SKIP_TABAN:-0}" = "1" ]; then echo "SKIPPED_BY_FILTER taban_yesil (ci.yml yol süzgeci: altyapı yolu değişmedi)"; return; fi
+  local d; d=$(fresh base); expect "taban yeşil" 0 "$d" X=1
+}
 
 scenario_bozuk_gd() { # bozuk .gd
   local d; d=$(fresh a); printf 'extends Node\nfunc broken(:\n' > "$d/scripts/sim/zz_broken.gd"
@@ -59,9 +77,26 @@ scenario_bos_test_dizisi() {
   expect "boş test dizisi" 1 "$d" X=1
 }
 
-scenario_asgari_sayi_alti() {
-  local d; d=$(fresh c); echo '{"test/unit/test_smoke.gd": 99}' > "$d/tools/gate_min_tests.json"
-  expect "asgari sayı altı" 1 "$d" X=1
+scenario_test_kimligi_kaybi() { # tabandaki bir test kimliği HEAD'de yok (silinmiş/yeniden adlandırılmış): kimlik kapısı LOST der
+  local d base; d=$(fresh c); base="$TMP/base_declared_c.txt"
+  # git'siz kopya: taban kimlikleri özgün (mutasyonsuz) ağaçtan üretilir, gate.sh'a GATE_BASE_DECLARED ile verilir
+  python3 - "$ROOT" "$base" <<'PY'
+import sys
+sys.path.insert(0, sys.argv[1] + "/tools/ci")
+import check_test_ids as T
+ids = sorted(T.collect_declared(T.FsSource(sys.argv[1])).ids)
+open(sys.argv[2], "w", encoding="utf-8").write("\n".join(ids) + "\n")
+PY
+  python3 - "$d/test/unit/test_art_loader.gd" <<'PY'
+import re, sys
+p = sys.argv[1]
+t = open(p, encoding="utf-8").read()
+n = re.sub(r"^func test_\w+\(", "func renamed_by_selftest(", t, count=1, flags=re.M)
+assert n != t, "selftest: test_art_loader.gd'de test işlevi yok"
+open(p, "w", encoding="utf-8").write(n)
+PY
+  expect "test kimliği kaybı" 1 "$d" GATE_BASE_DECLARED="$base"
+  grep -q "test_art_loader.gd::.*LOST (declared kayboldu)" "$TMP/test kimliği kaybı.log" || { echo "FAIL test kimliği kaybı: günlükte LOST yok (başka nedenle kırmızı)"; FAILS=$((FAILS+1)); }
 }
 
 scenario_stub_todo() { # Stub.todo => test başarısızlığı (stub.gd varsa; yoksa senaryo atlanır ama grup boş kalmaz)
@@ -71,11 +106,11 @@ scenario_stub_todo() { # Stub.todo => test başarısızlığı (stub.gd varsa; y
   expect "Stub.todo başarısızlık" 1 "$d" X=1
 }
 
-scenario_pending_sayilmaz() { # pending testler asgari sayıya sayılmaz
+scenario_kosmayan_test() { # bildirilen ama koşuda pending olan test (dilim dışı): kimlik kapısı MISSING der
   local d; d=$(fresh f)
   printf 'extends GutTest\n\n\nfunc test_p() -> void:\n\tpending("selftest")\n' > "$d/test/unit/test_zz_pending.gd"
-  echo '{"test/unit/test_zz_pending.gd": 1}' > "$d/tools/gate_min_tests.json"
-  expect "pending sayılmaz" 1 "$d" X=1
+  expect "koşmayan test" 1 "$d" X=1
+  grep -q "MISSING" "$TMP/koşmayan test.log" || { echo "FAIL koşmayan test: günlükte MISSING yok (başka nedenle kırmızı)"; FAILS=$((FAILS+1)); }
 }
 
 scenario_gut_error() { # GUT'ın saydığı ama çıkış kodunu etkilemeyen hata ([GUT ERROR]): olmayan test dizini
@@ -120,11 +155,13 @@ if [ "$defined" != "$listed" ]; then
 fi
 
 ONLY=""
+ONE=""
 LIST=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --group) ONLY="${2:-}"; shift 2 ;;
     --list) LIST=1; shift ;;
+    --scenario) ONE="${2:-}"; shift 2 ;;
     *) echo "bilinmeyen bağımsız değişken: $1" >&2; exit 2 ;;
   esac
 done
@@ -137,8 +174,20 @@ if [ -n "$ONLY" ] && ! printf '%s\n' "${GROUP[@]}" | grep -qx "$ONLY"; then
   exit 2
 fi
 
+if [ -n "$ONE" ] && [ -z "${GROUP[$ONE]:-}" ]; then echo "SELFTEST: senaryo $ONE tabloda yok" >&2; exit 2; fi
+# F-119 (soğuk koşu): önbellek yoksa her senaryo kopyası --import'u sıfırdan yapar (~60 sn/senaryo) ve iş .godot/imported'ı doldurmadığından
+# actions/cache da yazılmaz. Kökte BİR kez ısın (ensure_godot + godot_import); fresh() sonucu her kopyaya aktarır, cache post-adımı da yazar.
+# Başarısızlık ölümcül değil (senaryolar kendi import'larını yapar); mutasyon sonrası import doğrulaması etkilenmez (class cache aktarılmaz).
+GC="${SELFTEST_GODOT_CACHE:-$ROOT/.godot}"
+if [ ! -d "$GC/imported" ]; then
+  echo "SELFTEST: önbellek yok, tek seferlik ısınma (--import)"
+  if ! (cd "$ROOT" && eval "${SELFTEST_WARMUP_CMD:-bash tools/ci/selftest_warmup.sh}") > "$TMP/warmup.log" 2>&1; then
+    echo "SELFTEST: ısınma başarısız (senaryolar kendi import'unu yapar); son satırlar:"; tail -n 5 "$TMP/warmup.log"
+  fi
+fi
 ran=0
 for n in $(printf '%s\n' "${!GROUP[@]}" | sort); do
+  if [ -n "$ONE" ] && [ "$n" != "$ONE" ]; then continue; fi
   if [ -z "$ONLY" ] || [ "${GROUP[$n]}" = "$ONLY" ]; then
     echo "--- senaryo: $n (grup ${GROUP[$n]})"
     "scenario_$n"

@@ -155,10 +155,27 @@ func test_a6_talkback_names_match_the_design() -> void:
 
 
 func test_a10_screen_has_three_mode_rows_and_three_difficulty_cards() -> void:
+	# Adı tarihsel: satır/kart sayısı katalogdan türer (veri-yalnız mod eklenince satır artar).
 	var s := _screen()
 	await _settle()
-	assert_eq(s.mode_buttons.keys(), [&"quick", &"normal", &"endless"])
-	assert_eq(s.diff_buttons.keys(), [&"easy", &"normal", &"hard"])
+	assert_eq(s.mode_buttons.keys(), RunStrip.mode_order(), "her katalog modu için bir satır")
+	assert_eq(s.diff_buttons.keys(), RunStrip.diff_order(), "her katalog zorluğu için bir kart")
+	assert_eq(s.mode_buttons.size(), RunCatalog.default().mode_ids().size())
+	var cat := RunCatalog.default()
+	assert_eq(
+		CatalogFixtures.known_in_order(cat.mode_ids(), RunProfiles.MODES),
+		RunProfiles.MODES,
+		"yerleşik mod sırası"
+	)
+	assert_eq(
+		CatalogFixtures.known_in_order(cat.difficulty_ids(), RunProfiles.DIFFS),
+		RunProfiles.DIFFS,
+		"yerleşik zorluk sırası"
+	)
+	for m in RunProfiles.MODES:
+		assert_true(s.mode_buttons.has(StringName(m)), "yerleşik mod satırı: " + m)
+	for d in RunProfiles.DIFFS:
+		assert_true(s.diff_buttons.has(StringName(d)), "yerleşik zorluk kartı: " + d)
 	for m in s.mode_buttons:
 		var b: Button = s.mode_buttons[m]
 		assert_almost_eq(b.size.x, 936.0, 1.0, "mod satırı genişliği")

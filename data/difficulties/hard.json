@@ -1,0 +1,11 @@
+{
+"id": "hard",
+"order": 3,
+"name": "Zor",
+"label": "ZOR",
+"description": "Yoğun ve sert düşman.",
+"spoken": "yoğun ve sert düşman",
+"shields": 3,
+"values": {"enemy_hp": 1.00, "enemy_dmg": 1.00, "spawn_density": 1.00, "xp": 1.00, "lord_hp": 1.00},
+"achievements": {"block_lord_bound": false, "totals": "all"}
+}

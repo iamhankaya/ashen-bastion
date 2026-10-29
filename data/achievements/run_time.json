@@ -1,0 +1,14 @@
+{
+  "stat": "run_time",
+  "order": 100,
+  "icon_family": "hud-sure",
+  "persist": {
+    "total": null,
+    "best": "time"
+  },
+  "source": {
+    "poll": "time"
+  },
+  "aggregate": "max",
+  "result_max": "time"
+}

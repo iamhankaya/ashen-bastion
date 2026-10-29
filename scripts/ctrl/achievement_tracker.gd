@@ -2,6 +2,8 @@ class_name AchievementTracker
 extends RefCounted
 ## Başarım izleyici: SimBus sinyallerinden sayaç, eşikte `store.unlock`. Sim durumuna YAZMAZ, RNG kullanmaz, diske yazmaz,
 ## `run_ended` dinlemez (controller `finish(won, stats)` çağırır). Aile/kademe (v2.0.3): `steps` eşiklerini geçince depoya kademe yazar. Olay yolunda tahsis yok: yalnız skaler sayaçlar.
+## R8: hangi olayın hangi statı nasıl beslediği kodda değil `data/achievements/<stat>.json` kaydındadır (AchievementMetricRegistry):
+## yerleşik toplam (sum|max|count, filtreli), poll, finish ya da `AchievementReducer` eklentisi. Aynı olaydaki statlar metriğin `order` sırasıyla işlenir.
 ## Dinlenen sinyaller (test_contract_sim imza testiyle sabit): enemy_killed, level_up, score_changed, reload_started,
 ## streak_changed, pickup_collected, player_damaged, evolution_gained, buff_started, buff_ended, bomb_hits.
 
@@ -22,6 +24,7 @@ const LISTENED: PackedStringArray = [
 ]
 
 ## Stat dizinleri (AchievementDef.STATS sırası; testle sabit). Olay yolunda ad araması yok, dizinle O(1).
+## Kayıtta olup STATS'ta olmayan statlar bunların ardından, ad sırasıyla eklenir.
 const S_TOTAL_KILLS := 0
 const S_TOTAL_RUNS := 1
 const S_TOTAL_WINS := 2
@@ -44,11 +47,27 @@ const S_RUN_WON := 18
 const S_RUN_BOMB_HITS := 19
 const S_TOTAL_BOSS_KILLS := 20
 
+## Elit/buff sabitleri eklenti reducer'larının kullandığı değerlerdir (EliteKindsReducer, UnlimitedKillsReducer); sınıf yüzeyi (rf_api_surface) için burada kalır.
 const ELIT_PIYADE := &"elit_piyade"
 const ELITE_MASKS := {&"elit_piyade": 1, &"elit_sovalye": 2, &"elit_karga": 4}
 const UNLIMITED := &"unlimited"
 ## Elit türü bit maskesi -> tür sayısı (popcount, 3 bit).
 const POPCOUNT3: PackedInt32Array = [0, 1, 1, 2, 1, 2, 2, 3]
+
+## Kaynak türleri (stat başına).
+const _K_NONE := 0
+const _K_EVENT := 1
+const _K_POLL := 2
+const _K_FINISH := 3
+const _K_REDUCER := 4
+## Birleştirme: 0 toplam (sum|count), 1 en büyük.
+const _AGG_SUM := 0
+const _AGG_MAX := 1
+## `_slot` özel değerleri: olay/finish için sabit 1 ve finish'te result.time; poll için 0 time, 1 active_slots.
+const _SLOT_ONE := -1
+const _SLOT_RESULT_TIME := -2
+const _POLL_TIME := 0
+const _POLL_ACTIVE_SLOTS := 1
 
 var data: GameData
 var store: AchievementStore
@@ -64,14 +83,35 @@ var _run: PackedInt32Array = PackedInt32Array()
 ## stat dizini -> tanım indeksleri (`data.achievements`).
 var _by_stat: Array[PackedInt32Array] = []
 var _bus: SimBus = null
-var _elite_mask: int = 0
-var _unlimited_active: bool = false
-var _damaged: bool = false
 var _finished: bool = false
 var _run_unlocked: Array[StringName] = []
 var _run_steps: int = 0
-## [stat dizini, best anahtarı]: `finish` koşu en iyilerini depoya yazar.
-var _best_pairs: Array = []
+
+## Stat tabloları (hepsi stat dizinli; kayıttan kurulur).
+var _stats: PackedStringArray = PackedStringArray()
+var _kind: PackedInt32Array = PackedInt32Array()
+var _agg: PackedInt32Array = PackedInt32Array()
+var _slot: PackedInt32Array = PackedInt32Array()
+var _result_key: PackedInt32Array = PackedInt32Array()  # 0 time, 1 level, 2 score, -1 yok
+var _when_won: PackedByteArray = PackedByteArray()  # finish kaynağı yalnız kazanınca
+var _filter: Array = []  # StringName dizisi; boş = süzgeç yok
+var _total_key: Array[StringName] = []
+var _total_s: PackedStringArray = PackedStringArray()  # depo `totals` anahtarı ("" = toplam yok)
+var _best_s: PackedStringArray = PackedStringArray()  # depo `best` anahtarı ("" = en iyi yok)
+var _reducers: Array = []  # stat dizini -> AchievementReducer ya da null
+var _rstate: Array = []  # stat dizini -> reducer durum sözlüğü
+var _reducer_finish: PackedByteArray = PackedByteArray()
+## Olay dizini (LISTENED sırası) -> o olayı işleyen statlar (metrik `order` sırasıyla).
+var _ev_stats: Array[PackedInt32Array] = []
+var _ev_reducer: PackedByteArray = PackedByteArray()  # olayı dinleyen reducer var mı (payload doldurulur)
+var _ev_names: Array[StringName] = []
+var _poll_stats: PackedInt32Array = PackedInt32Array()
+var _result_stats: PackedInt32Array = PackedInt32Array()
+var _finish_stats: PackedInt32Array = PackedInt32Array()
+var _best_stats: PackedInt32Array = PackedInt32Array()
+## Reducer'a verilen yeniden kullanılan yük ve koşu sonu özeti (anahtarlar sabit, tahsis yok).
+var _payload: Dictionary = {}
+var _result: Dictionary = {"time": 0, "level": 0, "score": 0, "won": false, "counts_chars5": true}
 
 
 ## p_clock: () -> int unix (varsayılan Time.get_unix_time_from_system; testte enjekte; dönüş < 1 ise 1 kullanılır).
@@ -90,14 +130,10 @@ func _init(
 	clock = p_clock
 	rules = p_rules
 	diff = p_diff
-	_run.resize(AchievementDef.STATS.size())
-	for _i in AchievementDef.STATS.size():
-		_by_stat.append(PackedInt32Array())
-	for stat: String in AchievementDef.BEST_KEY:
-		_best_pairs.append([AchievementDef.STATS.find(stat), AchievementDef.BEST_KEY[stat]])
+	_build()
 	if data != null:
 		for i in data.achievements.size():
-			var si := AchievementDef.STATS.find(String(data.achievements[i].stat))
+			var si := _stats.find(String(data.achievements[i].stat))
 			if si >= 0:
 				_by_stat[si].append(i)
 
@@ -142,19 +178,14 @@ func detach() -> void:
 func poll(sim: GameSim) -> void:
 	if _finished or sim == null:
 		return
-	var secs := int(sim.time)
-	if secs > _run[S_RUN_TIME]:
-		_run[S_RUN_TIME] = secs
-		_check(S_RUN_TIME)
-	# Hasar adımı poll'dan önce gelir: ilk hasardan sonra değer son poll'un değerinde donar.
-	if not _damaged and secs > _run[S_RUN_CLEAN_SECS]:
-		_run[S_RUN_CLEAN_SECS] = secs
-		_check(S_RUN_CLEAN_SECS)
-	if sim.loadout != null:
-		var n := sim.loadout.actives().size()
-		if n > _run[S_RUN_ACTIVE_SLOTS]:
-			_run[S_RUN_ACTIVE_SLOTS] = n
-			_check(S_RUN_ACTIVE_SLOTS)
+	for si in _poll_stats:
+		if _kind[si] == _K_REDUCER:
+			(_reducers[si] as AchievementReducer).poll(sim, _rstate[si])
+			_sync(si)
+		elif _slot[si] == _POLL_TIME:
+			_raise(si, int(sim.time))
+		elif sim.loadout != null:
+			_raise(si, sim.loadout.actives().size())
 
 
 ## Controller çağırır; ikinci çağrı no-op.
@@ -164,26 +195,24 @@ func finish(won: bool, stats: Dictionary) -> void:
 	var time := _stat_int(stats, "time")
 	var level := _stat_int(stats, "level")
 	var score := _stat_int(stats, "score")
-	_raise(S_RUN_TIME, time)
-	_raise(S_RUN_LEVEL, level)
-	_raise(S_RUN_SCORE, score)
+	for si in _result_stats:
+		match _result_key[si]:
+			0:
+				_raise(si, time)
+			1:
+				_raise(si, level)
+			2:
+				_raise(si, score)
 	_finished = true  # bundan sonra olaylar ve poll sayılmaz; aşağıdaki kontroller doğrudan çağrılır
-	store.add_total(&"runs", 1)
-	_check(S_TOTAL_RUNS)
-	if won:
-		_add_total(&"wins", 1)
-		_check(S_TOTAL_WINS)
-	store.add_total(&"play_secs", time)
-	_check(S_TOTAL_PLAY_SECS)
-	store.note_best(score, time, level)
-	for pair in _best_pairs:
-		store.note_best_key(pair[1], _run[pair[0]])
-	if time >= 300 and _counts(&"chars5"):
-		store.note_char5(char_id)
-		_check(S_TOTAL_CHARS5)
-	if won:
-		_run[S_RUN_WON] = 1
-		_check(S_RUN_WON)
+	_result["time"] = time
+	_result["level"] = level
+	_result["score"] = score
+	_result["won"] = won
+	_result["counts_chars5"] = _counts(&"chars5")
+	for si in _finish_stats:
+		_finish_one(si, won, time)
+	for si in _best_stats:
+		store.note_best_key(StringName(_best_s[si]), _run[si])
 
 
 ## Bu koşuda kademe kazanan aileler, ilk kazanış sırası (aile başına bir kez).
@@ -198,7 +227,7 @@ func run_new_steps() -> int:
 
 ## Güncel sayaç (total: depo, run: koşu).
 func value_of(stat: StringName) -> int:
-	var si := AchievementDef.STATS.find(String(stat))
+	var si := _stats.find(String(stat))
 	return _value(si) if si >= 0 else 0
 
 
@@ -207,9 +236,9 @@ func progress(def: AchievementDef) -> int:
 	var base := AchievementProgress.of(def, store)
 	if base < 0:
 		return -1
-	var s := String(def.stat)
-	if AchievementDef.BEST_KEY.has(s):
-		return maxi(base, _run[AchievementDef.STATS.find(s)])
+	var si := _stats.find(String(def.stat))
+	if si >= 0 and _best_s[si] != "":
+		return maxi(base, _run[si])
 	return base
 
 
@@ -224,82 +253,109 @@ func flush() -> bool:
 
 
 func _on_enemy_killed(type_id: StringName, _pos: Vector2) -> void:
-	if _finished:
-		return
-	_add_total(&"kills", 1)
-	_check(S_TOTAL_KILLS)
-	_run[S_RUN_KILLS] += 1
-	_check(S_RUN_KILLS)
-	var mask: int = ELITE_MASKS.get(type_id, 0)
-	if mask != 0:
-		_add_total(&"boss_kills", 1)
-		_check(S_TOTAL_BOSS_KILLS)
-		if type_id == ELIT_PIYADE:
-			_run[S_RUN_ELIT_PIYADE] += 1
-			_check(S_RUN_ELIT_PIYADE)
-		if _elite_mask & mask == 0:
-			_elite_mask |= mask
-			_run[S_RUN_ELITE_KINDS] = POPCOUNT3[_elite_mask]
-			_check(S_RUN_ELITE_KINDS)
-	if _unlimited_active:
-		_run[S_RUN_UNLIMITED_KILLS] += 1
-		_check(S_RUN_UNLIMITED_KILLS)
+	_dispatch(0, type_id, 0, 0, 0)
 
 
 func _on_level_up(level: int) -> void:
-	_raise(S_RUN_LEVEL, level)
+	_dispatch(1, &"", level, 0, 0)
 
 
-func _on_score_changed(score: int, _mult: int, _gain: int) -> void:
-	_raise(S_RUN_SCORE, score)
+func _on_score_changed(score: int, mult: int, gain: int) -> void:
+	_dispatch(2, &"", score, mult, gain)
 
 
 func _on_reload_started(_duration: float) -> void:
-	if _finished:
-		return
-	_run[S_RUN_RELOADS] += 1
-	_check(S_RUN_RELOADS)
+	_dispatch(3, &"", 0, 0, 0)
 
 
 func _on_streak_changed(mult: int, _left: float) -> void:
-	_raise(S_RUN_BEST_MULT, mult)
+	_dispatch(4, &"", mult, 0, 0)
 
 
-func _on_pickup_collected(_kind_id: StringName, _pos: Vector2) -> void:
-	if _finished:
-		return
-	_run[S_RUN_PICKUPS] += 1
-	_check(S_RUN_PICKUPS)
+func _on_pickup_collected(kind_id: StringName, _pos: Vector2) -> void:
+	_dispatch(5, kind_id, 0, 0, 0)
 
 
 func _on_player_damaged(_amount: float, _hp: float) -> void:
-	_damaged = true
+	_dispatch(6, &"", 0, 0, 0)
 
 
-func _on_evolution_gained(_evo_id: StringName) -> void:
-	if _finished:
-		return
-	_run[S_RUN_EVOLUTIONS] += 1
-	_check(S_RUN_EVOLUTIONS)
+func _on_evolution_gained(evo_id: StringName) -> void:
+	_dispatch(7, evo_id, 0, 0, 0)
 
 
-## Yenilemede de yayınlanır (sinyal `fresh` taşımaz): bayrak zaten açıksa hiçbir şey yapılmaz.
+## Yenilemede de yayınlanır (sinyal `fresh` taşımaz): reducer bayrağı zaten açıksa sıfırlamaz.
 func _on_buff_started(kind: StringName, _duration: float) -> void:
-	if kind == UNLIMITED and not _unlimited_active:
-		_unlimited_active = true
-		_run[S_RUN_UNLIMITED_KILLS] = 0
+	_dispatch(8, kind, 0, 0, 0)
 
 
 func _on_buff_ended(kind: StringName) -> void:
-	if kind == UNLIMITED:
-		_unlimited_active = false
+	_dispatch(9, kind, 0, 0, 0)
 
 
 func _on_bomb_hits(_pos: Vector2, _radius: float, hits: int) -> void:
-	_raise(S_RUN_BOMB_HITS, hits)
+	_dispatch(10, &"", hits, 0, 0)
+
+
+## Tek olay girişi: `a/b/c` olayın tamsayı alanları (MetricSchema.EVENTS sırası), `tag` etiket alanı.
+func _dispatch(ev: int, tag: StringName, a: int, b: int, c: int) -> void:
+	if _finished:
+		return
+	if _ev_reducer[ev] != 0:
+		_fill_payload(ev, tag, a, b, c)
+	for si in _ev_stats[ev]:
+		if _kind[si] == _K_REDUCER:
+			(_reducers[si] as AchievementReducer).on_event(_ev_names[ev], _payload, _rstate[si])
+			_sync(si)
+			continue
+		var flt: Array = _filter[si]
+		if not flt.is_empty() and not flt.has(tag):
+			continue
+		var v := 1
+		match _slot[si]:
+			0:
+				v = a
+			1:
+				v = b
+			2:
+				v = c
+		_apply(si, v)
 
 
 # --- iç ------------------------------------------------------------------------------------------
+
+
+## Olay kaynağından gelen değeri uygular: en büyük ya da toplam (depo toplamı varsa depoya), sonra kademe denetimi.
+func _apply(si: int, v: int) -> void:
+	if _agg[si] == _AGG_MAX:
+		_raise(si, v)
+		return
+	if _total_s[si] != "":
+		_add_total(_total_key[si], v)
+	else:
+		_run[si] += v
+	_check(si)
+
+
+## Koşu sonu kaynakları (kazanma süzgeci, `_finished` sonrası olduğundan doğrudan yazar).
+func _finish_one(si: int, won: bool, time: int) -> void:
+	if _kind[si] == _K_REDUCER:
+		if _reducer_finish[si] != 0:
+			var r := (_reducers[si] as AchievementReducer).finish(_result, _rstate[si])
+			if r >= 0:
+				_run[si] = r
+				_check(si)
+		return
+	if _when_won[si] != 0 and not won:
+		return
+	var v := time if _slot[si] == _SLOT_RESULT_TIME else 1
+	if _agg[si] == _AGG_MAX:
+		_run[si] = maxi(_run[si], v)
+	elif _total_s[si] != "":
+		_add_total(_total_key[si], v)
+	else:
+		_run[si] += v
+	_check(si)
 
 
 func _raise(si: int, v: int) -> void:
@@ -307,6 +363,17 @@ func _raise(si: int, v: int) -> void:
 		return
 	_run[si] = v
 	_check(si)
+
+
+## Reducer değeri değiştiyse koşu sayacına yansıtır; yalnız artışta kademe denetimi (sıfırlama denetim istemez).
+func _sync(si: int) -> void:
+	var nv := (_reducers[si] as AchievementReducer).value(_rstate[si])
+	var old := _run[si]
+	if nv == old:
+		return
+	_run[si] = nv
+	if nv > old:
+		_check(si)
 
 
 ## Değeri değişen stat için: eşiği geçen ve henüz kayıtlı olmayan kademeleri açar. Aynı denetimde birden çok eşik
@@ -347,25 +414,138 @@ func _add_total(key: StringName, n: int) -> void:
 
 
 func _value(si: int) -> int:
-	match si:
-		S_TOTAL_KILLS:
-			return int(store.totals["kills"])
-		S_TOTAL_RUNS:
-			return int(store.totals["runs"])
-		S_TOTAL_WINS:
-			return int(store.totals["wins"])
-		S_TOTAL_PLAY_SECS:
-			return int(store.totals["play_secs"])
-		S_TOTAL_CHARS5:
-			return store.chars5.size()
-		S_TOTAL_BOSS_KILLS:
-			return int(store.totals["boss_kills"])
+	if _total_s[si] != "":
+		return int(store.totals[_total_s[si]])
+	if _kind[si] == _K_REDUCER:
+		return (_reducers[si] as AchievementReducer).value(_rstate[si])
 	return _run[si]
 
 
 func _now() -> int:
 	var t: int = int(clock.call()) if clock.is_valid() else int(Time.get_unix_time_from_system())
 	return maxi(t, 1)
+
+
+func _fill_payload(ev: int, tag: StringName, a: int, b: int, c: int) -> void:
+	var sig: Dictionary = MetricSchema.EVENTS[LISTENED[ev]]
+	if sig["tag"] != "":
+		_payload[sig["tag"]] = tag
+	var ints: Array = sig["ints"]
+	for i in ints.size():
+		_payload[ints[i]] = a if i == 0 else (b if i == 1 else c)
+
+
+# --- kurulum (kayıttan) --------------------------------------------------------------------------
+
+
+func _build() -> void:
+	var reg := AchievementMetricRegistry.default()
+	if data != null and not data._stat_metrics.is_empty():
+		reg = AchievementMetricRegistry.from_dicts(data._stat_metrics)
+	_stats = AchievementDef.STATS.duplicate()
+	for s in reg.stats():
+		if not _stats.has(s):
+			_stats.append(s)
+	var n := _stats.size()
+	_run.resize(n)
+	_kind.resize(n)
+	_agg.resize(n)
+	_slot.resize(n)
+	_result_key.resize(n)
+	_when_won.resize(n)
+	_reducer_finish.resize(n)
+	_result_key.fill(-1)
+	_total_s.resize(n)
+	_best_s.resize(n)
+	for _i in n:
+		_by_stat.append(PackedInt32Array())
+		_filter.append([])
+		_total_key.append(&"")
+		_reducers.append(null)
+		_rstate.append({})
+	_ev_reducer.resize(LISTENED.size())
+	for name in LISTENED:
+		_ev_stats.append(PackedInt32Array())
+		_ev_names.append(StringName(name))
+	var ordered: Array = []
+	for si in n:
+		var m := reg.metric(_stats[si])
+		if not m.is_empty():
+			ordered.append([int(m.get("order", 1000)), si])
+	ordered.sort()
+	for pair in ordered:
+		var si: int = pair[1]
+		_setup_stat(si, reg.metric(_stats[si]))
+
+
+func _setup_stat(si: int, m: Dictionary) -> void:
+	var persist: Dictionary = m["persist"] if m.get("persist") is Dictionary else {}
+	if persist.get("total", null) is String:
+		_total_s[si] = persist["total"]
+		_total_key[si] = StringName(persist["total"])
+	if persist.get("best", null) is String:
+		_best_s[si] = persist["best"]
+		_best_stats.append(si)
+	if m.has("result_max"):
+		_result_key[si] = MetricSchema.RESULT_KEYS.find(str(m["result_max"]))
+		_result_stats.append(si)
+	if m.has("reducer"):
+		_setup_reducer(si, m)
+		return
+	_agg[si] = _AGG_MAX if str(m.get("aggregate", "")) == "max" else _AGG_SUM
+	var src: Dictionary = m.get("source", {})
+	if src.has("poll"):
+		_kind[si] = _K_POLL
+		_slot[si] = MetricSchema.POLLS.find(str(src["poll"]))
+		_poll_stats.append(si)
+	elif src.has("finish"):
+		_kind[si] = _K_FINISH
+		_when_won[si] = 1 if str(src["finish"]) == "won" else 0
+		_slot[si] = _SLOT_RESULT_TIME if str(src.get("value", "")) == "result.time" else _SLOT_ONE
+		_finish_stats.append(si)
+	else:
+		_setup_event(si, src)
+
+
+func _setup_event(si: int, src: Dictionary) -> void:
+	var ev := LISTENED.find(str(src.get("event", "")))
+	if ev < 0:
+		return
+	_kind[si] = _K_EVENT
+	var value := str(src.get("value", "one"))
+	var ints: Array = MetricSchema.EVENTS[LISTENED[ev]]["ints"]
+	_slot[si] = ints.find(value.substr(8)) if value.begins_with("payload.") else _SLOT_ONE
+	var flt: Array = []
+	for tag_values: Array in (src.get("filter", {}) as Dictionary).values():
+		for t in tag_values:
+			flt.append(StringName(t))
+	_filter[si] = flt
+	_ev_stats[ev].append(si)
+
+
+func _setup_reducer(si: int, m: Dictionary) -> void:
+	var path := MetricSchema.script_path(str(m["reducer"]))
+	var scr: GDScript = load(path) if path != "" else null
+	var obj: Object = scr.new() if scr != null else null
+	var rd := obj as AchievementReducer
+	if rd == null:
+		push_error("AchievementReducer yüklenemedi: %s" % m["reducer"])
+		return
+	_kind[si] = _K_REDUCER
+	_reducers[si] = rd
+	var st: Dictionary = {"value": 0, "store": store, "char_id": char_id}
+	rd.reset(st)
+	_rstate[si] = st
+	for e in m.get("events", []):
+		var ev := LISTENED.find(str(e))
+		if ev >= 0:
+			_ev_stats[ev].append(si)
+			_ev_reducer[ev] = 1
+	if bool(m.get("poll", false)):
+		_poll_stats.append(si)
+	_reducer_finish[si] = 1 if bool(m.get("finish", false)) else 0
+	if bool(m.get("finish", false)):
+		_finish_stats.append(si)
 
 
 static func _stat_int(stats: Dictionary, key: String) -> int:

@@ -9,6 +9,16 @@ const TOUGH_HP := 1.0e7
 const STEP := GameSim.STEP
 
 
+## Kolsuz karakterin sanat kaynağı sahibi: `rig.walk.strip` `<sahip>_strip.png` ise `art/source/<sahip>/` (yalnız veriyle eklenen
+## karakter başka karakterin şeridini paylaşabilir); şerit adı bu kalıpta değilse karakterin kendi kimliği. `art/source/<sahip>/`
+## yoksa test KIRMIZI kalır (atlanmaz): yeni sanat getiren karakter kendi şeridini ve kaynağını da getirmelidir.
+static func art_owner(id: StringName, rig: Dictionary) -> StringName:
+	var walk: Variant = rig.get("walk", {})
+	var strip := str((walk as Dictionary).get("strip", "")) if walk is Dictionary else ""
+	var base := strip.get_file()
+	return StringName(base.trim_suffix("_strip.png")) if base.ends_with("_strip.png") else id
+
+
 ## Zyfen sim'i, gerçek veri, doğurma çizelgesi boş. Tabanca susturulur (`silence`), beceriler verilir, ölümsüz.
 static func zyfen(
 	grants: Dictionary = {},

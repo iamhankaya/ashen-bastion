@@ -85,13 +85,10 @@ func _build() -> void:
 	chronicle.name = "Chronicle"
 	chronicle.group_selected.connect(scroll_to_group)
 	add_child(chronicle)
-	list = ScrollContainer.new()
-	list.name = "List"
-	list.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	list.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	list.mouse_filter = Control.MOUSE_FILTER_STOP
-	list.scroll_deadzone = 12
-	UiKit.touch_scroll(list)
+	list = UiKit.make_scroll(
+		UiKit.SCROLL_AXIS_VERTICAL,
+		{"name": "List", "mouse_filter": Control.MOUSE_FILTER_STOP, "deadzone": 12}
+	)
 	add_child(list)
 	content = VBoxContainer.new()
 	content.name = "Content"

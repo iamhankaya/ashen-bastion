@@ -6,7 +6,6 @@ const DT := 1.0 / 60.0
 const STRIP := "user://test_walk_strip.png"
 const CELL := Vector2i(40, 80)
 
-var _walk_backup: Variant = null
 var _rig_ref: Dictionary
 
 
@@ -15,8 +14,6 @@ func before_each() -> void:
 
 
 func after_each() -> void:
-	if _rig_ref.size() > 0:  # GameData önbelleği paylaşımlıdır: işin sonunda geri al
-		_rig_ref["walk"] = _walk_backup
 	if FileAccess.file_exists(STRIP):
 		DirAccess.remove_absolute(STRIP)
 	ArtLoader._cache.clear()
@@ -33,9 +30,10 @@ func _write_strip(cells: int, w: int = CELL.x, h: int = CELL.y) -> void:
 func _view(n: int, dev: Array = [], write: bool = true, strip_cells: int = -1) -> PlayerView:
 	if write:
 		_write_strip(n + 1 if strip_cells < 0 else strip_cells)
-	var sim := GameSim.new(11, &"gunslinger", {"end_mode": "timer", "end_time": 480.0})
+	var sim := GameSim.new(
+		11, &"gunslinger", {"end_mode": "timer", "end_time": 480.0, "data": DataKit.copy()}
+	)
 	_rig_ref = sim.character.rig
-	_walk_backup = _rig_ref.get("walk", null)
 	_rig_ref["walk"] = {
 		"frames": n, "stride": 136, "strip": STRIP, "cell": [CELL.x, CELL.y], "shoulder_dev": dev
 	}

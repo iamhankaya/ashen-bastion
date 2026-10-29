@@ -39,7 +39,7 @@ func on_hit(enemy_id: int, proj_id: int) -> void:
 	if (f & ProjectilePool.FLAG_SPLITTER) == 0 or (f & ProjectilePool.FLAG_SPLIT) != 0:
 		return
 	pr.flags[proj_id] = f & ~ProjectilePool.FLAG_SPLITTER
-	pr.pierce[proj_id] = 0  # ebeveyn biter (isabet sonrası _projectile_hit tüketir)
+	pr.pierce[proj_id] = 0  # ebeveyn biter (isabet sonrası SimProjectiles._hit tüketir)
 	var dir := pr.vel[proj_id].normalized()
 	var spd := pr.vel[proj_id].length()
 	var opts := {

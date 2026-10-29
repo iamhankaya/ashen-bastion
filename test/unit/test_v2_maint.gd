@@ -186,7 +186,7 @@ func test_tapping_the_area_toggles_the_flag_and_the_label_does_not() -> void:
 	var c := _controller()
 	c.start_run()
 	c._update_views(0.016)
-	var was := EnemyEscape.enabled
+	var was := c._escape_enabled
 	var tap: Label = null
 	for t in _taps(c):
 		if t.get_meta(&"source") == c._escape_label:
@@ -196,10 +196,9 @@ func test_tapping_the_area_toggles_the_flag_and_the_label_does_not() -> void:
 	ev.pressed = true
 	ev.button_index = MOUSE_BUTTON_LEFT
 	tap.gui_input.emit(ev)
-	assert_ne(EnemyEscape.enabled, was, "dokunma alanı bayrağı çevirir")
+	assert_ne(c._escape_enabled, was, "dokunma alanı bayrağı çevirir")
 	c.toggle_escape_fix()
-	assert_eq(EnemyEscape.enabled, was)
-	EnemyEscape.enabled = true
+	assert_eq(c._escape_enabled, was)
 
 
 func test_debug_widgets_never_intersect_buttons_or_the_offscreen_arrow() -> void:

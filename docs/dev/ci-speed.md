@@ -10,7 +10,7 @@ Amaç: gate/CI süresini **doğruluktan ödün vermeden** düşürmek. Kapsam az
 
 Bu kuralın uygulanışı:
 
-- `.github/workflows/ci.yml` `push` **ve** `pull_request` üzerinde koşar; tam suite üç parçalı işle koşulur (bölüm 2). Hiçbir
+- `.github/workflows/ci.yml` yalnız `push` (`main`, `vlad/**`) üzerinde koşar (altyapı-A H3: `pull_request` tetiği kalktı, PR'ın `test` bağlamı dal ucundaki push koşusundan gelir); tam suite üç parçalı işle koşulur (bölüm 2). Hiçbir
   CI adımı `--changed` kullanmaz; `tools/ci/tests/test_ci_workflow.py` bunu denetler.
 - `tools/gate.sh --changed`, `CI` ya da `GITHUB_ACTIONS` ortam değişkeni doluysa çıkış 2 ile **reddeder** (aynı testte
   kanıtlanır).
@@ -30,8 +30,8 @@ selftest ×6, export-debug, release-prova      değişmedi
   (dosya -> sn, tam gate JUnit'inden) ağırlıklarıyla açgözlü en-uzun-önce (LPT) atanır; ağırlığı olmayan yeni dosya medyan
   ağırlık alır, yani **yeni test otomatik bir parçaya düşer**. Her dosya tam bir parçada olur (`tools/ci/tests/test_shard.py`).
 - **Kapsam kanıtı (verify işi)**: parça sayısı beklenenle eşit olmalı; `shard.py check-merge --require-all` her test dosyasının
-  bir parçada koştuğunu (eksik/yinelenen/bilinmeyen dosya = kırmızı) denetler; birleşik JUnit üzerinde adım 7 (asgari test sayısı
-  `tools/gate_min_tests.json`, tek test ≤ 75 sn, dilim/pending denetimleri) **aynen** koşar. Parçası düşen ya da hiç koşmayan
+  bir parçada koştuğunu (eksik/yinelenen/bilinmeyen dosya = kırmızı) denetler; birleşik JUnit üzerinde adım 7 (test kimliği kapısı
+  `tools/ci/check_test_ids.py`: bildirilen her test koştu mu + tabana göre kimlik kaybı yok, tek test ≤ 75 sn, dilim/pending denetimleri) **aynen** koşar. Parçası düşen ya da hiç koşmayan
   bir iş `test` işini kırmızı yapar.
 - `test` işi adını korur: dal koruması bu bağlamı bekliyor olabilir.
 - Parça sayısını değiştirmek: `ci.yml` (`matrix.shard`, `/N`, `GATE_SHARD_COUNT`) ve `tools/ci/tests/test_shard.py::SHARD_COUNT`
@@ -45,12 +45,14 @@ selftest ×6, export-debug, release-prova      değişmedi
 
 ## 3. Hızlı mod (yalnız yerel geri bildirim)
 
+Push öncesi sıra: `bash tools/precheck.sh` (Godot'suz sınıflar) → yerel Godot varsa `precheck.sh --godot` (= bu hızlı mod + USER_LEAK) → push. Kurulum ve ölçülen süreler: `docs/dev/setup.md`, sınıf listesi `.claude/skills/ab-test-ve-kapi/SKILL.md`.
+
 ```
 bash tools/gate.sh --changed [--base REF]     # REF yoksa origin/HEAD ya da origin/main ya da HEAD
 ```
 
 Değişen dosyalar = `git diff --name-only $(git merge-base HEAD REF)` (çalışma ağacı dahil) + izlenmeyen dosyalar.
-`tools/ci/test_map.py` (eşleme: `tools/ci/test_map.json`, `python3 tools/ci/test_map.py generate` ile üretilir) seçer:
+`tools/ci/test_map.py` (eşleme: `tools/ci/test_map.json`, izlenmez; `python3 tools/ci/test_map.py ensure` ile üretilir) seçer:
 
 | Değişen dosya | Sonuç |
 |---|---|
@@ -59,15 +61,14 @@ Değişen dosyalar = `git diff --name-only $(git merge-base HEAD REF)` (çalış
 | `docs/**.md` hiçbir testin bağımlılığı değilse | test yok (lint/veri doğrulama yine koşar) |
 | **paylaşılan**: `scripts/sim/*`, `scripts/autoload/*`, `data/*`, `test/helpers/*`, `test/fixtures/*`, `test/long/*`, `tools/gate*`, `tools/ci/*`, `tools/*.{gd,json,txt,sh}`, `project.godot`, `.gutconfig.json`, `export_presets.cfg`, `addons/*`, `.github/*`, `assets/*`, `art/*`, `audio/*`, `themes/*`, `scenes/*` | **TAM GATE** |
 | eşlemede yeri olmayan dosya (yeni betik, bilinmeyen dizin, kök dosyaları) | **TAM GATE** |
-| eşleme güncel değil (`test_map.py check` kırmızı), taban bulunamadı, seçim hatası | **TAM GATE** |
+| eşleme üretilemedi (`test_map.py ensure` hata), taban bulunamadı, seçim hatası | **TAM GATE** |
 
 Karışık değişiklikte tek bir paylaşılan/eşlemesiz dosya tam gate'e düşürür. Şüphede tam suite. Hızlı modda lint yalnız değişen
 `.gd` dosyalarına, Python testleri yalnız değişen araç dizinine (`tools/art`, `tools/audio`) uygulanır; veri doğrulaması her
-zaman koşar; adım 7'de asgari test sayısı seçilen dosyalar için, tek test süre sınırı aynen denetlenir. Dilim/pending denetimi
+zaman koşar; adım 7'de test kimliği kapısı seçilen dosyalar için (`--mode selected`), tek test süre sınırı aynen denetlenir. Dilim/pending denetimi
 tam JUnit ister ve yalnız tam gate'tedir.
 
-Eşleme bakımı: yeni betik/test eklenince `python3 tools/ci/test_map.py generate`; `tools/ci/tests/test_test_map.py`
-güncel olmayan eşlemeyi kırmızı yapar (bu test tam gate'in Python adımında koşar).
+Eşleme bakımı: `tools/ci/test_map.json` izlenmez; hızlı mod başında `python3 tools/ci/test_map.py ensure` üretir (elle commit yok).
 
 ### Eşlemenin doğruluğu
 
@@ -166,7 +167,7 @@ Godot sürecinde** koşar. N = `GATE_JOBS` (varsayılan `min(4, çekirdek)`; `GA
 - **Kendi `XDG_DATA_HOME`'u:** `user://` süreç başına ayrıdır. Ortak olsaydı USER_LEAK denetimi (kanca taban/son karşılaştırır)
   başka parçanın geçici dosyalarını sızıntı sayardı.
 - Kapsam kanıtı CI `test` işiyle aynı: `shard.py check-merge --require-all` (eksik/yinelenen/bilinmeyen dosya = kırmızı), sonra
-  `shard.py merge` -> `.gate/junit.xml`; adım 7 (asgari sayı, 75 sn, dilim/pending) birleşik JUnit üstünde aynen koşar.
+  `shard.py merge` -> `.gate/junit.xml`; adım 7 (test kimliği kapısı MISSING/LOST, 75 sn, dilim/pending) birleşik JUnit üstünde aynen koşar.
 - Hızlı mod (`--changed`) ve `GATE_PART=gut|static|verify` yolları değişmedi; CI işleri değişmedi (`ci.yml` aynı).
 - Saat eşiği yok: testler yalnız ms'i raporlar (`test_acc_perf_counters`, `test_ver_crowd_perf`), duvar saatine iddia etmez;
   paralel yük sonuçları değiştirmez. Tek-test 75 sn sınırı yük altında tek test için daha riskli olabilir (en yavaş test 105 sn'lik
@@ -180,3 +181,63 @@ Godot sürecinde** koşar. N = `GATE_JOBS` (varsayılan `min(4, çekirdek)`; `GA
 
 `test/long`'a taşıma (>20 sn testler) **yapılmadı**: `test/long` `.gutconfig.json` kümesinde değildir, taşıma gate kapsamını
 düşürür; görev kuralı (kapsam aynı kalır) ile çelişir.
+
+## CI izleme ve kırmızıda JUnit
+
+İzleme: push sonrası **tek** `gh run watch <run-id> --interval 60 --exit-status` (sık yoklama GitHub API ikincil sınırına takılıp 403 verir); yoklama döngüsü kurulmaz. Kapı GUT günlüğünün yalnız son 30 satırını gösterir, bu yüzden başarısız test adı/mesajı günlükte olmayabilir: `gh run download <run-id> -n gut-junit-<K>` (K = 1..4 GUT parçası) ile JUnit'i indirip `<failure>` içeren `testcase`'e bak. Kimlik kapısı (`check_test_ids.py`) kırmızısı `test` işindedir (birleşik JUnit).
+
+## Altyapı-A: tetik, süzgeç, önbellek, kanca (T20261028-34; plan T20261028-33 Faz 3)
+
+Kapsam değişmedi: PR/entegrasyon/main'de TAM kapsam koşar. Değişen yalnız *ne zaman ve kaç kez* koşulduğu.
+
+| Önlem | Ne yapar | Güvenlik kuralı |
+|---|---|---|
+| H3 tek tetik | `ci.yml` yalnız `push: [main, 'vlad/**']`; `pull_request` kalktı (aynı commit için çift koşu bitti). `concurrency: ci-<ref>-<olay>`, `cancel-in-progress` main dışında açık | Zorunlu bağlam adı `test` korunur. Dal koruması yok (`gh api .../protection` 404, ruleset boş). PR'ın `test` bağlamı dal ucundaki push koşusundan gelir (bağlam SHA'ya bağlı). Olay eki: nightly'nin `workflow_call` çağrısı aynı ref'teki push CI'ını iptal etmesin |
+| H2 önbellek | Yalnız `.godot/imported` + `.godot/uid_cache.bin`; `global_script_class_cache.cfg` girmez, her koşuda artımlı `--import` çalışır. Anahtar `audio/**` içerir, `scripts/**` karması yok (UI/sim değişikliği önbelleği boşa çıkarmaz) | Tam eşleşme (restore-keys yok). `selftest_gate.sh` senaryo kopyasına `imported/` + `uid_cache.bin` açıkça aktarır (`SELFTEST_GODOT_CACHE`); class cache aktarılmaz |
+| H1 selftest süzgeci | `taban_yesil` yalnız `tools/**`, `.github/**`, `project.godot`, `.gutconfig.json`, `.godot-version`, `export_presets.cfg`, `addons/**`, `scripts/ci*` değişince koşar | **Negatif senaryolar (bozuk_gd, bos_test_dizisi, …) her zaman koşar.** `tools/ci/path_filter.sh`: main, push dışı olay, shallow klon, taban ref'i yok, ortak ata yok, diff hatası ⇒ TAM koşu. Atlama `SKIPPED_BY_FILTER` ile etiketlenir |
+| H10 | `export-debug`, `release-prova` yalnız ilgili yollar ya da main/dispatch/nightly'de | Aynı `path_filter.sh` |
+| Nightly `full` | `nightly.yml` → `ci.yml`'i `workflow_call` ile çağırır; push dışı olay ⇒ süzgeçsiz TAM koşu (kapsam kanıtı). Yeni workflow dosyası yok (D4) | `gh workflow run nightly.yml --ref <dal>` |
+| `import` yeniden denemesi | `godot_import.sh`: SIGABRT imzasında 3 deneme, k·5 sn geri çekilme; her çöken deneme günlüğü `.denemeK`, kanıt `ASHEN_EVIDENCE_DIR` artifact'ında (F-042/F-115) | İmza dışı hata (çıkış ≠134 ya da içerik hatası) yeniden denenmez |
+| Kanca `checks.d` | `gate.sh` adım 0 `tools/ci/run_checks.sh` ile `tools/ci/checks.d/NN-ad.sh` betiklerini ad sırasıyla koşar (yalnız static/all; ilk kırmızı kapıyı düşürür) | Sözleşme fazları `gate.sh`'e dokunmadan denetim ekler |
+| Satır sonu | `.gitattributes` (LF), 4 `.sh` dosyası 100755 | Windows `autocrlf` bash betiklerini bozuyordu |
+| Timeout | Tüm workflow işlerinde `timeout-minutes` zorunlu (`test_infra_workflows.py`) | |
+
+### Ölçüm aracı
+`python tools/ci/measure_ci.py run <koşu-id>` (duvar, kritik yol, runner-dk, günlükten kaydedilen soğuk/sıcak etiketi, `SKIPPED_BY_FILTER` sayısı) ve `compare --before id,… --after id,…` (aynı etikette medyan oranı, kabul Tson ≤ 0,70·Tönce, taraf başına ≥5 koşu, aykırı değerler raporlanır ama dışarıda bırakılmaz).
+
+### Prova araçları (T20261029-19)
+- `tools/ci/prova_dry_run.py --root <geçici worktree>`: sahte karakter/mod/başarım yalnız YENİ dosyalarla; mevcut dosya değişimi ve sabit listeli test kırıkları raporlanır.
+- `tools/ci/prova_conflict.py --clone <boş geçici dizin>`: iki paralel dalın birleşimi; `merge=union` kontrolü.
+- `tools/ci/prova_precheck.py --root <geçici worktree> [--godot BIN]`: her precheck kırmızı sınıfı gerçek araçla kasıtlı ihlalle denenir.
+- Süzgeç provası: `tools/ci/tests/test_infra_prova_path_filter.py` (ci.yml desenleri).
+
+## Eşzamanlı pytest, `GATE_SERIAL=1` ve selftest grupları (T20261029-30)
+
+Kök neden: her tam-gate selftest senaryosu tek başına 270–400 sn sürüyordu (lint 35–50 + pytest 67–89 sn tek çekirdekte sıralı, sonra
+GUT 164–253 sn dört süreçte). Gruplama tek başına en kötü işi ≈0,73–0,75 oranının altına indiremiyordu. Kapsam azaltılmadı; pytest atlanmadı.
+
+- **Eşzamanlı pytest (`tools/gate.sh`, `CONC=1`):** `GATE_PART=all`, hızlı mod değil, GUT paralel (`GATE_JOBS>1`) ve `GATE_SERIAL!=1` iken
+  pytest arka planda GUT ile birlikte koşar (`bg_start`/`reap_bg`). Hiçbir denetim atlanmaz ve kısa devre yoktur: her denetimin çıkış
+  kodu toplanır, GUT kırmızı olsa da pytest beklenir, çıktılar ayrı log olarak sırayla basılır (`=== 5. Python testleri (eşzamanlı)`),
+  biri kırmızıysa gate kırmızıdır; adım 7 eşzamanlı sonuçlar toplanmadan koşmaz. Lint sıralı kalır (ucuz ve erken kırmızı verir).
+  Küçük davranış farkı: pytest kırmızıysa GUT yine koşar ve iki çıktı da basılır.
+- **`GATE_SERIAL=1`** eski sıralı yolu korur. `GATE_JOBS=1`, `--changed` ve `GATE_PART!=all` da sıralı yoldur. Eşzamanlı kipte
+  yarıştan şüpheleniliyorsa (pytest'in `.gate/` ya da izlenen dosyaya yazması) `GATE_SERIAL=1` ile yeniden koş.
+- **Selftest grup tablosu** (`tools/ci/selftest_gate.sh`, `GROUP[...]`; matris `group: [1..6]` değişmedi, 11 senaryo aynen):
+
+| Grup | Senaryo |
+|---|---|
+| 1 | `taban_yesil` (tam gate; yol süzgecinde `SKIPPED_BY_FILTER` olabilir) |
+| 2 | `anlamsal_hata` |
+| 3 | `test_kimligi_kaybi` |
+| 4 | `stub_todo` |
+| 5 | `kosmayan_test` |
+| 6 | `gut_error`, `bozuk_gd`, `bos_test_dizisi`, `to_upper`, `veri_hatasi`, `ag_yok` |
+
+  Her tam-gate senaryosu kendi grubunda tek başınadır (`test_selftest_gate_groups.py` denetler). Her senaryo sonucundan sonra gate adım
+  süreleri tek satırda yazılır (`adımlar: …`); ölçüm kaynağıdır, sonucu etkilemez.
+- **Ölçüm** (T20261029-30 raporu; sentetik yük, sıcak-sıcak, `measure_ci.py compare`, `Tson ≤ 0,70 × Tönce`):
+  (a) `scripts/ui/main_menu.gd` yorum satırı: medyan duvar 585,5 → 383 sn, oran **0,654** (kritik yol 0,648), 6+6 koşu, karşılandı;
+  (b) `tools/ci/check_junit.py` yorum satırı: 587 → 382 sn, oran **0,651**, 5+5 koşu, rapor. Nihai ağaç CI: 40884166561 (14/14 yeşil).
+  Parite: 9 negatif senaryo + taban her sürümde aynı çıkış kodu. Ölçüm paylaşılan runner havuzunda yapıldı; aykırı koşular dışarıda bırakılmadı.
+- **Sonraki hız adayı:** `test_kimligi_kaybi`/`kosmayan_test` GUT süresi (≈160–300 sn) ya da `gut` parça sayısını (4) artırmak.

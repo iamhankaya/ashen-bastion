@@ -1,0 +1,14 @@
+{
+  "stat": "total_runs",
+  "order": 200,
+  "icon_family": "hud-duraklat",
+  "persist": {
+    "total": "runs",
+    "best": null
+  },
+  "source": {
+    "finish": "always",
+    "value": "one"
+  },
+  "aggregate": "sum"
+}

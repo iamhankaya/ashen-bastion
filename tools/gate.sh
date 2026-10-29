@@ -23,6 +23,8 @@ if [ "$(basename -- "$0")" != "gate.sh" ] || [ ! -f "$0" ]; then
 fi
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
+# shellcheck source=tools/ci/py_shim.sh
+source tools/ci/py_shim.sh  # Windows: python3 Store kısayolu yerine python (çalışan python3 varsa etkisiz)
 
 FAST=0; FAST_BASE="${GATE_BASE:-}"
 while [ $# -gt 0 ]; do
@@ -74,8 +76,73 @@ end_step() {
   echo "$((SECONDS - STEP_START)) sn  $STEP_NAME" >> .gate/times.log
   STEP_NAME=""
 }
-fail() { end_step; echo "GATE FAIL: $*" >&2; exit 1; }
+# Eşzamanlı denetimler (T20261029-30): tam gate'te (PART=all, hızlı değil, GUT paralel) pytest tek çekirdekte sıralı koşarken
+# 3 çekirdek boştaydı. Bu kipte pytest ARKA PLANDA GUT ile birlikte koşar; HİÇBİR denetim atlanmaz ve kısa devre yoktur:
+# her birinin çıkış kodu toplanır, hepsi bitince çıktıları (ayrı log, sırayla) basılır, biri kırmızıysa gate kırmızıdır.
+# GATE_SERIAL=1 eski sıralı yolu korur. Süre denetimi eşzamanlı GUT için zaten --contended (yalnız uyarı) kullanır.
+CONC=0
+if [ "$PART" = "all" ] && [ $FAST -eq 0 ] && [ "$JOBS" -gt 1 ] && [ "${GATE_SERIAL:-0}" != "1" ]; then CONC=1; fi
+# --- eşzamanlı denetimler (başla)
+BG_PIDS=(); BG_NAMES=(); BG_SAFE=()
+bg_start() { # bg_start <ad> <işlev> : işlevi arka planda koşar; çıktı .gate/bg-<ad>.log, çıkış kodu .gate/bg-<ad>.rc
+  local name="$1" fn="$2" safe
+  safe="$(printf '%s' "$name" | tr -c 'A-Za-z0-9' _)"
+  ( t0=$SECONDS; "$fn"; rc=$?; echo "$((SECONDS - t0))" > ".gate/bg-$safe.sec"; echo "$rc" > ".gate/bg-$safe.rc"; exit "$rc" )     > ".gate/bg-$safe.log" 2>&1 < /dev/null &
+  BG_PIDS+=($!); BG_NAMES+=("$name"); BG_SAFE+=("$safe")
+}
+reap_bg() { # hepsini bekler, çıktılarını sırayla basar; biri kırmızıysa 1 (idempotent: ikinci çağrı 0)
+  local i bad=0 safe rc sec
+  for i in "${!BG_PIDS[@]}"; do
+    wait "${BG_PIDS[$i]}" 2>/dev/null
+    safe="${BG_SAFE[$i]}"; rc="$(cat ".gate/bg-$safe.rc" 2>/dev/null || echo 1)"; sec="$(cat ".gate/bg-$safe.sec" 2>/dev/null || echo 0)"
+    echo "=== ${BG_NAMES[$i]} (eşzamanlı)"
+    cat ".gate/bg-$safe.log"
+    echo "    süre: $sec sn" >&2
+    echo "(eşzamanlı) $sec sn  ${BG_NAMES[$i]}" >> .gate/times.log
+    [ "$rc" = "0" ] || bad=1
+  done
+  BG_PIDS=(); BG_NAMES=(); BG_SAFE=()
+  return $bad
+}
+# --- eşzamanlı denetimler (bitti)
+fail() { end_step; reap_bg || true; echo "GATE FAIL: $*" >&2; exit 1; }
 step() { end_step; STEP_NAME="$*"; STEP_START=$SECONDS; echo "=== $*"; }
+
+lint_body() { # biçim + lint + yasaklı çağrı denetimi; başarısızlıkta çıktıyı ve GATE FAIL satırını yazıp 1 döner
+  if [ $FAST -eq 1 ]; then
+    # Hızlı mod: yalnız değişen .gd dosyaları (gdformat/gdlint dosya başınadır; o dosyalar için sonuç tam lint ile aynıdır)
+    LINT_ARGS=()
+    while read -r f; do [ -f "$f" ] && LINT_ARGS+=("$f"); done < <(grep -E '\.gd$' .gate/changed.txt || true)
+    LINT_UP=("${LINT_ARGS[@]}")
+  else
+    LINT_ARGS=(scripts tools test)
+    LINT_UP=(scripts tools)
+  fi
+  if [ ${#LINT_ARGS[@]} -gt 0 ]; then
+    gdformat --check "${LINT_ARGS[@]}" > .gate/gdformat.log 2>&1 || { cat .gate/gdformat.log >&2; echo "GATE FAIL: gdformat" >&2; return 1; }
+    gdlint "${LINT_ARGS[@]}" > .gate/gdlint.log 2>&1 || { cat .gate/gdlint.log >&2; echo "GATE FAIL: gdlint" >&2; return 1; }
+    if grep -rnE --include='*.gd' "to_upper|to_lower" "${LINT_UP[@]}"; then echo "GATE FAIL: to_upper/to_lower yasak (Türkçe i/İ tuzağı)" >&2; return 1; fi
+  fi
+  return 0
+}
+pytest_body() { # PYDIRS üzerinde pytest; başarısızlıkta günlüğü ve GATE FAIL satırını yazıp 1 döner
+  python3 -m pytest -q -p no:cacheprovider $PYDIRS > .gate/pytest.log 2>&1; py_rc=$?
+  tail -n 5 .gate/pytest.log
+  [ $py_rc -eq 0 ] || { cat .gate/pytest.log >&2; echo "GATE FAIL: pytest" >&2; return 1; }
+  echo "PYTHON_TESTS: $(grep -oE '[0-9]+ passed' .gate/pytest.log | tail -1 | grep -oE '[0-9]+')"
+}
+
+# Kimlik kapısının tabanı (check_test_ids.py): GATE_BASE_REF ya da merge-base(HEAD, origin/main); git'siz kopyada (selftest)
+# GATE_BASE_DECLARED=<dosya> (taban declared kimlikleri); ikisi de yoksa LOST denetimi atlanır ve bu AÇIKÇA yazılır.
+IDS_BASE=()
+ids_base_args() {
+  local b
+  if [ -n "${GATE_BASE_DECLARED:-}" ]; then IDS_BASE=(--base-declared "$GATE_BASE_DECLARED"); return; fi
+  b="${GATE_BASE_REF:-$(git merge-base HEAD origin/main 2>/dev/null || true)}"
+  if [ -n "$b" ]; then IDS_BASE=(--base "$b"); return; fi
+  echo "not: taban bulunamadı (git merge-base HEAD origin/main yok, GATE_BASE_REF/GATE_BASE_DECLARED verilmedi): LOST denetimi atlandı; yalnız bildirilen testlerin koşması denetlenir" >&2
+  IDS_BASE=(--no-base)
+}
 
 # Günlük taraması: izin listesi YOK. ANSI renk kodları atılır.
 scan_log() { # scan_log <dosya>
@@ -96,9 +163,9 @@ if [ $FAST -eq 1 ]; then
   MB="$(git merge-base HEAD "$FAST_BASE" 2>/dev/null)" || MB=""
   if [ -z "$MB" ]; then
     echo "hızlı mod: '$FAST_BASE' ile ortak ata bulunamadı => TAM GATE" >&2; FAST=0
-  elif ! python3 tools/ci/test_map.py check > .gate/map_check.log 2>&1; then
+  elif ! python3 tools/ci/test_map.py ensure > .gate/map_check.log 2>&1; then
     cat .gate/map_check.log >&2
-    echo "hızlı mod: tools/ci/test_map.json güncel/tutarlı değil => TAM GATE" >&2; FAST=0
+    echo "hızlı mod: tools/ci/test_map.json üretilemedi => TAM GATE" >&2; FAST=0
   else
     { git diff --name-only "$MB"; git ls-files -o --exclude-standard; } | sort -u > .gate/changed.txt
     if python3 tools/ci/test_map.py select < .gate/changed.txt > .gate/selected.txt 2> .gate/select.why; then
@@ -115,6 +182,15 @@ if [ $FAST -eq 1 ]; then
   fi
 fi
 
+# --- Kanca: tools/ci/checks.d/NN-ad.sh (sözleşme fazları gate.sh'e dokunmadan Godot'suz denetim ekler) ----------------------
+# Yalnız static/all: gut parçaları ve verify aynı denetimi yinelemez. Koşucu: tools/ci/run_checks.sh (ad sırası, ilk kırmızı durdurur).
+if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
+  if compgen -G "tools/ci/checks.d/*.sh" > /dev/null; then
+    step "0. Ön denetimler (tools/ci/checks.d)"
+    bash tools/ci/run_checks.sh tools/ci/checks.d || fail "ön denetim kırmızı (bkz. yukarıdaki satırlar)"
+  fi
+fi
+
 if [ "$PART" != "verify" ]; then
   step "1. Godot kurulumu"
   GODOT_BIN="$(bash tools/ci/ensure_godot.sh)"; rc=$?
@@ -128,7 +204,7 @@ if [ "$PART" != "verify" ]; then
   step "2. İçe aktarma"
   # Önceden var olan .godot önbelleği bozuksa --import çıkış 0 verip yalnız ERROR: satırı yazar (prova: tools/ci/prova_import_cache.sh).
   HAD_CACHE=0; [ -d .godot ] && HAD_CACHE=1
-  # F-042: aralıklı SIGABRT çöküşüne karşı en çok 1 bilinen-imzalı yeniden deneme (tools/ci/godot_import.sh; sessiz değil).
+  # F-042: aralıklı SIGABRT çöküşüne karşı en çok 3 deneme (2 bilinen-imzalı yeniden deneme, geri çekilmeli) (tools/ci/godot_import.sh; sessiz değil).
   bash tools/ci/godot_import.sh .gate/import.log || fail "--import başarısız (bkz. .gate/import.log, .gate/import_retry.txt)"
   [ $HAD_CACHE -eq 1 ] && echo "not: .godot önbelleği önceden vardı; içe aktarma günlüğü hata verirse önce 'rm -rf .godot' dene" >&2
   scan_log .gate/import.log
@@ -136,20 +212,8 @@ fi
 
 if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
   step "3. Lint"
-  if [ $FAST -eq 1 ]; then
-    # Hızlı mod: yalnız değişen .gd dosyaları (gdformat/gdlint dosya başınadır; o dosyalar için sonuç tam lint ile aynıdır)
-    LINT_ARGS=()
-    while read -r f; do [ -f "$f" ] && LINT_ARGS+=("$f"); done < <(grep -E '\.gd$' .gate/changed.txt || true)
-    LINT_UP=("${LINT_ARGS[@]}")
-  else
-    LINT_ARGS=(scripts tools test)
-    LINT_UP=(scripts tools)
-  fi
-  if [ ${#LINT_ARGS[@]} -gt 0 ]; then
-    gdformat --check "${LINT_ARGS[@]}" > .gate/gdformat.log 2>&1 || { cat .gate/gdformat.log >&2; fail "gdformat"; }
-    gdlint "${LINT_ARGS[@]}" > .gate/gdlint.log 2>&1 || { cat .gate/gdlint.log >&2; fail "gdlint"; }
-    if grep -rnE --include='*.gd' "to_upper|to_lower" "${LINT_UP[@]}"; then fail "to_upper/to_lower yasak (Türkçe i/İ tuzağı)"; fi
-  fi
+  # Lint SIRALI kalır: ucuz ve erken kırmızı verir (bozuk .gd, to_upper); eşzamanlı koşsaydı kırmızı gate yine de tam GUT koşardı (CI 40867946046: grup 6 14 dk).
+  lint_body || { end_step; exit 1; }
 
   step "3b. Yasaklı ad denetimi (public repo; desen GATE_FORBIDDEN_RE secret'ından)"
   bash tools/ci/check_forbidden_names.sh || fail "yasaklı ad denetimi (tools/ci/check_forbidden_names.sh)"
@@ -174,10 +238,7 @@ if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
     PYDIRS="$PYDIRS $d"
   done
   if [ -n "$PYDIRS" ]; then
-    python3 -m pytest -q -p no:cacheprovider $PYDIRS > .gate/pytest.log 2>&1; py_rc=$?
-    tail -n 5 .gate/pytest.log
-    [ $py_rc -eq 0 ] || { cat .gate/pytest.log >&2; fail "pytest"; }
-    echo "PYTHON_TESTS: $(grep -oE '[0-9]+ passed' .gate/pytest.log | tail -1 | grep -oE '[0-9]+')"
+    if [ $CONC -eq 1 ]; then bg_start "5. Python testleri" pytest_body; else pytest_body || { end_step; exit 1; }; fi
   fi
 fi
 
@@ -219,6 +280,11 @@ if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; t
   fi
 fi
 
+if [ ${#BG_PIDS[@]} -gt 0 ]; then
+  step "6a. Eşzamanlı denetimin (pytest) sonucu"
+  reap_bg || fail "eşzamanlı denetim kırmızı (pytest; yukarıdaki GATE FAIL satırları)"
+fi
+
 if [ "$PART" = "verify" ]; then
   step "6b. Parça JUnit birleştirme (GATE_SHARD_COUNT=$GATE_SHARD_COUNT)"
   SHARD_DIR="${GATE_JUNIT_DIR:-.gate/shards}"
@@ -231,17 +297,21 @@ fi
 if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then
   step "7. Sahte yeşil korumaları"
   [ -f .gate/junit.xml ] || fail "JUnit çıktısı yok"
-  python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json || fail "asgari test sayısı"
+  python3 tools/ci/check_junit.py .gate/junit.xml || fail "JUnit'te çalışan test yok"
+  ids_base_args
+  python3 tools/ci/check_test_ids.py --mode full --junit .gate/junit.xml "${IDS_BASE[@]}" || fail "test kimliği kapısı (tools/ci/check_test_ids.py: MISSING = bildirilen test koşmadı, LOST = kimlik kayboldu)"
   python3 tools/ci/check_durations.py .gate/junit.xml $DUR_FLAGS || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
   python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v202_slices.txt)"
   python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v203_slices.txt)"
   python3 tools/ci/check_slices.py --v21 tools/v21_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v21_slices.txt)"
 elif [ $FAST -eq 1 ] && [ -n "$GUT_CONFIG" ]; then
-  # Hızlı mod: asgari sayı yalnız seçilen dosyalar için; tek test süre sınırı aynı; dilim/pending denetimi tam JUnit ister
-  # (yalnız tam gate'te koşar).
+  # Hızlı mod: kimlik kapısı yalnız seçilen dosyalar için (--mode selected); tek test süre sınırı aynı; dilim/pending denetimi
+  # tam JUnit ister (yalnız tam gate'te koşar).
   step "7. Sahte yeşil korumaları (hızlı mod: kısmi)"
-  python3 tools/ci/check_junit.py .gate/junit.xml tools/gate_min_tests.json --only .gate/selected.txt || fail "asgari test sayısı (hızlı mod)"
+  python3 tools/ci/check_junit.py .gate/junit.xml || fail "JUnit'te çalışan test yok (hızlı mod)"
+  ids_base_args
+  python3 tools/ci/check_test_ids.py --mode selected --files .gate/selected.txt --junit .gate/junit.xml "${IDS_BASE[@]}" || fail "test kimliği kapısı (hızlı mod; tools/ci/check_test_ids.py)"
   python3 tools/ci/check_durations.py .gate/junit.xml || fail "tek test > 75 sn (ağır test test/long/ altına taşınır; tools/ci/check_durations.py)"
 fi
 
