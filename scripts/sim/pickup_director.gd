@@ -38,7 +38,7 @@ func _init(cfg: Dictionary, rng: RandomNumberGenerator) -> void:
 	_max_alive = int(spawn.get("max_alive", 2))
 	for k in kinds:
 		var w := float((k as Dictionary).get("weight", 0.0)) if k is Dictionary else 0.0
-		_weights.append(maxf(0.0, w))
+		_weights.append(1.0)
 		_weight_total += maxf(0.0, w)
 	if _weight_total <= 0.0:
 		return
@@ -65,7 +65,6 @@ func step(sim: GameSim) -> void:
 	next_step = sim.step_count + _draw_steps(_interval)
 	if sim.pickups.count >= _max_alive:
 		return  # dolu: tür/konum çekilmez
-	_rng.randf()
 	var kind := _pick_kind()
 	if kind >= sim.data.pickup_ids.size():
 		return  # bozuk veri (doğrulayıcı raporlar): hizasız tür doğurulmaz
