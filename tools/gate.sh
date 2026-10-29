@@ -76,8 +76,8 @@ end_step() {
   echo "$((SECONDS - STEP_START)) sn  $STEP_NAME" >> .gate/times.log
   STEP_NAME=""
 }
-# Eşzamanlı denetimler (T20261029-30): tam gate'te (PART=all, hızlı değil, GUT paralel) lint ve pytest tek çekirdekte sıralı
-# koşarken 3 çekirdek boştaydı. Bu kipte ikisi ARKA PLANDA GUT ile birlikte koşar; HİÇBİR denetim atlanmaz ve kısa devre yoktur:
+# Eşzamanlı denetimler (T20261029-30): tam gate'te (PART=all, hızlı değil, GUT paralel) pytest tek çekirdekte sıralı koşarken
+# 3 çekirdek boştaydı. Bu kipte pytest ARKA PLANDA GUT ile birlikte koşar; HİÇBİR denetim atlanmaz ve kısa devre yoktur:
 # her birinin çıkış kodu toplanır, hepsi bitince çıktıları (ayrı log, sırayla) basılır, biri kırmızıysa gate kırmızıdır.
 # GATE_SERIAL=1 eski sıralı yolu korur. Süre denetimi eşzamanlı GUT için zaten --contended (yalnız uyarı) kullanır.
 CONC=0
@@ -212,7 +212,8 @@ fi
 
 if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
   step "3. Lint"
-  if [ $CONC -eq 1 ]; then bg_start "3. Lint" lint_body; else lint_body || { end_step; exit 1; }; fi
+  # Lint SIRALI kalır: ucuz ve erken kırmızı verir (bozuk .gd, to_upper); eşzamanlı koşsaydı kırmızı gate yine de tam GUT koşardı (CI 40867946046: grup 6 14 dk).
+  lint_body || { end_step; exit 1; }
 
   step "3b. Yasaklı ad denetimi (public repo; desen GATE_FORBIDDEN_RE secret'ından)"
   bash tools/ci/check_forbidden_names.sh || fail "yasaklı ad denetimi (tools/ci/check_forbidden_names.sh)"
@@ -280,8 +281,8 @@ if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; t
 fi
 
 if [ ${#BG_PIDS[@]} -gt 0 ]; then
-  step "6a. Eşzamanlı denetimlerin (lint, pytest) sonucu"
-  reap_bg || fail "eşzamanlı denetim kırmızı (lint ve/veya pytest; yukarıdaki GATE FAIL satırları)"
+  step "6a. Eşzamanlı denetimin (pytest) sonucu"
+  reap_bg || fail "eşzamanlı denetim kırmızı (pytest; yukarıdaki GATE FAIL satırları)"
 fi
 
 if [ "$PART" = "verify" ]; then

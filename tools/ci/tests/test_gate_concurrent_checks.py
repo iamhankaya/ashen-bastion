@@ -1,4 +1,4 @@
-"""Gate: lint ve pytest, GUT ile eşzamanlı koşar (PART=all, tam gate); hiçbir denetim atlanmaz (T20261029-30, koşul 1-4)."""
+"""Gate: pytest, GUT ile eşzamanlı koşar (lint sıralı kalır) (PART=all, tam gate); hiçbir denetim atlanmaz (T20261029-30, koşul 1-4)."""
 
 import re
 import subprocess
@@ -72,3 +72,9 @@ def test_every_check_still_exists_exactly_once_in_gate():
         assert GATE.count(needle) == 1, needle
     # eşzamanlı sonuç toplanmadan sahte yeşil korumaları (adım 7) çalışmamalı
     assert GATE.index("reap_bg ||") < GATE.index('step "7. Sahte yeşil korumaları"')
+
+
+def test_lint_stays_serial_so_cheap_reds_do_not_run_the_whole_gut():
+    # CI 40867946046: lint eşzamanlıyken bozuk_gd/to_upper tam GUT koşup grup 6'yı 14 dk yaptı.
+    assert 'bg_start "3. Lint"' not in GATE
+    assert 'bg_start "5. Python testleri" pytest_body' in GATE
