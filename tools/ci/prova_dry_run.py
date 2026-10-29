@@ -184,6 +184,7 @@ def main(argv=None) -> int:
         print(f"SCENARIO {name}: yeni={len(new)} degisen={len(changed)} {json.dumps({'yeni': new, 'degisen': changed}, ensure_ascii=False)}")
         if a.no_run:
             continue
+        run_godot(a.godot, root, "--import")  # yeni class_name (reducer .gd) global sınıf önbelleğine ancak içe aktarmayla girer (CI'da gate adım 2)
         v = run_godot(a.godot, root, "-s", "res://tools/validate_data.gd")
         verr = [l for l in ANSI.sub("", v).splitlines() if "VERİ HATASI" in l]
         print(f"VALIDATE {name}: {'ok' if not verr else 'hata'}")
