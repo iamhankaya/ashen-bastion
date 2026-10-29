@@ -74,6 +74,8 @@ func test_validators_dir_files_extend_base_and_stay_in_sim_layer() -> void:
 			assert_false(
 				src.contains("res://scripts/%s/" % layer), "%s: sim dışı katman: %s" % [f, layer]
 			)
+		if f == BASE_FILE:
+			continue
 		for line in src.split("\n"):
 			if line.begins_with("class_name "):
 				class_names.append(line.trim_prefix("class_name ").strip_edges())

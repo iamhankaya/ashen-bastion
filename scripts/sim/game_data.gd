@@ -255,7 +255,11 @@ static func _discover_validators(dir: String = _VALIDATORS_DIR) -> Array[DataVal
 	for c in ProjectSettings.get_global_class_list():
 		var path := str(c["path"])
 		if str(c["base"]) == "DataValidator" and path.begins_with(dir):
-			var v: DataValidator = (load(path) as GDScript).new()
+			var scr := load(path) as GDScript
+			if scr == null:
+				push_error("DataValidator yüklenemedi: %s" % path)
+				continue
+			var v: DataValidator = scr.new()
 			rows.append([v.validator_order(), str(v.validator_id()), path, v])
 	rows.sort_custom(func(a: Array, b: Array) -> bool: return a.slice(0, 3) < b.slice(0, 3))
 	var found: Array[DataValidator] = []
