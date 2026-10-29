@@ -35,7 +35,7 @@ static func load_achievements(g: GameData, root_dir: String) -> void:
 	if not FileAccess.file_exists(path):
 		return
 	var before := g.load_errors.size()
-	var data: Variant = g._read_json(path, ACH_FILE).get("data")
+	var data: Variant = CatalogLoader.read_json(g, path, ACH_FILE).get("data")
 	g._v2["ach"] = data
 	g._v2["ach_present"] = true
 	g._v2["ach_failed"] = g.load_errors.size() > before  # bad_json zaten bildirildi

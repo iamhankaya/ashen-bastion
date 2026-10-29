@@ -1,7 +1,7 @@
 class_name DataV202Rig
 extends RefCounted
 ## v2.0.2 kolsuz rig doğrulaması (`rig.armless: true`). GameData `_validate_character` içinde rig'i buraya yönlendirir;
-## kollu rig GameData._validate_rig'e aynen gider. Kolsuzda `arm, arm_pivot, muzzle, shoulders, arm_scale` zorunlu
+## kollu rig SchemaValidators.rig'e aynen gider. Kolsuzda `arm, arm_pivot, muzzle, shoulders, arm_scale` zorunlu
 ## değildir, verilirse yok sayılır (kopyada sahte geçerli değerlerle değiştirilip ortak doğrulama koşar).
 ## Hata kodları GameData'nın (yeni kod yok): missing_field, bad_type, out_of_range, unknown_key, asset_missing.
 ## Şema: docs/data-schema.md
@@ -23,7 +23,7 @@ const STRIP_MAX_WIDTH := 8192
 
 static func validate(g: GameData, out: PackedStringArray, ctx: String, r: Dictionary) -> void:
 	if not PlayerRig.is_armless(r):
-		g._validate_rig(out, ctx, r)
+		SchemaValidators.new(g).rig(out, ctx, r)
 		return
 	var base := r.duplicate()
 	for k in EXTRA_KEYS:
@@ -33,7 +33,7 @@ static func validate(g: GameData, out: PackedStringArray, ctx: String, r: Dictio
 	base["muzzle"] = [0.0, 0.0]
 	base["shoulders"] = [[0.0, 0.0], [0.0, 0.0]]
 	base["arm_scale"] = 0.5
-	g._validate_rig(out, ctx, base)
+	SchemaValidators.new(g).rig(out, ctx, base)
 	GameData._pair(out, ctx, r, "cast_point", -CAST_POINT_MAX, CAST_POINT_MAX)
 	if r.has("action_while_moving") and not (r["action_while_moving"] is bool):
 		GameData._err(out, "bad_type", ctx, "'action_while_moving' bool olmalı")
