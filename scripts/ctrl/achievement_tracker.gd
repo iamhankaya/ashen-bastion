@@ -526,7 +526,8 @@ func _setup_event(si: int, src: Dictionary) -> void:
 func _setup_reducer(si: int, m: Dictionary) -> void:
 	var path := MetricSchema.script_path(str(m["reducer"]))
 	var scr: GDScript = load(path) if path != "" else null
-	var rd: AchievementReducer = scr.new() if scr != null else null
+	var obj: Object = scr.new() if scr != null else null
+	var rd := obj as AchievementReducer
 	if rd == null:
 		push_error("AchievementReducer yüklenemedi: %s" % m["reducer"])
 		return

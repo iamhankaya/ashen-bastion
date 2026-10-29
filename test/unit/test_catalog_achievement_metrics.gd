@@ -79,7 +79,8 @@ func test_bad_value_expression_fails() -> void:
 	var m := CatalogFixtures.metrics(1)
 	m[0]["source"]["value"] = "toplam"
 	assert_string_contains(_errs(m), "ACH_METRIC: zz_stat0: value 'toplam' geçersiz")
-	m[0]["source"]["value"] = "payload.amount"
+	m[0]["source"]["event"] = "bomb_hits"
+	m[0]["source"]["value"] = "payload.hits"
 	assert_eq(_errs(m), "")
 
 
@@ -121,4 +122,11 @@ func test_event_value_and_filter_follow_the_event_signature() -> void:
 	m[0]["source"]["value"] = "one"
 	m[1]["source"]["filter"] = {"type_id": ["elit_piyade"]}
 	m[2]["source"] = {"finish": "won", "value": "result.time"}
+	assert_eq(_errs(m), "")
+
+
+func test_same_key_in_totals_and_best_is_not_a_conflict() -> void:
+	var m := CatalogFixtures.metrics(2)
+	m[0]["persist"] = {"total": "zz_k", "best": null}
+	m[1]["persist"] = {"total": null, "best": "zz_k"}
 	assert_eq(_errs(m), "")

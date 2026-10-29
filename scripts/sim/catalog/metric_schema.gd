@@ -83,10 +83,10 @@ static func _check_persist(
 		var raw: Variant = (persist as Dictionary).get(k, null)
 		if not (raw is String) or raw == "":
 			continue  # null/yok = bu metrik o değeri tutmaz
-		var key: String = raw
+		var key: String = "%s:%s" % [k, raw]  # totals ve best ayrı ad alanı (kills ikisinde de meşru)
 		if keys.has(key):
 			out.append(
-				"ACH_METRIC: %s: persist anahtarı '%s' %s ile çakışıyor" % [stat, key, keys[key]]
+				"ACH_METRIC: %s: persist anahtarı '%s' %s ile çakışıyor" % [stat, raw, keys[key]]
 			)
 		else:
 			keys[key] = stat
