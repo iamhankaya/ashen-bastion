@@ -3,6 +3,12 @@
 Kart gate komutu: `bash tools/gate.sh` (çıkış 0 yeşil, 1 kırmızı, 2 kullanım hatası, 3 ağ yok). CI aynı kapsamı üç parçalı işle (static, gut×4, test) koşar; yalnız yerel hızlı geri bildirim için `bash tools/gate.sh --changed` vardır (`GATE OK` yazmaz; PR CI'ı/merge/son kapı her zaman tam suite): bkz. `docs/dev/ci-speed.md`.
 İsteğe bağlı bayraklar: `GATE_EXPORT=1`, `GATE_NIGHTLY=1`, `GATE_RENDER=1`.
 
+## Push öncesi ve yerel Windows
+
+Push öncesi her zaman `bash tools/precheck.sh` (Godot'suz, değişen dosyalarda: test_map, gdformat, gdlint, `to_upper/to_lower`, `.sh` kipi, pytest, satır tavanı 800, UI kuralı, katman matrisi, test kimlikleri). Hata `PRECHECK_FAIL: <sınıf>: <ayrıntı>`, çıkış 1; araç yoksa ya da sınıf platformda güvenilmezse `PRECHECK_SKIP: <sınıf>: <neden>` yazılır (atlanan sınıf yeşil sayılmaz; Windows'ta pytest atlanır). `--godot` Godot'lu sınıfları ekler (`gate.sh --changed`: USER_LEAK, değişikliğe bağlı birim/içerik testleri); `--base REF` tabanı verir (varsayılan origin/main). precheck tam kapının yerine geçmez: PR CI'ı ve son kapı her zaman tam gate'tir. Sınıf listesi ve akış: `.claude/skills/ab-test-ve-kapi/SKILL.md`.
+
+Yerel Windows Godot (altyapı-B, T20261029-02 ölçümü): `Godot_v4.7.2-stable_win64_console.exe` + **Git Bash** + `export GODOT_BIN=/c/.../Godot_v4.7.2-stable_win64_console.exe`. Git Bash'te `python3` Microsoft Store takma adıdır: `python`'a yönlendiren bir `python3` sarmalayıcısını PATH'e koy. gdtoolkit için venv (`pip install -r tools/ci/requirements-ci.txt`) ve `GATE_JOBS=1`. Ölçülen: `--import` ~66 sn, `validate_data` 1 sn, tek test dosyasıyla `gate.sh --changed` ~16 sn. Yerelde çalışmayan: tam `gate.sh` (Windows'ta `tools/ci/tests` ortam kırmızıları: godot_import, selftest_gate_groups, snapshot; UTF-8 olmayan konsolda `PYTHONUTF8=1`); tam kapı için WSL2 ya da CI. `.gitattributes` LF'yi zorlar (CRLF `.sh` dosyalarını bozar).
+
 ## Sabitlenen sürümler (2026-10-23'te doğrulandı)
 
 | Bileşen | Sürüm | Kaynak / doğrulama |
@@ -28,7 +34,7 @@ Yedek sürüm `4.6.3-stable` kullanılmadı: 4.7.2 indirilebildi ve çalıştı.
 
 ## Gate adımları
 
-1. `ensure_godot.sh` 2. `--import` 3. `gdformat --check` + `gdlint` + `to_upper/to_lower` grep 4. `tools/validate_data.gd` 5. pytest 6. GUT (`test/unit`, `test/acceptance`) 7. günlük taraması, JUnit test kimliği kapısı (`tools/ci/check_test_ids.py`: bildirilen her `func test_*` koşmalı, tabandan kimlik kaybolmamalı; silinen/taşınan test `tools/ci/removed_tests.txt` / `moved_tests.txt`'e yazılır, el ile sayı güncellenmez).
+0. ön denetim kancası (`tools/ci/run_checks.sh`, `tools/ci/checks.d/NN-ad.sh`: satır tavanı, test kimlikleri, katman, UI kuralı; yalnız static/all; ilk kırmızıda `GATE FAIL`) 1. `ensure_godot.sh` 2. `--import` 3. `gdformat --check` + `gdlint` + `to_upper/to_lower` grep 4. `tools/validate_data.gd` 5. pytest 6. GUT (`test/unit`, `test/acceptance`) 7. günlük taraması, JUnit test kimliği kapısı (`tools/ci/check_test_ids.py`: bildirilen her `func test_*` koşmalı, tabandan kimlik kaybolmamalı; silinen/taşınan test `tools/ci/removed_tests.txt` / `moved_tests.txt`'e yazılır, el ile sayı güncellenmez).
 
 Öz-test: `bash tools/ci/selftest_gate.sh` (bozuk `.gd`, anlamsal hata, boş test dizisi, asgari sayı altı, `Stub.todo`, ağ yok → 3).
 11 senaryo `GROUP[...]=N` tablosuyla 6 gruba bölünmüştür (F-028): `selftest_gate.sh --group N` yalnız o grubu, `--list` tabloyu yazar;

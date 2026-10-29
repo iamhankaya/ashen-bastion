@@ -5,7 +5,7 @@ description: Ashen Bastion'a aktif beceri, pasif veya evrim eklerken (data/skill
 
 # Beceri / pasif / evrim ekle
 
-Başlamadan: kb kartının `## Çalışma notları` bölümünü oku; kapı `bash tools/gate.sh`.
+Başlamadan: kb kartının `## Çalışma notları` bölümünü oku; push öncesi `bash tools/precheck.sh` (+ `--godot`), tam kapı CI (`ab-test-ve-kapi`). Kod ekliyorsan kurallar: her `scripts/**/*.gd` ≤ 800 satır, sim → store/ui/ctrl bağımlılığı yasak (`check_layers`; `layer_exceptions.txt` yalnız azalır); `precheck.sh` ikisini de yakalar (`ab-test-ve-kapi`).
 
 ## Adımlar
 1. **Sözleşme önce:** `data/skills/<id>.json` + `scripts/sim/skills/<id>.gd` (no-op) + `SkillRegistry.BEHAVIORS` satırı (alfabetik; `scripts/sim/skills/skill_registry.gd`). Paralel fazlar aynı kayıt dosyalarına yazacaksa sözleşme fazı bunları önceden hazırlar.
@@ -16,12 +16,13 @@ Başlamadan: kb kartının `## Çalışma notları` bölümünü oku; kapı `bas
 6. **Testler:** birim `test/unit/test_v202_wind_basic.gd`, `test_v202_wind_evo.gd` kalıbı; kabul tabloları `test/helpers/expected_tables_v202.gd`; sayı değişirse test itirazı turu; yeni test dosyası → `ab-test-ve-kapi`.
 7. **Fuzz/ölçüm:** `test/helpers/fuzz_invariants.gd`, `tools/balance/card_priority.json` (mid_run.gd kart önceliği).
 8. **DPS bandı:** `tools/balance/dps_density.gd` (evrim ÷ aktif 1,8–2,2) → `ab-denge-olcumu`.
+9. **Doğrulayıcı:** Veri kuralı gerekiyorsa (yeni alan, çapraz başvuru) `GameData` çekirdeğini değiştirme: `scripts/sim/validators/` altına `extends DataValidator` yeni bir dosya ekle (doğrudan alt sınıf; `GameData._discover_validators()` keşfeder, merkezi liste yok; `validator_order()`/`validator_id()`/`run(g, out, complete)`; hata `[kod] bağlam: açıklama`; örnek `run_catalog_validator.gd`, `stat_metrics_validator.gd`; sim dışı katmana bağımlı olamaz). `docs/data-schema.md` "Doğrulayıcı eklentileri".
 
 ## Dokunulan dosyalar
 `data/skills/<id>.json`, `scripts/sim/skills/<id>.gd`, `scripts/sim/skills/skill_registry.gd`, `scripts/sim/skill_def.gd`, `scripts/sim/data_v2.gd`, `docs/data-schema.md`, `docs/dev/skill-hooks.md`, `docs/design/v2.0.2/behavior-contract.md`, `test/helpers/expected_tables_v202.gd`, `assets/ui/icons/`.
 
 ## Doğrulama
-`bash tools/gate.sh` (adım 4 veri doğrulama), GUT, altın hash'ler (`test/fixtures/golden_hashes.json`; sim değiştiyse yalnız ilgili karakter kaydı), `ab-denge-olcumu`.
+`bash tools/precheck.sh`, CI tam kapı (adım 4 veri doğrulama), GUT, altın hash'ler (`test/fixtures/golden_hashes.json`; sim değiştiyse yalnız ilgili karakter kaydı), `ab-denge-olcumu`.
 
 ## Kontrol listesi
 - [ ] Bilinen açığı sabitleyen test `karakterizasyon (F-xxx)` adıyla; düzeltme fazı testi ters çevirir.

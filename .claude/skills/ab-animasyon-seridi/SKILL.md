@@ -24,13 +24,13 @@ Girdi: duruş görseli + üç kısa video. Çıktı: `assets/gfx/char/<id>_strip
 7. **`cast_point`:** cast karesinden avuç pikseli → `--palm-px`; manifest `palm.point` ile `rig.cast_point` farkı ≤ 0,03 (`docs/data-schema.md` "Manifest palm ↔ cast_point"). Zyfen `[0.375, -0.305]`.
 8. **Veriyi bağla:** `data/characters/<id>.json` `rig.walk{frames,stride,strip,cell}`, `cast{frames,fire_frame,fps}`, `gather{frames}`; hücre boyutu manifestten. `godot --headless --import`, `.import` dosyaları commit'lenir.
 9. **Görsel denetim:** `--preview` (`tools/art/_preview/`), `python3 tools/capture/walk_montage.py`, `tools/capture/anim_montage.py`, xvfb ile `tools/capture/shots_zyfen.gd` kalıbı. Klipler arası renk/kıyafet sıçramasına bak (F-059: Zyfen cast/gather'da palto astarı farkı).
-10. `python3 -m pytest -q -p no:cacheprovider tools/art/tests` ve `bash tools/gate.sh`.
+10. `python3 -m pytest -q -p no:cacheprovider tools/art/tests` ve `bash tools/precheck.sh` (+ CI; `ab-test-ve-kapi`).
 
 ## Dokunulan dosyalar
 `tools/art/make_zyfen_strip.py`, `tools/art/chroma_key.py`, `tools/art/tests/test_make_zyfen_strip.py`, `tools/art/README.md`, `art/source/<id>/`, `assets/gfx/char/`, `scripts/view/art_loader.gd`. `tools/art/make_strip.py` Gunslinger/piyade içindir; yeni karakterde kullanılmaz.
 
 ## Doğrulama
-`pytest tools/art/tests`; `test/acceptance/test_acc_v202_rig_walk_gate.gd` ve `test_acc_v202_rig_manifest.gd` her kolsuz karakteri tarar (yerelde `V202_SLICES_FORCE=R`); gate; user-verify maddesi (cast_point hizası, el savurma hissi) kendi bölüm dosyasında.
+`pytest tools/art/tests`; `test/acceptance/test_acc_v202_rig_walk_gate.gd` ve `test_acc_v202_rig_manifest.gd` her kolsuz karakteri tarar (`R` dilimi açıktır: kapıda gerçekten koşar, `V202_SLICES_FORCE` gerekmez); precheck + CI (`ab-test-ve-kapi`); user-verify maddesi (cast_point hizası, el savurma hissi) kendi bölüm dosyasında.
 
 ## Kontrol listesi
 - [ ] Yürüme **video + ffmpeg + yeşil silme**; kare kare AI çizimi değil (yan görünümde bacak sırası değişmez).

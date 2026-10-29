@@ -1,7 +1,7 @@
 # Yeni karakter ekleme (tek parça gövde)
 
 Yeni karakter **tek parça gövde** yöntemiyle eklenir (karar 2026-10-26): her animasyon karesi tüm karakteri içerir, kol/namlu/omuz düzeneği yoktur
-(`rig.armless: true`). Kod değişmez; karakter, `data/characters/<id>.json` dosyası eklenince seçim altyapısı (`CharacterRoster`), vitrin
+(`rig.armless: true`). Kod değişmez (R1: sabit karakter kimlikleri koddan veriye taşındı, `CharacterRoster` `scripts/domain/`'dadır); karakter, `data/characters/<id>.json` dosyası eklenince seçim altyapısı (`CharacterRoster`), vitrin
 ekranı (`CharactersScreen`), seviye atlama başlığı ve koşu (`GameSim.new(seed, id, …)`) tarafından otomatik tanınır. Örnek: `zyfen`.
 
 Adım adım iş akışı repo skill'lerindedir: `.claude/skills/ab-karakter-ekle/SKILL.md` (üst akış), `ab-animasyon-seridi` (kareler ve şerit),
@@ -65,17 +65,20 @@ Görseller (portre, duruş, ikon) kullanıcının makinesinde Codex ile üretili
 **Görsel yokken (yer tutucu):** `python tools/art/make_placeholder.py <kaynak.png> <hedef.png>` mevcut bir görselin tonunu
 kaydırarak PNG üretir. `placeholder: true` yazın. Yer tutucu yalnız portre/vitrin içindir; kolsuz rig için gerçek şerit gerekir.
 
-## Doğrulama (`bash tools/gate.sh`)
+## Doğrulama
 
 ```
-bash tools/gate.sh
+bash tools/precheck.sh        # + --godot (yerel Godot varsa); tam kapı CI'da: ab-test-ve-kapi
 ```
 
-Gate, veri doğrulamasını (`validate_data`: bozuk alan → hata kodu, dosya ve alan adıyla), karakter kabul testlerini (her karakter 15 adım koşar,
+Tam kapı, veri doğrulamasını (`validate_data`: bozuk alan → hata kodu, dosya ve alan adıyla), karakter kabul testlerini (her karakter 15 adım koşar,
 başlangıç becerisi `kind: active`) ve her kolsuz karakter için şerit testlerini (`test/acceptance/test_acc_v202_rig_manifest.gd`,
 `test_acc_v202_rig_walk_gate.gd`: manifest ↔ rig, `palm` ↔ `cast_point`, yürüme kalite kapısı, CastAnim kare seçimi) koşar. Bu testler
-`art/source/<id>/` çıktılarını kimliğe göre kendiliğinden bulur; yeni karaktere özel test yazılmaz. Dilim `R` kapalıyken pending döner; yerelde
-`V202_SLICES_FORCE=R` ile zorlanır. Yürüme kapısı kırmızıysa yalnız `docs/design/walk-waiver-<id>.md` (tarih, kullanıcı onayı, ölçüm, gerekçe) geçirir.
+`art/source/<id>/` çıktılarını kimliğe göre kendiliğinden bulur; yeni karaktere özel test yazılmaz. Dilim `R` açıktır (`tools/v202_slices.txt`: P R W Z E açık, A F-ashen-bastion-128 ile ertelendi); testler kapıda gerçekten koşar, `V202_SLICES_FORCE` yalnız kapalı bir simge için gerekir. Yürüme kapısı kırmızıysa yalnız `docs/design/walk-waiver-<id>.md` (tarih, kullanıcı onayı, ölçüm, gerekçe) geçirir.
+
+## Elle satır isteyen yerler
+
+Vitrin hiçbir kayıt dosyası istemez, ama şu araç/veri dosyaları yeni karakteri **sessizce** atlar (hata vermez), karakter eklerken kontrol et: `tools/balance/card_priority.json` (karakter satırı; yoksa Gunslinger önceliği), `data/sfx_rules.json` (yeni ses kimlikleri için `limits`/`min_gap_ms`; yoksa kuralsız), `tools/audio/sfx_manifest.json`, `tools/balance/dps_density.gd` ve `dps_table.gd` (karakter listesi varsayılanı `gunslinger,zyfen`), `tools/balance/mid_report.py` (`legacy_rows` karakter döngüsü), `tools/golden/golden_run.gd` (`--characters`), `tools/capture/shots_<id>.gd`. Katalog sözleşmesi `test/unit/test_catalog_contract_characters.gd` her karakteri dolaşır (ad, portre dosyası, aktif başlangıç becerisi + havuz, kart havuzu, kilit referansı, kart önceliği dosyası); `sfx{}` değerlerinin gerçek `.ogg` varlığı henüz denetlenmez (açık bulgu).
 
 ## Vitrine düşme
 
@@ -94,5 +97,5 @@ Kontrol: `tools/capture/shots.gd` ile `chars`, `chars_b`, `chars_lock`, `levelup
 1. Gerçek PNG'leri aynı dosya adlarıyla `assets/gfx/char/`'a koyun (yeniden `--import`; `.import` dosyaları commit'lenir).
 2. JSON'da `placeholder` alanını silin (ya da `false`); `blurb`, `name`, sayılar ve `starting_skill`'i gerçek tasarıma göre güncelleyin.
 3. Şeridi `ab-animasyon-seridi` ile üretip `rig.walk/cast/gather/cast_point` değerlerini manifestten yazın.
-4. `bash tools/gate.sh` yeşil; cihazda vitrin ve seviye atlama ekran görüntüsü kontrolü (kendi bölüm dosyanız `docs/dev/user-verify/`).
+4. `bash tools/precheck.sh` temiz, CI tam kapı yeşil; cihazda vitrin ve seviye atlama ekran görüntüsü kontrolü (kendi bölüm dosyanız `docs/dev/user-verify/`).
 5. Denge (sayılar) kullanıcı kararıdır; `ab-denge-olcumu` ile Gunslinger ±%5 kanıtı ve karakterin DPS bandı raporlanır.

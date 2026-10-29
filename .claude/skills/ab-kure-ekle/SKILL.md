@@ -24,7 +24,7 @@ Küre tipi XP değerinden türer (`GemTiers.tier_of`); görünüm sınıfıdır,
    - Kayıt dosyaları: yeni test dosyası eklersen `ab-test-ve-kapi` (`tools/v2_slices.txt`; test kimliği kapısı yeni testi otomatik görür, sayı güncellenmez).
 7. **Kuru deneme (zorunlu):** sahte tip ekle (ör. `DRYRUN`, ≥ 200 xp, 80 px, `ara_boss.png` kopyası), `python tools/art/process_gem_orbs.py --check` + ilgili GUT dosyalarını koş, kırılan listeyi çıkar, sonra **tümünü geri al** (repoya girmez). T20261026-66'daki denemede kırılanlar: `COUNT`/`ORB_PX` sabitleri, `tier_of` (3 test), atlas boyutu (512×128 ≠ 384×128), sayım testleri.
 8. **Ekran görüntüsü:** `tools/capture/shots_orbs.gd` (xvfb, 1080×2400; `orbs_three`, `orbs_crowd` 300 küre, `orbs_still`) ile önce/sonra al; **kullanıcıya göster, onaydan sonra kesinleştir.** Çıktıyı commit'leme. Küre sayısı arttıkça `refresh` µs/kare çıktısına bak (perf).
-9. `bash tools/gate.sh`.
+9. **Doğrulama:** `bash tools/precheck.sh` (+ `--godot`), push, CI (`ab-test-ve-kapi`). `gem_tiers.gd` ve `gem_renderer.gd` 800 satır tavanının altında kalmalı; `scripts/view` → ui/ctrl katman kuralı geçerli (`check_layers`).
 
 ## Kontrol listesi
 - [ ] Görünen (opak) boyut ölçüldü; ana küre 1080 genişlikte ≥ ~20 px görünür.

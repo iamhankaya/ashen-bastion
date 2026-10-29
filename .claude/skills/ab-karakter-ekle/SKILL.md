@@ -7,7 +7,7 @@ description: Ashen Bastion'a yeni oynanabilir karakter eklerken (yeni karakter, 
 
 Yeni karakter **tek parça gövde** ile yapılır: her animasyon karesi tüm karakteri içerir, kol/namlu/omuz düzeneği yoktur
 (`rig.armless: true`). Örnek ve ölçüm kaynağı: **Zyfen** (`data/characters/zyfen.json`). Başlamadan: kb kartının `## Çalışma notları`
-bölümünü oku; kapı komutu `bash tools/gate.sh`; Türkçe `to_upper/to_lower` yasak (`tools/gate.sh` lint grep'i).
+bölümünü oku; kapı akışı `ab-test-ve-kapi` (push öncesi `bash tools/precheck.sh`, tam kapı CI); Türkçe `to_upper/to_lower` yasak (`tools/gate.sh` lint grep'i).
 
 ## Gunslinger istisnası (tek not)
 Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/characters/gunslinger.json`). Yeni karakter için parçalı rig
@@ -23,9 +23,10 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 7. **Testler:** R1 sonrası karakter listesi/sayısını sabitleyen test yoktur (4 test sentetik fixture/katalogdan türetilir; `test/unit/test_catalog_contract_characters.gd` her karakteri dolaşır). Aşağıdaki liste yalnız tarihsel bağlamdır (R1 öncesi kuru denemede 4 test): `test/unit/test_character_roster.gd` (`test_ids_follow_order_field`), `test/unit/test_characters_screen.gd` (`test_f030_default_character_first_by_order_field`), `test/acceptance/test_acc_v2_chars.gd` (`test_k10_single_character_set_works`, zyfen silince 1 karakter kalacağını varsayar), `test/unit/test_v202_pool_real.gd` (`test_empty_character_id_keeps_old_unfiltered_behavior`, filtresiz aktif beceri sayısı). Beklenen değerleri yeni karaktere göre güncelle (kusurlu davranışı değil sayıyı).
 8. **Denge:** `ab-denge-olcumu` ile Gunslinger ±%5 kanıtı (`kills5`, `hp_early`) ve yeni karakterin DPS bandı; `tools/balance/card_priority.json`'a karakter satırı (yoksa Gunslinger önceliği kullanılır); `mid_all.sh` karakter listesini `data/characters/` katalogundan alır (kod/liste düzenlenmez).
 9. **Altın hash:** yeni karakter için yeni aşama kaydı (`test/fixtures/golden_hashes.json`, `tools/golden/golden_run.gd`). Gunslinger kayıtları değişmez; eşitlik zinciri testleri (ör. "u3 = u1b") korunur.
+9b. **Elle satır isteyen sabit yerler ("dokunulacak yerler", kuru deneme kaynaklı):** `tools/balance/card_priority.json` (karakter satırı; yoksa Gunslinger önceliği sessizce kullanılır), `data/sfx_rules.json` (`limits`/`min_gap_ms` içinde yeni ses kimlikleri; yoksa kuralsız = havuz sınırı, sessizce), `tools/balance/{dps_density,dps_table}.gd` karakter listesi varsayılanı (`gunslinger,zyfen` — komut satırı argümanıyla ver), `tools/balance/mid_report.py` `legacy_rows` karakter döngüsü (yeni karakter raporda görünmez), `tools/balance/lord_budget.gd` (`zyfen` sabit), `tools/golden/golden_run.gd` `--characters` argümanı, `tools/audio/sfx_manifest.json` (yeni ses). Bunlar sessiz düşer, hata vermez: eklemeyi unutma. (Prova fazı T20261029-19 raporu gelince bu liste ona göre tamamlanır.)
 10. **Ekran öz-kontrolü:** xvfb ile `tools/capture/shots_zyfen.gd` örneği (seçim ekranı, duruş, yürüme, cast, gather, aynalama) — kendi `shots_<id>.gd`'ni onun kalıbıyla yaz.
 11. **Cihaz listesi:** ortak `docs/dev/user-verify.md`'ye yazma; kendi bölüm dosyanı `docs/dev/user-verify/` altına yaz.
-12. `bash tools/gate.sh` yeşil; `docs/dev/new-character.md` ile çelişki yok.
+12. `bash tools/precheck.sh` (+ `--godot`) temiz, push, CI yeşil (`ab-test-ve-kapi`); `docs/dev/new-character.md` ile çelişki yok. Satır tavanı (800) ve katman matrisi karakter eklemede devreye girmez: yalnız veri ve araç dosyaları değişir, `scripts/**`'a dokunma.
 
 ## Tek parça gövde yöntemi (Zyfen'den ölçülmüş başlangıç değerleri)
 - **Şerit, AnimatedSprite2D değil:** gövde tek `MeshInstance2D` (`scripts/view/player_view.gd`), tek yatay şerit PNG, hücre = UV bölgesi. Sway shader ve rim konturu hücre dolgusuna (`PAD=12`) bağlı; doğrulayıcı hücre/doku boyutunu denetler (`scripts/sim/data_v202_rig.gd`).
@@ -41,8 +42,9 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 `data/characters/<id>.json`; `assets/gfx/char/<id>_{body,strip,portrait}.png` + `.import`; `art/source/<id>/` (kare, `strip_manifest.json`, `quality.json`); `docs/data-schema.md`; `docs/dev/new-character.md`; karakter listesi sabitleyen mevcut testler (adım 7). Dokunulmaz: `scripts/domain/character_roster.gd` (`DEFAULT_ID = gunslinger`), Gunslinger dosyaları.
 
 ## Doğrulama
-- `bash tools/gate.sh` (adım 4 `validate_data` karakter hatalarını dosya/alan olarak söyler; `test/fixtures/rig_bad_*` örnek bozuk rig'ler).
-- Kolsuz karakter her karakter için otomatik taranır: `test/acceptance/test_acc_v202_rig_manifest.gd`, `test_acc_v202_rig_walk_gate.gd` (yeni testi elle yazma; `art/source/<id>/` çıktıları yeterli). Dilim `R` kapalıysa bu testler pending döner; yerelde `V202_SLICES_FORCE=R` ile zorla.
+- CI tam kapısı (adım 4 `validate_data` karakter hatalarını dosya/alan olarak söyler; `test/fixtures/rig_bad_*` örnek bozuk rig'ler).
+- `bash tools/precheck.sh` + CI (`ab-test-ve-kapi`); tam kapı yerelde yalnız WSL2'de.
+- Kolsuz karakter her karakter için otomatik taranır: `test/acceptance/test_acc_v202_rig_manifest.gd`, `test_acc_v202_rig_walk_gate.gd` (yeni testi elle yazma; `art/source/<id>/` çıktıları yeterli). v2.0.2 dilimleri **P R W Z E açıktır** (`tools/v202_slices.txt`), `R` dahil: bu testler artık gerçekten koşar ve kırmızı olabilir (pending dönmez, `V202_SLICES_FORCE` gerekmez; zorlamak yalnız kapalı `A` için anlamlıdır). `A` (varlık bağlama) F-ashen-bastion-128 nedeniyle ertelendi: A sınıfındaki testler (önek yok) pending kalabilir, bu beklenen.
 - Yürüme kalite kapısı `art/source/<id>/quality.json` `pass: true`; kırmızıysa waiver yolu `docs/design/walk-waiver-<id>.md` (tarih + kullanıcı onayı + ölçüm + gerekçe).
 
 ## Kontrol listesi (kart çalışma notlarından)
