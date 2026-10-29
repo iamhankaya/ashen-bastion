@@ -21,6 +21,10 @@ func before_each() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_dir))
 
 
+func after_each() -> void:
+	CatalogFixtures.unpin_default()  # test yarıda kalsa da daraltılmış katalog sonrakilere sızmaz
+
+
 func after_all() -> void:
 	_rm(ProjectSettings.globalize_path(ROOT))
 

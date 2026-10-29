@@ -161,6 +161,17 @@ func test_a10_screen_has_three_mode_rows_and_three_difficulty_cards() -> void:
 	assert_eq(s.mode_buttons.keys(), RunStrip.mode_order(), "her katalog modu için bir satır")
 	assert_eq(s.diff_buttons.keys(), RunStrip.diff_order(), "her katalog zorluğu için bir kart")
 	assert_eq(s.mode_buttons.size(), RunCatalog.default().mode_ids().size())
+	var cat := RunCatalog.default()
+	assert_eq(
+		CatalogFixtures.known_in_order(cat.mode_ids(), RunProfiles.MODES),
+		RunProfiles.MODES,
+		"yerleşik mod sırası"
+	)
+	assert_eq(
+		CatalogFixtures.known_in_order(cat.difficulty_ids(), RunProfiles.DIFFS),
+		RunProfiles.DIFFS,
+		"yerleşik zorluk sırası"
+	)
 	for m in RunProfiles.MODES:
 		assert_true(s.mode_buttons.has(StringName(m)), "yerleşik mod satırı: " + m)
 	for d in RunProfiles.DIFFS:
