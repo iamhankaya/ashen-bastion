@@ -14,8 +14,7 @@ const CEILINGS := {
 }
 const ENEMIES := 400
 const STEPS := 240
-const BUDGET_EXCEPTIONS := "res://tools/ci/line_budget_exceptions.txt"
-const BUDGET_DEFAULT := 800  # tools/ci/check_line_budget.py --max ile aynı; tavanın tek kaynağı araç + istisna dosyası
+const CONTROLLER_MAX_LINES := 960
 
 
 func after_each() -> void:
@@ -73,9 +72,7 @@ func test_tracker_attached_does_not_change_work_counters() -> void:
 func test_game_controller_line_budget() -> void:
 	var src := FileAccess.get_file_as_string("res://scripts/ctrl/game_controller.gd")
 	var lines := src.count("\n")
-	assert_lte(
-		lines, _ceiling("res://scripts/ctrl/game_controller.gd"), "game_controller.gd satır tavanı"
-	)
+	assert_lte(lines, CONTROLLER_MAX_LINES, "game_controller.gd satır tavanı")
 
 
 func test_save_file_is_small_even_with_everything_unlocked() -> void:
@@ -93,12 +90,3 @@ func test_v2_data_loading_adds_no_scene_cost_to_sim_construction() -> void:
 	var sim := SimKit.make(1, {"data_kind": "quiet"})
 	assert_eq(sim.state, GameSim.State.RUNNING)
 	assert_eq(sim.check_invariants(), PackedStringArray())
-
-
-func _ceiling(path: String) -> int:
-	var rel := path.trim_prefix("res://")
-	for raw in FileAccess.get_file_as_string(BUDGET_EXCEPTIONS).split("\n"):
-		var parts := raw.split("#")[0].split("|")
-		if parts.size() == 2 and parts[0].strip_edges() == rel:
-			return int(parts[1].strip_edges())
-	return BUDGET_DEFAULT

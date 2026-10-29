@@ -13,9 +13,9 @@ func _init(profiles: Dictionary = {}) -> void:
 	var a: Dictionary = profiles.get("achievements", {})
 	for id: Variant in a.get("lord_bound_tier_ids", []):
 		_lord_bound.append(str(id))
-	for diff: Variant in a.keys():
-		if a[diff] is Dictionary:  # zorluk kimliği -> kural (katalogdaki her zorluk; lord_bound_tier_ids dizi, atlanır)
-			_by_diff[str(diff)] = a[diff]
+	for diff in RunProfiles.DIFFS:
+		if a.get(diff, null) is Dictionary:
+			_by_diff[diff] = a[diff]
 
 
 ## "<aile>:<kademe sırası>" kimliği (1 tabanlı), örn. tier_id(&"endure", 4) = "endure:4".

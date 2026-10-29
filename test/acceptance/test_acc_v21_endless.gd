@@ -106,6 +106,16 @@ func test_s25_second_kill_counts_but_the_milestone_fires_once() -> void:
 	assert_eq(s.state, GameSim.State.RUNNING)
 
 
+func test_s26_a_lord_that_never_dies_does_not_repeat() -> void:
+	if V21Slice.require(self, "S"):
+		return
+	var s := _endless()
+	var w := V21Acc.watch(s)
+	V21Acc.run_until(s, 60 * 400)
+	assert_eq(w["spawns"].size(), 1, "ölmeyen Lord için tekrar yok")
+	assert_false(s.milestone_won)
+
+
 func test_s27_repeat_hp_is_capped() -> void:
 	if V21Slice.require(self, "S"):
 		return

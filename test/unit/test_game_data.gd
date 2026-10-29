@@ -3,8 +3,7 @@ extends GutTest
 const FIX := "res://test/fixtures"
 
 # Başka yolla sınanan kodlar (fixture bindirmesi uygun değil)
-## metric_schema: karakterizasyon (rf_data_errors) her data_* fixture dizinini sabitlediğinden fixture yok; test_catalog_achievement_dry_run + test_catalog_achievement_metrics sınar.
-const COVERED_ELSEWHERE: Array[String] = ["behavior_base", "metric_schema"]
+const COVERED_ELSEWHERE: Array[String] = ["behavior_base"]
 
 
 func after_all() -> void:

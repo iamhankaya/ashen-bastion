@@ -53,12 +53,11 @@ def test_profile_fixture_dirs_do_not_use_the_data_bad_prefix():
     assert not list((ROOT / "test" / "fixtures").glob("data_bad_profile_*"))
 
 
-def test_run_catalog_data_is_one_file_per_entry_mergeable():
-    # R7: modlar/zorluklar tek dosya = tek kayıt (paralel eklemede satır çakışması yok); run_profiles.json yalnız v + Lord kademeleri
-    for sub, names in (("run_modes", ("quick", "normal", "endless")), ("difficulties", ("easy", "normal", "hard"))):
-        for name in names:
-            assert json.loads(_read(f"data/{sub}/{name}.json"))["id"] == name, (sub, name)
-    json.loads(_read("data/run_profiles.json"))
+def test_run_profiles_json_is_one_key_per_line_mergeable():
+    lines = _read("data/run_profiles.json").splitlines()
+    for name in ("quick", "normal", "endless", "easy", "hard"):
+        assert sum(1 for ln in lines if ln.lstrip().startswith(f'"{name}":')) >= 1, name
+    json.loads("\n".join(lines))
 
 
 def test_golden_ref_workflow_is_manual_only():

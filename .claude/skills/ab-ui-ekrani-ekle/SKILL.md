@@ -18,7 +18,7 @@ Bu bir **Godot Control ağacı** işidir; web/HTML tasarım skill'leri (impeccab
 8. `bash tools/gate.sh`.
 
 ## Dokunulan dosyalar
-`scripts/ui/*.gd`, `scripts/ctrl/*.gd`, `docs/ui/*`, `tools/capture/shots.gd`, `test/unit/` (yeni UI testi).
+`scripts/ui/*.gd`, `scripts/ctrl/*.gd`, `docs/ui/*`, `tools/capture/shots.gd`, `test/unit/` (yeni UI testi), `tools/gate_min_tests.json`.
 
 ## Kontrol listesi
 - [ ] `apply_safe_area` + güvenli alan testi.

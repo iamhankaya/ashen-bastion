@@ -1,11 +1,10 @@
 extends GutTest
 ## Sözleşme (S3): game_controller.gd satır bütçesi. v2 mantığı V2Flow + 3 dilim sınıfında yaşar; controller yalnız
-## tek satırlık delegasyon taşır. Satır tavanları artık araçta: tools/ci/check_line_budget.py (tek tip 800) +
-## tools/ci/line_budget_exceptions.txt (azalan geçiş kaydı); bu testler aynı kaynaktan okur.
+## tek satırlık delegasyon taşır (taban 912, gdlint tavanı 1000, bu test tavanı 960; S3 sonu ≤ 946).
 
 const CONTROLLER := "res://scripts/ctrl/game_controller.gd"
-const BUDGET_EXCEPTIONS := "res://tools/ci/line_budget_exceptions.txt"
-const BUDGET_DEFAULT := 800  # tools/ci/check_line_budget.py --max ile aynı; tavanın tek kaynağı araç + istisna dosyası
+const CEILING := 960
+const S3_CEILING := 960  # v2.1 C fazı: 946 + 7 (V21Runs delegasyonu, KOSU ekranı, open_scores parametreleri); kalan pay 7
 const GAME_DATA := "res://scripts/sim/game_data.gd"
 const GAME_SIM := "res://scripts/sim/game_sim.gd"
 
@@ -15,11 +14,11 @@ func _lines(path: String) -> int:
 
 
 func test_controller_stays_under_the_ceiling() -> void:
-	assert_lte(_lines(CONTROLLER), _ceiling(CONTROLLER), "game_controller.gd satır sayısı")
+	assert_lte(_lines(CONTROLLER), CEILING, "game_controller.gd satır sayısı (tavan %d)" % CEILING)
 
 
 func test_controller_after_contract_phase_within_s3_budget() -> void:
-	assert_lte(_lines(CONTROLLER), _ceiling(CONTROLLER), "sözleşme fazı bütçesi")
+	assert_lte(_lines(CONTROLLER), S3_CEILING, "sözleşme fazı bütçesi (912 + 34)")
 
 
 func test_controller_has_no_v2_decision_logic() -> void:
@@ -52,18 +51,11 @@ func test_controller_delegations_are_single_calls() -> void:
 
 
 func test_game_data_growth_is_bounded() -> void:
-	assert_lte(_lines(GAME_DATA), _ceiling(GAME_DATA))
+	# v1.1 sonu 897 satır; v2.0 ek <= 40 (doğrulayıcılar data_v2.gd'de), gdlint tavanı 1000.
+	assert_lte(_lines(GAME_DATA), 897 + 40 + 4 + 4)  # v2.0.2: +4 (937 → 941; doğrulayıcılar data_v202_*.gd'de); v2.0.3: +4 (hata kodları + portrait_video anahtarı, 945)
 	assert_lt(_lines(GAME_DATA), 1000)
 
 
 func test_game_sim_stays_within_the_v202_budget() -> void:
-	assert_lte(_lines(GAME_SIM), _ceiling(GAME_SIM), "game_sim.gd satır sayısı")
-
-
-func _ceiling(path: String) -> int:
-	var rel := path.trim_prefix("res://")
-	for raw in FileAccess.get_file_as_string(BUDGET_EXCEPTIONS).split("\n"):
-		var parts := raw.split("#")[0].split("|")
-		if parts.size() == 2 and parts[0].strip_edges() == rel:
-			return int(parts[1].strip_edges())
-	return BUDGET_DEFAULT
+	# v2.0.2 S1: game_sim.gd tavanı 990 (rüzgar sistemi WindSystem/WindUtil'de yaşar; sim yalnız delegasyon taşır).
+	assert_lte(_lines(GAME_SIM), 990, "game_sim.gd satır sayısı (tavan 990)")

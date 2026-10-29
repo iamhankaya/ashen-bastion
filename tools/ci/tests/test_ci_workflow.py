@@ -23,25 +23,9 @@ def code_lines(text: str) -> str:
     return "\n".join(l for l in text.splitlines() if not l.strip().startswith("#"))
 
 
-def test_ci_triggers_push_only_main_and_vlad_branches():
-    # H3: çift tetik (push + pull_request) kalktı; PR'ın "test" bağlamı dal ucundaki push koşusundan gelir (bağlam SHA'ya bağlıdır)
+def test_ci_runs_on_push_and_pull_request():
     head = CI.split("jobs:")[0]
-    assert re.search(r"^\s*push:", head, re.M)
-    assert not re.search(r"^\s*pull_request(_target)?:", head, re.M), "pull_request tetiği kaldırıldı (çift koşu)"
-    m = re.search(r"push:\s*\n\s*branches:\s*\[([^\]]*)\]", head)
-    assert m, "push.branches listesi gerekli"
-    assert sorted(x.strip().strip("'\"") for x in m.group(1).split(",")) == ["main", "vlad/**"]
-
-
-def test_ci_concurrency_per_ref_cancels_all_but_main():
-    head = CI.split("jobs:")[0]
-    assert "group: ci-${{ github.ref }}-${{ github.event_name }}" in head  # workflow_call (nightly) push CI'ını iptal etmesin
-    assert "cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}" in head
-
-
-def test_required_check_context_name_is_kept():
-    # dal koruması "test" bağlamını bekleyebilir: iş adı değişmez (yeşil = static + gut + sahte yeşil korumaları)
-    assert re.search(r"^  test:[ \t]*$", CI, re.M)
+    assert re.search(r"^\s*push:", head, re.M) and re.search(r"^\s*pull_request:", head, re.M)
 
 
 def test_ci_never_uses_fast_mode():

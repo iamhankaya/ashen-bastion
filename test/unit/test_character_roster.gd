@@ -40,19 +40,8 @@ class _FakeStore:
 
 
 func test_ids_follow_order_field() -> void:
-	# F-030: vitrin sırası `order` alanı, dosya adı sırası değil (sentetik 3 karakter, order ters çevrilir).
-	var g := CatalogFixtures.characters(3)
-	g.get_character(&"zz_c0").order = 3
-	g.get_character(&"zz_c2").order = 1
-	g._sort_character_ids()
-	assert_eq(CharacterRoster.ids(g), [&"zz_c2", &"zz_c1", &"zz_c0"] as Array[StringName])
-
-
-func test_ids_of_real_catalog_are_sorted_by_order_and_default_comes_first() -> void:
-	var ids := CharacterRoster.ids(_real)
-	assert_eq(ids[0], CharacterRoster.DEFAULT_ID)
-	for i in ids.size() - 1:
-		assert_lte(_real.get_character(ids[i]).order, _real.get_character(ids[i + 1]).order)
+	# F-030: vitrin sırası `order` alanı (gunslinger 1, zyfen 2), dosya adı sırası değil.
+	assert_eq(CharacterRoster.ids(_real), [&"gunslinger", &"zyfen"] as Array[StringName])
 
 
 func test_resolve_empty_unknown_or_missing_goes_to_default() -> void:

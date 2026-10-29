@@ -122,8 +122,8 @@ def main(argv: list[str]) -> int:
                 seen[ts.get("name")] = seen.get(ts.get("name"), 0) + 1
         want = set(discover())
         dup = sorted(f for f, c in seen.items() if c > 1)
-        # Testsuite'i olmayan dosya (içinde hiç test işlevi yok) merge öncesi de JUnit'te yoktur; kimlik kapısı
-        # (check_test_ids.py, gate.sh adım 7) bildirilen testlerin koşmadığını ayrıca yakalar. Burada yalnız yinelenme ve bilinmeyen dosya.
+        # Testsuite'i olmayan dosya (içinde hiç test işlevi yok) merge öncesi de JUnit'te yoktur; asgari sayı denetimi
+        # (check_junit + gate_min_tests.json) o dosyaları ayrıca yakalar. Burada yalnız yinelenme ve bilinmeyen dosya.
         extra = sorted(set(seen) - want)
         missing = sorted(want - set(seen)) if require_all else []
         for f in missing:

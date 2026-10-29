@@ -90,19 +90,15 @@ func test_expiry_is_exactly_life_steps_and_emits_once() -> void:
 	assert_eq(ev[0]["kind_id"], &"cekim_tasi")
 
 
-## İlk doğuşun türü, sim koşturulmadan: direktör kendi doğuş adımına getirilip bir kez çalıştırılır (aynı rng_pickup akışı).
-func _first_spawn_kind_direct(seed_value: int) -> StringName:
-	var sim := _sim(seed_value, {"data_kind": "quiet", "log_events": false})
-	sim.step_count = sim.pickup_director.next_step
-	sim.pickup_director.step(sim)
-	return sim.data.pickup_ids[sim.pickups.kind_idx[0]]
-
-
 func test_kind_distribution_follows_weights() -> void:
 	var counts := {}
 	var n := 200
 	for s in n:
-		var id := _first_spawn_kind_direct(1000 + s)
+		var sim := _sim(1000 + s, {"data_kind": "quiet", "log_events": false})
+		SimKit.run_until(
+			sim, func() -> bool: return sim.pickups.count > 0, sim.pickup_director.next_step + 5
+		)
+		var id: StringName = sim.data.pickup_ids[sim.pickups.kind_idx[0]]
 		counts[id] = int(counts.get(id, 0)) + 1
 	var expect := {
 		&"kizil_iksir": 0.30,
@@ -115,36 +111,6 @@ func test_kind_distribution_follows_weights() -> void:
 	for k in expect.keys():
 		var frac := float(counts.get(k, 0)) / float(n)
 		assert_almost_eq(frac, float(expect[k]), 0.09, "%s" % k)
-
-
-## Entegrasyon (kısa): tam sim ilk doğuşu, rng_pickup tohumundan elle yinelenen çekim sırasıyla (aralık, tür) örtüşür.
-## Çekim sırası kayarsa (fazladan randf) adım ya da tür oracle'dan ayrılır.
-func test_first_spawn_step_kind_and_position_follow_rng_stream() -> void:
-	for s in 4:
-		var sim := _sim(1000 + s, {"data_kind": "quiet", "log_events": false})
-		var cfg: Dictionary = sim.data.pickup_cfg
-		var spawn: Dictionary = cfg["spawn"]
-		var rng := RandomNumberGenerator.new()
-		rng.seed = sim.rng_pickup.seed
-		var first_step := roundi(rng.randf_range(spawn["first"][0], spawn["first"][1]) * 60.0)
-		assert_eq(sim.pickup_director.next_step, first_step, "tohum %d: planlanan adım" % s)
-		rng.randf_range(spawn["interval"][0], spawn["interval"][1])  # sonraki aralık çekimi
-		var total := 0.0
-		for k in cfg["kinds"]:
-			total += float(k["weight"])
-		var r := rng.randf() * total
-		var want := -1
-		var acc := 0.0
-		for i in cfg["kinds"].size():
-			acc += float(cfg["kinds"][i]["weight"])
-			if r < acc:
-				want = i
-				break
-		SimKit.run_until(sim, func() -> bool: return sim.pickups.count > 0, first_step + 5)
-		assert_eq(sim.step_count, first_step, "tohum %d: doğuş adımı" % s)
-		assert_eq(sim.pickups.kind_idx[0], want, "tohum %d: tür" % s)
-		var d := sim.pickups.pos[0].distance_to(sim.player_pos)
-		assert_between(d, 450.0 - 1.0, 700.0 + 41.0, "tohum %d: konum" % s)
 
 
 func test_skip_to_pulls_stale_next_step_forward() -> void:

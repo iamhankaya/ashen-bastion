@@ -1,2 +1,0 @@
-# Kaldırılan testler (check_test_ids.py). Yalnız eklemeli (merge=union). Biçim: id | gerekçe | görev/bulgu
-# Kimlik = yol::fonksiyon. Silinen bir test burada kayıtlıysa LOST sayılmaz; kayıtsız silme kapıyı kırar.

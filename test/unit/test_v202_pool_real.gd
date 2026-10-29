@@ -61,14 +61,9 @@ func test_no_cross_leak_and_common_passives_shared() -> void:
 
 
 func test_empty_character_id_keeps_old_unfiltered_behavior() -> void:
-	# Filtresiz küme = katalogdaki tüm karakterlerin süzülmüş kümelerinin birleşimi (sayı sabiti yok).
-	for kind in [SkillDef.KIND_ACTIVE, SkillDef.KIND_PASSIVE, SkillDef.KIND_EVOLUTION]:
-		var union := {}
-		for id in CharacterRoster.ids(data):
-			for sid in _ids(id, kind):
-				union[sid] = true
-		assert_eq(_ids(&"", kind).size(), union.size(), String(kind))
-		assert_eq(_ids(&"", kind).size(), data.skills_of_kind(kind).size(), String(kind))
+	assert_eq(_ids(&"", SkillDef.KIND_ACTIVE).size(), GUNSLINGER_ACTIVES + ZYFEN_ACTIVES)
+	assert_eq(_ids(&"", SkillDef.KIND_PASSIVE).size(), 7 + 2)
+	assert_eq(_ids(&"", SkillDef.KIND_EVOLUTION).size(), 8)
 
 
 func test_evolutions_share_the_pool_of_their_raw_active() -> void:
@@ -144,6 +139,6 @@ func _drain(character: StringName) -> void:
 	assert_true(healed, "%s: havuz tükenmedi / Şifa gelmedi" % character)
 
 
-func test_card_pool_exhaustion_every_character() -> void:
-	for id in CharacterRoster.ids(data):
-		_drain(id)
+func test_card_pool_exhaustion_both_characters() -> void:
+	_drain(&"gunslinger")
+	_drain(&"zyfen")

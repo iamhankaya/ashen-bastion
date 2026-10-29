@@ -2,6 +2,8 @@ extends GutTest
 ## Kabul (v1.1): determinizm - state_hash v1.1 alanlarını kapsar (S2'den beri gerçek, dilimsiz), aynı tohum iki koşu aynı
 ## hash (eklenti toplayan bot dahil, D2+D3), farklı tohum farklı hash, yeni RNG akışı eskileri kaydırmaz.
 
+const SEG := 300
+
 
 func _sim(seed_value: int = 1, extra: Dictionary = {}) -> GameSim:
 	var o := {"data_kind": "quiet_pickups"}
@@ -90,6 +92,30 @@ func test_pickups_flag_off_gives_same_old_streams_as_on_for_fresh_sims() -> void
 	assert_eq(on.rng_choice.state, off.rng_choice.state)
 	assert_eq(on.rng_map.state, off.rng_map.state)
 	assert_eq(on.rng_combat.state, off.rng_combat.state)
+
+
+func _run_hashes(seed_value: int, policy: StringName, segments: int) -> Array[int]:
+	var sim := SimKit.make(seed_value, {"data_kind": "real", "log_events": false})
+	SimKit.godmode(sim)
+	var rng := Bots.make_rng(seed_value)
+	var out: Array[int] = []
+	for s in segments:
+		Bots.play(sim, policy, SEG, rng)
+		out.append(sim.state_hash())
+	return out
+
+
+func test_same_seed_same_hash_every_300_steps_for_all_policies_incl_pickup_bot() -> void:
+	if V11Slice.require(self, "D2") or V11Slice.require(self, "D3"):
+		return
+	var all: Array[StringName] = Bots.POLICIES.duplicate()
+	all.append_array(Bots.PICKUP_POLICIES)
+	for pol in all:
+		var a := _run_hashes(31, pol, 16)
+		var b := _run_hashes(31, pol, 16)
+		assert_eq(a, b, "%s: aynı tohum iki koşu her 300 adımda eşit" % pol)
+		var c := _run_hashes(32, pol, 16)
+		assert_ne(a[a.size() - 1], c[c.size() - 1], "%s: farklı tohum farklı" % pol)
 
 
 func test_pickup_collecting_run_actually_changes_hash_via_new_state() -> void:

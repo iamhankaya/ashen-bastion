@@ -1,3 +1,0 @@
-# Satır tavanı geçiş istisnaları (check_line_budget.py). Biçim: yol | tavan. YALNIZ AZALIR: yeni satır ya da artış yasak
-# (--base ile LINE_BUDGET_RAISED), dosya <= 800 olunca satır silinmeli (LINE_BUDGET_STALE). merge=union YOK. R dilimleri kendi satırını siler.
-scripts/sim/game_sim.gd | 889

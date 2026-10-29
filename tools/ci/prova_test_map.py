@@ -38,7 +38,7 @@ def compare(files: list[str], junits: list[str]) -> int:
         for ts in ET.parse(j).getroot().iter("testsuite"):
             if int(ts.get("failures") or 0) or int(ts.get("errors") or 0):
                 failing.add(ts.get("name"))
-    m = test_map.build()
+    m = test_map.load()
     union: set[str] = set()
     for f in files:
         sel = test_map.select([f], m)

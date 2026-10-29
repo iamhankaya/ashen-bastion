@@ -20,8 +20,8 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 4. **Beceri havuzu:** `pool: "<id>"` özel aktif/evrimler → `ab-beceri-ekle`. `starting_skill` `kind: active` olmalı; havuzu karakterin kimliği ya da `common` (`requires_ref`). Depoda `common` havuzlu aktif beceri yok: yeni karakter kendi havuzlu bir başlangıç becerisi getirir.
 5. **Ses:** karakter `sfx{}` sözlüğü ve beceri `cast_sfx` → `ab-ses-ekle`. Sözlük varsa anahtarı olmayan olay sessiz kalır.
 6. **Kilit (isteğe bağlı):** `unlock: {"achievement": "<id>"}` → başarım `ab-basarim-ekle`.
-7. **Testler:** R1 sonrası karakter listesi/sayısını sabitleyen test yoktur (4 test sentetik fixture/katalogdan türetilir; `test/unit/test_catalog_contract_characters.gd` her karakteri dolaşır). Aşağıdaki liste yalnız tarihsel bağlamdır (R1 öncesi kuru denemede 4 test): `test/unit/test_character_roster.gd` (`test_ids_follow_order_field`), `test/unit/test_characters_screen.gd` (`test_f030_default_character_first_by_order_field`), `test/acceptance/test_acc_v2_chars.gd` (`test_k10_single_character_set_works`, zyfen silince 1 karakter kalacağını varsayar), `test/unit/test_v202_pool_real.gd` (`test_empty_character_id_keeps_old_unfiltered_behavior`, filtresiz aktif beceri sayısı). Beklenen değerleri yeni karaktere göre güncelle (kusurlu davranışı değil sayıyı).
-8. **Denge:** `ab-denge-olcumu` ile Gunslinger ±%5 kanıtı (`kills5`, `hp_early`) ve yeni karakterin DPS bandı; `tools/balance/card_priority.json`'a karakter satırı (yoksa Gunslinger önceliği kullanılır); `mid_all.sh` karakter listesini `data/characters/` katalogundan alır (kod/liste düzenlenmez).
+7. **Mevcut testleri güncelle:** karakter listesi/sayısını sabitleyen testler yeni karakterde kırmızı olur (kuru denemede 4 test): `test/unit/test_character_roster.gd` (`test_ids_follow_order_field`), `test/unit/test_characters_screen.gd` (`test_f030_gunslinger_first_by_order_field`), `test/acceptance/test_acc_v2_chars.gd` (`test_k10_single_character_set_works`, zyfen silince 1 karakter kalacağını varsayar), `test/unit/test_v202_pool_real.gd` (`test_empty_character_id_keeps_old_unfiltered_behavior`, filtresiz aktif beceri sayısı). Beklenen değerleri yeni karaktere göre güncelle (kusurlu davranışı değil sayıyı); `tools/gate_min_tests.json` gerekirse.
+8. **Denge:** `ab-denge-olcumu` ile Gunslinger ±%5 kanıtı (`kills5`, `hp_early`) ve yeni karakterin DPS bandı; `tools/balance/mid_run.gd` `PRIORITY_BY_CHAR`'a karakter satırı (yoksa Gunslinger önceliği kullanılır) ve `mid_all.sh` varsayılan `CHARS` listesi.
 9. **Altın hash:** yeni karakter için yeni aşama kaydı (`test/fixtures/golden_hashes.json`, `tools/golden/golden_run.gd`). Gunslinger kayıtları değişmez; eşitlik zinciri testleri (ör. "u3 = u1b") korunur.
 10. **Ekran öz-kontrolü:** xvfb ile `tools/capture/shots_zyfen.gd` örneği (seçim ekranı, duruş, yürüme, cast, gather, aynalama) — kendi `shots_<id>.gd`'ni onun kalıbıyla yaz.
 11. **Cihaz listesi:** ortak `docs/dev/user-verify.md`'ye yazma; kendi bölüm dosyanı `docs/dev/user-verify/` altına yaz.
@@ -38,7 +38,7 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 - **Bilinen sınırlar:** tek `cast_point` (iki bağımsız nişanlı silah için yetmez); kare tutarlılığı (renk/kıyafet sıçraması) elle denetlenir; iki yönlü `walk_cast` yok.
 
 ## Dokunulan dosyalar
-`data/characters/<id>.json`; `assets/gfx/char/<id>_{body,strip,portrait}.png` + `.import`; `art/source/<id>/` (kare, `strip_manifest.json`, `quality.json`); `docs/data-schema.md`; `docs/dev/new-character.md`; karakter listesi sabitleyen mevcut testler (adım 7). Dokunulmaz: `scripts/domain/character_roster.gd` (`DEFAULT_ID = gunslinger`), Gunslinger dosyaları.
+`data/characters/<id>.json`; `assets/gfx/char/<id>_{body,strip,portrait}.png` + `.import`; `art/source/<id>/` (kare, `strip_manifest.json`, `quality.json`); `docs/data-schema.md`; `docs/dev/new-character.md`; `tools/gate_min_tests.json` (yeni test eklenirse); karakter listesi sabitleyen mevcut testler (adım 7). Dokunulmaz: `scripts/ctrl/character_roster.gd` (`DEFAULT_ID = gunslinger`), Gunslinger dosyaları.
 
 ## Doğrulama
 - `bash tools/gate.sh` (adım 4 `validate_data` karakter hatalarını dosya/alan olarak söyler; `test/fixtures/rig_bad_*` örnek bozuk rig'ler).
@@ -49,7 +49,7 @@ Gunslinger parçalı rig'dir (kolsuz gövde + kol; `rig.armless` yok, `data/char
 - [ ] `godot --headless --import` yapıldı, `validate_data` 0 hata; karakter listesi sabitleyen 4 mevcut test güncellendi.
 - [ ] Yürüme/aksiyon kareleri **video → ffmpeg → yeşil silme** hattından; görsel üreticiyle kare kare çizilen yürüme kullanılmaz (yan görünümde bacak sırası çizilemez; tek ızgarada tutarlı döngü çıkmaz). `--preview` ile bağlamadan önce ölç.
 - [ ] Bilinen açığı sabitleyen test baştan `karakterizasyon (F-xxx)` adıyla; kabul testi kusurlu davranışı beklenen değer yapmaz, bulgu kimliğine bağlı `pending` yazılır.
-- [ ] Paralel fazlar ortak kayıt dosyalarına (dilim dosyaları, `removed_tests.txt`/`moved_tests.txt`) yazarsa sözleşme fazı önceden hazırlar; rapordan önce entegrasyon dalını yeniden al.
+- [ ] Paralel fazlar ortak kayıt dosyalarına (`tools/gate_min_tests.json`, dilim dosyaları) yazarsa sözleşme fazı önceden hazırlar; rapordan önce entegrasyon dalını yeniden al.
 - [ ] Cihaz kontrol listesi kendi bölüm dosyana (`docs/dev/user-verify/`), ortak dosyaya değil.
 - [ ] Araç/ölçüm çıktı klasörü aynı commit'te `.gitignore`'a (ör. `tools/art/_preview/`).
 - [ ] Sır, imza materyali, esin kaynağı adı yok; gate'in yasaklı ad denetimi (`tools/ci/check_forbidden_names.sh`) yeşil ya da "atlandı".

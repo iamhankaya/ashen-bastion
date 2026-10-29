@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Seçici koşu eşlemesi (F-044): değişen dosyalara göre koşulacak GUT test dosyalarını seçer.
 
-  test_map.py ensure              tools/ci/test_map.json yoksa ya da bayatsa üretir (dosya İZLENMEZ: .gitignore); hata => çıkış 1
-  test_map.py generate            tools/ci/test_map.json'u koşulsuz yeniden üretir (kaynak ağacın statik bağımlılık analizi)
-  test_map.py check               ensure + sahipsiz test yok; 0/1
+  test_map.py generate            tools/ci/test_map.json'u yeniden üretir (kaynak ağacın statik bağımlılık analizi)
+  test_map.py check               json ile ağaç tutarlı mı (güncel + sahipsiz test yok); 0/1
   test_map.py select [DOSYA...]   değişen dosyalar (argüman ya da stdin satırları) -> "FULL" ya da test dosyaları listesi
 
 HIZLI MOD YALNIZ GELİŞTİRİCİ GERİ BİLDİRİMİDİR; PR CI'ı, entegrasyon merge'ü ve son kapı (main) HER ZAMAN tam suite koşar
@@ -207,25 +206,7 @@ def build(root: Path = ROOT, rev: str | None = None) -> dict:
     }
 
 
-def render(m: dict) -> str:
-    return json.dumps(m, indent=1, ensure_ascii=False, sort_keys=True) + "\n"
-
-
-def ensure(root: Path = ROOT) -> int:
-    """Harita yoksa/bayatsa üretir (türetilmiş dosya, izlenmez). Üretim hatası: TEST_MAP mesajı + çıkış 1 (çağıran tam gate'e düşer)."""
-    try:
-        text = render(build(root))
-        if not MAP.is_file() or MAP.read_text(encoding="utf-8") != text:
-            MAP.write_text(text, encoding="utf-8")
-    except Exception as e:  # noqa: BLE001 - her üretim hatası çağıranı tam gate'e düşürür
-        print(f"TEST_MAP: üretim hatası: {type(e).__name__}: {e}", file=sys.stderr)
-        return 1
-    return 0
-
-
 def load() -> dict:
-    if not MAP.is_file() and ensure() != 0:
-        raise RuntimeError("TEST_MAP: harita üretilemedi")
     return json.loads(MAP.read_text(encoding="utf-8"))
 
 
@@ -257,10 +238,12 @@ def select(changed: list[str], m: dict | None = None):
 
 
 def check(root: Path = ROOT) -> int:
-    rc = ensure(root)
-    if rc:
-        return rc
+    fresh = build(root)
     cur = load()
+    rc = 0
+    if fresh != cur:
+        print("TESTMAP_ERROR: tools/ci/test_map.json güncel değil (python3 tools/ci/test_map.py generate)", file=sys.stderr)
+        rc = 1
     covered = set()
     for ts in cur["files"].values():
         covered.update(ts)
@@ -276,10 +259,8 @@ def check(root: Path = ROOT) -> int:
 def main(argv: list[str]) -> int:
     cmd = argv[1] if len(argv) > 1 else ""
     if cmd == "generate":
-        MAP.write_text(render(build()), encoding="utf-8")
+        MAP.write_text(json.dumps(build(), indent=1, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
         return 0
-    if cmd == "ensure":
-        return ensure()
     if cmd == "check":
         return check()
     if cmd == "select":

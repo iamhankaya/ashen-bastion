@@ -1,23 +1,19 @@
 """F-044: seçici koşu eşlemesi — sahipsiz test yok, paylaşılan/eşlemesiz dosya => FULL, eşleme güncel."""
 
 import json
-import shutil
-import subprocess
 import sys
 from pathlib import Path
-
-import pytest
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "tools" / "ci"))
 import shard  # noqa: E402
 import test_map  # noqa: E402
 
-M = test_map.build()  # test_map.json izlenmez (S-map): bellekte üretilir
+M = test_map.load()
 
 
-def test_build_is_deterministic():
-    assert test_map.build() == M
+def test_map_is_fresh():
+    assert test_map.build() == M, "tools/ci/test_map.json güncel değil: python3 tools/ci/test_map.py generate"
 
 
 def test_every_test_file_is_in_map_and_selects_itself():
@@ -46,6 +42,7 @@ def test_shared_files_force_full():
         "test/fixtures/golden_hashes.json",
         "tools/gate.sh",
         "tools/ci/shard.py",
+        "tools/gate_min_tests.json",
         "project.godot",
         ".gutconfig.json",
         "export_presets.cfg",
@@ -81,7 +78,7 @@ def test_mapped_script_selects_all_tests_that_reference_it():
     assert direct <= sel, sorted(direct - sel)
 
 
-def test_map_entries_point_to_existing_files():
+def test_map_json_has_no_stale_entries():
     for f in M["files"]:
         assert (ROOT / f).is_file(), f
     for t in M["tests"]:
@@ -108,84 +105,3 @@ def test_mutation_compare_flags_missed_failures(tmp_path):
     bad.write_text(suite.format(n=outside))
     assert prova_test_map.compare([hud], [str(ok)]) == 0
     assert prova_test_map.compare([hud], [str(bad)]) == 1
-
-
-# --- S-map: test_map.json izlenmez, `ensure` ile üretilir ---------------------------------------------------------------------
-
-
-@pytest.fixture
-def tmp_map(tmp_path, monkeypatch):
-    monkeypatch.setattr(test_map, "MAP", tmp_path / "test_map.json")
-    return tmp_path / "test_map.json"
-
-
-def test_ensure_creates_a_missing_map(tmp_map):
-    assert not tmp_map.exists()
-    assert test_map.ensure() == 0
-    assert json.loads(tmp_map.read_text(encoding="utf-8")) == M
-
-
-def test_ensure_rewrites_a_stale_map(tmp_map):
-    tmp_map.write_text('{"version": 0}', encoding="utf-8")
-    assert test_map.ensure() == 0
-    assert json.loads(tmp_map.read_text(encoding="utf-8")) == M
-
-
-def test_ensure_leaves_a_fresh_map_untouched(tmp_map):
-    test_map.ensure()
-    before = tmp_map.stat().st_mtime_ns
-    assert test_map.ensure() == 0
-    assert tmp_map.stat().st_mtime_ns == before
-
-
-def test_ensure_reports_generation_failure(tmp_map, monkeypatch, capsys):
-    def boom(*a, **k):
-        raise RuntimeError("kırık")
-
-    monkeypatch.setattr(test_map, "build", boom)
-    assert test_map.ensure() == 1
-    assert "TEST_MAP: üretim hatası" in capsys.readouterr().err
-    assert not tmp_map.exists()
-
-
-def test_load_generates_when_missing(tmp_map):
-    assert test_map.load() == M
-
-
-def test_ensure_command_via_cli(tmp_path):
-    r = subprocess.run([sys.executable, str(ROOT / "tools/ci/test_map.py"), "ensure"], capture_output=True, text=True, cwd=ROOT)
-    assert r.returncode == 0, r.stderr
-
-
-@pytest.mark.skipif(not (ROOT / ".git").exists(), reason="git'siz selftest kopyası")
-def test_map_json_is_untracked_and_ignored():
-    tracked = subprocess.run(["git", "ls-files", "tools/ci/test_map.json"], capture_output=True, text=True, cwd=ROOT).stdout
-    assert tracked.strip() == "", "tools/ci/test_map.json izlenmemeli (git rm --cached)"
-    ignored = subprocess.run(["git", "check-ignore", "-q", "tools/ci/test_map.json"], cwd=ROOT)
-    assert ignored.returncode == 0, ".gitignore'da tools/ci/test_map.json yok"
-
-
-def test_gate_fast_mode_uses_ensure_not_a_committed_map():
-    gate = (ROOT / "tools/gate.sh").read_text(encoding="utf-8")
-    assert "test_map.py ensure" in gate
-    assert "test_map.py check" not in gate
-
-
-def test_clean_gitless_copy_ensures_and_selects(tmp_path):
-    # selftest kopyası: izlenen dosyalar, .git yok, harita yok (temiz checkout)
-    for d in ("scripts", "test"):
-        shutil.copytree(ROOT / d, tmp_path / d, ignore=shutil.ignore_patterns("*.import"))
-    (tmp_path / "tools/ci").mkdir(parents=True)
-    shutil.copy(ROOT / "tools/ci/test_map.py", tmp_path / "tools/ci/test_map.py")
-    shutil.copy(ROOT / "project.godot", tmp_path / "project.godot")
-    py = tmp_path / "tools/ci/test_map.py"
-    assert not (tmp_path / "tools/ci/test_map.json").exists()
-    assert subprocess.run([sys.executable, str(py), "ensure"], capture_output=True, text=True, cwd=tmp_path).returncode == 0
-    assert (tmp_path / "tools/ci/test_map.json").is_file()
-    sel = subprocess.run([sys.executable, str(py), "select", "scripts/ui/hud.gd"], capture_output=True, text=True, cwd=tmp_path)
-    assert sel.returncode == 0 and sel.stdout.strip() != "FULL"
-
-
-def test_selection_is_safe_for_deleted_or_renamed_files():
-    assert test_map.select(["test/unit/test_silinmis_dosya.gd"], M) == []  # silinmiş/taşınmış test: seçilecek şey yok
-    assert test_map.select(["scripts/ui/yeniden_adlandirilmis_eski_ad.gd"], M) == "FULL"  # eşlemede yok => şüphede tam

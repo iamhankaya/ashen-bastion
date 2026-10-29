@@ -1,5 +1,5 @@
 extends GutTest
-## AchievementsScreen (v2.0.3 C): 19 aile / kademe toplamı veriden türetilir, grup başlıkları, kroniği şeridi, satır aç/kapat, boş/hata durumu,
+## AchievementsScreen (v2.0.3 C): 19 aile / 53 kademe, grup başlıkları, kroniği şeridi, satır aç/kapat, boş/hata durumu,
 ## kaydırma, güvenli alan, GERİ. Dokunma/sürükleme (F-037) geçmiş turdan korunur.
 
 const T0 := 1761270000  # biçim doğrulaması için sabit
@@ -10,14 +10,6 @@ var _data: GameData
 
 func before_each() -> void:
 	_data = GameData.load_dir("res://data")
-
-
-## Gerçek aile verisinin kademe toplamı (53 sabiti yerine veriden türetilir).
-func _total() -> int:
-	var n := 0
-	for d in _data.achievements:
-		n += AchievementStep.total(d)
-	return n
 
 
 func _screen(store: AchievementStore = null, data: GameData = null) -> AchievementsScreen:
@@ -53,10 +45,10 @@ func _groups(s: AchievementsScreen) -> Array:
 func test_19_rows_and_zero_summary_when_no_store_file() -> void:
 	var s := _screen()
 	assert_eq(s.row_count(), 19)
-	assert_eq(s.count_label.text, "0 / %d" % _total())
+	assert_eq(s.count_label.text, "0 / 53")
 	assert_eq(s.count_sub.text, "kademe")
 	assert_false(s.error_label.visible)
-	assert_eq(s.accessibility_name, "Başarımlar, 0 / %d kademe" % _total())
+	assert_eq(s.accessibility_name, "Başarımlar, 0 / 53 kademe")
 
 
 func test_empty_state_panel_text() -> void:
@@ -68,7 +60,7 @@ func test_all_open_state_shows_complete_everywhere() -> void:
 	for d in _data.achievements:
 		st.unlock_step(d.id, AchievementStep.total(d), T0)
 	var s := _screen(st)
-	assert_eq(s.count_label.text, "%d / %d" % [_total(), _total()])
+	assert_eq(s.count_label.text, "53 / 53")
 	assert_true(_texts(s.content, []).has("Tüm başarımlar açıldı."))
 	for r in s.rows:
 		assert_not_null(r.done_chip, "%s TAMAM" % r.def.id)
@@ -94,7 +86,7 @@ func test_summary_counts_steps_not_families() -> void:
 	var st := AchievementStore.new(PATH)
 	st.unlock_step(&"reaper", 3, T0)
 	st.unlock_step(&"endure", 1, T0)
-	assert_eq(_screen(st).count_label.text, "4 / %d" % _total())
+	assert_eq(_screen(st).count_label.text, "4 / 53")
 
 
 func test_row_size_and_touch_height() -> void:
@@ -230,7 +222,7 @@ func test_unknown_ids_not_shown_but_kept_in_store() -> void:
 	assert_eq(s.row_count(), 19)
 	assert_null(_row(s, &"gelecek_basarim"))
 	assert_true(st.is_unlocked(&"gelecek_basarim"))
-	assert_eq(s.count_label.text, "0 / %d" % _total())
+	assert_eq(s.count_label.text, "0 / 53")
 
 
 func test_definitions_missing_shows_error_and_back_still_works() -> void:
@@ -321,7 +313,7 @@ func test_reopen_rebuilds_rows_and_closes_open_row() -> void:
 	await get_tree().process_frame
 	assert_eq(s.row_count(), 19, "satırlar birikmez")
 	assert_eq(s.open_id, &"")
-	assert_eq(s.count_label.text, "1 / %d" % _total())
+	assert_eq(s.count_label.text, "1 / 53")
 
 
 func test_sticky_group_header_follows_scroll_and_hides_at_top() -> void:

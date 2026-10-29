@@ -87,7 +87,7 @@ func _build() -> void:
 
 	var panel := PanelContainer.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override(&"panel", ResultLayout.stone_box())
+	panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
 	var pv := VBoxContainer.new()
 	pv.add_theme_constant_override(&"separation", 18)
 	pv.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -195,7 +195,7 @@ func _build_dialog() -> void:
 	UiKit.fill(dim)
 	dialog.add_child(dim)
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override(&"panel", ResultLayout.stone_box())
+	panel.add_theme_stylebox_override(&"panel", ResultFit.stone_box())
 	panel.anchor_left = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_top = 0.5

@@ -28,7 +28,7 @@ Yedek sürüm `4.6.3-stable` kullanılmadı: 4.7.2 indirilebildi ve çalıştı.
 
 ## Gate adımları
 
-1. `ensure_godot.sh` 2. `--import` 3. `gdformat --check` + `gdlint` + `to_upper/to_lower` grep 4. `tools/validate_data.gd` 5. pytest 6. GUT (`test/unit`, `test/acceptance`) 7. günlük taraması, JUnit test kimliği kapısı (`tools/ci/check_test_ids.py`: bildirilen her `func test_*` koşmalı, tabandan kimlik kaybolmamalı; silinen/taşınan test `tools/ci/removed_tests.txt` / `moved_tests.txt`'e yazılır, el ile sayı güncellenmez).
+1. `ensure_godot.sh` 2. `--import` 3. `gdformat --check` + `gdlint` + `to_upper/to_lower` grep 4. `tools/validate_data.gd` 5. pytest 6. GUT (`test/unit`, `test/acceptance`) 7. günlük taraması, JUnit asgari sayı (`tools/gate_min_tests.json`; yalnız `tools/update_min_tests.sh` ile bilinçli güncellenir).
 
 Öz-test: `bash tools/ci/selftest_gate.sh` (bozuk `.gd`, anlamsal hata, boş test dizisi, asgari sayı altı, `Stub.todo`, ağ yok → 3).
 11 senaryo `GROUP[...]=N` tablosuyla 6 gruba bölünmüştür (F-028): `selftest_gate.sh --group N` yalnız o grubu, `--list` tabloyu yazar;

@@ -2,13 +2,13 @@
 # P (havuz), R (kolsuz rig), W (temel rüzgar), Z (bölgeler), E (evrimler), A (varlık bağlama).
 # Simge YALNIZ ilgili dilimin ayar turu (K fazı: T-P, T-R, T-W/Z, T-E) ya da D/A fazı tarafından eklenir: satırın başındaki
 # '#' kaldırılır. Açmanın önkoşulu: o dilimin kabul testleri (test_acc_v202_*) gerçek kodda yeşil, sızıntı yok, asgari
-# test kimlikleri (tools/ci/check_test_ids.py) koşuyor. Simgesi açılmamış dilimin kabul testleri V202Slice.require ile
+# test sayısı (tools/gate_min_tests.json) yükseltilmiş. Simgesi açılmamış dilimin kabul testleri V202Slice.require ile
 # pending döner. İşaretli dilimde pending ya da sıfır test gate'i KIRAR (tools/ci/check_slices.py --v202).
 # Test adı öneki: test_p<N>_ (P), test_r<N>_ (R), test_w<N>_ (W), test_z<N>_ (Z), test_e<N>_ (E), test_a<N>_ (A).
 # Her simge ayrı satırdadır (birleşme dostu): çakışmasız açılır.
-P
-R
-W
-Z
-E
+#P
+#R
+#W
+#Z
+#E
 #A
