@@ -15,8 +15,10 @@ func _cfg() -> Dictionary:
 
 
 func test_rf_profiles_file_and_errors() -> void:
-	var loaded := RunProfiles.load_default()
+	# Baz yerleşik 3 modla alınmıştır: birleşik sözlük yerleşik üçlü katalogdan kurulur (yeni veri-yalnız mod bazı değiştirmez).
+	var loaded := RunProfiles.load_dir("res://data", CatalogFixtures.shipped_trio())
 	assert_eq(loaded["errors"], [], "varsayılan profil dosyası geçerli")
+	assert_eq(RunProfiles.load_default()["errors"], [], "gerçek katalog da geçerli")
 	RfBaseline.check(self, "rf_runs_profiles_file", loaded)
 
 

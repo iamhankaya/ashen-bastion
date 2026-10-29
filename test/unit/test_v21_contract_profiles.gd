@@ -49,8 +49,11 @@ func test_contract_default_selection_is_normal_normal() -> void:
 func test_contract_file_has_the_planned_modes_and_difficulties() -> void:
 	var c := V21Kit.cfg()
 	assert_eq(c["v"], 1.0)
-	assert_eq((c["modes"] as Dictionary).keys(), ["quick", "normal", "endless"])
-	assert_eq((c["difficulties"] as Dictionary).keys(), ["easy", "normal", "hard"])
+	# Yerleşik kimlikler katalogda ve `order` sırasında; veri-yalnız eklenen modlar bu beklentiyi bozmaz.
+	var modes := PackedStringArray((c["modes"] as Dictionary).keys())
+	var diffs := PackedStringArray((c["difficulties"] as Dictionary).keys())
+	assert_eq(CatalogFixtures.known_in_order(modes, RunProfiles.MODES), RunProfiles.MODES)
+	assert_eq(CatalogFixtures.known_in_order(diffs, RunProfiles.DIFFS), RunProfiles.DIFFS)
 	assert_eq(c["modes"]["quick"]["time_scale"], 0.5)
 	assert_eq(c["modes"]["endless"]["end_mode"], "endless")
 	for name in ["quick", "normal"]:
@@ -70,7 +73,9 @@ func test_contract_missing_file_is_an_error_not_a_builtin_default() -> void:
 
 
 func test_contract_error_line_format_is_code_context_message() -> void:
-	var errs := RunProfiles.validate(V21Kit.mutated(V21Kit.cfg(), "modes.quick.time_scale", 9.0))
+	# open_names: katalog biçimi (yerleşik üçlüden fazla mod olabilir); tek hata bekleniyor.
+	var bad := V21Kit.mutated(V21Kit.cfg(), "modes.quick.time_scale", 9.0)
+	var errs := RunProfiles.validate(bad, true)
 	var rx := RegEx.create_from_string("^\\[[a-z_]+\\] [^:]+: .+")
 	assert_eq(errs.size(), 1, str(errs))
 	assert_not_null(rx.search(errs[0]), errs[0])
@@ -104,12 +109,12 @@ func test_contract_bounds_are_inclusive_and_just_outside_is_a_range_error() -> v
 		var lo: float = row[1]
 		var hi: float = row[2]
 		assert_eq(
-			RunProfiles.validate(V21Kit.mutated(base, path, lo)),
+			RunProfiles.validate(V21Kit.mutated(base, path, lo), true),
 			PackedStringArray(),
 			"%s alt sınır" % path
 		)
 		assert_eq(
-			RunProfiles.validate(V21Kit.mutated(base, path, hi)),
+			RunProfiles.validate(V21Kit.mutated(base, path, hi), true),
 			PackedStringArray(),
 			"%s üst sınır" % path
 		)
