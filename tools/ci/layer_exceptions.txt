@@ -14,7 +14,6 @@ scripts/ui/achievement_toast.gd -> AchievementStep
 scripts/ui/achievements_screen.gd -> AchievementStep
 scripts/ui/achievements_screen.gd -> AchievementStore
 scripts/ui/characters_screen.gd -> AchievementStore
-scripts/ui/characters_screen.gd -> CharacterRoster
 scripts/ui/highscore_screen.gd -> Highscores
 scripts/ui/hud.gd -> DebugLabels
 scripts/ui/main_menu.gd -> V21Runs

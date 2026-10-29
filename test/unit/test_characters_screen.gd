@@ -262,19 +262,20 @@ func test_f029_name_uses_display_upper_not_dotted_i() -> void:
 	assert_eq(UiKit.character_upper(c), UiKit.upper_tr("Kirpi"), "display_upper yoksa upper_tr")
 
 
-func test_f030_gunslinger_first_by_order_field() -> void:
-	assert_eq(_data.character_ids[0], &"gunslinger")
-	_data.get_character(&"zyfen").order = 0
-	_data._sort_character_ids()
-	assert_eq(_data.character_ids[0], &"zyfen", "order küçük olan önce")
-	_data.get_character(&"zyfen").order = CharacterDef.ORDER_DEFAULT
-	_data.get_character(&"gunslinger").order = CharacterDef.ORDER_DEFAULT
-	_data._sort_character_ids()
-	assert_eq(
-		_data.character_ids,
-		[&"zyfen", &"gunslinger"] as Array[StringName],
-		"eşitlikte mevcut sıra korunur (kararlı sıralama)"
-	)
+func test_f030_default_character_first_by_order_field() -> void:
+	assert_eq(_data.character_ids[0], CharacterRoster.DEFAULT_ID)
+
+
+func test_f030_order_field_sorts_and_ties_keep_current_order() -> void:
+	var g := CatalogFixtures.characters(3)
+	g.get_character(&"zz_c2").order = 0
+	g._sort_character_ids()
+	assert_eq(g.character_ids[0], &"zz_c2", "order küçük olan önce")
+	var before := g.character_ids.duplicate()
+	for id in g.character_ids:
+		g.get_character(id).order = CharacterDef.ORDER_DEFAULT
+	g._sort_character_ids()
+	assert_eq(g.character_ids, before, "eşitlikte mevcut sıra korunur (kararlı sıralama)")
 
 
 func test_skill_icon_has_84px_frame() -> void:
@@ -291,7 +292,7 @@ func test_sd01_skill_icon_is_drawn_above_frame() -> void:
 	var icon := box.get_node("SkillIcon") as Control
 	var frame := box.get_node("SkillFrame") as Control
 	assert_gt(icon.get_index(), frame.get_index(), "çerçeve altta, ikon üstte")
-	for id in [&"gunslinger", &"zyfen"]:
+	for id in CharacterRoster.ids(_data):
 		s.set_focus_id(id)
 		assert_not_null((icon as TextureRect).texture, "başlangıç becerisi ikonu yüklü: %s" % id)
 

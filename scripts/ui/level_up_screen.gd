@@ -13,7 +13,6 @@ const CARD_W := 984.0
 const CARD_H := 324.0
 const CARD_GAP := 27.0
 const ICON := 180.0
-const PORTRAIT := "res://assets/ui/portre-seviye-atlama.png"
 const PORTRAIT_H := 1620.0
 ## v2.0 başlık bloğu (N4): üst yazı y 880, başlık y ≈ 924; portre perdesi alt gradyan duraklı.
 const NAME_Y := 880.0
@@ -79,7 +78,7 @@ func _build() -> void:
 	_head.position = Vector2(60, NAME_Y)
 	_head.add_theme_constant_override(&"separation", -6)
 	_head.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	name_label = UiKit.label("GUNSLINGER", &"LabelAccent", 34)
+	name_label = UiKit.label("", &"LabelAccent", 34)
 	name_label.add_theme_constant_override(&"shadow_offset_y", 3)
 	_head.add_child(name_label)
 	title_label = UiKit.label("SEVİYE 2", &"LabelTitle", 104)
@@ -153,11 +152,13 @@ func show_choices(
 		cards[0].grab_focus.call_deferred()  # varsayılan odak (klavye/gamepad)
 
 
-## Karakter başlığı + portre (null = v1.1: Gunslinger, varsayılan portre). Portre dosyası yoksa portresiz düzen:
-## bordo radyal zemin, başlık aynı yerde (çökmez).
+## Karakter başlığı + portre (null = v1.1: veri varsayılanı `CharacterRoster.DEFAULT_ID`). Portre dosyası yoksa
+## portresiz düzen: bordo radyal zemin, başlık aynı yerde (çökmez).
 func set_character(character: CharacterDef) -> void:
-	var path := character.portrait if character != null else PORTRAIT
-	name_label.text = UiKit.character_upper(character) if character != null else "GUNSLINGER"
+	if character == null:
+		character = GameData.load_default().get_character(CharacterRoster.DEFAULT_ID)
+	var path := character.portrait if character != null else ""
+	name_label.text = UiKit.character_upper(character)
 	if portrait_node != null:
 		portrait_node.free()
 		portrait_node = null

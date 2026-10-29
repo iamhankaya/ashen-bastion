@@ -634,16 +634,15 @@ func test_k10_single_character_set_works() -> void:
 	if _gate():
 		return
 	var dir := SimKit.copy_data(REAL, "k10single")
-	DirAccess.remove_absolute(
-		ProjectSettings.globalize_path(dir.path_join("characters/zyfen.json"))
-	)
-	DirAccess.remove_absolute(
-		ProjectSettings.globalize_path(dir.path_join("characters/zyfen.json"))
-	)
+	var keep := CharacterRoster.DEFAULT_ID
+	var chars_dir := ProjectSettings.globalize_path(dir.path_join("characters"))
+	for f in DirAccess.get_files_at(chars_dir):
+		if f != "%s.json" % keep:
+			DirAccess.remove_absolute(chars_dir.path_join(f))
 	var d := GameData.load_dir(dir)
-	assert_eq(d.character_ids.size(), 1)
+	assert_eq(d.character_ids, [keep] as Array[StringName])
 	var s := CharactersScreen.new()
 	add_child_autofree(s)
-	s.open(d, AchKit.fake_store(), &"gunslinger")
+	s.open(d, AchKit.fake_store(), keep)
 	assert_eq(s.select_button_state(), CharactersScreen.SelectState.SELECTED)
 	assert_false(s.press_select())
