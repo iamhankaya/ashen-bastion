@@ -97,7 +97,7 @@ func test_reducer_base_class_has_noop_contract() -> void:
 func test_default_registry_is_valid() -> void:
 	var r := AchievementMetricRegistry.default()
 	assert_eq(r.validate().size(), 0, str(r.validate()))
-	assert_eq(r.stats().size(), AchievementDef.STATS.size())
+	assert_gte(r.stats().size(), AchievementDef.STATS.size(), "yerleşikler + eklenenler")
 	for st in AchievementDef.STATS:
 		assert_false(r.metric(st).is_empty(), st)
 
