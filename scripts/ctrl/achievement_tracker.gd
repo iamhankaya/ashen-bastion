@@ -479,7 +479,7 @@ func _build() -> void:
 
 
 func _setup_stat(si: int, m: Dictionary) -> void:
-	var persist: Dictionary = m.get("persist", {})
+	var persist: Dictionary = m["persist"] if m.get("persist") is Dictionary else {}
 	if persist.get("total", null) is String:
 		_total_s[si] = persist["total"]
 		_total_key[si] = StringName(persist["total"])
