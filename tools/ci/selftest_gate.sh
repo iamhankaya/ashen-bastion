@@ -35,21 +35,25 @@ expect() { # expect <ad> <beklenen_kod> <dizin> [env...]
   (cd "$dir" && env "$@" bash tools/gate.sh > "$TMP/$name.log" 2>&1)
   local got=$?
   if [ "$got" = "$want" ]; then echo "OK   $name (çıkış $got)"; else echo "FAIL $name: beklenen $want, gelen $got"; tail -n 15 "$TMP/$name.log"; FAILS=$((FAILS+1)); fi
+  step_times "$TMP/$name.log"
+}
+step_times() { # gate günlüğündeki "=== adım" + "süre: N sn" çiftleri tek satırda (grup dengeleme ölçümü; sonucu etkilemez)
+  awk '/^=== /{n=substr($0,5)} /^ +süre: /{printf "%s%s=%ss", (c++?" | ":""), n, $2} END{if(c)print ""}' "$1" | sed 's/^/     adımlar: /'
 }
 
-# --- senaryo -> grup tablosu (en uzun grup ≈ 409 s; tam-gate senaryoları ayrı gruplarda) ---------------------------------
+# --- senaryo -> grup tablosu (tam-gate senaryoları ≈270-400 s HER BİRİ KENDİ grubunda yalnız; hafifler ve gut_error grup 6'da ≈215 s; ölçüm: CI 40865703918) ---------------------------------
 declare -A GROUP=()
 GROUP[taban_yesil]=1
-GROUP[bozuk_gd]=1
-GROUP[bos_test_dizisi]=1
 GROUP[anlamsal_hata]=2
-GROUP[to_upper]=2
-GROUP[veri_hatasi]=2
 GROUP[test_kimligi_kaybi]=3
 GROUP[stub_todo]=4
 GROUP[kosmayan_test]=5
-GROUP[ag_yok]=5
 GROUP[gut_error]=6
+GROUP[bozuk_gd]=6
+GROUP[bos_test_dizisi]=6
+GROUP[to_upper]=6
+GROUP[veri_hatasi]=6
+GROUP[ag_yok]=6
 
 scenario_taban_yesil() {
   if [ "${SELFTEST_SKIP_TABAN:-0}" = "1" ]; then echo "SKIPPED_BY_FILTER taban_yesil (ci.yml yol süzgeci: altyapı yolu değişmedi)"; return; fi

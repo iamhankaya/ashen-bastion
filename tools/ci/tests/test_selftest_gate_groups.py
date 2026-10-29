@@ -90,3 +90,13 @@ def test_unknown_group_is_rejected():
         ["bash", str(SCRIPT), "--group", "99"], capture_output=True, text=True, cwd=ROOT
     )
     assert r.returncode == 2
+
+
+def test_full_gate_scenarios_run_alone_in_their_group():
+    # Ölçüm (CI 40865703918): tam-gate senaryosu 270-400 sn; yanına hafif senaryo eklemek o işi uzatır (kritik yol).
+    # Hafifler (≈1-115 sn) tek ortak grupta toplanır.
+    heavy = ["taban_yesil", "anlamsal_hata", "test_kimligi_kaybi", "stub_todo", "kosmayan_test"]
+    t = table()
+    for h in heavy:
+        mates = sorted(n for n, g in t.items() if g == t[h] and n != h)
+        assert mates == [], f"{h} grup {t[h]} içinde yalnız olmalı, yanında: {mates}"

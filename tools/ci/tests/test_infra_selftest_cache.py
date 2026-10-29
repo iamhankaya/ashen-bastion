@@ -118,3 +118,13 @@ def test_list_never_warms_up(tmp_path):
     env = {"PATH": os.environ["PATH"], "SELFTEST_ROOT": str(repo), "SELFTEST_GODOT_CACHE": str(gc), "SELFTEST_WARMUP_CMD": warm_cmd(tmp_path, gc, counter)}
     r = subprocess.run(["bash", str(SCRIPT), "--list"], capture_output=True, text=True, encoding="utf-8", env=env)
     assert r.returncode == 0 and not counter.exists()
+
+
+def test_scenario_result_line_is_followed_by_gate_step_timings(tmp_path):
+    # Yeniden dengeleme ölçümü: yeşil senaryo da gate adım sürelerini yazar (günlükten senaryo başına adım dökümü).
+    gate = 'echo "=== 2. İçe aktarma" >&2\necho "    süre: 12 sn" >&2\necho "=== 5. Python testleri" >&2\necho "    süre: 88 sn" >&2\nexit 1\n'
+    repo = mini_repo(tmp_path, gate)
+    r = run(repo, "to_upper")
+    assert r.returncode == 0, r.stdout + r.stderr
+    line = next(ln for ln in r.stdout.splitlines() if "adımlar:" in ln)
+    assert "2. İçe aktarma=12s" in line and "5. Python testleri=88s" in line
