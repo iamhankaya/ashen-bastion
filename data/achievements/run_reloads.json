@@ -1,0 +1,15 @@
+{
+  "stat": "run_reloads",
+  "order": 320,
+  "icon_family": "hud-mermi",
+  "persist": {
+    "total": null,
+    "best": "reloads"
+  },
+  "source": {
+    "event": "reload_started",
+    "filter": {},
+    "value": "one"
+  },
+  "aggregate": "count"
+}

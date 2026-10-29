@@ -63,7 +63,7 @@ func _errs(records: Array, complete: bool = false) -> PackedStringArray:
 
 
 func test_stats_gains_total_boss_kills_at_the_end() -> void:
-	assert_eq(AchievementDef.STATS.size(), 21)
+	assert_eq(AchievementDef.STATS.size(), AchievementMetricRegistry.default().stats().size())
 	assert_eq(AchievementDef.STATS[20], "total_boss_kills")
 	assert_eq(AchievementDef.scope_of(&"total_boss_kills"), &"total")
 

@@ -5,12 +5,8 @@ scripts/autoload/settings.gd -> RenderFix
 scripts/store/achievement_migration.gd -> AchievementProgress
 scripts/store/achievement_migration.gd -> AchievementStep
 scripts/store/achievement_store.gd -> AchievementStep
-scripts/ui/achievement_row.gd -> AchievementProgress
-scripts/ui/achievement_row.gd -> AchievementStep
 scripts/ui/achievement_row.gd -> AchievementStore
 scripts/ui/achievement_row.gd -> Highscores
-scripts/ui/achievement_toast.gd -> AchievementStep
-scripts/ui/achievements_screen.gd -> AchievementStep
 scripts/ui/achievements_screen.gd -> AchievementStore
 scripts/ui/characters_screen.gd -> AchievementStore
 scripts/ui/highscore_screen.gd -> Highscores

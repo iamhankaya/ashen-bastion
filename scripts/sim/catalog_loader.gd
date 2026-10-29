@@ -8,6 +8,10 @@ static func load_all(g: GameData) -> void:
 	g._raw_characters = read_dir(g, "characters")
 	g._raw_skills = read_dir(g, "skills")
 	g._raw_enemies = read_dir(g, "enemies")
+	g._raw_metrics = read_dir(g, "achievements")
+	for e in g._raw_metrics:
+		if e["data"] is Dictionary:
+			g._stat_metrics.append(e["data"])
 	var wp := g.root_dir.path_join("waves.json")
 	if FileAccess.file_exists(wp):
 		var r := read_json(g, wp, "waves.json")

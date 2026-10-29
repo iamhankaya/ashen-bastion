@@ -81,7 +81,35 @@ Sıralama `(order, id)`; varsayılan `"default": true` olan kayıt (yoksa sırad
 
 ### Başarım metrik kaydı (R8)
 
-(R8 yazar.)
+`data/achievements/<stat>.json` = bir stat'ın **nereden beslendiği** ve **nereye yazıldığı** (21 dosya, dosya adı = `stat`). Aile/kademe
+tanımları (`achievements.json`: ad, açıklama, `steps`, `group`, `legacy`, ikon) ayrı kalır; kademe eşikleri tek yerde (aile kaydı) durur.
+Şema kuralları `scripts/sim/catalog/metric_schema.gd` (`MetricSchema`), doğrulayıcı eklenti `scripts/sim/validators/stat_metrics_validator.gd`
+(hata kodu `metric_schema`), okuyucu `AchievementMetricRegistry` (`scripts/ctrl/`; `test_b9` sim dizininde başarım sınıf adlarını yasakladığı
+için sim tarafı bu adları anmaz, F-ashen-bastion-121). Tracker (`AchievementTracker`) olay kodu taşımaz, bu kayıttan kurulur.
+
+| Alan | Anlam |
+|---|---|
+| `stat` | Kimlik; `achievements.json` ailesinin `stat`ı bununla eşleşir. `total_*` = koşular arası toplam, aksi halde koşu kapsamı. |
+| `order` | Aynı olayı/poll'u/finish'i işleyen statların sırası (küçük önce). Kademe açılış sırasını (`run_unlocked`) belirler; değiştirmek anlık görüntüyü değiştirir. |
+| `icon_family` | `AchievementIcons.FAMILY` ile aynı (ikon adı). |
+| `persist` | `{"total": anahtar, "best": anahtar}` (`null` = tutmaz). `total` → kayıtta `totals[anahtar]`, `best` → `best[anahtar]`. Anahtarlar `AchievementDef.TOTAL_KEY/BEST_KEY` ve `AchievementStore.TOTAL_KEYS/BEST_KEYS` ile birebir (`test_catalog_achievement_real`); çakışan anahtar hata. |
+| `source` + `aggregate` | **Yerleşik** metrik. `source` = `{"event": <SimBus sinyali>, "filter": {<etiket alanı>: [değer]}, "value": "one"\|"payload.<alan>"}` ya da `{"poll": "time"\|"active_slots"}` ya da `{"finish": "always"\|"won", "value": "one"\|"result.time"}`; `aggregate` = `sum` \| `max` \| `count`. |
+| `result_max` | `time`/`level`/`score`: koşu sonunda `finish(stats)` değeriyle en büyüğe yükselt. |
+| `reducer` + `events` [+ `poll`, `finish`] | **Eklenti** metrik: `AchievementReducer` alt sınıfı (`scripts/ctrl/achievement_reducers/`), `source/aggregate` ile birlikte olmaz. `events` = dinlenen sinyaller, `poll: true` = her poll'da, `finish: true` = koşu sonunda çağrılır. |
+| `tiers`, `group`, `goal_text` | İsteğe bağlı; `tiers` varsa artan pozitif tamsayılar. |
+
+Olay alanları (`MetricSchema.EVENTS`): `enemy_killed{type_id}`, `level_up{level}`, `score_changed{score,mult,gain}`, `reload_started`,
+`streak_changed{mult}`, `pickup_collected{kind_id}`, `player_damaged`, `evolution_gained{evo_id}`, `buff_started{kind}`, `buff_ended{kind}`,
+`bomb_hits{hits}`. Süzgeç anahtarı olayın etiket alanı (parantezsiz ilk ad) olmalıdır; değer ifadesi tamsayı alanlardan biridir.
+
+**Veriyle eklemek** (kod yok): mevcut bir olaya bağlı yerleşik toplam için `data/achievements/<yeni_stat>.json` + `achievements.json`'a o stat'lı
+aile. **Yeni reducer** (durumlu/koşullu): `scripts/ctrl/achievement_reducers/` altına `extends AchievementReducer` yeni bir dosya + metrik JSON'u;
+mevcut `.gd` değişmez. İki yol da `test_catalog_achievement_dry_run` ile kuru denenir. Yeni olay türü (sim kodu) ve depoya yeni kalıcı
+anahtar (`totals`/`best` listeleri) hâlâ kod ister (aşağıda).
+
+Sınırlar: kalıcı `totals`/`best` anahtarları `AchievementStore.TOTAL_KEYS/BEST_KEYS` ve `AchievementDef.TOTAL_KEY/BEST_KEY`'de kapalı kümedir
+(kayıt dosyası biçimi sabit); veriyle eklenen stat bugün `persist: null` (yalnız koşu içi) kullanır. `AchievementDef.STATS` ve tracker `S_*`
+dizinleri yerleşik 21 stat için sabittir; kayıttaki yeni statlar bunların ardına eklenir.
 
 ## Karakter — `characters/<id>.json`
 

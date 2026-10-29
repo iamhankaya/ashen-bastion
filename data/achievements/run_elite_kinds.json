@@ -1,0 +1,13 @@
+{
+  "stat": "run_elite_kinds",
+  "order": 50,
+  "icon_family": "hud-oldurme",
+  "persist": {
+    "total": null,
+    "best": "elite_kinds"
+  },
+  "reducer": "EliteKindsReducer",
+  "events": [
+    "enemy_killed"
+  ]
+}

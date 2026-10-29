@@ -175,11 +175,11 @@ static func _validate_achievement(
 		GameData._num(out, ctx, d, "target", 1, TARGET_MAX, true)
 	var stat_ok := false
 	if GameData._str(out, ctx, d, "stat"):
-		stat_ok = AchievementDef.STATS.has(d["stat"])
+		stat_ok = AchievementDef.STATS.has(d["stat"]) or _has_metric(g, d["stat"])
 		if not stat_ok:
 			GameData._err(out, "unknown_stat", ctx, "bilinmeyen stat '%s'" % d["stat"])
 	var scope_ok := _enum_field(out, ctx, d, "scope", SCOPES)
-	if stat_ok and scope_ok and str(AchievementDef.scope_of(StringName(d["stat"]))) != d["scope"]:
+	if stat_ok and scope_ok and str(_scope_of(StringName(d["stat"]))) != d["scope"]:
 		GameData._err(
 			out,
 			"scope_mismatch",
@@ -190,6 +190,26 @@ static func _validate_achievement(
 		tiers_seen[d["tier"]] = true
 	if d.has("icon"):
 		g._check_asset(out, ctx, d, "icon")
+
+
+## Kapalı kümedeki stat ya da `data/achievements/<stat>.json` kaydı olan stat (R8: veriyle eklenen stat).
+static func _has_metric(g: GameData, stat: String) -> bool:
+	for m in g._stat_metrics:
+		if str(m.get("stat", "")) == stat:
+			return true
+	return false
+
+
+## Kapalı küme `AchievementDef.scope_of`; veriyle eklenen stat için `total_` ön eki = total, yoksa run.
+static func _scope_of(stat: StringName) -> StringName:
+	var known := AchievementDef.scope_of(stat)
+	if known != &"":
+		return known
+	return (
+		AchievementDef.SCOPE_TOTAL
+		if String(stat).begins_with("total_")
+		else AchievementDef.SCOPE_RUN
+	)
 
 
 ## Aile kaydı (`steps` var): target/tier olmaz, 1..MAX_STEPS kesin artan eşik, `group` zorunlu, `legacy` isteğe bağlı.
