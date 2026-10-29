@@ -29,6 +29,11 @@ var push_n: PackedVector2Array = PackedVector2Array()
 var stuck_n: PackedByteArray = PackedByteArray()
 var esc_left: PackedFloat32Array = PackedFloat32Array()
 var esc_side: PackedFloat32Array = PackedFloat32Array()
+## F-021 anahtarı ve sayacı (örnek durumu; hash'e girmez): kapalıysa kaçışa girilmez, sayaç bu koşuda kaç kez girildiğini tutar.
+var escape_enabled: bool = true
+var escape_begun: int = 0
+## Targeting.pick için yeniden kullanılan sorgu tamponu (sıcak yolda tahsis olmasın; havuz başına, paylaşılmaz).
+var pick_ids: PackedInt32Array = PackedInt32Array()
 
 ## Tür başına yapay zekâ sınıfı (sıcak yolda def aramasını önler): 0 düz, 1 yer (engelden kayar), 2 özel (şarj/çağırma).
 const KIND_PLAIN := 0

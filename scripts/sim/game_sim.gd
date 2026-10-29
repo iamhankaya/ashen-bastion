@@ -165,6 +165,7 @@ func _init(p_seed: int, character_id: StringName, opts: Dictionary = {}) -> void
 	v21 = V21Sim.create(self)
 	character = data.get_character(character_id)
 	enemies.bind(data)
+	enemies.escape_enabled = bool(opts.get("escape_enabled", true))
 	for eid in data.enemy_ids:
 		_max_enemy_radius = maxf(_max_enemy_radius, data.get_enemy(eid).radius)
 	spawn_director = SpawnDirector.new(V21Sim.waves_for(data.waves, run_profile))

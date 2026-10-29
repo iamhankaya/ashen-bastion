@@ -4,10 +4,6 @@ extends GutTest
 const WALL_R := 90.0
 
 
-func after_each() -> void:
-	EnemyEscape.enabled = true
-
-
 func _synthetic(circles: Array, player: Vector2, seed_value: int = 1) -> GameSim:
 	var sim := SimKit.make(seed_value, {"data_kind": "quiet", "log_events": false})
 	SimKit.godmode(sim)
@@ -90,8 +86,8 @@ func test_cup_enemy_escapes_the_pocket_for_both_player_offsets() -> void:
 
 func test_without_the_fix_the_same_pocket_traps_the_enemy() -> void:
 	# Bayrak KAPALI: F-020 dolanması tek başına çıkamaz (karşılaştırma bayrağının işe yaradığını sınar).
-	EnemyEscape.enabled = false
 	var sim := _synthetic(_l_corner(), Vector2(-300, -300))
+	sim.enemies.escape_enabled = false
 	var i := _foe(sim, Vector2(260, 260))
 	var r := _run(sim, i, 60)
 	assert_false(r["begun"])

@@ -1,6 +1,6 @@
 extends GutTest
 ## Karakterizasyon (refactor güvenlik ağı, T20261028-35, plan Faz 4 madde 1 ve 5): statik/global durum sızıntısı.
-## R9c (EnemyEscape.enabled/begun_total, Targeting._ids) ve R6a (GameData._default) bu testlere karşı yeşil kalır.
+## R9c (EnemyEscape bayrağı/sayacı artık sim örneğinde, Targeting tamponu havuzda) ve R6a (GameData._default) bu testlere karşı yeşil kalır.
 ## Yalnız ilişkisel iddialar: mutlak hash yok (mutlak değerler golden_hashes.json'da); Godot sürümünden bağımsız.
 ## Her hash dizisi her 60 adımda örneklenir (ara hash), son durum + RNG durumları ayrı alanlardır.
 
@@ -9,24 +9,12 @@ const SEED_B := 4102
 const STEPS := 900
 const EVERY := 60
 
-var _was_enabled := true
-var _was_begun := 0
 
-
-func before_each() -> void:
-	_was_enabled = EnemyEscape.enabled
-	_was_begun = EnemyEscape.begun_total
-	EnemyEscape.enabled = true
-
-
-func after_each() -> void:
-	EnemyEscape.enabled = _was_enabled
-	EnemyEscape.begun_total = _was_begun
-
-
-func _make(seed_value: int) -> GameSim:
+func _make(seed_value: int, escape: bool = true) -> GameSim:
 	return GameSim.new(
-		seed_value, &"gunslinger", {"data": GameData.load_default(), "log_events": false}
+		seed_value,
+		&"gunslinger",
+		{"data": GameData.load_default(), "log_events": false, "escape_enabled": escape}
 	)
 
 
@@ -47,7 +35,7 @@ func _trail(sim: GameSim, steps: int, start: int = 0, toggle_at: int = -1) -> Ar
 	var n := start
 	while n < start + steps:
 		if toggle_at >= 0 and n == toggle_at:
-			EnemyEscape.enabled = not EnemyEscape.enabled
+			sim.enemies.escape_enabled = not sim.enemies.escape_enabled
 		if not _advance(sim, n):
 			break
 		if sim.state != GameSim.State.LEVEL_UP:
@@ -66,19 +54,16 @@ func test_rf_trail_is_nontrivial() -> void:
 
 
 func test_rf_escape_enabled_and_disabled_are_each_deterministic() -> void:
-	EnemyEscape.enabled = true
 	var on1 := _trail(_make(SEED_A), STEPS)
 	var on2 := _trail(_make(SEED_A), STEPS)
 	assert_eq(on1, on2, "açık: aynı tohum aynı iz")
-	EnemyEscape.enabled = false
-	var off1 := _trail(_make(SEED_A), STEPS)
-	var off2 := _trail(_make(SEED_A), STEPS)
+	var off1 := _trail(_make(SEED_A, false), STEPS)
+	var off2 := _trail(_make(SEED_A, false), STEPS)
 	assert_eq(off1, off2, "kapalı: aynı tohum aynı iz")
 
 
 func test_rf_escape_toggle_mid_run_is_deterministic() -> void:
 	var a := _trail(_make(SEED_A), STEPS, 0, 300)
-	EnemyEscape.enabled = true
 	var b := _trail(_make(SEED_A), STEPS, 0, 300)
 	assert_eq(a, b, "çalışma anında değiştirme: aynı noktada aynı sonuç")
 
@@ -124,27 +109,24 @@ func test_rf_interleaved_sims_match_their_solo_runs() -> void:
 	assert_eq(tb, solo_b, "iç içe B = tek başına B")
 
 
-func test_rf_begun_total_is_session_scoped_and_does_not_feed_hash() -> void:
-	EnemyEscape.begun_total = 0
-	var t1 := _trail(_make(SEED_A), STEPS)
-	var after_first := EnemyEscape.begun_total
-	EnemyEscape.begun_total = 12345
-	var t2 := _trail(_make(SEED_A), STEPS)
-	assert_eq(t1, t2, "begun_total başlangıç değeri hash'i etkilemez")
-	assert_gte(
-		EnemyEscape.begun_total, 12345, "sayaç oturum boyunca birikir (azalmaz, sıfırlanmaz)"
-	)
-	assert_gte(after_first, 0, "sayaç negatif olmaz")
-
-
-func test_rf_enabled_flag_applies_to_every_new_sim() -> void:
-	EnemyEscape.enabled = false
+func test_rf_escape_begun_is_per_run_and_does_not_feed_hash() -> void:
 	var s1 := _make(SEED_A)
+	var t1 := _trail(s1, STEPS)
+	var s2 := _make(SEED_A)
+	s2.enemies.escape_begun = 12345
+	var t2 := _trail(s2, STEPS)
+	assert_eq(t1, t2, "escape_begun başlangıç değeri hash'i etkilemez")
+	assert_eq(_make(SEED_B).enemies.escape_begun, 0, "yeni sim sayacı sıfırdan başlar")
+	assert_gte(s2.enemies.escape_begun, 12345, "sayaç koşu boyunca birikir (azalmaz)")
+	assert_eq(s2.enemies.escape_begun - 12345, s1.enemies.escape_begun, "aynı koşu aynı sayı")
+
+
+func test_rf_enabled_flag_is_per_sim_and_independent() -> void:
+	var s1 := _make(SEED_A, false)
 	var s2 := _make(SEED_B)
-	assert_false(
-		EnemyEscape.enabled, "yeni GameSim bayrağı değiştirmez (R9c oturum kapsamını korur)"
-	)
+	assert_false(s1.enemies.escape_enabled)
+	assert_true(s2.enemies.escape_enabled, "bir sim'in bayrağı ötekini etkilemez")
 	var t1 := _trail(s1, 120)
 	var t2 := _trail(s2, 120)
 	assert_ne(t1, t2, "iki farklı tohum farklı iz")
-	assert_false(EnemyEscape.enabled, "koşu bayrağı değiştirmez")
+	assert_false(s1.enemies.escape_enabled, "koşu bayrağı değiştirmez")

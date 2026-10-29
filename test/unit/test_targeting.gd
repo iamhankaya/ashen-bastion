@@ -63,3 +63,12 @@ func test_dead_enemies_are_ignored() -> void:
 	_index()
 	pool.kill(a)  # hash eski kalır
 	assert_eq(Targeting.pick(0, Vector2.ZERO, 700.0, pool, grid, -1), b)
+
+
+func test_query_buffer_is_owned_by_the_pool_not_shared() -> void:
+	_add(&"curumus_piyade", Vector2(100, 0))
+	_index()
+	var other := EnemyPool.new(GameData.load_default())
+	assert_eq(Targeting.pick(0, Vector2.ZERO, 700.0, pool, grid, -1) >= 0, true)
+	assert_eq(pool.pick_ids.size(), 1, "sorgu tamponu havuzda")
+	assert_eq(other.pick_ids.size(), 0, "başka havuzun tamponu etkilenmez")
