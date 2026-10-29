@@ -594,102 +594,11 @@ func _phase_skills() -> void:
 	wind.step(self)
 
 
-## (6) mermi hareketi + çarpışma + hit_ids.
+## (6) mermi hareketi + çarpışma + hit_ids. Gövde: SimProjectiles.step (R9b).
 func _phase_projectiles() -> void:
 	_trace(5)
-	var pr := projectiles
-	var i := pr.count - 1
-	while i >= 0:
-		w_proj_updates += 1
-		pr.pos[i] += pr.vel[i] * STEP
-		pr.life[i] -= STEP
-		var consumed := false
-		_scratch.clear()
-		if (pr.flags[i] & ProjectilePool.FLAG_LOB) == 0:
-			grid.query_circle(pr.pos[i], pr.rad[i] + SMALL_ENEMY_RADIUS, _scratch)
-			for id in _scratch:
-				if not enemies.is_alive(id) or pr.has_hit(i, id):
-					continue
-				w_collision_tests += 1
-				var ei := EnemyPool.index_of(id)
-				var reach := pr.rad[i] + enemies.radius[ei]
-				if enemies.pos[ei].distance_squared_to(pr.pos[i]) <= reach * reach:
-					if _projectile_hit(i, id):
-						consumed = true
-						break
-			if not consumed and not _big_ids.is_empty():
-				consumed = _projectile_vs(i, _big_ids)  # elit/Lord: ızgara sorgusu dışında doğrudan denetlenir
-		if not consumed and pr.life[i] <= 0.0:
-			if pr.flags[i] & ProjectilePool.FLAG_EXPLODE_ON_EXPIRE:
-				explode(pr.pos[i], pr.ex_radius[i], pr.ex_dmg[i], &"projectile")
-			consumed = true
-		kill_source_flags = 0
-		if consumed:
-			pr.remove(i)
-		i -= 1
+	SimProjectiles.step(self)
 	_tick_bombs()
-
-
-## Mermi `pi` aday düşmanlara (artan id sırası) çarpıyor mu; true = mermi tükendi.
-func _projectile_vs(pi: int, ids: PackedInt32Array) -> bool:
-	var pr := projectiles
-	for id in ids:
-		if not enemies.is_alive(id) or pr.has_hit(pi, id):
-			continue
-		w_collision_tests += 1
-		var ei := EnemyPool.index_of(id)
-		var reach := pr.rad[pi] + enemies.radius[ei]
-		if enemies.pos[ei].distance_squared_to(pr.pos[pi]) <= reach * reach:
-			if _projectile_hit(pi, id):
-				return true
-	return false
-
-
-## Mermi düşmana değdi. true = mermi tükendi.
-func _projectile_hit(pi: int, id: int) -> bool:
-	var pr := projectiles
-	kill_source_flags = pr.flags[pi]
-	damage.damage_enemy(self, id, pr.dmg[pi], &"bullet")
-	pr.mark_hit(pi, id)
-	for st in loadout.actives():
-		if st.behavior != null:
-			st.behavior.on_hit(id, pi)
-	var f := pr.flags[pi]
-	if pr.push[pi] > 0.0 and enemies.is_alive(id) and not enemies.is_elite(EnemyPool.index_of(id)):
-		var ei := EnemyPool.index_of(id)
-		enemies.pos[ei] += pr.vel[pi].normalized() * pr.push[pi]
-	if f & ProjectilePool.FLAG_EXPLODES:
-		explode(pr.pos[pi], pr.ex_radius[pi], pr.ex_dmg[pi], &"projectile")
-	if pr.pierce[pi] > 0:
-		pr.pierce[pi] -= 1
-		return false
-	if (f & ProjectilePool.FLAG_RICOCHET) and pr.bounces[pi] > 0:
-		var nxt := _nearest_unhit(pi, BOUNCE_RANGE)
-		if nxt >= 0:
-			var ni := EnemyPool.index_of(nxt)
-			var dir := (enemies.pos[ni] - pr.pos[pi]).normalized()
-			pr.vel[pi] = dir * pr.vel[pi].length()
-			pr.bounces[pi] -= 1
-			pr.life[pi] = maxf(pr.life[pi], 0.5)
-			if f & ProjectilePool.FLAG_EXPLODE_ON_BOUNCE:
-				explode(pr.pos[pi], pr.ex_radius[pi], pr.ex_dmg[pi], &"projectile")
-			return false
-	return true
-
-
-## Mermi için vurulmamış en yakın canlı düşman (eşitlikte en düşük indeks); yoksa -1.
-func _nearest_unhit(pi: int, range_px: float) -> int:
-	grid.query_circle(projectiles.pos[pi], range_px, _bounce_buf)
-	var best := -1
-	var best_d := INF
-	for id in _bounce_buf:
-		if not enemies.is_alive(id) or projectiles.has_hit(pi, id):
-			continue
-		var d := enemies.pos[EnemyPool.index_of(id)].distance_squared_to(projectiles.pos[pi])
-		if d < best_d or (d == best_d and EnemyPool.index_of(id) < EnemyPool.index_of(best)):
-			best = id
-			best_d = d
-	return best
 
 
 ## (7) düşman AI + temas hasarı.
