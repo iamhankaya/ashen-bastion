@@ -75,3 +75,18 @@ def test_nightly_runs_full_ci_without_filter():
 def test_ci_concurrency_group_is_per_ref_and_event():
     head = CI.split("\njobs:\n")[0]
     assert "group: ci-${{ github.ref }}-${{ github.event_name }}" in head
+
+
+def test_f124_static_job_fetches_full_history_for_test_id_base():
+    """F-124: static işi gate.sh adım 7'de merge-base(HEAD, origin/main) ister; shallow klon tabanı bulamaz, LOST denetimi sessizce atlanır."""
+    b = block("static")
+    assert re.search(r"actions/checkout@v4\s*\n\s+with:\s*\n\s+fetch-depth:\s*0", b), "static: checkout fetch-depth: 0 olmalı"
+
+
+def test_f130_append_only_lists_use_union_merge():
+    """F-130: yalnız-eklemeli kayıt listeleri paralel dallarda ekleme/ekleme çakışması vermemeli."""
+    attrs = (ROOT / ".gitattributes").read_text(encoding="utf-8")
+    for name in ("moved_tests.txt", "removed_tests.txt", "pending_allowed.txt", "baseline_changes.txt"):
+        assert re.search(rf"^tools/ci/{re.escape(name)}\s+merge=union\s*$", attrs, re.M), f"{name} merge=union değil"
+    for name in ("layer_exceptions.txt", "line_budget_exceptions.txt"):  # YALNIZ AZALIR: union satır geri getirir
+        assert not re.search(rf"^tools/ci/{re.escape(name)}\s+merge=union", attrs, re.M), f"{name} union olmamalı (silinen satır birleşmede geri döner)"

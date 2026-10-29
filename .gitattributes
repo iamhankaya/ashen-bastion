@@ -16,3 +16,10 @@
 *.import text eol=lf
 .godot-version text eol=lf
 .gitattributes text eol=lf
+
+# F-130: yalnız-eklemeli kayıt listeleri paralel dallarda satır ekleyince ekleme/ekleme çakışması vermesin (birleşim sürücüsü).
+# layer_exceptions.txt ve line_budget_exceptions.txt YALNIZ AZALIR: union silinen satırı geri getirir, burada YOK.
+tools/ci/moved_tests.txt merge=union
+tools/ci/removed_tests.txt merge=union
+tools/ci/pending_allowed.txt merge=union
+tools/ci/baseline_changes.txt merge=union
