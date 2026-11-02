@@ -209,3 +209,62 @@ func test_data_only_skill_in_gunslinger_and_common_pool_validates_and_is_pool_fi
 		for c in gs.roll_choices(rng2):
 			seen = seen or c.skill_id == &"zz_g_yelek"
 	assert_true(seen, "Gunslinger yeni havuz becerisini teklif alır")
+
+
+# --- F-129: karakter sfx + sfx_rules anahtarları gerçek .ogg ister ------------------------------------------------
+
+
+func _char_root(sfx: Variant, rules_patch: Dictionary = {}) -> String:
+	var dest := "%s/extsfx_%d" % [KitDev.TMP_ROOT, Time.get_ticks_usec()]
+	KitDev.copy_dir("res://data", dest)
+	var c: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string("res://data/characters/zyfen.json")
+	)
+	c["sfx"] = sfx  # başlangıç becerisi havuzu kimliğe bağlı: kimlik aynı kalır, yalnız sfx değişir
+	var cf := FileAccess.open(dest.path_join("characters/zyfen.json"), FileAccess.WRITE)
+	cf.store_string(JSON.stringify(c))
+	cf.close()
+	if not rules_patch.is_empty():
+		var rules: Dictionary = JSON.parse_string(
+			FileAccess.get_file_as_string(dest.path_join("sfx_rules.json"))
+		)
+		for sect: String in rules_patch:
+			(rules[sect] as Dictionary).merge(rules_patch[sect])
+		var rf := FileAccess.open(dest.path_join("sfx_rules.json"), FileAccess.WRITE)
+		rf.store_string(JSON.stringify(rules))
+		rf.close()
+	return dest
+
+
+func test_character_with_real_sfx_ids_validates() -> void:
+	var g := GameData.load_dir(_char_root({"shot": "zyfen_cast", "hit": ["hit_1", "hit_2"]}))
+	assert_eq(Array(g.validate()), [], "gerçek .ogg kimlikleri temiz geçer")
+
+
+func test_character_sfx_without_an_ogg_is_a_catalog_error() -> void:
+	var g := GameData.load_dir(_char_root({"shot": "zz_yok_ses"}))
+	var errs := "\n".join(g.validate())
+	assert_string_contains(errs, "asset_missing", "eksik karakter sesi sessiz kalmaz")
+	assert_string_contains(errs, "zz_yok_ses")
+
+
+func test_sfx_rules_key_without_an_ogg_is_a_catalog_error() -> void:
+	var g := GameData.load_dir(
+		_char_root({"shot": "zyfen_cast"}, {"limits": {"zz_ses_yok": 2}, "min_gap_ms": {"zz_ses_yok2": 50}})
+	)
+	var errs := "\n".join(g.validate())
+	assert_string_contains(errs, "zz_ses_yok", "kurallardaki ölü ses kimliği hata")
+	assert_string_contains(errs, "zz_ses_yok2")
+
+
+func test_every_shipped_sfx_rule_key_and_character_sfx_has_an_ogg() -> void:
+	var g := GameData.load_default()
+	var rules: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/sfx_rules.json"))
+	for sect: String in ["limits", "min_gap_ms"]:
+		for id: String in rules[sect]:
+			assert_true(DataV2.sfx_exists(id), "sfx_rules.%s.%s için .ogg" % [sect, id])
+	for cid in CharacterRoster.ids(g):
+		for ev: String in g.get_character(cid).sfx:
+			var v: Variant = g.get_character(cid).sfx[ev]
+			for id in (v if v is Array else [v]):
+				assert_true(DataV2.sfx_exists(str(id)), "%s sfx.%s=%s için .ogg" % [cid, ev, id])
