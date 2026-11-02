@@ -30,4 +30,6 @@ func test_restart_keeps_sprite_count_after_a_frame() -> void:
 	gut.p("sprite: ilk=%d hemen=%d bir kare sonra=%d" % [first, immediately, settled])
 	assert_gt(first, 0, "harabe sprite'ları var")
 	assert_eq(settled, first, "bir kare sonra sayı sabit")
-	assert_eq(immediately, first, "yeniden başlatma anında da sabit (eski sprite'lar hemen serbest)")
+	assert_eq(
+		immediately, first, "yeniden başlatma anında da sabit (eski sprite'lar hemen serbest)"
+	)
