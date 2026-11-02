@@ -16,11 +16,11 @@ var fake: V21Kit.FakeSettings
 
 
 func before_each() -> void:
-	fake = V21Kit.use_fake_settings()
+	fake = V21Kit.FakeSettings.new()
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 
 
 func _host() -> Control:
@@ -49,6 +49,7 @@ func _result(
 	p_won: bool, stats: Dictionary, n_combos: int = 0, rec: Dictionary = {}
 ) -> ResultScreen:
 	var r := ResultScreen.new()
+	r.run_selection = fake.selection()
 	_host().add_child(r)
 	r.show_result(p_won, stats, _combos(n_combos), "", rec)
 	return r
@@ -221,6 +222,7 @@ func test_b15_rank_line_prefixes_record_and_top10_notes() -> void:
 
 func test_b16_worst_case_blocks_do_not_overlap_and_buttons_fit() -> void:
 	var r := ResultScreen.new()
+	r.run_selection = fake.selection()
 	_host().add_child(r)
 	r.set_new_achievements(["AİLE II", "AİLE III"] as Array[String])
 	var stats := _stats(

@@ -1,35 +1,15 @@
-"""v2.1 sözleşme (C): dilim dosyası, gate bağlantıları, profil fixture'larının güncelliği, referans karma iş akışı, şema belgesi."""
+"""v2.1 sözleşme (C): profil fixture'larının güncelliği, referans karma iş akışı, şema belgesi."""
 import importlib.util
 import json
 import re
-import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-sys.path.insert(0, str(HERE.parent))
-import check_slices  # noqa: E402
 
 
 def _read(rel):
     return (ROOT / rel).read_text(encoding="utf-8")
-
-
-def test_slice_file_parses_and_has_separated_closed_symbol_lines():
-    text = _read("tools/v21_slices.txt")
-    ok, marks, errors = check_slices.parse(text, check_slices.V21_SYMBOLS)
-    assert ok, errors
-    assert marks == ["M", "S", "K", "A", "B"], "T-tur 1: tüm dilimler açık"
-    lines = text.splitlines()
-    idx = [i for i, ln in enumerate(lines) if re.fullmatch(r"#?[MSKAB]", ln.strip())]
-    assert len(idx) == 5, "her dilim için bir simge satırı"
-    assert all(b - a >= 2 for a, b in zip(idx, idx[1:])), "simge satırları bitişik olmamalı (birleşme dostu)"
-
-
-def test_gate_checks_v21_slices_in_both_places():
-    gate = _read("tools/gate.sh")
-    assert gate.count("check_slices.py --v21 tools/v21_slices.txt") == 2
-    assert "tools/v21_slices.txt .gate/junit.xml" in gate
 
 
 def _gen_module():

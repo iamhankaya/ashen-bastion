@@ -19,6 +19,8 @@ var screen: int = PauseLogic.Screen.MENU
 var sim: GameSim = null
 ## v2.1 KOŞU ekranı (U4a kurar; testler yerine sahte Control koyabilir).
 var run_screen: Control = null
+## Koşu modu/zorluk seçimi; ekranlarla paylaşılır. Testler Settings yerine sahte kaynak veren örneği add_child'dan ÖNCE koyar (F-137).
+var run_selection: RunSelection = RunSelection.new()
 var gate: InputGate = InputGate.new()
 
 var world: Node2D
@@ -167,7 +169,7 @@ func go_menu() -> void:
 ## Yeni oyun (menüden OYNA, Baştan Başla, Tekrar Oyna).
 func start_run() -> void:
 	_stop_stress()
-	_bind(GameSim.new(randi(), v2.selected_character(), V21Runs.run_opts()))
+	_bind(GameSim.new(randi(), v2.selected_character(), run_selection.run_opts()))
 	world.visible = true
 	atmosphere.visible = true
 	_update_views(0.0)
@@ -351,6 +353,7 @@ func _update_views(dt: float) -> void:
 	ruin_view.follow(sim.player_pos)
 	ground.follow(camera.position, camera.view_size())
 	enemy_renderer.refresh()
+	gem_renderer.motion_reduced = _settings().hareket_azalt
 	gem_renderer.refresh()
 	projectile_renderer.refresh()
 	fx_renderer.update_fx(_v11_view_dt(dt))
@@ -425,7 +428,7 @@ func _apply_safe_areas() -> void:
 func open_scores(p_mode: StringName = &"", p_diff: StringName = &"") -> void:
 	if screen != PauseLogic.Screen.MENU and screen != PauseLogic.Screen.RESULT:
 		return
-	var k := V21Runs.scores_key(p_mode, p_diff)
+	var k := run_selection.scores_key(p_mode, p_diff)
 	scores_screen.show_scores(highscores.list_for(k["mode"], k["diff"]), -1, k["mode"], k["diff"])
 	_set_screen(PauseLogic.Screen.SCORES)
 
@@ -437,7 +440,7 @@ func open_run_screen() -> void:
 
 
 func play_with(p_mode: StringName, p_diff: StringName) -> void:
-	V21Runs.set_selection(p_mode, p_diff)
+	run_selection.set_selection(p_mode, p_diff)
 	start_run()
 
 
@@ -640,7 +643,7 @@ func _save_score(won: bool, stats: Dictionary) -> void:
 	if _run_saved:
 		return
 	_run_saved = true
-	_result_record = highscores.submit(V21Runs.score_fields(stats, won))
+	_result_record = highscores.submit(run_selection.score_fields(stats, won))
 	if int(_result_record.get("rank", 0)) > 0:
 		highscores.save()
 

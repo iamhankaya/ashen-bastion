@@ -2,7 +2,7 @@ extends GutTest
 ## Kabul (v2.1 S): Sonsuz mod (spec senaryo 8, K4-A, plan K-C1/K-C2/K-C3). İlk Lord ölümü kazanma sayılır (kilometre taşı),
 ## koşu sürer ve yalnız ölümle biter; Lord ölümünden `lord_repeat_sec` (300) sonra HP ×1,5 (tavan ×8) ile döner; 1200. sn
 ## sonrası temas hasarı artar (enrage). Determinizm testi tester'ındır (Sonsuz altın hash dışıdır). 40. dk performansı
-## nightly (test/long). V21Slice "S" açılana dek pending; e1 (profil/opts) C'den beri koşar.
+## nightly (test/long).
 
 const START := 1190.0
 
@@ -40,8 +40,6 @@ func test_e1_endless_profile_sets_the_end_rules() -> void:
 
 
 func test_s22_first_lord_death_is_a_win_but_the_run_goes_on() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _endless()
 	var ended := []
 	s.bus.run_ended.connect(func(w: bool, _st: Dictionary) -> void: ended.append(w))
@@ -59,8 +57,6 @@ func test_s22_first_lord_death_is_a_win_but_the_run_goes_on() -> void:
 
 
 func test_s23_player_death_ends_the_run_and_keeps_the_win() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _endless()
 	_to_first_kill(s)
 	var got := []
@@ -76,8 +72,6 @@ func test_s23_player_death_ends_the_run_and_keeps_the_win() -> void:
 
 
 func test_s24_lord_returns_300s_after_the_death_with_more_hp() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _endless()
 	var w := _to_first_kill(s)
 	var t_kill := s.time
@@ -93,8 +87,6 @@ func test_s24_lord_returns_300s_after_the_death_with_more_hp() -> void:
 
 
 func test_s25_second_kill_counts_but_the_milestone_fires_once() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _endless()
 	var w := _to_first_kill(s)
 	V21Acc.run_until(s, 60 * 305, func() -> bool: return w["spawns"].size() > 1)
@@ -107,8 +99,6 @@ func test_s25_second_kill_counts_but_the_milestone_fires_once() -> void:
 
 
 func test_s27_repeat_hp_is_capped() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _endless(&"hard")
 	var w := _to_first_kill(s)
 	var hp_seen: Array = []
@@ -127,8 +117,6 @@ func test_s27_repeat_hp_is_capped() -> void:
 
 
 func test_s28_simultaneous_lord_and_player_death_counts_the_milestone() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _endless()
 	V21Acc.run_until(s, 60 * 40, func() -> bool: return V21Acc.lord_id(s) >= 0)
 	V21Acc.slay_lord(s)
@@ -140,8 +128,6 @@ func test_s28_simultaneous_lord_and_player_death_counts_the_milestone() -> void:
 
 
 func test_s29_spawning_continues_past_1200_and_lord_death() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := (
 		GameSim
 		. new(
@@ -162,8 +148,6 @@ func test_s29_spawning_continues_past_1200_and_lord_death() -> void:
 
 
 func test_s30_enrage_raises_contact_damage_only_in_endless_after_the_threshold() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var loss := {}
 	# 1190: ~2 sn'lik pencere eşiğin (1200) altında biter; 1200'de başlasa pencere eşiği aşardı.
 	var cases := [["endless", 1100.0], ["endless", 1190.0], ["endless", 1500.0]]
@@ -194,8 +178,6 @@ func test_s30_enrage_raises_contact_damage_only_in_endless_after_the_threshold()
 
 
 func test_s31_endless_run_is_deterministic_through_a_repeat() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var results := []
 	for r in 2:
 		var s := _endless(&"normal")

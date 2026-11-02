@@ -161,8 +161,8 @@ def collect_declared(src) -> Declared:
 
 
 def _families():
-    """check_slices profilleri (v2, v2.0.2, v2.1, v2.0.3). Test adı deseni `e5b_` gibi harf sonekini de kabul eder (check_slices.Profile.test_re)."""
-    fams = [("tools/v2_slices.txt", cs.V2), ("tools/v202_slices.txt", cs.V202), ("tools/v21_slices.txt", cs.V21),
+    """check_slices profilleri (v2, v2.0.2, v2.0.3). Test adı deseni `e5b_` gibi harf sonekini de kabul eder (check_slices.Profile.test_re)."""
+    fams = [("tools/v2_slices.txt", cs.V2), ("tools/v202_slices.txt", cs.V202),
             ("tools/v203_slices.txt", cs.Profile(("A", "B", "C", "D"), "V203_SLICES_FORCE", "v203", ()))]
     return fams
 

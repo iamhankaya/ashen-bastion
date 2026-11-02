@@ -9,7 +9,7 @@ var _saved: Array = []
 
 
 func before_each() -> void:
-	fake = V21Kit.use_fake_settings()
+	fake = V21Kit.FakeSettings.new()
 	var st := get_node_or_null(^"/root/Settings")
 	if st != null:
 		_saved = [st.buyuk_yazi, st.hareket_azalt]
@@ -18,7 +18,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 	var st := get_node_or_null(^"/root/Settings")
 	if st != null and _saved.size() == 2:
 		st.buyuk_yazi = _saved[0]
@@ -162,6 +162,7 @@ func test_b64_hud_hands_the_font_scale_to_the_band_when_it_shows() -> void:
 
 func _pause() -> PauseScreen:
 	var p := PauseScreen.new()
+	p.run_selection = fake.selection()
 	_host().add_child(p)
 	await _settle()
 	p.open([] as Array[SkillState], [] as Array[SkillState], true, true)

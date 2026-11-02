@@ -57,7 +57,7 @@ static func reconcile(store: AchievementStore, defs: Array, unix: int) -> int:
 	var added := 0
 	for def: AchievementDef in defs:
 		var have := store.step_count(def.id)
-		var v := AchievementProgress.of(def, store)
+		var v := store.progress_of(def)
 		if v < 0:
 			continue
 		var n := mini(AchievementStep.reached(def, v), AchievementStep.total(def))

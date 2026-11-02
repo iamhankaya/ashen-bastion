@@ -486,7 +486,7 @@ func _fill(entries: Array[Dictionary], highlight_index: int) -> void:
 			(inner.get_node("Score") as Label).text = UiKit.format_thousands(int(e["score"]))
 			(inner.get_node("Chip") as ResultChip).configure(bool(e["won"]))
 			(inner.get_node("Time") as Label).text = UiKit.format_time(float(e["time"]))
-			(inner.get_node("Date") as Label).text = Highscores.format_date(int(e["unix"]), bias)
+			(inner.get_node("Date") as Label).text = DateText.local_date(int(e["unix"]), bias)
 			if i == highlight:
 				bg.add_theme_stylebox_override(
 					&"panel", UiKit.stylebox(UiKit.TAS_700, UiKit.AMBER, 5, 14, true)
