@@ -151,3 +151,61 @@ func test_fourth_mode_and_difficulty_tabs_are_laid_out_selectable_and_named() ->
 	assert_signal_emitted_with_parameters(s, "tab_changed", [&"zz_m3", &"zz_d1"])
 	assert_true(s.diff_tabs[1].selected)
 
+
+
+# --- F-151: veri-yalnız karakter becerisi havuza girince kimse kırılmaz --------------------------------------------
+
+
+func _skill_root(skills: Dictionary) -> String:
+	var dest := "%s/extskill_%d" % [KitDev.TMP_ROOT, Time.get_ticks_usec()]
+	KitDev.copy_dir("res://data", dest)
+	for id: String in skills:
+		var f := FileAccess.open(dest.path_join("skills/%s.json" % id), FileAccess.WRITE)
+		f.store_string(JSON.stringify(skills[id]))
+		f.close()
+	return dest
+
+
+func _clone_passive(id: String, pool: String) -> Dictionary:
+	var d: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string("res://data/skills/saglam_yelek.json")
+	)
+	d["id"] = id
+	d["name"] = "ZZ " + id
+	d["pool"] = pool
+	if pool != "common":
+		d.erase("variants")  # yalnız ortak pasifin karakter varyantı olur
+	return d
+
+
+func test_data_only_skill_in_gunslinger_and_common_pool_validates_and_is_pool_filtered() -> void:
+	var root := _skill_root(
+		{
+			"zz_g_yelek": _clone_passive("zz_g_yelek", "gunslinger"),
+			"zz_c_yelek": _clone_passive("zz_c_yelek", "common"),
+		}
+	)
+	var g := GameData.load_dir(root)
+	assert_eq(Array(g.validate()), [], "havuzlu yeni beceriler doğrulayıcıdan temiz geçer")
+	assert_eq(g.get_skill(&"zz_g_yelek").pool, &"gunslinger")
+	assert_eq(g.get_skill(&"zz_c_yelek").pool, &"common")
+	var base := GameData.load_default()
+	assert_eq(
+		g.skills_of_kind(SkillDef.KIND_PASSIVE).size(),
+		base.skills_of_kind(SkillDef.KIND_PASSIVE).size() + 2,
+		"iki yeni pasif katalogda"
+	)
+	var zy := Loadout.new(g, &"zyfen")
+	var gs := Loadout.new(g, &"gunslinger")
+	for seed_value in 40:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_value
+		for c in zy.roll_choices(rng):
+			assert_ne(c.skill_id, &"zz_g_yelek", "Zyfen Gunslinger havuzundan kart almaz")
+	var seen := false
+	for seed_value in 60:
+		var rng2 := RandomNumberGenerator.new()
+		rng2.seed = seed_value
+		for c in gs.roll_choices(rng2):
+			seen = seen or c.skill_id == &"zz_g_yelek"
+	assert_true(seen, "Gunslinger yeni havuz becerisini teklif alır")
