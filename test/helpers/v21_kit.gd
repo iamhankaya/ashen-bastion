@@ -40,7 +40,8 @@ static func pin_selection(mode: String, diff: String) -> Callable:
 		st.run_diff = old[1]
 
 
-## Settings yerine geçen sahte nesne (run_mode/run_diff/save_settings); V21Runs.settings_override'a atanır.
+## Settings yerine geçen sahte nesne (run_mode/run_diff/save_settings); `selection()` controller'a enjekte edilir
+## (`c.run_selection = fake.selection()`, add_child'dan ÖNCE). Global durum yok (F-ashen-bastion-137).
 class FakeSettings:
 	extends RefCounted
 	var run_mode: String = "normal"
@@ -51,13 +52,5 @@ class FakeSettings:
 		saves += 1
 		return true
 
-
-static func use_fake_settings() -> FakeSettings:
-	var f := FakeSettings.new()
-	V21Runs.settings_override = f
-	return f
-
-
-static func clear_fake_settings() -> void:
-	V21Runs.settings_override = null
-	V21Runs.reset_cache()
+	func selection() -> RunSelection:
+		return RunSelection.new(self)

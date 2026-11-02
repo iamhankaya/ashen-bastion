@@ -1,8 +1,8 @@
 extends GutTest
 ## Kabul (v2.1 K): highscore ayrımı ve kayıt göçü (spec senaryo 9, K5-A, plan K-C6). (mod, zorluk) başına ayrı en iyi 10;
 ## v1 dosyası -> v2 (`{"v":2,"lists":{"<mod>:<zorluk>":[...]}}`), v1 girişleri `normal:normal`; `.v1.bak` + atomik yazım;
-## bozuk v2 dosyası çökertmez. Ayrım testleri (sep*) C'den beri koşar; göç testleri (k1-k13, k20) V21Slice "K" açılana
-## dek pending. Gerçek kod (T-turu): göç `load_file()` sırasında yapılır (yedek + v2 yazımı); testler yine de göçten sonra
+## bozuk v2 dosyası çökertmez. Ayrım testleri (sep*) ve göç testleri (k1-k13, k20) koşar.
+## Gerçek kod (T-turu): göç `load_file()` sırasında yapılır (yedek + v2 yazımı); testler yine de göçten sonra
 ## `save()` çağırır (idempotent). Bellekteki giriş sözlükleri mode/diff TAŞIMAZ (liste anahtarı bunu söyler); alanlar yalnız
 ## diskteki v2 dosyasında bulunur, bu yüzden etiket denetimleri dosyayı okur. Yalnız geçici yollar (user:// sızıntısı yok;
 ## after_all siler).
@@ -22,7 +22,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 
 
 func after_all() -> void:
@@ -108,13 +108,14 @@ func _migrate() -> Highscores:
 
 
 func _controller(fake_mode: String, fake_diff: String) -> GameController:
-	var fake := V21Kit.use_fake_settings()
+	var fake := V21Kit.FakeSettings.new()
 	fake.run_mode = fake_mode
 	fake.run_diff = fake_diff
 	var c := GameController.new()
 	c.v2_opts = {"achievements_path": _dir.path_join("ach.json")}
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	c.highscores = Highscores.new(_path())
+	c.run_selection = fake.selection()
 	add_child_autofree(c)
 	c.start_run()
 	return c
@@ -156,8 +157,6 @@ func test_sep2_a_finished_run_lands_in_the_list_of_its_own_mode_and_difficulty()
 
 
 func test_k20_the_saved_entry_carries_its_mode_and_difficulty() -> void:
-	if V21Slice.require(self, "K"):  # giriş alanları v2 biçimiyle (U3) kalıcı olur
-		return
 	var c := _controller("quick", "easy")
 	_die(c)
 	var rows := _disk_list("quick:easy")
@@ -169,7 +168,7 @@ func test_k20_the_saved_entry_carries_its_mode_and_difficulty() -> void:
 
 func test_sep3_changing_the_selection_mid_run_does_not_move_the_score() -> void:
 	var c := _controller("endless", "normal")
-	V21Runs.set_selection(&"quick", &"hard")  # koşu sürerken ayar değişti
+	c.run_selection.set_selection(&"quick", &"hard")  # koşu sürerken ayar değişti
 	_die(c)
 	assert_eq(c.highscores.list_for(&"endless", &"normal").size(), 1, "koşunun kendi çifti")
 	assert_eq(c.highscores.list_for(&"quick", &"hard").size(), 0, "yeni seçim değil")
@@ -178,7 +177,7 @@ func test_sep3_changing_the_selection_mid_run_does_not_move_the_score() -> void:
 func test_sep4_open_scores_shows_the_pair_it_is_asked_for() -> void:
 	var c := _controller("normal", "normal")
 	c.highscores.submit(_e(777, "endless", "hard"))
-	var key := V21Runs.scores_key(&"endless", &"hard")
+	var key := c.run_selection.scores_key(&"endless", &"hard")
 	assert_eq(c.highscores.list_for(key["mode"], key["diff"])[0]["score"], 777)
 	assert_eq(c.highscores.list_for(&"normal", &"normal").size(), 0)
 
@@ -187,8 +186,6 @@ func test_sep4_open_scores_shows_the_pair_it_is_asked_for() -> void:
 
 
 func test_k1_v1_entries_become_the_normal_normal_list() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	_install("v1_full.json")
 	var h := _migrate()
 	var list := h.list_for(&"normal", &"normal")
@@ -207,8 +204,6 @@ func test_k1_v1_entries_become_the_normal_normal_list() -> void:
 
 
 func test_k2_migration_writes_the_v2_format_to_disk() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	_install("v1_full.json")
 	_migrate()
 	var doc: Variant = JSON.parse_string(_read(_path()))
@@ -220,8 +215,6 @@ func test_k2_migration_writes_the_v2_format_to_disk() -> void:
 
 
 func test_k3_the_v1_file_is_backed_up_byte_for_byte() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var original := _install("v1_full.json")
 	_migrate()
 	assert_true(FileAccess.file_exists(_path() + ".v1.bak"), ".v1.bak yazıldı")
@@ -229,8 +222,6 @@ func test_k3_the_v1_file_is_backed_up_byte_for_byte() -> void:
 
 
 func test_k4_an_existing_backup_is_never_overwritten() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var original := _install("v1_full.json")
 	_write(_path() + ".v1.bak", "ESKI YEDEK")
 	_migrate()
@@ -242,8 +233,6 @@ func test_k4_an_existing_backup_is_never_overwritten() -> void:
 
 
 func test_k5_migration_is_idempotent_and_does_not_rebackup() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	_install("v1_full.json")
 	_migrate()
 	var after_first := _read(_path())
@@ -254,8 +243,6 @@ func test_k5_migration_is_idempotent_and_does_not_rebackup() -> void:
 
 
 func test_k6_mixed_v1_keeps_the_valid_entries_and_drops_the_rest() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	_install("v1_mixed.json")
 	var list := _migrate().list_for(&"normal", &"normal")
 	assert_eq(_scores(list), [99999999, 5000, 5000], "tavan, bozuklar atıldı")
@@ -264,8 +251,6 @@ func test_k6_mixed_v1_keeps_the_valid_entries_and_drops_the_rest() -> void:
 
 
 func test_k7_empty_and_missing_v1_files_do_not_crash() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	_install("v1_empty.json")
 	var h := _migrate()
 	assert_eq(h.list_for(&"normal", &"normal").size(), 0)
@@ -276,8 +261,6 @@ func test_k7_empty_and_missing_v1_files_do_not_crash() -> void:
 
 
 func test_k8_v2_roundtrip_keeps_every_list_apart() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var h := Highscores.new(_path())
 	h.submit(_e(300, "normal", "normal"))
 	h.submit(_e(500, "quick", "easy"))
@@ -294,8 +277,6 @@ func test_k8_v2_roundtrip_keeps_every_list_apart() -> void:
 
 
 func test_k9_the_list_key_is_authoritative_over_entry_fields() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var doc := {
 		"v": 2,
 		"lists":
@@ -330,8 +311,6 @@ func test_k9_the_list_key_is_authoritative_over_entry_fields() -> void:
 
 
 func test_k10_unknown_list_keys_are_preserved_for_forward_compat() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var doc := {
 		"v": 2,
 		"lists":
@@ -352,8 +331,6 @@ func test_k10_unknown_list_keys_are_preserved_for_forward_compat() -> void:
 
 
 func test_k11_corrupt_v2_files_open_empty_and_keep_a_bad_copy() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var bodies := [
 		"{ yarım",
 		JSON.stringify({"v": "2", "lists": {}}),
@@ -375,8 +352,6 @@ func test_k11_corrupt_v2_files_open_empty_and_keep_a_bad_copy() -> void:
 
 
 func test_k12_oversized_and_dirty_lists_are_cleaned() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var rows: Array = []
 	for i in 14:
 		rows.append({"score": 500 + (i % 7), "time": 1, "won": false, "level": 1, "unix": UNIX + i})
@@ -398,8 +373,6 @@ func test_k12_oversized_and_dirty_lists_are_cleaned() -> void:
 
 
 func test_k13_all_helper_files_derive_from_the_injected_path() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	_install("v1_full.json")
 	_migrate()
 	for f in DirAccess.get_files_at(ProjectSettings.globalize_path(_dir)):

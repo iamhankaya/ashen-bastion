@@ -125,8 +125,7 @@ func test_rf_scene_tree_summary_at_run_start() -> void:
 
 
 func test_rf_scene_tree_after_restart() -> void:
-	# Bulgu: yeniden başlatma düğüm sayısını artırıyor (Sprite2D 153 -> 297, CI 40773133231); davranış korunur,
-	# bu yüzden ilişkisel eşitlik değil baz sabitlenir. Düzeltme ayrı Developer işidir (rapor: Bulunan hatalar).
+	# F-125 düzeltildi (T20261103-06): yeniden başlatma düğüm sayısını artırmaz (Sprite2D 153 = 153); baz second = first.
 	var c := _controller()
 	seed(RUN_SEED)
 	c.start_run()

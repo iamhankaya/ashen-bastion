@@ -230,6 +230,18 @@ func count_unlocked(known: Array[StringName]) -> int:
 	return n
 
 
+## totals/best/chars5'ten ilerleme; kaynağı olmayan stat (`run_elit_piyade`, `run_won`) için -1 (AchievementProgress.of buna yönlenir).
+func progress_of(def: AchievementDef) -> int:
+	var s := String(def.stat)
+	if s == "total_chars5":
+		return chars5.size()
+	if AchievementDef.TOTAL_KEY.has(s):
+		return int(totals[AchievementDef.TOTAL_KEY[s]])
+	if AchievementDef.BEST_KEY.has(s):
+		return int(best[AchievementDef.BEST_KEY[s]])
+	return -1
+
+
 ## Tanımlardaki toplam açık kademe (aile başına `total` ile sınırlı).
 func count_steps(defs: Array) -> int:
 	var n := 0

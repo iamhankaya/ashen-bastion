@@ -7,7 +7,7 @@ var _saved: Array = []
 
 
 func before_each() -> void:
-	fake = V21Kit.use_fake_settings()
+	fake = V21Kit.FakeSettings.new()
 	var st := get_node_or_null(^"/root/Settings")
 	if st != null:  # RunScreen yazı ölçeği/hareket ayarını gerçek Settings'ten okur: testten önce sabitle, sonra geri al
 		_saved = [st.buyuk_yazi, st.hareket_azalt]
@@ -16,7 +16,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 	var st := get_node_or_null(^"/root/Settings")
 	if st != null and _saved.size() == 2:
 		st.buyuk_yazi = _saved[0]
@@ -37,6 +37,7 @@ func _settle() -> void:
 
 func _screen() -> RunScreen:
 	var s := RunScreen.new()
+	s.run_selection = fake.selection()
 	_host().add_child(s)
 	s.visible = true
 	return s
@@ -44,6 +45,7 @@ func _screen() -> RunScreen:
 
 func _menu() -> MainMenu:
 	var m := MainMenu.new()
+	m.run_selection = fake.selection()
 	_host().add_child(m)
 	return m
 
@@ -240,6 +242,7 @@ func test_a14_opening_shows_the_saved_selection() -> void:
 	fake.run_mode = "quick"
 	fake.run_diff = "hard"
 	var s := RunScreen.new()
+	s.run_selection = fake.selection()
 	_host().add_child(s)
 	await _settle()
 	s.visible = true
@@ -393,6 +396,7 @@ func test_a30_pause_shows_info_only_run_chips() -> void:
 	fake.run_mode = "quick"
 	fake.run_diff = "hard"
 	var p := PauseScreen.new()
+	p.run_selection = fake.selection()
 	_host().add_child(p)
 	await _settle()
 	p.open([] as Array[SkillState], [] as Array[SkillState], true, true)
@@ -418,6 +422,7 @@ func test_a30_pause_shows_info_only_run_chips() -> void:
 
 func test_a31_chips_do_not_push_the_pause_actions_off_screen() -> void:
 	var p := PauseScreen.new()
+	p.run_selection = fake.selection()
 	_host().add_child(p)
 	await _settle()
 	p.open([] as Array[SkillState], [] as Array[SkillState], true, true)

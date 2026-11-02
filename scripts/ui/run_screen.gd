@@ -2,8 +2,8 @@ class_name RunScreen
 extends Control
 ## v2.1 KOŞU ekranı (docs/design/v2.1/DESIGN.md §3): "Hangi koşuyu, ne kadar zorlukta oynayacağım?" Üç mod satırı (HIZLI /
 ## NORMAL / SONSUZ), üç zorluk kartı (KOLAY / NORMAL / ZOR), seçili zorluğun ayrıntı levhası ve kural levhası; GERİ sabit.
-## Dokun = seç + anında kaydet (V21Runs.set_selection -> Settings); onay düğmesi yok. Koşuda değişmez (menüden açılır).
-## Sayılar ve süreler `data/run_profiles.json`'dan (V21Runs.profiles), metinler RunStrip'tedir. 2× yazıda (font_scale > 1,3)
+## Dokun = seç + anında kaydet (run_selection.set_selection -> Settings); onay düğmesi yok. Koşuda değişmez (menüden açılır).
+## Sayılar ve süreler `data/run_profiles.json`'dan (run_selection.profiles), metinler RunStrip'tedir. 2× yazıda (font_scale > 1,3)
 ## satırlar uzar, zorluk kartları dikey sıraya düşer; liste kayar, GERİ sabittir.
 
 signal back_requested
@@ -27,6 +27,8 @@ const SECTION_GAP := 30
 ## Mühür üst payı: 1× süre yazısı (38 px, satır 184'te ortalı) y≈67'den başlar; 14 px'te mühür (14-70) örtüşürdü, 6 px'te 62'de biter.
 const MARK_TOP := 6.0
 
+## Koşu seçimi kaynağı; controller kurarken paylaşılan örneği koyar (verilmezse Settings).
+var run_selection: RunSelection = RunSelection.new()
 var title_label: Label
 var back_button: Button
 var scroll: ScrollContainer
@@ -250,11 +252,15 @@ func _mode_row(m: StringName) -> Button:
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(UiKit.label(RunStrip.mode_name(m), &"LabelAccent", _fs(44), UiKit.KEMIK_100))
-	var d := UiKit.label(RunStrip.mode_desc(m, V21Runs.profiles()), &"", _fs(28), UiKit.KEMIK_300)
+	var d := UiKit.label(
+		RunStrip.mode_desc(m, run_selection.profiles()), &"", _fs(28), UiKit.KEMIK_300
+	)
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(d)
 	h.add_child(v)
-	var span := UiKit.label(RunStrip.duration_text(m, V21Runs.profiles()), &"LabelAccent", _fs(38))
+	var span := UiKit.label(
+		RunStrip.duration_text(m, run_selection.profiles()), &"LabelAccent", _fs(38)
+	)
 	span.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	if span.text == "∞":  # Cinzel'de ∞ yok: gövde yazı tipi
 		span.theme_type_variation = &""
@@ -340,23 +346,23 @@ func selection() -> Dictionary:
 
 
 func _select_mode(m: StringName) -> void:
-	V21Runs.set_selection(m, V21Runs.selection()["diff"])
+	run_selection.set_selection(m, run_selection.selection()["diff"])
 	_apply_selection(true)
 	selection_changed.emit(_mode, _diff)
 
 
 func _select_diff(d: StringName) -> void:
-	V21Runs.set_selection(V21Runs.selection()["mode"], d)
+	run_selection.set_selection(run_selection.selection()["mode"], d)
 	_apply_selection(true)
 	selection_changed.emit(_mode, _diff)
 
 
-## Kaydedilmiş seçimi (V21Runs) ekrana yansıtır: yüzey, mühür, a11y adı, ayrıntı ve kural levhaları.
+## Kaydedilmiş seçimi (run_selection) ekrana yansıtır: yüzey, mühür, a11y adı, ayrıntı ve kural levhaları.
 func _apply_selection(animate: bool) -> void:
-	var sel := V21Runs.selection()
+	var sel := run_selection.selection()
 	_mode = sel["mode"]
 	_diff = sel["diff"]
-	var cfg := V21Runs.profiles()
+	var cfg := run_selection.profiles()
 	for m in mode_buttons:
 		var b: Button = mode_buttons[m]
 		var on: bool = m == _mode

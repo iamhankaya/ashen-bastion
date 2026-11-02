@@ -2,18 +2,21 @@ extends GutTest
 ## Kabul (v2.1 B): skor ekranı sekmeleri ve sonuç ekranı koşu bilgisi (spec UI maddesi, DESIGN.md §5-6). Davranış sözleşmesi:
 ## skor ekranı iki sıra üçlü sekme (MOD 3 + ZORLUK 3 = 9 liste) sunar, açılan liste istenen çifttir; sonuç ekranı mod/zorluğu
 ## söyler, Sonsuz'da Lord sayısı, yalnız Kolay'da kural notu. Yerleşim/çakışma `test_b<N>_` birim testleri + görüntülerdir.
-## V21Slice "B" açılana dek pending. Metinler gerçek ekranlardan (RunStrip.MODE_NAMES/DIFF_NAMES, ResultScreen.EASY_NOTE) doğrulandı.
+## Metinler gerçek ekranlardan (RunStrip.MODE_NAMES/DIFF_NAMES, ResultScreen.EASY_NOTE) doğrulandı.
 
 const DIR := "user://v21_scores_acc"
 
+var _fake := V21Kit.FakeSettings.new()
+
 
 func before_each() -> void:
+	_fake = V21Kit.FakeSettings.new()
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(DIR))
 	_clean()
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 
 
 func after_all() -> void:
@@ -32,6 +35,7 @@ func _controller() -> GameController:
 	c.v2_opts = {"achievements_path": DIR + "/ach.json"}
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	c.highscores = Highscores.new(DIR + "/hs.json")
+	c.run_selection = _fake.selection()
 	add_child_autofree(c)
 	c.start_run()
 	return c
@@ -70,9 +74,6 @@ func _upper(root: Node) -> String:
 
 
 func test_b1_the_scores_screen_offers_three_modes_and_three_difficulties() -> void:
-	if V21Slice.require(self, "B"):
-		return
-	V21Kit.use_fake_settings()
 	var c := _controller()
 	c.go_menu()
 	c.open_scores()
@@ -84,9 +85,6 @@ func test_b1_the_scores_screen_offers_three_modes_and_three_difficulties() -> vo
 
 
 func test_b2_the_requested_pair_is_the_one_shown() -> void:
-	if V21Slice.require(self, "B"):
-		return
-	V21Kit.use_fake_settings()
 	var c := _controller()
 	c.highscores.submit(
 		{
@@ -118,9 +116,7 @@ func test_b2_the_requested_pair_is_the_one_shown() -> void:
 
 
 func test_b3_the_result_screen_names_the_mode_and_difficulty_of_the_finished_run() -> void:
-	if V21Slice.require(self, "B"):
-		return
-	var fake := V21Kit.use_fake_settings()
+	var fake := _fake
 	fake.run_mode = "quick"
 	fake.run_diff = "hard"
 	var c := _controller()
@@ -132,9 +128,7 @@ func test_b3_the_result_screen_names_the_mode_and_difficulty_of_the_finished_run
 
 
 func test_b4_endless_result_shows_the_lord_count_only_in_endless() -> void:
-	if V21Slice.require(self, "B"):
-		return
-	var fake := V21Kit.use_fake_settings()
+	var fake := _fake
 	fake.run_mode = "endless"
 	var c := _controller()
 	c.sim.milestone_won = true
@@ -149,9 +143,7 @@ func test_b4_endless_result_shows_the_lord_count_only_in_endless() -> void:
 
 
 func test_b5_the_easy_rule_note_appears_on_easy_results_only() -> void:
-	if V21Slice.require(self, "B"):
-		return
-	var fake := V21Kit.use_fake_settings()
+	var fake := _fake
 	fake.run_diff = "easy"
 	var easy := _controller()
 	_finish(easy)

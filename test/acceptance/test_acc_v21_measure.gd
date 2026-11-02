@@ -2,7 +2,7 @@ extends GutTest
 ## Kabul (v2.1 M, S): kazanma/Lord'a ulaşma ölçütünün (spec senaryo 2-8) ölçüm altyapısı sözleşmesi. Oranlar istatistiktir
 ## (400 tohum, bootstrap %95 GA): balance.yml A400/B400 koşularının işidir; birim kapıya KONMAZ (gürültü, süre). Burada
 ## (a) ölçüm aracının plandaki yüzeyi (politika, çıktı alanları, süre sınırları, matris) ve (b) deterministik bir sim vekili
-## sınanır: aynı tohum ve aynı oyun, Kolay < Normal < Zor hasar yer. V21Slice "M" (a) ve "S" (b) açılana dek pending.
+## sınanır: aynı tohum ve aynı oyun, Kolay < Normal < Zor hasar yer.
 
 const MID_RUN := "res://tools/balance/mid_run.gd"
 const BALANCE_YML := "res://.github/workflows/balance.yml"
@@ -29,8 +29,6 @@ const FIELDS := [
 
 
 func test_m1_the_measurement_tool_reports_every_planned_field() -> void:
-	if V21Slice.require(self, "M"):
-		return
 	var text := FileAccess.get_file_as_string(MID_RUN)
 	assert_ne(text, "", "mid_run.gd okundu")
 	for f in FIELDS:
@@ -38,8 +36,6 @@ func test_m1_the_measurement_tool_reports_every_planned_field() -> void:
 
 
 func test_m2_the_tool_can_play_the_lord_fight_and_the_endless_horizon() -> void:
-	if V21Slice.require(self, "M"):
-		return
 	var text := FileAccess.get_file_as_string(MID_RUN)
 	assert_true(text.contains("strong_lord"), "strong_lord politikası")
 	var m := RegEx.create_from_string("const MAX_STEPS\\s*:?=\\s*(\\d+)")
@@ -88,8 +84,6 @@ func _damage_taken(diff: StringName) -> float:
 
 
 func test_s31_easier_difficulties_take_less_damage_under_identical_play() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var easy := _damage_taken(&"easy")
 	var normal := _damage_taken(&"normal")
 	var hard := _damage_taken(&"hard")

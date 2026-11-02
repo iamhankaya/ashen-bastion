@@ -1,7 +1,7 @@
 extends GutTest
 ## Kabul (v2.1 S): profil/regresyon ve zorluk düğmelerinin etkisi (spec senaryo 1 ve K1 düğmeleri: düşman HP, temas hasarı,
 ## doğuş yoğunluğu, XP, Lord HP; oyuncu HP düğmesi yok). Sözleşme: docs/data-schema.md v2.1, K-C7, K-C10.
-## Regresyon testleri (r1-r3) C'den beri gerçek kodda koşar (referans-fixture karşılaştırması test_v21_contract_golden_ref'te); çarpan testleri (s1-s8) V21Slice "S" açılana dek pending.
+## Regresyon testleri (r1-r3) C'den beri gerçek kodda koşar (referans-fixture karşılaştırması test_v21_contract_golden_ref'te); çarpan testleri (s1-s8) de koşar.
 ## Kazanma/Lord'a ulaşma ORANI (senaryo 2-5) istatistiktir: balance.yml ölçümüdür, kapı değil (rapor: Kapsam).
 
 const STEPS := 600
@@ -78,8 +78,6 @@ func test_r3_default_selection_is_normal_normal_and_not_legacy() -> void:
 
 
 func test_s1_enemy_hp_follows_the_difficulty_multiplier() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var hard := _sim(V21Kit.profile(&"normal", &"hard"))
 	var easy := _sim(V21Kit.profile(&"normal", &"easy"))
 	var norm := _sim(V21Kit.profile(&"normal", &"normal"))
@@ -92,8 +90,6 @@ func test_s1_enemy_hp_follows_the_difficulty_multiplier() -> void:
 
 
 func test_s2_lord_hp_uses_lord_hp_and_mode_only_not_enemy_hp() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var base := _sim(V21Kit.profile(&"normal", &"hard"))
 	var lord_base := _enemy_hp(base, base.spawn_enemy(LORD, Vector2(300, 0)))
 	assert_eq(lord_base, 45000.0, "Zor/Normal Lord = bugünkü 45000")
@@ -122,8 +118,6 @@ func _contact_loss(profile: RunProfile) -> float:
 
 
 func test_s3_contact_damage_follows_the_difficulty_multiplier() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var hard := _contact_loss(V21Kit.profile(&"normal", &"hard"))
 	var easy := _contact_loss(V21Kit.profile(&"normal", &"easy"))
 	var norm := _contact_loss(V21Kit.profile(&"normal", &"normal"))
@@ -145,8 +139,6 @@ func _alive_after(profile: RunProfile, seconds: float) -> int:
 
 
 func test_s4_spawn_density_scales_the_number_of_spawns() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var hard := _alive_after(V21Kit.profile(&"normal", &"hard"), 40.0)
 	var easy := _alive_after(V21Kit.profile(&"normal", &"easy"), 40.0)
 	var norm := _alive_after(V21Kit.profile(&"normal", &"normal"), 40.0)
@@ -164,8 +156,6 @@ func _xp_dropped(profile: RunProfile, kills: int) -> int:
 
 
 func test_s5_xp_carry_loses_no_fraction_over_a_series() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var base := _xp_dropped(V21Kit.profile(&"normal", &"hard"), 8)
 	assert_gt(base, 0, "piyade taş düşürür (kurulum)")
 	assert_eq(_xp_dropped(V21Kit.profile(&"normal", &"easy"), 8), base * 5 / 4, "Kolay ×1,25")
@@ -174,8 +164,6 @@ func test_s5_xp_carry_loses_no_fraction_over_a_series() -> void:
 
 
 func test_s6_xp_multiplier_never_loses_a_gem_on_a_single_kill() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	# Tek öldürmede birikimli kesir: değer xp_value'dan küçük olmaz (roundi reddedildi, K-C7).
 	var one_hard := _xp_dropped(V21Kit.profile(&"normal", &"hard"), 1)
 	assert_gte(_xp_dropped(V21Kit.profile(&"normal", &"easy"), 1), one_hard)
@@ -183,16 +171,12 @@ func test_s6_xp_multiplier_never_loses_a_gem_on_a_single_kill() -> void:
 
 
 func test_s7_no_difficulty_changes_the_player_hp() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	for d in [&"easy", &"normal", &"hard"]:
 		var s := _sim(V21Kit.profile(&"normal", d))
 		assert_eq(s.max_hp, _sim(null).max_hp, "oyuncu HP düğmesi yok: %s" % d)
 
 
 func test_s8_profile_runs_are_deterministic() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	for pair in [[&"quick", &"easy"], [&"normal", &"normal"]]:
 		var a := _sim(V21Kit.profile(pair[0], pair[1]), 21)
 		var b := _sim(V21Kit.profile(pair[0], pair[1]), 21)

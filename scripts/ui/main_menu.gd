@@ -68,6 +68,8 @@ const HERO_BOTTOM := 332.0
 const HEAD_TOP := 128.0
 const TOP_DEFAULT := 96.0
 
+## Koşu seçimi kaynağı; controller kurarken paylaşılan örneği koyar (verilmezse Settings).
+var run_selection: RunSelection = RunSelection.new()
 var run_button: RunStrip
 var play_button: Button
 var scores_button: Button
@@ -636,8 +638,8 @@ func apply_safe_area(extra: Variant = null) -> void:
 
 ## Koşu şeridini kaydedilmiş (mod, zorluk) seçimine göre yeniler (KOŞU ekranından dönüşte ve açılışta).
 func refresh_run() -> void:
-	var sel := V21Runs.selection()
-	run_button.show_selection(sel["mode"], sel["diff"], V21Runs.profiles())
+	var sel := run_selection.selection()
+	run_button.show_selection(sel["mode"], sel["diff"], run_selection.profiles())
 
 
 ## Ses/titreşim anahtarları AYARLAR'a taşındı; çağrılar uyumluluk için kalır (menüde gösterilecek durum yok).

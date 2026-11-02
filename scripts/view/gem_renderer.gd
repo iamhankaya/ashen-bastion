@@ -11,6 +11,8 @@ const TILE_PX := 128
 var _sim: GameSim = null
 var _buf: PackedFloat32Array = PackedFloat32Array()
 var _cap: int = GemPool.CAP
+## Hareket azaltma (Settings.hareket_azalt); controller her karede yazar, görünüm katmanı ayara doğrudan bağlanmaz.
+var motion_reduced: bool = false
 
 
 func _init() -> void:
@@ -49,9 +51,7 @@ static func atlas_texture() -> Texture2D:
 
 ## hareket_azalt AÇIKken küre süzülmesi durur.
 func apply_motion_setting() -> void:
-	(material as ShaderMaterial).set_shader_parameter(
-		"bob_scale", 0.0 if Settings.hareket_azalt else 1.0
-	)
+	(material as ShaderMaterial).set_shader_parameter("bob_scale", 0.0 if motion_reduced else 1.0)
 
 
 ## Değer → ölçek (1 → 1.0, büyüdükçe log ile, en çok 2.2).

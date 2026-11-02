@@ -62,6 +62,8 @@ const SHINE_SEC := ResultAnim.SHINE_SEC
 const PILL_SEC := ResultAnim.PILL_SEC
 const ROW_SLIDE_PX := ResultAnim.ROW_SLIDE_PX
 
+## Koşu seçimi kaynağı; controller kurarken paylaşılan örneği koyar (verilmezse Settings).
+var run_selection: RunSelection = RunSelection.new()
 var won: bool = false
 var stats: Dictionary = {}
 var last_record: Dictionary = {}
@@ -215,7 +217,7 @@ func show_result(
 	glow.texture = ResultBlocks.glow_texture(UiKit.AMBER if won else UiKit.BORDO_500)
 	_shown_combos = _combo_cap()
 	_fill_combos(combos)
-	ResultBlocks.fill_run(self, V21Runs.profiles)
+	ResultBlocks.fill_run(self, run_selection.profiles)
 	ResultBlocks.fill_record(self)
 	ResultBlocks.fill_rows(self)
 	_hero_total = clampi(int(stats.get("score", 0)), 0, DISPLAY_CAP)
@@ -249,7 +251,7 @@ func set_font_scale(f: float) -> void:
 		return
 	_render_combos()
 	if not stats.is_empty():
-		ResultBlocks.fill_run(self, V21Runs.profiles)
+		ResultBlocks.fill_run(self, run_selection.profiles)
 	_layout()
 	if not stats.is_empty():
 		_apply(_t)
