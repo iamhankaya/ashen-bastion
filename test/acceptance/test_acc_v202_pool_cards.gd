@@ -199,7 +199,9 @@ func test_p9_pool_assignments_match_the_plan_counts() -> void:
 			)
 	# plan sayıları TABANDIR: veriyle eklenen beceri ortak/Gunslinger/Zyfen havuzuna girebilir (F-151)
 	assert_gte(by_pool["common"].size(), 7, "ortak pasif sayısı (plan tabanı)")
-	assert_gte(by_pool["gunslinger"].size(), 12, "Gunslinger'a özel (plan tabanı: 8 beceri + 4 evrim)")
+	assert_gte(
+		by_pool["gunslinger"].size(), 12, "Gunslinger'a özel (plan tabanı: 8 beceri + 4 evrim)"
+	)
 	assert_gte(by_pool["zyfen"].size(), 13, "Zyfen'e özel (plan tabanı)")
 	for id in ExpectedTablesV202.GUNSLINGER_ONLY:
 		assert_true(by_pool["gunslinger"].has(id), "%s Gunslinger havuzunda (plan)" % id)
@@ -207,7 +209,11 @@ func test_p9_pool_assignments_match_the_plan_counts() -> void:
 	for pool: String in by_pool:
 		extras += by_pool[pool].size()
 	extras -= 7 + 12 + 13
-	assert_gte(_all_skills().size(), 32 + others + extras, "toplam beceri (dinamit çıkmış; ek becerilerle artar)")
+	assert_gte(
+		_all_skills().size(),
+		32 + others + extras,
+		"toplam beceri (dinamit çıkmış; ek becerilerle artar)"
+	)
 	assert_null(_data.get_skill(&"dinamit"), "dinamit kaldırıldı")
 
 

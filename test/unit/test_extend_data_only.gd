@@ -137,7 +137,9 @@ func test_fourth_mode_and_difficulty_tabs_are_laid_out_selectable_and_named() ->
 			assert_gt(t.position.x + t.size.x, t.position.x)
 			if i > 0:
 				var prev: Control = tabs[i - 1]
-				assert_gte(t.position.x, prev.position.x + prev.size.x, "sekme %d öncekiyle çakışmaz" % i)
+				assert_gte(
+					t.position.x, prev.position.x + prev.size.x, "sekme %d öncekiyle çakışmaz" % i
+				)
 		var last: Control = tabs[3]
 		assert_lte(last.position.x + last.size.x, 1080.0, "4. sekme ekrana sığar")
 		assert_gt(last.position.x, 0.0, "4. sekme (0,0)'a düşmez")
@@ -150,7 +152,6 @@ func test_fourth_mode_and_difficulty_tabs_are_laid_out_selectable_and_named() ->
 	s.select_tab(&"zz_m3", &"zz_d1")
 	assert_signal_emitted_with_parameters(s, "tab_changed", [&"zz_m3", &"zz_d1"])
 	assert_true(s.diff_tabs[1].selected)
-
 
 
 # --- F-151: veri-yalnız karakter becerisi havuza girince kimse kırılmaz --------------------------------------------
@@ -250,7 +251,9 @@ func test_character_sfx_without_an_ogg_is_a_catalog_error() -> void:
 
 func test_sfx_rules_key_without_an_ogg_is_a_catalog_error() -> void:
 	var g := GameData.load_dir(
-		_char_root({"shot": "zyfen_cast"}, {"limits": {"zz_ses_yok": 2}, "min_gap_ms": {"zz_ses_yok2": 50}})
+		_char_root(
+			{"shot": "zyfen_cast"}, {"limits": {"zz_ses_yok": 2}, "min_gap_ms": {"zz_ses_yok2": 50}}
+		)
 	)
 	var errs := "\n".join(g.validate())
 	assert_string_contains(errs, "zz_ses_yok", "kurallardaki ölü ses kimliği hata")
@@ -259,12 +262,14 @@ func test_sfx_rules_key_without_an_ogg_is_a_catalog_error() -> void:
 
 func test_every_shipped_sfx_rule_key_and_character_sfx_has_an_ogg() -> void:
 	var g := GameData.load_default()
-	var rules: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/sfx_rules.json"))
+	var rules: Dictionary = JSON.parse_string(
+		FileAccess.get_file_as_string("res://data/sfx_rules.json")
+	)
 	for sect: String in ["limits", "min_gap_ms"]:
 		for id: String in rules[sect]:
 			assert_true(DataV2.sfx_exists(id), "sfx_rules.%s.%s için .ogg" % [sect, id])
 	for cid in CharacterRoster.ids(g):
 		for ev: String in g.get_character(cid).sfx:
 			var v: Variant = g.get_character(cid).sfx[ev]
-			for id in (v if v is Array else [v]):
+			for id in v if v is Array else [v]:
 				assert_true(DataV2.sfx_exists(str(id)), "%s sfx.%s=%s için .ogg" % [cid, ev, id])
