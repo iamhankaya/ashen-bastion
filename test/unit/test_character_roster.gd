@@ -107,7 +107,9 @@ func test_locked_character_is_not_selectable_when_store_missing_or_corrupt() -> 
 		"store null => kilitli (güvenli yön)"
 	)
 	assert_eq(
-		CharacterRoster.resolve("kilitli", g, _store(["bes_dakika"], true)),
+		CharacterRoster.resolve(
+			"kilitli", g, AchievementProgressView.of_store(_store(["bes_dakika"], true))
+		),
 		&"gunslinger",
 		"bozuk kayıt => kilitli"
 	)
@@ -115,14 +117,22 @@ func test_locked_character_is_not_selectable_when_store_missing_or_corrupt() -> 
 
 func test_locked_character_unlocks_with_the_achievement() -> void:
 	var g := _data_with_locked()
-	assert_eq(CharacterRoster.resolve("kilitli", g, _store([])), &"gunslinger")
-	assert_eq(CharacterRoster.resolve("kilitli", g, _store(["bes_dakika"])), &"kilitli")
+	assert_eq(
+		CharacterRoster.resolve("kilitli", g, AchievementProgressView.of_store(_store([]))),
+		&"gunslinger"
+	)
+	assert_eq(
+		CharacterRoster.resolve(
+			"kilitli", g, AchievementProgressView.of_store(_store(["bes_dakika"]))
+		),
+		&"kilitli"
+	)
 
 
 func test_is_unlocked_without_unlock_field_is_always_true() -> void:
 	var c := _real.get_character(&"zyfen")
 	assert_true(CharacterRoster.is_unlocked(c, null))
-	assert_true(CharacterRoster.is_unlocked(c, _store([], true)))
+	assert_true(CharacterRoster.is_unlocked(c, AchievementProgressView.of_store(_store([], true))))
 
 
 func test_lock_reason_uses_achievement_display_name() -> void:
@@ -169,3 +179,24 @@ func test_step_edge_cases() -> void:
 	var one: Array[StringName] = [&"a"]
 	assert_eq(CharacterRoster.step(one, &"a", 1), &"a")
 	assert_eq(CharacterRoster.step(one, &"a", -1), &"a")
+
+
+## F-130: ilerleme parametresi `Variant` değil `AchievementProgressView` (null güvenli yön olarak kalır).
+func test_progress_parameters_are_typed_as_progress_view() -> void:
+	for method in ["is_unlocked", "resolve"]:
+		var found := false
+		for m in (
+			(load("res://scripts/domain/character_roster.gd") as GDScript).get_script_method_list()
+		):
+			if m["name"] != method:
+				continue
+			found = true
+			var args: Array = m["args"]
+			var last: Dictionary = args[args.size() - 1]
+			assert_eq(last["type"], TYPE_OBJECT, "%s: ilerleme parametresi nesne tipli" % method)
+			assert_eq(
+				last["class_name"],
+				&"AchievementProgressView",
+				"%s: AchievementProgressView" % method
+			)
+		assert_true(found, method)
