@@ -369,6 +369,8 @@ def _parse_rows(s: str):
 
 
 def main(argv=None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows konsolu cp1254: ≤ → yazılamaz
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--sheet", help="temas sayfası ya da ızgara görseli")
     ap.add_argument("--frames", nargs="+", help="ayrı kare dosyaları (sheet yerine)")

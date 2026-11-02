@@ -45,5 +45,12 @@ def test_digest_ignores_gate_outputs_and_untracked_files_elsewhere(tmp_path):
     assert tree_guard.digest(repo) == before
 
 
+def test_digest_ignores_godot_uid_files(tmp_path):
+    repo = make_repo(tmp_path)
+    before = tree_guard.digest(repo)
+    (repo / "data" / "yeni.gd.uid").write_text("uid://x", encoding="utf-8")
+    assert tree_guard.digest(repo) == before
+
+
 def test_digest_is_none_without_git(tmp_path):
     assert tree_guard.digest(tmp_path) is None

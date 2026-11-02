@@ -21,4 +21,6 @@ def digest(root):
     new = _git(root, "ls-files", "-o", "--exclude-standard", "--", *GUT_DIRS)
     if diff is None or new is None:
         return None
+    # Godot'un kendi yazdığı .uid/.import dosyaları pytest'ten sayılmaz (GUT eşzamanlı koşar)
+    new = b"\n".join(n for n in new.splitlines() if not n.endswith((b".uid", b".import")))
     return hashlib.sha256(diff + b"\0" + new).hexdigest()

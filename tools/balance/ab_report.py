@@ -133,7 +133,8 @@ def main(d, out_md=None, out_json=None):
     text = "\n".join(lines) + "\n"
     if out_md:
         open(out_md, "w", encoding="utf-8").write(text)
-    sys.stdout.reconfigure(encoding="utf-8")  # Windows konsolu cp1254: ≥ − … yazılamaz
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows konsolu cp1254: ≥ − … yazılamaz
     print(text)
 
 

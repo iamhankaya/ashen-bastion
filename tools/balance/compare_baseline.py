@@ -278,7 +278,8 @@ def main(argv=None) -> int:
         print(f"girdi hatası: {e}", file=sys.stderr)
         return 2
     md = render(res, os.path.basename(a.base.rstrip("/")), os.path.basename(a.new.rstrip("/")))
-    sys.stdout.reconfigure(encoding="utf-8")  # Windows konsolu cp1254
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows konsolu cp1254
     print(md)
     if a.out:
         Path(a.out).write_text(md, encoding="utf-8")

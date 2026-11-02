@@ -34,8 +34,8 @@ func _controller() -> GameController:
 	var c := GameController.new()
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}
 	c.process_mode = Node.PROCESS_MODE_DISABLED
-	add_child_autofree(c)
 	c.highscores = Highscores.new("%s/hs_%d_%d.json" % [TMP, OS.get_process_id(), _n])
+	add_child_autofree(c)
 	return c
 
 
