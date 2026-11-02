@@ -61,10 +61,10 @@ def test_selftest_has_id_loss_scenarios():
 
 def test_check_junit_is_a_total_sanity_check_only(tmp_path):
     j = tmp_path / "j.xml"
-    j.write_text('<testsuites><testsuite name="a" tests="2" skipped="2"></testsuite></testsuites>')
+    j.write_text('<testsuites><testsuite name="a" tests="2" skipped="2"></testsuite></testsuites>', encoding="utf-8")
     r = subprocess.run([sys.executable, str(CI / "check_junit.py"), str(j)], capture_output=True, text=True)
     assert r.returncode == 1 and "sıfır" in r.stderr
-    j.write_text('<testsuites><testsuite name="a" tests="2" skipped="1"></testsuite></testsuites>')
+    j.write_text('<testsuites><testsuite name="a" tests="2" skipped="1"></testsuite></testsuites>', encoding="utf-8")
     assert subprocess.run([sys.executable, str(CI / "check_junit.py"), str(j)]).returncode == 0
 
 

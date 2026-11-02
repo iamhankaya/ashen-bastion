@@ -21,11 +21,11 @@ def test_tables_and_paired_difference(tmp_path):
     for s in range(1, 11):
         rows.append(row("kite", s, False, 300.0))
         rows.append(row("kite", s, True, 330.0, "curumus_piyade"))
-    json.dump(rows[:10], open(tmp_path / "a.json", "w"))
-    json.dump(rows[10:], open(tmp_path / "b.json", "w"))
+    (tmp_path / "a.json").write_text(json.dumps(rows[:10]), encoding="utf-8")
+    (tmp_path / "b.json").write_text(json.dumps(rows[10:]), encoding="utf-8")
     out = tmp_path / "t.md"
     ab_report.main(str(tmp_path), str(out), str(tmp_path / "combined.json"))
-    text = out.read_text()
+    text = out.read_text(encoding="utf-8")
     assert "| kite | eklentili | 10 |" in text
     assert "| kite | eklentisiz | 10 |" in text
     assert "+30.0" in text  # eşli medyan fark

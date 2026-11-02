@@ -11,7 +11,7 @@ def mini_repo(tmp_path, gate_body):
     """selftest'in kopyalayacağı sahte depo: yalnız tools/gate.sh (gerçek Godot gerekmez)."""
     repo = tmp_path / "repo"
     (repo / "tools").mkdir(parents=True)
-    (repo / "tools" / "gate.sh").write_text("#!/usr/bin/env bash\n" + gate_body, newline="\n")
+    (repo / "tools" / "gate.sh").write_text("#!/usr/bin/env bash\n" + gate_body, newline="\n", encoding="utf-8")
     env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"}
     subprocess.run(["git", "init", "-q"], cwd=repo, check=True, env=env)
     subprocess.run(["git", "add", "-A"], cwd=repo, check=True, env=env)
@@ -47,9 +47,9 @@ def test_import_cache_is_transferred_into_scenario_copy(tmp_path):
     repo = mini_repo(tmp_path, "[ -f .godot/imported/marker.ctex ] && [ -f .godot/uid_cache.bin ] && exit 0\nexit 9\n")
     godot = tmp_path / "cache_godot"
     (godot / "imported").mkdir(parents=True)
-    (godot / "imported" / "marker.ctex").write_text("x")
-    (godot / "uid_cache.bin").write_text("u")
-    (godot / "global_script_class_cache.cfg").write_text("sinif")  # AKTARILMAMALI
+    (godot / "imported" / "marker.ctex").write_text("x", encoding="utf-8")
+    (godot / "uid_cache.bin").write_text("u", encoding="utf-8")
+    (godot / "global_script_class_cache.cfg").write_text("sinif", encoding="utf-8")  # AKTARILMAMALI
     r = run(repo, "taban_yesil", SELFTEST_GODOT_CACHE=str(godot))
     assert r.returncode == 0, r.stdout + r.stderr
 
@@ -58,7 +58,7 @@ def test_class_cache_is_never_transferred(tmp_path):
     repo = mini_repo(tmp_path, "[ -e .godot/global_script_class_cache.cfg ] && exit 9\nexit 0\n")
     godot = tmp_path / "cache_godot"
     (godot / "imported").mkdir(parents=True)
-    (godot / "global_script_class_cache.cfg").write_text("sinif")
+    (godot / "global_script_class_cache.cfg").write_text("sinif", encoding="utf-8")
     r = run(repo, "taban_yesil", SELFTEST_GODOT_CACHE=str(godot))
     assert r.returncode == 0, r.stdout + r.stderr
 
@@ -79,7 +79,7 @@ def test_unknown_scenario_is_usage_error(tmp_path):
 def warm_cmd(tmp_path, gc, counter, fail=False):
     c = tmp_path / "warm.sh"
     body = f'echo x >> "{counter.as_posix()}"\n' + ("exit 7\n" if fail else f'mkdir -p "{gc.as_posix()}/imported"; echo m > "{gc.as_posix()}/imported/marker.ctex"; echo u > "{gc.as_posix()}/uid_cache.bin"\n')
-    c.write_text("#!/usr/bin/env bash\n" + body, newline="\n")
+    c.write_text("#!/usr/bin/env bash\n" + body, newline="\n", encoding="utf-8")
     return f'bash "{c.as_posix()}"'
 
 
@@ -91,14 +91,14 @@ def test_cold_cache_triggers_one_warmup_and_scenarios_get_the_result(tmp_path):
     gc, counter = tmp_path / "gc", tmp_path / "count"
     r = run(repo, "taban_yesil", SELFTEST_GODOT_CACHE=str(gc), SELFTEST_WARMUP_CMD=warm_cmd(tmp_path, gc, counter))
     assert r.returncode == 0, r.stdout + r.stderr
-    assert counter.read_text().split() == ["x"]
+    assert counter.read_text(encoding="utf-8").split() == ["x"]
 
 
 def test_warm_cache_skips_the_warmup(tmp_path):
     repo = mini_repo(tmp_path, MARKER_GATE)
     gc, counter = tmp_path / "gc", tmp_path / "count"
     (gc / "imported").mkdir(parents=True)
-    (gc / "imported" / "marker.ctex").write_text("x")
+    (gc / "imported" / "marker.ctex").write_text("x", encoding="utf-8")
     r = run(repo, "taban_yesil", SELFTEST_GODOT_CACHE=str(gc), SELFTEST_WARMUP_CMD=warm_cmd(tmp_path, gc, counter))
     assert r.returncode == 0, r.stdout + r.stderr
     assert not counter.exists(), "önbellek sıcakken ısınma koşmamalı"

@@ -57,10 +57,10 @@ def test_config_replaces_dirs_with_tests(tmp_path):
         check=True,
         cwd=ROOT,
     )
-    cfg = json.loads(out.read_text())
+    cfg = json.loads(out.read_text(encoding="utf-8"))
     assert cfg["dirs"] == [] and cfg["tests"], cfg
     assert cfg["junit_xml_file"] == "res://.gate/junit-2.xml"
-    base = json.loads((ROOT / ".gutconfig.json").read_text())
+    base = json.loads((ROOT / ".gutconfig.json").read_text(encoding="utf-8"))
     for k in ("prefix", "suffix", "pre_run_script", "post_run_script", "should_exit"):
         assert cfg[k] == base[k]
 
@@ -75,7 +75,7 @@ def test_merge_and_check_merge(tmp_path):
     paths = []
     for i, p in enumerate(parts):
         f = tmp_path / f"j{i}.xml"
-        f.write_text("<testsuites>" + "".join(_suite(x) for x in p) + "</testsuites>")
+        f.write_text("<testsuites>" + "".join(_suite(x) for x in p) + "</testsuites>", encoding="utf-8")
         paths.append(str(f))
     out = tmp_path / "all.xml"
     subprocess.run([sys.executable, str(ROOT / "tools/ci/shard.py"), "merge", str(out)] + paths, check=True)
@@ -88,6 +88,6 @@ def test_merge_and_check_merge(tmp_path):
 
 def test_check_merge_detects_unknown_suite(tmp_path):
     f = tmp_path / "x.xml"
-    f.write_text("<testsuites>" + _suite("test/unit/test_yok.gd") + "</testsuites>")
+    f.write_text("<testsuites>" + _suite("test/unit/test_yok.gd") + "</testsuites>", encoding="utf-8")
     r = subprocess.run([sys.executable, str(ROOT / "tools/ci/shard.py"), "check-merge", str(f)], capture_output=True)
     assert r.returncode == 1

@@ -19,7 +19,7 @@ def load(d):
     for f in sorted(glob.glob(os.path.join(d, "*.json"))):
         if os.path.basename(f) == "combined.json":
             continue
-        rows += json.load(open(f))
+        rows += json.load(open(f, encoding="utf-8"))
     return rows
 
 
@@ -117,7 +117,7 @@ def main(d, out_md=None, out_json=None):
     rows = load(d)
     rng = random.Random(1)
     if out_json:
-        json.dump(rows, open(out_json, "w"), separators=(",", ":"))
+        json.dump(rows, open(out_json, "w", encoding="utf-8"), separators=(",", ":"))
     pairs = [(p, a) for p in ("idle", "kite", "greedy", "greedy_pickup") for a in ("off", "on")]
     lines = ["## Özet (kol başına)", ""] + summary_table(rows, pairs)
     lines += ["", "## Ölüm nedeni dağılımı (yalnız ölen koşular; tür = son hasarda oyuncuya değen en yüksek temas hasarlı düşman)", ""] + deaths_table(rows, pairs)
@@ -132,7 +132,8 @@ def main(d, out_md=None, out_json=None):
     lines += ["", "## Eklenti kullanımı (eklentili kol)", ""] + pickup_table(rows)
     text = "\n".join(lines) + "\n"
     if out_md:
-        open(out_md, "w").write(text)
+        open(out_md, "w", encoding="utf-8").write(text)
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows konsolu cp1254: ≥ − … yazılamaz
     print(text)
 
 

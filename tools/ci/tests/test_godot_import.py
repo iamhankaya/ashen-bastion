@@ -26,10 +26,10 @@ esac
 
 def run(tmp_path, plan, umask="022", summary=True, evidence=False):
     fake = tmp_path / "fake_godot.sh"
-    fake.write_text(FAKE)
+    fake.write_text(FAKE, encoding="utf-8")
     fake.chmod(0o755)
     (tmp_path / "proj" / ".godot").mkdir(parents=True)
-    (tmp_path / "proj" / ".godot" / "yarim.bin").write_text("yarim yazilmis")
+    (tmp_path / "proj" / ".godot" / "yarim.bin").write_text("yarim yazilmis", encoding="utf-8")
     env = {
         "PATH": os.environ["PATH"], "GODOT_BIN": str(fake), "FAKE_PLAN": plan,
         "FAKE_COUNT": str(tmp_path / "count"), "FAKE_SEEN": str(tmp_path / "seen"), "IMPORT_BACKOFF_SECS": "0",
@@ -41,9 +41,9 @@ def run(tmp_path, plan, umask="022", summary=True, evidence=False):
     (tmp_path / "proj" / ".gate").mkdir(exist_ok=True)
     r = subprocess.run(
         ["bash", "-c", f"umask {umask}; bash {SCRIPT_SH} .gate/import.log"],
-        cwd=tmp_path / "proj", env=env, capture_output=True, text=True,
+        cwd=tmp_path / "proj", env=env, capture_output=True, text=True, encoding="utf-8",
     )
-    count = len((tmp_path / "count").read_text().split()) if (tmp_path / "count").exists() else 0
+    count = len((tmp_path / "count").read_text(encoding="utf-8").split()) if (tmp_path / "count").exists() else 0
     return r, count
 
 
@@ -58,20 +58,20 @@ def test_single_sigabrt_is_retried_once_and_reported(tmp_path):
     r, n = run(tmp_path, "abrt,ok")
     assert r.returncode == 0 and n == 2
     assert r.stderr.count("IMPORT_RETRY") == 2  # deneme 1 çöktü + deneme 2 başarılı: ikisi de görünür
-    note = (tmp_path / "proj" / ".gate" / "import_retry.txt").read_text()
+    note = (tmp_path / "proj" / ".gate" / "import_retry.txt").read_text(encoding="utf-8")
     assert "SIGABRT" in note and "deneme 2 başarılı" in note
-    assert "IMPORT_RETRY" in (tmp_path / "summary.md").read_text()
+    assert "IMPORT_RETRY" in (tmp_path / "summary.md").read_text(encoding="utf-8")
     assert (tmp_path / "proj" / ".gate" / "import.log.deneme1").exists()
     # yarım .godot yeniden denemeden önce silindi
-    assert (tmp_path / "seen").read_text().split() == ["godot_var_1", "godot_yok_2"]
+    assert (tmp_path / "seen").read_text(encoding="utf-8").split() == ["godot_var_1", "godot_yok_2"]
 
 
 def test_two_sigabrts_then_ok_succeeds_on_third_attempt(tmp_path):
     r, n = run(tmp_path, "abrt,abrt,ok")
     assert r.returncode == 0 and n == 3
-    note = (tmp_path / "proj" / ".gate" / "import_retry.txt").read_text()
+    note = (tmp_path / "proj" / ".gate" / "import_retry.txt").read_text(encoding="utf-8")
     assert "deneme 1" in note and "deneme 2" in note and "deneme 3 başarılı" in note
-    assert (tmp_path / "seen").read_text().split() == ["godot_var_1", "godot_yok_2", "godot_yok_3"]
+    assert (tmp_path / "seen").read_text(encoding="utf-8").split() == ["godot_var_1", "godot_yok_2", "godot_yok_3"]
     assert (tmp_path / "proj" / ".gate" / "import.log.deneme1").exists() and (tmp_path / "proj" / ".gate" / "import.log.deneme2").exists()
 
 
@@ -84,7 +84,7 @@ def test_third_sigabrt_stays_red_and_no_fourth_attempt(tmp_path):
 def test_backoff_grows_between_attempts_and_is_reported(tmp_path):
     # geri çekilme: deneme k'den sonra k * IMPORT_BACKOFF_SECS sn bekler; not'a yazılır (süre iddiası yok, yalnız bildirim)
     r, n = run(tmp_path, "abrt,abrt,ok")
-    note = (tmp_path / "proj" / ".gate" / "import_retry.txt").read_text()
+    note = (tmp_path / "proj" / ".gate" / "import_retry.txt").read_text(encoding="utf-8")
     assert note.count("geri çekilme 0 sn") == 2
 
 
@@ -110,7 +110,7 @@ def test_works_under_restrictive_umask_and_stdin_script(tmp_path):
     env = {"PATH": os.environ["PATH"], "GODOT_BIN": str(fake), "FAKE_PLAN": "ok",
            "FAKE_COUNT": str(tmp_path / "c2"), "FAKE_SEEN": str(tmp_path / "s2")}
     src = f"bash {SCRIPT_SH} .gate/import.log\necho SONRAKI_SATIR\n"
-    r = subprocess.run(["bash", "-s"], input=src, cwd=tmp_path / "proj", env=env, capture_output=True, text=True)
+    r = subprocess.run(["bash", "-s"], input=src, cwd=tmp_path / "proj", env=env, capture_output=True, text=True, encoding="utf-8")
     assert "SONRAKI_SATIR" in r.stdout
 
 
