@@ -46,6 +46,7 @@ static func load_achievements(g: GameData, root_dir: String) -> void:
 			var id := StringName(d["id"])
 			if not g._achievements.has(id):
 				var def := AchievementDef.from_dict(d)
+				def.bind_persist(g._stat_metrics)
 				g._achievements[id] = def
 				g.achievement_ids.append(id)
 				g.achievements.append(def)

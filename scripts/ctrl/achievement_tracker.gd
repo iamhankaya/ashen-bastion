@@ -131,6 +131,7 @@ func _init(
 	rules = p_rules
 	diff = p_diff
 	_build()
+	_declare_persist_keys()
 	if data != null:
 		for i in data.achievements.size():
 			var si := _stats.find(String(data.achievements[i].stat))
@@ -413,9 +414,23 @@ func _add_total(key: StringName, n: int) -> void:
 		store.add_total(key, n)
 
 
+## Metriklerin `persist` anahtarlarını depoya tanıtır (yerleşik olmayan anahtar veriyle gelir; F-140/F-149).
+func _declare_persist_keys() -> void:
+	if store == null:
+		return
+	var tk := PackedStringArray()
+	var bk := PackedStringArray()
+	for si in _stats.size():
+		if _total_s[si] != "":
+			tk.append(_total_s[si])
+		if _best_s[si] != "":
+			bk.append(_best_s[si])
+	store.declare_counters(tk, bk)
+
+
 func _value(si: int) -> int:
 	if _total_s[si] != "":
-		return int(store.totals[_total_s[si]])
+		return int(store.totals.get(_total_s[si], 0))
 	if _kind[si] == _K_REDUCER:
 		return (_reducers[si] as AchievementReducer).value(_rstate[si])
 	return _run[si]

@@ -16,6 +16,8 @@ const DEFAULT_PATH := "user://achievements.json"
 const MAX_UNLOCKED := 64
 const MAX_CHARS5 := 16
 const COUNTER_CAP := 999999999
+## Veriyle eklenen (metrik `persist`) fazladan sayaç anahtarı sınırı (totals ve best ayrı ayrı).
+const MAX_EXTRA_KEYS := 32
 const TOTAL_KEYS: PackedStringArray = ["kills", "runs", "wins", "play_secs", "boss_kills"]
 const BEST_KEYS: PackedStringArray = [
 	"score",
@@ -185,6 +187,17 @@ func unlock(id: StringName, unix: int) -> bool:
 
 
 ## COUNTER_CAP'e kırpar; dirty.
+## Veriyle eklenen metriklerin `persist` anahtarlarını sıfırdan tanımlar (yoksa 0 açar; var olana dokunmaz).
+## Tracker kurulurken çağrılır; tanımsız anahtar `add_total`/`note_best_key`te yine yok sayılır.
+func declare_counters(total_keys: PackedStringArray, best_keys: PackedStringArray) -> void:
+	for k in total_keys:
+		if k != "" and _valid_id(k, 32) and not totals.has(k):
+			totals[k] = 0
+	for k in best_keys:
+		if k != "" and _valid_id(k, 32) and not best.has(k):
+			best[k] = 0
+
+
 func add_total(key: StringName, n: int = 1) -> void:
 	var k := String(key)
 	if n <= 0 or not totals.has(k):
@@ -308,6 +321,18 @@ static func _clean_counters(raw: Variant, keys: PackedStringArray) -> Dictionary
 		var n: Variant = StoreIo.int_of((raw as Dictionary).get(k, null), false)
 		if n != null and int(n) >= 0:
 			out[k] = mini(int(n), COUNTER_CAP)
+	# veriyle eklenen (yerleşik olmayan) geçerli anahtarlar kaybolmaz; sıralı ve sınırlı
+	var extra: Array = []
+	for k in (raw as Dictionary).keys():
+		if k is String and not keys.has(k) and _valid_id(k, 32):
+			extra.append(k)
+	extra.sort()
+	for k in extra:
+		if out.size() >= keys.size() + MAX_EXTRA_KEYS:
+			break
+		var n2: Variant = StoreIo.int_of((raw as Dictionary)[k], false)
+		if n2 != null and int(n2) >= 0:
+			out[k] = mini(int(n2), COUNTER_CAP)
 	return out
 
 
