@@ -22,7 +22,7 @@ Mod ve zorluk **dosya başına bir kayıt**tır; dilim dosyası, sabit kimlik li
 
 ## Dokunulan dosyalar
 Veri-yalnız mod için: `data/run_modes/<id>.json` (zorluk: `data/difficulties/<id>.json`), (nadiren) `data/run_profiles.json`, `docs/data-schema.md` (yeni alan/kural varsa), yeni modun kendi testi. Baz dosyaları, `tools/ci/baseline_changes.txt` ve fixture üreticisi (`gen_profile_fixtures.py` yerleşik üçlüye sabit) DEĞİŞMEZ.
-Hâlâ KOD gerektiren yerler: `scripts/sim/catalog/run_catalog.gd` (`ENDING_KINDS`, yeni bitiş türü), `scripts/ui/run_strip.gd` (`rule_lines` Kolay notu `easy` kimliğine bağlı), `scripts/ui/highscore_screen.gd` (`_layout`: sekme genişliği `/3` ve `for i in 3`; mod ya da zorluk 4. sekmeye çıkınca sekme (0,0)'a düşer ve satırdan taşar; `test_acc_v11_ui::test_u15` bu yüzden yerleşik üçlüye sabitli), `highscore_screen._ordinal` yalnız ilk 3 sıra sözcüğü ("4." ondan sonra).
+Hâlâ KOD gerektiren yerler: `scripts/sim/catalog/run_catalog.gd` (`ENDING_KINDS`, yeni bitiş türü), `scripts/ui/run_strip.gd` (`rule_lines` Kolay notu `easy` kimliğine bağlı). Skor ekranı (`HighscoreScreen`) sekmeleri katalogdaki mod/zorluk sayısına eşit bölünür; 4. mod/zorluk kod istemez (F-148, `test_extend_data_only`); çok dar sığmayan uzun etiketler kozmetik kontrol ister.
 
 ## Kontrol listesi
 - [ ] Dosya adı = `id`; etiketler elle büyük harf (Türkçe i/İ); `description` mod için `%d` içeriyor.
