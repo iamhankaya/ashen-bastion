@@ -22,6 +22,8 @@ const CHIP_ROW_GAP := 8.0  # 2×: çipler iki satıra sarar; slot 48 -> 104 (sat
 const CHIP_ACTION_MIN := 24.0  # çip ile eylem düğmeleri arası en az (U6 #17); GAP_MIN bunun altına inmez
 const BIG_SCALE := 1.3
 
+## Koşu seçimi kaynağı; controller kurarken paylaşılan örneği koyar (verilmezse Settings).
+var run_selection: RunSelection = RunSelection.new()
 var resume_button: Button
 var sound_button: Button
 var vibration_button: Button
@@ -251,8 +253,8 @@ func refresh_chips() -> void:
 		chips_slot.remove_child(chips)
 	if chips != null:
 		chips.queue_free()
-	var sel := V21Runs.selection()
-	chips = RunStrip.make_chips(sel["mode"], sel["diff"], V21Runs.profiles())
+	var sel := run_selection.selection()
+	chips = RunStrip.make_chips(sel["mode"], sel["diff"], run_selection.profiles())
 	UiKit.fill(chips)
 	chips_slot.add_child(chips)
 	_layout_chips()

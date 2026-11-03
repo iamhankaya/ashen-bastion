@@ -2,7 +2,7 @@ extends GutTest
 ## Kabul (v2.1 S): Hızlı mod (spec senaryo 6 ve K3-A). Süre ölçeği ×0,5: Lord 600. sn'de gelir (uyarı 2,5 sn önce),
 ## elit dalgaları 150/300/450, eğriler `curve_t` ile; Lord ölümüyle biter (end_time gelince bitmez). Hedef düzeltmesi
 ## (plan): kazanılan koşu ≤ 13 dk. Kazanma oranı farkı ve `level_at_end` ölçütü ölçümdür (balance.yml), burada değil.
-## V21Slice "S" açılana dek pending (q1 süre kuralı C'den beri koşar).
+##
 
 
 func _quick(diff: StringName = &"hard", extra: Dictionary = {}) -> GameSim:
@@ -32,8 +32,6 @@ func test_q1_run_length_rules_come_from_the_profile() -> void:
 
 
 func test_s12_scheduled_waves_are_halved_and_consistent() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _quick()
 	var waves: Dictionary = s.spawn_director.waves
 	assert_eq(waves["end_time"], 600.0)
@@ -52,8 +50,6 @@ func test_s12_scheduled_waves_are_halved_and_consistent() -> void:
 
 
 func test_s13_lord_arrives_at_600_with_an_early_warning() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _quick(&"hard", {"data": V21Acc.lord_only_data(), "start_time": 590.0})
 	V21Acc.quiet_player(s)
 	var w := V21Acc.watch(s)
@@ -65,8 +61,6 @@ func test_s13_lord_arrives_at_600_with_an_early_warning() -> void:
 
 
 func test_s14_the_run_does_not_end_at_end_time_while_the_lord_lives() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _quick(&"hard", {"data": V21Acc.lord_only_data(), "start_time": 590.0})
 	V21Acc.quiet_player(s)
 	V21Acc.run_until(s, 60 * 40)  # 40 sn: 630. sn
@@ -76,8 +70,6 @@ func test_s14_the_run_does_not_end_at_end_time_while_the_lord_lives() -> void:
 
 
 func test_s15_enemy_curves_run_at_double_speed() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var q := _quick(&"hard")
 	var n := GameSim.new(5, &"gunslinger", {"data": GameData.load_default()})
 	q.debug_set_time(150.0)
@@ -88,8 +80,6 @@ func test_s15_enemy_curves_run_at_double_speed() -> void:
 
 
 func test_s16_slaying_the_lord_wins_the_run() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _quick(&"hard", {"data": V21Acc.lord_only_data(), "start_time": 590.0})
 	V21Acc.quiet_player(s)
 	var won := []

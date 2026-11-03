@@ -1,7 +1,7 @@
 extends GutTest
 ## Kabul (v2.1 A): KOŞU ekranı temeli (spec UI maddesi, tasarım docs/design/v2.1/DESIGN.md §3). Yalnız davranış sözleşmesi:
 ## ekranın varlığı, mod/zorluk adları, görünürlük, seçimin yalnız bilinçli eylemle değişmesi. Piksel/yerleşim ve güvenli alan
-## `test_a<N>_` birim testleri (test_v21_a_run_ui) + shots_v21 görüntüleridir. V21Slice "A" açılana dek pending.
+## `test_a<N>_` birim testleri (test_v21_a_run_ui) + shots_v21 görüntüleridir.
 ## T-turu (gerçek koda ayar): seçim ekran düğmelerinden (RunScreen.mode_buttons/diff_buttons) yapılır; metin araması
 ## büyük/küçük harf dönüşümsüzdür (Godot to_upper "i" -> "I" üretir, "İ" değil: Türkçe i/İ tuzağı); seçim sahte Settings'tedir.
 ## İzolasyon: Settings.store_path geçici yola alınır (ekran/controller save_settings'i gerçek user://settings.cfg'yi sızdırır).
@@ -24,13 +24,13 @@ func before_each() -> void:
 	st.buyuk_yazi = false
 	st.hareket_azalt = false
 	# Seçim (mod/zorluk) sahte Settings'te: kullanıcının gerçek kaydı sonucu etkilemez, hiçbir şey diske yazılmaz.
-	_fake = V21Kit.use_fake_settings()
+	_fake = V21Kit.FakeSettings.new()
 
 
 func after_each() -> void:
 	# Controller, AchKit/DIR temizliğinden ÖNCE serbest bırakılır: _exit_tree -> release -> flush dosyayı yeniden yazardı.
 	_free_controller()
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 	var st := get_node("/root/Settings")
 	st.store_path = _store_path
 	st.buyuk_yazi = _pinned[0]
@@ -63,6 +63,7 @@ func _controller() -> GameController:
 	c.v2_opts = {"achievements_path": DIR + "/ach.json"}
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	c.highscores = Highscores.new(DIR + "/hs.json")
+	c.run_selection = _fake.selection()
 	add_child(c)
 	_ctrl = c
 	c.go_menu()
@@ -77,8 +78,6 @@ func _has_text(texts: PackedStringArray, needle: String) -> bool:
 
 
 func test_a1_the_controller_builds_a_run_screen_that_is_hidden_on_the_menu() -> void:
-	if V21Slice.require(self, "A"):
-		return
 	var c := _controller()
 	assert_not_null(c.run_screen, "U4a KOŞU ekranını kurar")
 	if c.run_screen == null:
@@ -95,8 +94,6 @@ func test_a1_the_controller_builds_a_run_screen_that_is_hidden_on_the_menu() -> 
 
 
 func test_a2_every_mode_and_difficulty_is_offered_by_name() -> void:
-	if V21Slice.require(self, "A"):
-		return
 	var c := _controller()
 	if c.run_screen == null:
 		fail_test("run_screen yok")
@@ -108,8 +105,6 @@ func test_a2_every_mode_and_difficulty_is_offered_by_name() -> void:
 
 
 func test_a3_the_screen_reflects_the_saved_selection_and_leaves_it_alone() -> void:
-	if V21Slice.require(self, "A"):
-		return
 	_fake.run_mode = "endless"
 	_fake.run_diff = "easy"
 	var c := _controller()
@@ -120,7 +115,7 @@ func test_a3_the_screen_reflects_the_saved_selection_and_leaves_it_alone() -> vo
 	c.open_run_screen()
 	assert_eq(_fake.saves, 0, "yalnız açmak seçimi yazmaz")
 	assert_eq([_fake.run_mode, _fake.run_diff], ["endless", "easy"])
-	assert_eq(V21Runs.selection(), {"mode": &"endless", "diff": &"easy"})
+	assert_eq(c.run_selection.selection(), {"mode": &"endless", "diff": &"easy"})
 	assert_eq(
 		rs.selection(), {"mode": &"endless", "diff": &"easy"}, "ekran kayıtlı seçimi yansıtır"
 	)
@@ -136,8 +131,6 @@ func test_a3_the_screen_reflects_the_saved_selection_and_leaves_it_alone() -> vo
 
 
 func test_a4_the_easy_rule_warning_is_shown_only_for_easy() -> void:
-	if V21Slice.require(self, "A"):
-		return
 	_fake.run_diff = "easy"
 	var c := _controller()
 	c.open_run_screen()
@@ -154,8 +147,6 @@ func test_a4_the_easy_rule_warning_is_shown_only_for_easy() -> void:
 
 
 func test_a5_play_with_starts_the_chosen_run_and_hides_the_screen() -> void:
-	if V21Slice.require(self, "A"):
-		return
 	var c := _controller()
 	c.open_run_screen()
 	c.play_with(&"quick", &"easy")

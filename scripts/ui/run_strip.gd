@@ -2,7 +2,7 @@ class_name RunStrip
 extends Button
 ## v2.1 koşu şeridi (docs/design/v2.1/DESIGN.md §2): ana sayfada OYNA'nın üstünde seçili (mod, zorluk) özeti; tüm şerit tek
 ## dokunma hedefidir ve KOŞU ekranını açar. Aynı dosya KOŞU ekranının ve duraklatma çiplerinin ortak metin/glif kaynağıdır:
-## sayılar ve süreler `data/run_profiles.json`'dan (V21Runs.profiles) gelir, burada sabit sayı yoktur. Mod/zorluk kimlikleri,
+## sayılar ve süreler `data/run_profiles.json`'dan (RunSelection.load_profiles) gelir, burada sabit sayı yoktur. Mod/zorluk kimlikleri,
 ## adları, açıklamaları ve kalkan sayıları RunCatalog'tan (`data/run_modes`, `data/difficulties`) okunur (R7).
 
 const H := 132.0
@@ -199,7 +199,7 @@ func is_big() -> bool:
 	return _big
 
 
-## Şerit içeriğini seçime göre yeniler. cfg = V21Runs.profiles() (boş: süre yazılmaz).
+## Şerit içeriğini seçime göre yeniler. cfg = RunSelection.load_profiles() (boş: süre yazılmaz).
 func show_selection(mode: StringName, diff: StringName, cfg: Dictionary) -> void:
 	for c in _glyph_slot.get_children():
 		c.queue_free()

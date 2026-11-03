@@ -102,7 +102,16 @@ func test_b9_sim_sources_do_not_mention_achievement_classes() -> void:
 			if not f.ends_with(".gd"):
 				continue
 			# Veri yükleyici (DataV2/AchievementDef/GameData) tanım taşır; sim ÇALIŞMA zamanı dosyaları taranır.
-			if f in ["data_v2.gd", "achievement_def.gd", "game_data.gd", "character_def.gd"]:
+			if (
+				f
+				in [
+					"data_v2.gd",
+					"achievement_def.gd",
+					"achievement_step.gd",
+					"game_data.gd",
+					"character_def.gd"
+				]
+			):
 				continue
 			var src := FileAccess.get_file_as_string(dir.path_join(f))
 			for line in src.split("\n"):

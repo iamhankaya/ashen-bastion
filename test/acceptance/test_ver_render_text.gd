@@ -63,7 +63,7 @@ func test_all_three_multimesh_renderers_install_the_cull_fix_at_construction() -
 
 
 func test_render_fix_uses_a_fixed_world_covering_rect() -> void:
-	assert_true(_src("res://scripts/view/render_fix.gd").contains("canvas_item_set_custom_rect"))
+	assert_true(_src("res://scripts/domain/render_fix.gd").contains("canvas_item_set_custom_rect"))
 	var r := RenderFix.HUGE_RECT
 	# oyun dünyası ±1e5 px'in çok altında kalır; sabit dikdörtgen tüm koşuyu kapsar
 	assert_true(r.has_point(Vector2(0, 0)))
