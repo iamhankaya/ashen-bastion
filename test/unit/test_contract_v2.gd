@@ -35,7 +35,7 @@ const METHODS := {
 	"AchievementStore":
 	{
 		"_init": ["p_path", O],
-		"load_file": ["defs", B],  # v2.0.3: göç için isteğe bağlı aile tanımları
+		"load_file": ["defs,metrics", B],  # v2.0.3: göç için isteğe bağlı aile tanımları
 		"save": ["", B],
 		"is_unlocked": ["id", B],
 		"unlocked_at": ["id", I],
