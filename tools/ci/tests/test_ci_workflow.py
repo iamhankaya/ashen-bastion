@@ -98,7 +98,7 @@ def test_gate_ok_only_on_full_gate():
 
 
 def test_dependencies_pinned_and_cached():
-    req = (ROOT / "tools/ci/requirements-ci.txt").read_text()
+    req = (ROOT / "tools/ci/requirements-ci.txt").read_text(encoding="utf-8")
     pkgs = [l for l in req.splitlines() if l and not l.startswith("#")]
     assert pkgs and all("==" in l for l in pkgs), "bağımlılık sürümleri sabit olmalı"
     assert "pip install -r tools/ci/requirements-ci.txt" in CI

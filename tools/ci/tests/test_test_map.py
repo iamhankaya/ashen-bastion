@@ -104,8 +104,8 @@ def test_mutation_compare_flags_missed_failures(tmp_path):
     outside = next(t for t in M["tests"] if t not in sel)
     ok, bad = tmp_path / "ok.xml", tmp_path / "bad.xml"
     suite = '<testsuites><testsuite name="{n}" tests="1" failures="1" errors="0"><testcase classname="{n}" name="a"/></testsuite></testsuites>'
-    ok.write_text(suite.format(n=sel[0]))
-    bad.write_text(suite.format(n=outside))
+    ok.write_text(suite.format(n=sel[0]), encoding="utf-8")
+    bad.write_text(suite.format(n=outside), encoding="utf-8")
     assert prova_test_map.compare([hud], [str(ok)]) == 0
     assert prova_test_map.compare([hud], [str(bad)]) == 1
 

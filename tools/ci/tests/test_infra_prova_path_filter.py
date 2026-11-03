@@ -44,7 +44,7 @@ def repo(tmp_path_factory):
     sh(r, "git", "init", "-q", "-b", "main")
     for p in ("scripts/ui/a.gd", "tools/ci/x.sh", ".github/workflows/ci.yml", "project.godot", "README.md"):
         (r / p).parent.mkdir(parents=True, exist_ok=True)
-        (r / p).write_text("x\n")
+        (r / p).write_text("x\n", encoding="utf-8")
     commit(r, "base")
     sh(r, "git", "update-ref", "refs/remotes/origin/main", "HEAD")
     return r
@@ -54,7 +54,7 @@ def branch(repo, name, path):
     sh(repo, "git", "checkout", "-q", "-B", name, "origin/main")
     p = repo / path
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(p.read_text() + "y\n" if p.exists() else "y\n")
+    p.write_text(p.read_text() + "y\n" if p.exists() else "y\n", encoding="utf-8")
     commit(repo, name)
 
 
@@ -105,7 +105,7 @@ def test_missing_base_ref_or_no_common_ancestor_or_shallow_runs_full(repo, tmp_p
     assert decision(repo, taban, PATH_FILTER_BASE="origin/yok")[0] == "run=1"  # yeni dal / taban ref'i yok
     sh(repo, "git", "checkout", "-q", "--orphan", "yetim")
     sh(repo, "git", "rm", "-rfq", ".")
-    (repo / "z.txt").write_text("z\n")
+    (repo / "z.txt").write_text("z\n", encoding="utf-8")
     commit(repo, "orphan")
     assert decision(repo, taban)[0] == "run=1"  # ortak ata yok
     shallow = tmp_path / "sh"

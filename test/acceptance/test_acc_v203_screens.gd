@@ -111,8 +111,8 @@ func test_d1b_controller_built_menu_counts_shipped_steps_not_the_old_default() -
 	var c := GameController.new()
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	c.v2_opts = {"achievements_path": path, "clock": AchKit.clock()}
-	add_child(c)
 	c.highscores = Highscores.new(AchKit.tmp_path("d1bhs"))
+	add_child(c)
 	c.go_menu()
 	var shown := AchKit.any_text_contains(c.menu, "0/53")
 	var stale := AchKit.any_text_contains(c.menu, "0/22")

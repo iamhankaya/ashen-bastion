@@ -12,18 +12,18 @@ SCENARIOS_V11 = 11  # F-028: 11 senaryo korunur
 
 def table():
     out = {}
-    for m in re.finditer(r"^GROUP\[(\w+)\]=(\d+)\s*$", SCRIPT.read_text(), re.M):
+    for m in re.finditer(r"^GROUP\[(\w+)\]=(\d+)\s*$", SCRIPT.read_text(encoding="utf-8"), re.M):
         assert m.group(1) not in out, f"çift satır: {m.group(1)}"
         out[m.group(1)] = int(m.group(2))
     return out
 
 
 def defined():
-    return set(re.findall(r"^scenario_(\w+)\(\)", SCRIPT.read_text(), re.M))
+    return set(re.findall(r"^scenario_(\w+)\(\)", SCRIPT.read_text(encoding="utf-8"), re.M))
 
 
 def matrix_groups():
-    text = CI.read_text()
+    text = CI.read_text(encoding="utf-8")
     job = text[text.index("  selftest:") : text.index("  export-debug:")]
     m = re.search(r"group:\s*\[([^\]]*)\]", job)
     assert m, "selftest işinde strategy.matrix.group yok"
@@ -55,7 +55,7 @@ def test_matrix_covers_all_groups_and_nothing_else():
 
 
 def test_matrix_is_fail_fast_false_and_timeout_within_limit():
-    text = CI.read_text()
+    text = CI.read_text(encoding="utf-8")
     job = text[text.index("  selftest:") : text.index("  export-debug:")]
     assert "fail-fast: false" in job
     timeout = int(re.search(r"timeout-minutes:\s*(\d+)", job).group(1))
@@ -79,7 +79,7 @@ def test_full_gate_scenarios_do_not_share_a_group():
 
 
 def test_list_option_prints_the_table():
-    r = subprocess.run(["bash", str(SCRIPT), "--list"], capture_output=True, text=True, cwd=ROOT)
+    r = subprocess.run(["bash", str(SCRIPT), "--list"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT)
     assert r.returncode == 0
     listed = dict(line.split() for line in r.stdout.strip().splitlines())
     assert {k: int(v) for k, v in listed.items()} == table()
@@ -87,7 +87,7 @@ def test_list_option_prints_the_table():
 
 def test_unknown_group_is_rejected():
     r = subprocess.run(
-        ["bash", str(SCRIPT), "--group", "99"], capture_output=True, text=True, cwd=ROOT
+        ["bash", str(SCRIPT), "--group", "99"], capture_output=True, text=True, encoding="utf-8", cwd=ROOT
     )
     assert r.returncode == 2
 

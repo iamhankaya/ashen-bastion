@@ -80,6 +80,7 @@ end_step() {
 # 3 çekirdek boştaydı. Bu kipte pytest ARKA PLANDA GUT ile birlikte koşar; HİÇBİR denetim atlanmaz ve kısa devre yoktur:
 # her birinin çıkış kodu toplanır, hepsi bitince çıktıları (ayrı log, sırayla) basılır, biri kırmızıysa gate kırmızıdır.
 # GATE_SERIAL=1 eski sıralı yolu korur. Süre denetimi eşzamanlı GUT için zaten --contended (yalnız uyarı) kullanır.
+# Yarış koruması (F-153): tools/conftest.py + tools/ci/tree_guard.py pytest oturumu boyunca ağaç değiştiyse (izlenen dosya, GUT dizinlerine yeni dosya) pytest'i kırmızı yapar.
 CONC=0
 if [ "$PART" = "all" ] && [ $FAST -eq 0 ] && [ "$JOBS" -gt 1 ] && [ "${GATE_SERIAL:-0}" != "1" ]; then CONC=1; fi
 # --- eşzamanlı denetimler (başla)

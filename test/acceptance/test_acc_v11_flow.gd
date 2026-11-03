@@ -33,8 +33,8 @@ func test_u11_controller_opens_scores_screen_from_menu_and_back_returns() -> voi
 	var c := GameController.new()
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED
-	add_child_autofree(c)
 	c.highscores = Highscores.new(_dir.path_join("hs.json"))
+	add_child_autofree(c)
 	assert_not_null(c.scores_screen, "scores_screen kuruldu")
 	if c.scores_screen == null:
 		return
@@ -61,8 +61,8 @@ func _spy(highscore_path: String) -> SpyController:
 	var c := SpyController.new()
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon
 	c.process_mode = Node.PROCESS_MODE_DISABLED
-	add_child_autofree(c)
 	c.highscores = Highscores.new(highscore_path)
+	add_child_autofree(c)
 	c.start_run()
 	return c
 

@@ -5,6 +5,7 @@ extends GutTest
 func test_label_flag_and_counters_in_a_debug_build() -> void:
 	assert_true(OS.is_debug_build())
 	var c := GameController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.start_run()
@@ -24,6 +25,7 @@ func test_label_flag_and_counters_in_a_debug_build() -> void:
 
 func test_flag_and_counter_carry_over_to_the_next_run() -> void:
 	var c := GameController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.start_run()
@@ -39,6 +41,7 @@ func test_flag_and_counter_carry_over_to_the_next_run() -> void:
 
 func test_label_hidden_in_menu() -> void:
 	var c := GameController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.start_run()

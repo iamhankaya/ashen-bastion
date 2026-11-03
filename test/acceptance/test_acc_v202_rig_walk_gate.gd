@@ -9,7 +9,6 @@ extends GutTest
 const SLIDE_TOL_PX := 3.0
 const HEIGHT_TOL_PCT := 6.0
 const MAX_TEXTURE := 8192
-const LEGACY_WAIVERS := {&"zyfen": "res://docs/design/v2.0.2/walk-waiver.md"}
 ## id -> [hücre sayısı] (zyfen: 8 yürüme + 1 duruş + 6 cast + 4 gather)
 const PINNED_CELLS := {&"zyfen": 19}
 
@@ -41,8 +40,7 @@ func _manifest(id: StringName) -> Dictionary:
 
 
 func _waiver_path(id: StringName) -> String:
-	var o: StringName = _owner.get(id, id)
-	return LEGACY_WAIVERS.get(o, "res://docs/design/walk-waiver-%s.md" % o)
+	return AccV202.waiver_path(id)
 
 
 func _waived(id: StringName) -> bool:

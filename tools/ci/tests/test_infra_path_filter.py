@@ -18,7 +18,7 @@ def make_repo(tmp_path, changed):
     repo = tmp_path / "r"
     repo.mkdir(parents=True)
     git(repo, "init", "-q", "-b", "main")
-    (repo / "a.txt").write_text("1")
+    (repo / "a.txt").write_text("1", encoding="utf-8")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "base")
     git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
@@ -26,7 +26,7 @@ def make_repo(tmp_path, changed):
     for f in changed:
         p = repo / f
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text("degisti")
+        p.write_text("degisti", encoding="utf-8")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "change")
     return repo
@@ -38,7 +38,7 @@ def run(repo, pattern=INFRA, **env):
     e = {"PATH": os.environ["PATH"], "GITHUB_REF": "refs/heads/vlad/x", "GITHUB_EVENT_NAME": "push", "GITHUB_OUTPUT": str(out)}
     e.update(env)
     r = subprocess.run(["bash", str(SCRIPT), pattern], cwd=repo, env=e, capture_output=True, text=True, encoding="utf-8")
-    flag = out.read_text().strip() if out.exists() else None
+    flag = out.read_text(encoding="utf-8").strip() if out.exists() else None
     return r, flag
 
 
@@ -88,7 +88,7 @@ def test_shallow_clone_means_full_run(tmp_path):
 def test_unrelated_history_means_full_run(tmp_path):
     repo = make_repo(tmp_path, ["scripts/ui/a.gd"])
     git(repo, "checkout", "-q", "--orphan", "yetim")
-    (repo / "z.txt").write_text("z")
+    (repo / "z.txt").write_text("z", encoding="utf-8")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "yetim")
     r, flag = run(repo)
