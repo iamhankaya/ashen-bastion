@@ -45,10 +45,10 @@ static func _unix_for(at: Dictionary, k: int, top: int) -> int:
 
 ## Toplam stat'ın eşiğini `totals` alt sınırı olarak yazar (`run_*` ve `total_chars5` tohumlanmaz).
 static func _seed(state: Dictionary, def: AchievementDef, value: int) -> void:
-	var key: String = AchievementDef.TOTAL_KEY.get(String(def.stat), "")
+	var key: String = def.total_key
 	if key != "":
 		var t: Dictionary = state["totals"]
-		t[key] = maxi(int(t[key]), mini(value, AchievementStore.COUNTER_CAP))
+		t[key] = maxi(int(t.get(key, 0)), mini(value, AchievementStore.COUNTER_CAP))
 
 
 ## Sayaçların hak ettiği ama kayıtta olmayan kademeleri SESSİZCE verir (bildirim yok; kademe asla geri alınmaz).
@@ -57,7 +57,7 @@ static func reconcile(store: AchievementStore, defs: Array, unix: int) -> int:
 	var added := 0
 	for def: AchievementDef in defs:
 		var have := store.step_count(def.id)
-		var v := AchievementProgress.of(def, store)
+		var v := store.progress_of(def)
 		if v < 0:
 			continue
 		var n := mini(AchievementStep.reached(def, v), AchievementStep.total(def))

@@ -275,6 +275,7 @@ func test_selected_character_does_not_mutate_default_data_cache() -> void:
 
 func _ctrl(opts: Dictionary = {}) -> GameController:
 	var gc := GameController.new()
+	gc.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	if not opts.has("achievements_path"):
 		opts["achievements_path"] = ACH_PATH  # koşu sonu/duraklatma kaydı gerçek user:// dosyasına yazmasın
 	gc.v2_opts = opts

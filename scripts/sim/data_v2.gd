@@ -46,6 +46,7 @@ static func load_achievements(g: GameData, root_dir: String) -> void:
 			var id := StringName(d["id"])
 			if not g._achievements.has(id):
 				var def := AchievementDef.from_dict(d)
+				def.bind_persist(g._stat_metrics)
 				g._achievements[id] = def
 				g.achievement_ids.append(id)
 				g.achievements.append(def)
@@ -54,6 +55,7 @@ static func load_achievements(g: GameData, root_dir: String) -> void:
 ## complete: içerik tamamlandı modu (dosya zorunlu, aile adedi 12..30, kademe toplamı ≤ 80; eski şemada her zorlukta en az bir kayıt).
 static func validate(g: GameData, out: PackedStringArray, complete: bool) -> void:
 	_validate_atlas_cells(g, out)
+	validate_sfx_rules(g, out)
 	for e in g._raw_skills:
 		if e["data"] is Dictionary:
 			validate_skill_sfx(out, e["file"], e["data"])
@@ -118,6 +120,29 @@ static func sfx_exists(id: String) -> bool:
 		ResourceLoader.exists(SFX_DIR + id + ".ogg")
 		or ResourceLoader.exists(SFX_DIR + id + "_1.ogg")
 	)
+
+
+## `<kök>/sfx_rules.json` (isteğe bağlı) `limits`/`min_gap_ms` anahtarları gerçek bir SFX dosyasına (ya da `_1` varyasyonuna)
+## karşılık gelmeli: yazım hatası ya da silinmiş ses sessizce kuralsız kalmasın (F-129).
+static func validate_sfx_rules(g: GameData, out: PackedStringArray) -> void:
+	var path := g.root_dir.path_join("sfx_rules.json")
+	if g.root_dir == "" or not FileAccess.file_exists(path):
+		return
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not (raw is Dictionary):
+		return
+	for sect: String in ["limits", "min_gap_ms"]:
+		var tbl: Variant = (raw as Dictionary).get(sect, {})
+		if not (tbl is Dictionary):
+			continue
+		for id: String in (tbl as Dictionary).keys():
+			if not sfx_exists(id):
+				GameData._err(
+					out,
+					"asset_missing",
+					"sfx_rules.json",
+					"%s.%s için SFX dosyası yok" % [sect, id]
+				)
 
 
 ## Karakter `sfx` sözlüğü: anahtarlar SFX_EVENTS, değer metin ya da metin dizisi.

@@ -73,7 +73,7 @@ def test_clean_repo_passes(repo, tmp_path):
 
 
 def test_sh_mode_must_be_executable(repo, tmp_path):
-    (repo / "tools" / "x.sh").write_text("#!/usr/bin/env bash\ntrue\n")
+    (repo / "tools" / "x.sh").write_text("#!/usr/bin/env bash\ntrue\n", encoding="utf-8")
     commit_all(repo)  # 100644
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 1
@@ -81,7 +81,7 @@ def test_sh_mode_must_be_executable(repo, tmp_path):
 
 
 def test_sh_mode_ok_when_100755(repo, tmp_path):
-    (repo / "tools" / "x.sh").write_text("#!/usr/bin/env bash\ntrue\n")
+    (repo / "tools" / "x.sh").write_text("#!/usr/bin/env bash\ntrue\n", encoding="utf-8")
     commit_all(repo, chmod_x=["tools/x.sh"])
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
@@ -90,7 +90,7 @@ def test_sh_mode_ok_when_100755(repo, tmp_path):
 def test_to_upper_forbidden(repo, tmp_path):
     d = repo / "scripts"
     d.mkdir()
-    (d / "a.gd").write_text("extends RefCounted\n\n\nfunc f(s: String) -> String:\n\treturn s.to_upper()\n")
+    (d / "a.gd").write_text("extends RefCounted\n\n\nfunc f(s: String) -> String:\n\treturn s.to_upper()\n", encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 1
@@ -100,7 +100,7 @@ def test_to_upper_forbidden(repo, tmp_path):
 def test_to_lower_untracked_file_also_caught(repo, tmp_path):
     d = repo / "test"
     d.mkdir()
-    (d / "test_a.gd").write_text("func f(s):\n\treturn s.to_lower()\n")  # commit'lenmedi
+    (d / "test_a.gd").write_text("func f(s):\n\treturn s.to_lower()\n", encoding="utf-8")  # commit'lenmedi
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 1
     assert "PRECHECK_FAIL: UPPER_LOWER: test/test_a.gd" in r.stderr
@@ -109,11 +109,11 @@ def test_to_lower_untracked_file_also_caught(repo, tmp_path):
 def test_unchanged_gd_not_scanned(repo, tmp_path):
     """Yalnız değişen dosyalar: tabandaki eski ihlal bu dalın işi değildir (tam kapı yakalar)."""
     (repo / "scripts").mkdir()
-    (repo / "scripts" / "old.gd").write_text("func f(s):\n\treturn s.to_upper()\n")
+    (repo / "scripts" / "old.gd").write_text("func f(s):\n\treturn s.to_upper()\n", encoding="utf-8")
     git(repo, "checkout", "-q", "main")
     commit_all(repo, "old")
     git(repo, "checkout", "-q", "-b", "work2")
-    (repo / "README.md").write_text("x\n")
+    (repo / "README.md").write_text("x\n", encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
@@ -122,14 +122,14 @@ def test_unchanged_gd_not_scanned(repo, tmp_path):
 def fake_tool(bindir, name, rc, msg=""):
     bindir.mkdir(exist_ok=True)
     p = bindir / name
-    p.write_text(f"#!/usr/bin/env bash\necho '{msg}' >&2\nexit {rc}\n")
+    p.write_text(f"#!/usr/bin/env bash\necho '{msg}' >&2\nexit {rc}\n", encoding="utf-8")
     p.chmod(p.stat().st_mode | stat.S_IEXEC)
     return bindir
 
 
 def test_missing_gdformat_is_skipped_loudly_not_green_silently(repo, tmp_path):
     (repo / "scripts").mkdir()
-    (repo / "scripts" / "a.gd").write_text("extends RefCounted\n")
+    (repo / "scripts" / "a.gd").write_text("extends RefCounted\n", encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     if shutil.which("gdformat"):
@@ -141,7 +141,7 @@ def test_missing_gdformat_is_skipped_loudly_not_green_silently(repo, tmp_path):
 
 def test_gdformat_failure_is_red(repo, tmp_path):
     (repo / "scripts").mkdir()
-    (repo / "scripts" / "a.gd").write_text("extends RefCounted\n")
+    (repo / "scripts" / "a.gd").write_text("extends RefCounted\n", encoding="utf-8")
     commit_all(repo)
     bindir = fake_tool(tmp_path / "bin", "gdformat", 1, "would reformat")
     fake_tool(bindir, "gdlint", 0)
@@ -152,7 +152,7 @@ def test_gdformat_failure_is_red(repo, tmp_path):
 
 def test_gdlint_failure_is_red(repo, tmp_path):
     (repo / "scripts").mkdir()
-    (repo / "scripts" / "a.gd").write_text("extends RefCounted\n")
+    (repo / "scripts" / "a.gd").write_text("extends RefCounted\n", encoding="utf-8")
     commit_all(repo)
     bindir = fake_tool(tmp_path / "bin", "gdformat", 0)
     fake_tool(bindir, "gdlint", 1, "problem")
@@ -173,7 +173,7 @@ def test_gdlint_failure_is_red(repo, tmp_path):
 def test_check_tools_failure_maps_to_label(repo, tmp_path, script, label):
     ci = repo / "tools" / "ci"
     ci.mkdir()
-    (ci / script).write_text("import sys\nprint('ihlal', file=sys.stderr)\nsys.exit(1)\n")
+    (ci / script).write_text("import sys\nprint('ihlal', file=sys.stderr)\nsys.exit(1)\n", encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 1
@@ -192,7 +192,7 @@ def test_test_ids_runs_in_static_mode(repo, tmp_path):
     ci.mkdir()
     (ci / "check_test_ids.py").write_text(
         "import sys\nsys.exit(0 if sys.argv[1:3] == ['--mode', 'static'] else 1)\n"
-    )
+    , encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
@@ -248,7 +248,7 @@ def test_test_map_without_ensure_command_uses_check_even_if_word_appears(repo, t
     (ci / "test_map.py").write_text(
         "import sys, json\njson.dumps({}, ensure_ascii=False)\n"
         "sys.exit(0 if sys.argv[1] == 'check' else 1)\n"
-    )
+    , encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
@@ -259,7 +259,7 @@ def test_test_map_with_ensure_command_uses_ensure(repo, tmp_path):
     ci.mkdir()
     (ci / "test_map.py").write_text(
         'import sys\ncmd = sys.argv[1]\nif cmd == "ensure":\n    sys.exit(0)\nsys.exit(1)\n'
-    )
+    , encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
@@ -267,7 +267,7 @@ def test_test_map_with_ensure_command_uses_ensure(repo, tmp_path):
 
 def _base_with_old_violation(repo):
     (repo / "scripts").mkdir()
-    (repo / "scripts" / "old.gd").write_text("func f(s):\n\treturn s.to_upper()\n\n\nfunc g():\n\treturn 1\n")
+    (repo / "scripts" / "old.gd").write_text("func f(s):\n\treturn s.to_upper()\n\n\nfunc g():\n\treturn 1\n", encoding="utf-8")
     git(repo, "checkout", "-q", "main")
     commit_all(repo, "old")
     git(repo, "checkout", "-q", "-b", "work2")
@@ -277,7 +277,7 @@ def test_f131_touching_file_with_old_violation_elsewhere_is_not_red(repo, tmp_pa
     """F-131: dosyada TABANDAN kalan to_upper, başka satır değişince kırmızı vermez (gate.sh de yalnız yeni ihlali kırar)."""
     _base_with_old_violation(repo)
     p = repo / "scripts" / "old.gd"
-    p.write_text(p.read_text().replace("return 1", "return 2"))
+    p.write_text(p.read_text().replace("return 1", "return 2"), encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
@@ -287,7 +287,7 @@ def test_f131_touching_file_with_old_violation_elsewhere_is_not_red(repo, tmp_pa
 def test_f131_added_violation_line_in_old_file_is_red(repo, tmp_path):
     _base_with_old_violation(repo)
     p = repo / "scripts" / "old.gd"
-    p.write_text(p.read_text() + "\n\nfunc h(s):\n\treturn s.to_lower()\n")
+    p.write_text(p.read_text() + "\n\nfunc h(s):\n\treturn s.to_lower()\n", encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 1
@@ -335,7 +335,7 @@ def test_baseline_change_with_matching_record_is_green(repo, tmp_path):
 
 def test_baseline_guard_not_run_when_baseline_untouched(repo, tmp_path):
     _with_guard(repo)
-    (repo / "README.md").write_text("x\n")
+    (repo / "README.md").write_text("x\n", encoding="utf-8")
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
     assert "BASELINE" not in r.stderr

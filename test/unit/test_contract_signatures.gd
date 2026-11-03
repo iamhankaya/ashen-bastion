@@ -673,6 +673,7 @@ func test_v11_value_classes_have_their_contract_fields() -> void:
 		assert_not_null(node, "yüklenir: %s" % sc)
 		node.free()
 	var gc := GameController.new()
+	gc.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	for p in ["highscores", "scores_screen", "pickup_renderer", "enemy_shadows", "ghosts"]:
 		assert_true(p in gc, "GameController.%s" % p)
 	gc.free()

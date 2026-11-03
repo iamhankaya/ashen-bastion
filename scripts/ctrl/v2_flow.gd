@@ -108,7 +108,9 @@ func selected_character() -> StringName:
 	if st != null:
 		var v: Variant = st.get("character_id")
 		saved = v if v is String else ""
-	var id := CharacterRoster.resolve(saved, data, achievements.store)
+	var id := CharacterRoster.resolve(
+		saved, data, AchievementProgressView.of_store(achievements.store)
+	)
 	return id if id != &"" else CharacterRoster.DEFAULT_ID
 
 

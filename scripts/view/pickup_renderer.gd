@@ -125,10 +125,10 @@ static func glow_texture() -> Texture2D:
 static func rarity_color(rarity: StringName) -> Color:
 	match rarity:
 		&"rare":
-			return UiKit.AMBER
+			return UiColors.AMBER
 		&"uncommon":
-			return UiKit.BRONZ_300
-	return UiKit.KEMIK_300
+			return UiColors.BRONZ_300
+	return UiColors.KEMIK_300
 
 
 ## Doğma animasyonu ölçeği: 260 ms'de 0 → 1,15 → 1 (cubic-out ilk kısım).
@@ -187,9 +187,9 @@ func _on_collected(kind_id: StringName, pos: Vector2) -> void:
 	_push_fx(Fx.FLY, pos, FLY_TIME, k, col)
 	match def.effect:
 		&"heal":
-			_push_fx(Fx.PLUS, pos, PLUS_TIME, k, UiKit.KEMIK_100)
+			_push_fx(Fx.PLUS, pos, PLUS_TIME, k, UiColors.KEMIK_100)
 		&"magnet":
-			_push_fx(Fx.MAGNET, pos, MAGNET_TIME, k, UiKit.XP_PARLAK)
+			_push_fx(Fx.MAGNET, pos, MAGNET_TIME, k, UiColors.XP_PARLAK)
 		&"buff":
 			_push_fx(Fx.RING, pos, RING_TIME, k, col)
 
@@ -237,7 +237,7 @@ func _draw() -> void:
 					_sim.data.get_pickup(_sim.data.pickup_ids[k]).radius,
 					_t * FUSE_SPIN,
 					4.0,
-					Color(UiKit.CAN_KRITIK, pa)
+					Color(UiColors.CAN_KRITIK, pa)
 				)
 		last_draw_items += 1
 	_draw_fx_icons()
@@ -269,10 +269,10 @@ func _draw_bomb(b: int) -> void:
 	var pulse := 1.0
 	if left <= PULSE_STEPS:
 		pulse = 1.0 + 0.03 * sin(TAU * float(PULSE_STEPS - left) / 7.5)
-	var fill := UiKit.CAN_KRITIK.lerp(UiKit.BORDO_700, 0.5)
+	var fill := UiColors.CAN_KRITIK.lerp(UiColors.BORDO_700, 0.5)
 	fill.a = fuse_fill_alpha(left, total)
 	draw_circle(p, r * pulse, fill)
-	_draw_dashed(p, r * pulse, _t * FUSE_SPIN, FUSE_RING_WIDTH, UiKit.CAN_KRITIK)
+	_draw_dashed(p, r * pulse, _t * FUSE_SPIN, FUSE_RING_WIDTH, UiColors.CAN_KRITIK)
 	var k := bm.kind_idx[b]
 	var flick := 0.8 + 0.2 * sin(_t * 38.0 + float(b))
 	_draw_icon(k, p, 1.0, flick)
@@ -352,7 +352,7 @@ func _draw_glow() -> void:
 		if _sim.state == GameSim.State.WON or _sim.state == GameSim.State.LOST:
 			break
 		_glow.draw_circle(
-			_sim.bombs.pos[b], 34.0, Color(UiKit.AMBER, 0.25 + 0.2 * sin(_t * 40.0 + float(b)))
+			_sim.bombs.pos[b], 34.0, Color(UiColors.AMBER, 0.25 + 0.2 * sin(_t * 40.0 + float(b)))
 		)
 	_draw_glow_fx()
 

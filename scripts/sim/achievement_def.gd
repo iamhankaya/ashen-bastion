@@ -95,6 +95,10 @@ var icon: String = ""
 var steps: Array[int] = []
 var group: StringName = &""
 var legacy: Dictionary = {}
+## Kalıcı depo anahtarları (`totals`/`best`); "" = yok. Yerleşik stat'larda TOTAL_KEY/BEST_KEY, veriyle eklenenlerde
+## metrik kaydındaki `persist` (bind_persist): yeni stat kapalı sabitlere dokunmadan kalıcı olur (F-140/F-149).
+var total_key: String = ""
+var best_key: String = ""
 
 
 static func from_dict(d: Dictionary) -> AchievementDef:
@@ -116,7 +120,24 @@ static func from_dict(d: Dictionary) -> AchievementDef:
 	a.group = StringName(_s(d.get("group", "")))
 	var lg: Variant = d.get("legacy", {})
 	a.legacy = (lg as Dictionary).duplicate() if lg is Dictionary else {}
+	a.total_key = TOTAL_KEY.get(String(a.stat), "")
+	a.best_key = BEST_KEY.get(String(a.stat), "")
 	return a
+
+
+## Stat'ın metrik kaydı (`data/achievements/<stat>.json`) `persist` veriyorsa anahtarlar ondan alınır; yoksa yerleşik kalır.
+func bind_persist(metrics: Array) -> void:
+	for m in metrics:
+		if not (m is Dictionary) or str((m as Dictionary).get("stat", "")) != String(stat):
+			continue
+		var persist: Variant = (m as Dictionary).get("persist", null)
+		if not (persist is Dictionary):
+			return
+		var t: Variant = (persist as Dictionary).get("total", null)
+		var b: Variant = (persist as Dictionary).get("best", null)
+		total_key = t if t is String else ""
+		best_key = b if b is String else ""
+		return
 
 
 ## Kademe eşikleri: `steps`, yoksa tek kademe `target` (v2.0 kaydı); ikisi de yoksa boş.

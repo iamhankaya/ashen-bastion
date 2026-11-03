@@ -12,7 +12,7 @@ def run(tmp_path, suites, skipped=None):
         for n, c in suites.items()
     ) + "</testsuites>"
     j = tmp_path / "j.xml"
-    j.write_text(xml)
+    j.write_text(xml, encoding="utf-8")
     return subprocess.run([sys.executable, str(SCRIPT), str(j)], capture_output=True)
 
 
@@ -34,5 +34,5 @@ def test_some_skipped_still_ok(tmp_path):
 
 def test_table_argument_is_gone(tmp_path):
     j = tmp_path / "j.xml"
-    j.write_text('<testsuites><testsuite name="a" tests="1" skipped="0"></testsuite></testsuites>')
+    j.write_text('<testsuites><testsuite name="a" tests="1" skipped="0"></testsuite></testsuites>', encoding="utf-8")
     assert subprocess.run([sys.executable, str(SCRIPT), str(j), "m.json"], capture_output=True).returncode == 2

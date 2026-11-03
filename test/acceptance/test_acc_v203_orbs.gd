@@ -202,9 +202,9 @@ func test_orb3_same_seed_same_hash_whether_or_not_a_renderer_watched() -> void:
 func test_orb4_with_reduced_motion_orb_instances_do_not_drift_between_frames() -> void:
 	if _gate():
 		return
-	Settings.hareket_azalt = true
 	var sim := _sim_with_mixed_gems()
 	var r := GemRenderer.new()
+	r.motion_reduced = true  # controller Settings.hareket_azalt değerini bu alana yazar (F-155)
 	add_child_autofree(r)
 	r.bind(sim)
 	r.refresh()

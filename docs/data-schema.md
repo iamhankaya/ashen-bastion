@@ -64,7 +64,7 @@ Yeni doğrulama = `scripts/sim/validators/` altına yeni bir `extends DataValida
 
 Koşu modları ve zorlukları **dosya başına bir kayıt**tır: `data/run_modes/<id>.json`, `data/difficulties/<id>.json` (dosya adı = `id`).
 `RunCatalog.default()` (`scripts/sim/catalog/run_catalog.gd`) bunları okur; `RunProfiles`, `RunStrip`, `Settings`, `Highscores`,
-`AchievementRules` ve `V21Runs.set_selection` kimlik kümesini buradan alır (sabit `quick|normal|endless` / `easy|normal|hard` listesi yok).
+`AchievementRules` ve `RunSelection.set_selection` kimlik kümesini buradan alır (sabit `quick|normal|endless` / `easy|normal|hard` listesi yok).
 Sıralama `(order, id)`; varsayılan `"default": true` olan kayıt (yoksa sıradaki ilk).
 
 - Mod: `id`, `order`, `name` ("Hızlı"), `label` ("HIZLI", büyük harf elle yazılır: Türkçe i/İ), `description` (Lord dakikası için `%d`),
@@ -92,7 +92,7 @@ için sim tarafı bu adları anmaz, F-ashen-bastion-121). Tracker (`AchievementT
 | `stat` | Kimlik; `achievements.json` ailesinin `stat`ı bununla eşleşir. `total_*` = koşular arası toplam, aksi halde koşu kapsamı. |
 | `order` | Aynı olayı/poll'u/finish'i işleyen statların sırası (küçük önce). Kademe açılış sırasını (`run_unlocked`) belirler; değiştirmek anlık görüntüyü değiştirir. |
 | `icon_family` | `AchievementIcons.FAMILY` ile aynı (ikon adı). |
-| `persist` | `{"total": anahtar, "best": anahtar}` (`null` = tutmaz). `total` → kayıtta `totals[anahtar]`, `best` → `best[anahtar]`. Anahtarlar `AchievementDef.TOTAL_KEY/BEST_KEY` ve `AchievementStore.TOTAL_KEYS/BEST_KEYS` ile birebir (`test_catalog_achievement_real`); çakışan anahtar hata. |
+| `persist` | `{"total": anahtar, "best": anahtar}` (`null` = tutmaz). `total` → kayıtta `totals[anahtar]`, `best` → `best[anahtar]`. Yerleşik 21 stat için anahtarlar `AchievementDef.TOTAL_KEY/BEST_KEY` ve `AchievementStore.TOTAL_KEYS/BEST_KEYS` ile birebir (`test_catalog_achievement_real`); veriyle eklenen stat'ta anahtar bu kayıttan gelir (`[a-z0-9_]{1,32}`, depo `declare_counters` ile açar, en çok 32 ek anahtar); çakışan anahtar hata. |
 | `source` + `aggregate` | **Yerleşik** metrik. `source` = `{"event": <SimBus sinyali>, "filter": {<etiket alanı>: [değer]}, "value": "one"\|"payload.<alan>"}` ya da `{"poll": "time"\|"active_slots"}` ya da `{"finish": "always"\|"won", "value": "one"\|"result.time"}`; `aggregate` = `sum` \| `max` \| `count`. |
 | `result_max` | `time`/`level`/`score`: koşu sonunda `finish(stats)` değeriyle en büyüğe yükselt. |
 | `reducer` + `events` [+ `poll`, `finish`] | **Eklenti** metrik: `AchievementReducer` alt sınıfı (`scripts/ctrl/achievement_reducers/`), `source/aggregate` ile birlikte olmaz. `events` = dinlenen sinyaller, `poll: true` = her poll'da, `finish: true` = koşu sonunda çağrılır. |
@@ -107,8 +107,7 @@ aile. **Yeni reducer** (durumlu/koşullu): `scripts/ctrl/achievement_reducers/` 
 mevcut `.gd` değişmez. İki yol da `test_catalog_achievement_dry_run` ile kuru denenir. Yeni olay türü (sim kodu) ve depoya yeni kalıcı
 anahtar (`totals`/`best` listeleri) hâlâ kod ister (aşağıda).
 
-Sınırlar: kalıcı `totals`/`best` anahtarları `AchievementStore.TOTAL_KEYS/BEST_KEYS` ve `AchievementDef.TOTAL_KEY/BEST_KEY`'de kapalı kümedir
-(kayıt dosyası biçimi sabit); veriyle eklenen stat bugün `persist: null` (yalnız koşu içi) kullanır. `AchievementDef.STATS` ve tracker `S_*`
+Sınırlar: kalıcı `totals`/`best` anahtarı artık veridir (`persist`; F-140/F-149): yerleşik `TOTAL_KEY/BEST_KEY` yalnız 21 stat'ın varsayılanı, yeni stat sabitlere dokunmaz. `AchievementDef.STATS` ve tracker `S_*`
 dizinleri yerleşik 21 stat için sabittir; kayıttaki yeni statlar bunların ardına eklenir. Testler bu kümeyi veriden eşitlemez: "STATS kayıtta
 var, fazlası geçerli" (`test_catalog_achievement_real`, `test_data_v2`); sıra/sınır sözleşmeleri sentetik fixture ile sınanır.
 
@@ -119,7 +118,7 @@ Kuru deneme sınıflandırması (`tools/ci/prova_dry_run.py --scenario ach_data|
 | Yerleşik toplam, `persist: null`, mevcut olay | Yalnız veri | yok (yeni `data/achievements/<stat>.json`) |
 | Yeni reducer | Yeni dosya | yeni `.gd` + JSON; mevcut `.gd` değişmez |
 | Yeni stat'lı aile satırı | Mevcut dosya değişir (açık nokta) | `data/achievements.json`; metrik dizinine taşıma tasarım kararı, yapılmadı; araç varsayılan olarak eklemez |
-| Kalıcı `totals`/`best` anahtarı | Kod eklentisi | `AchievementDef.TOTAL_KEY/BEST_KEY`, `AchievementStore.TOTAL_KEYS/BEST_KEYS` (+ kayıt göçü), `AchievementProgress.of` |
+| Kalıcı `totals`/`best` anahtarı | Yalnız veri | `persist` anahtarı (kod yok); kanıt `test_extend_data_only` |
 | Yeni SimBus olayı/poll/finish | Kod eklentisi | sim kodu, `MetricSchema.EVENTS/POLLS`, tracker `LISTENED` |
 | Özel hedef cümlesi / ikon adı tablosu | Kozmetik kod | `AchievementRow.GOAL_TEXT` ("Hedef N" yedeği), `AchievementIcons.FAMILY` (aile `icon` alanı yedeği) |
 
@@ -518,6 +517,6 @@ iken kurulur, aksi halde `null` (her yardımcı eski değeri döndürür: RNG/ka
 - Mod süresi: `end_mode != endless` ise `GameSim.DEFAULT_END_TIME × modes.<mod>.time_scale / 60` dakika ("10 DK", "20 DK"); `endless` süresiz ("SONSUZ", "∞"). Açıklamadaki "Lord N. dakikada gelir" aynı sayıdır.
 - Ayrıntı levhası: `difficulties.<zorluk>.{enemy_hp, enemy_dmg, spawn_density, xp}` çarpanı -> `(çarpan − 1) × 100` yuvarlanır ("−%30", "+%25"); sıfır ise XP satırında "aynı", diğerlerinde "tam" (Zor).
 - Kural levhası: her zaman skor-listesi satırı; zorluk `easy` ise Kolay uyarısı; mod `endless` ise Sonsuz uyarısı. Başarım kuralı metni `achievements.<zorluk>.block_lord_bound` ile aynı olgudur (metin sabit, kural JSON'da).
-- Seçim: `Settings.run_mode/run_diff` (`kosu_modu`/`kosu_zorluk`); dokunma `V21Runs.set_selection` ile anında kaydeder. U4b (skor sekmeleri, sonuç çipleri) bu başlığa kendi satırlarını ekler.
+- Seçim: `Settings.run_mode/run_diff` (`kosu_modu`/`kosu_zorluk`); dokunma `RunSelection.set_selection` ile anında kaydeder. U4b (skor sekmeleri, sonuç çipleri) bu başlığa kendi satırlarını ekler.
 
 **U4b (skor/sonuç/bant):** sonuç sözlüğüne `milestone_t` (Sonsuz'da ilk Lord ölümünün sim zamanı, yoksa -1) eklendi; sonuç ekranı `mode/diff/lords_killed/milestone_t` alanlarını `stats`'tan okur (alan yoksa çip/not gizli). `Highscores.list_for(mode,diff)` sekme listelerini besler; bant ipucu süresi `modes.endless.lord_repeat_sec`'ten. Sonsuz'da koşu bitince `milestone_won` ise kazanma müziği (`V21Runs.music_won`).

@@ -14,7 +14,7 @@ var _saved: Array = []
 
 
 func before_each() -> void:
-	fake = V21Kit.use_fake_settings()
+	fake = V21Kit.FakeSettings.new()
 	var st := get_node_or_null(^"/root/Settings")
 	if st != null:
 		_saved = [st.buyuk_yazi, st.hareket_azalt]
@@ -23,7 +23,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 	var st := get_node_or_null(^"/root/Settings")
 	if st != null and _saved.size() == 2:
 		st.buyuk_yazi = _saved[0]
@@ -104,8 +104,9 @@ func test_a60_big_strip_keeps_the_change_label_and_fits_every_selection() -> voi
 
 # Üretim değişikliği olmadan kırmızı: glif hep bronz_300'dü.
 func test_a61_mode_glyph_is_bronz_300_only_when_selected() -> void:
-	V21Runs.set_selection(&"quick", &"normal")
 	var s := RunScreen.new()
+	s.run_selection = fake.selection()
+	s.run_selection.set_selection(&"quick", &"normal")
 	_host().add_child(s)
 	s.visible = true
 	await _settle()
@@ -132,6 +133,7 @@ func test_a61_mode_glyph_is_bronz_300_only_when_selected() -> void:
 # Üretim değişikliği olmadan kırmızı: mühür y14-70, süre yazısı y≈67'den başlıyordu.
 func test_a62_seal_never_overlaps_the_duration_text_at_1x() -> void:
 	var s := RunScreen.new()
+	s.run_selection = fake.selection()
 	_host().add_child(s)
 	s.visible = true
 	await _settle()

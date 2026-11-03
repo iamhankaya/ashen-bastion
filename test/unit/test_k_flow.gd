@@ -27,6 +27,7 @@ func after_each() -> void:
 
 func _ctrl() -> GameController:
 	var gc := GameController.new()
+	gc.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	gc.v2_opts = {"achievements_path": "user://test_ach_kflow_never_written.json"}
 	add_child_autofree(gc)
 	return gc

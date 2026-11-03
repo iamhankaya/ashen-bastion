@@ -42,8 +42,8 @@ def test_v2_snapshot_is_byte_identical(tmp_path):
         r = _run(cmd, {"V2_SLICES_FORCE": s["force"]})
         got = {
             "rc": r.returncode,
-            "stdout": r.stdout.replace(str(tmp_path), "<TMP>"),
-            "stderr": r.stderr.replace(str(tmp_path), "<TMP>"),
+            "stdout": r.stdout.replace(str(tmp_path), "<TMP>").replace("\\", "/"),
+            "stderr": r.stderr.replace(str(tmp_path), "<TMP>").replace("\\", "/"),
         }
         assert got == s["expect"], s["name"]
 

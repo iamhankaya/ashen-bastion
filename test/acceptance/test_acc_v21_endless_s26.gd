@@ -17,8 +17,6 @@ func _endless(diff: StringName = &"hard", extra: Dictionary = {}) -> GameSim:
 
 
 func test_s26_a_lord_that_never_dies_does_not_repeat() -> void:
-	if V21Slice.require(self, "S"):
-		return
 	var s := _endless()
 	var w := V21Acc.watch(s)
 	V21Acc.run_until(s, 60 * 400)

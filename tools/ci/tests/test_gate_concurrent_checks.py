@@ -47,9 +47,9 @@ def test_all_checks_run_to_completion_even_when_one_is_red(tmp_path):
 
 def test_green_checks_return_zero_and_run_concurrently(tmp_path):
     t0 = time.time()
-    r = harness(tmp_path, 'a() { sleep 1.2; }\nb() { sleep 1.2; }\nbg_start A a\nbg_start B b\nreap_bg; echo "rc=$?"\n')
+    r = harness(tmp_path, 'a() { sleep 4; }\nb() { sleep 4; }\nbg_start A a\nbg_start B b\nreap_bg; echo "rc=$?"\n')
     assert "rc=0" in r.stdout + r.stderr
-    assert time.time() - t0 < 2.3  # sıralı olsaydı ≥2.4 sn
+    assert time.time() - t0 < 7.5  # sıralı olsaydı ≥8 sn; geniş pay: Windows'ta bash başlatma yükü (F-117)
 
 
 def test_fail_reaps_background_checks_before_exiting(tmp_path):

@@ -58,10 +58,10 @@ func test_b2_atlas_has_three_distinct_tiles() -> void:
 func test_b3_hareket_azalt_stops_bobbing() -> void:
 	var r := GemRenderer.new()
 	add_child_autofree(r)
-	Settings.hareket_azalt = false
+	r.motion_reduced = false
 	r.refresh()
 	assert_eq((r.material as ShaderMaterial).get_shader_parameter("bob_scale"), 1.0)
-	Settings.hareket_azalt = true
+	r.motion_reduced = true
 	r.refresh()
 	assert_eq((r.material as ShaderMaterial).get_shader_parameter("bob_scale"), 0.0)
 

@@ -79,20 +79,20 @@ def test_character_filter_and_cli(tmp_path):
     allrows = rows(1, 60) + rows(1, 60, char="zyfen", scale=0.5)
     base = tmp_path / "base.jsonl"
     new = tmp_path / "new.jsonl"
-    base.write_text("".join(json.dumps(r) + "\n" for r in allrows))
-    new.write_text("".join(json.dumps(r) + "\n" for r in allrows))
+    base.write_text("".join(json.dumps(r) + "\n" for r in allrows), encoding="utf-8")
+    new.write_text("".join(json.dumps(r) + "\n" for r in allrows), encoding="utf-8")
     out = tmp_path / "r.md"
     r = subprocess.run([sys.executable, str(BAL / "compare_baseline.py"), str(base), str(new), "--boot", "100", "--out", str(out)],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == 0, r.stderr
-    md = out.read_text()
+    md = out.read_text(encoding="utf-8")
     assert cb.DISCLAIMER in md and "PASS" in md
     assert cb.load(str(base), "zyfen")[0]["character"] == "zyfen"
 
 
 def test_cli_input_errors(tmp_path):
     r = subprocess.run([sys.executable, str(BAL / "compare_baseline.py"), str(tmp_path / "yok"), str(tmp_path / "yok2")],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == 2
 
 

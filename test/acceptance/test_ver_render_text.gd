@@ -63,7 +63,7 @@ func test_all_three_multimesh_renderers_install_the_cull_fix_at_construction() -
 
 
 func test_render_fix_uses_a_fixed_world_covering_rect() -> void:
-	assert_true(_src("res://scripts/view/render_fix.gd").contains("canvas_item_set_custom_rect"))
+	assert_true(_src("res://scripts/domain/render_fix.gd").contains("canvas_item_set_custom_rect"))
 	var r := RenderFix.HUGE_RECT
 	# oyun dünyası ±1e5 px'in çok altında kalır; sabit dikdörtgen tüm koşuyu kapsar
 	assert_true(r.has_point(Vector2(0, 0)))
@@ -73,6 +73,7 @@ func test_render_fix_uses_a_fixed_world_covering_rect() -> void:
 
 func test_controller_toggle_flips_the_fix_for_all_three_renderers_and_persists() -> void:
 	var c := GameController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
@@ -92,6 +93,7 @@ func test_controller_toggle_flips_the_fix_for_all_three_renderers_and_persists()
 func test_debug_label_shows_visible_vs_live_counts_in_a_debug_build() -> void:
 	assert_true(OS.is_debug_build(), "test koşusu debug derleme")
 	var c := GameController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)

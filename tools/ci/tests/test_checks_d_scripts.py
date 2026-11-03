@@ -36,9 +36,9 @@ def test_scripts_go_red_on_a_deliberate_violation(tmp_path):
     # kasıtlı ihlal: tavan aşımı + yasak katman kenarı + kayıtsız test silme; üç betik de kırmızı
     (tmp_path / "scripts/sim").mkdir(parents=True)
     (tmp_path / "scripts/ui").mkdir(parents=True)
-    (tmp_path / "scripts/sim/big.gd").write_text("class_name Big\n" + "x\n" * 801 + "var u: Ui\n")
-    (tmp_path / "scripts/ui/ui.gd").write_text("class_name Ui\n")
-    (tmp_path / "project.godot").write_text("[autoload]\n")
+    (tmp_path / "scripts/sim/big.gd").write_text("class_name Big\n" + "x\n" * 801 + "var u: Ui\n", encoding="utf-8")
+    (tmp_path / "scripts/ui/ui.gd").write_text("class_name Ui\n", encoding="utf-8")
+    (tmp_path / "project.godot").write_text("[autoload]\n", encoding="utf-8")
     for name, tool in (("10-line-budget.sh", "check_line_budget.py"), ("30-layers.sh", "check_layers.py")):
         r = subprocess.run(["python", str(ROOT / "tools/ci" / tool), "--root", str(tmp_path), "--exceptions", str(tmp_path / "yok.txt")], capture_output=True, text=True, encoding="utf-8")
         assert r.returncode == 1, name

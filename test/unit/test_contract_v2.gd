@@ -35,7 +35,7 @@ const METHODS := {
 	"AchievementStore":
 	{
 		"_init": ["p_path", O],
-		"load_file": ["defs", B],  # v2.0.3: göç için isteğe bağlı aile tanımları
+		"load_file": ["defs,metrics", B],  # v2.0.3: göç için isteğe bağlı aile tanımları
 		"save": ["", B],
 		"is_unlocked": ["id", B],
 		"unlocked_at": ["id", I],
@@ -44,7 +44,7 @@ const METHODS := {
 		"note_best": ["score,time,level", N],
 		"note_char5": ["char_id", B],
 		"count_unlocked": ["known", I],
-		"sanitize": ["raw", D],
+		"sanitize": ["raw,extra_totals,extra_bests", D],
 	},
 	"AchievementTracker":
 	{

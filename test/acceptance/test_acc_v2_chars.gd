@@ -61,21 +61,38 @@ func test_k1_resolve_defaults_to_gunslinger_for_missing_empty_unknown() -> void:
 	var d := AchKit.legacy_data()
 	var st := AchKit.fake_store()
 	for saved in ["", "yok_boyle", "BARUTCU", " barutcu", "../barutcu"]:
-		var got := CharacterRoster.resolve(saved, d, st)
+		var got := CharacterRoster.resolve(saved, d, AchievementProgressView.of_store(st))
 		assert_eq(got, &"gunslinger", "'%s' -> varsayılan" % saved)
-	assert_eq(CharacterRoster.resolve("zyfen", d, st), &"zyfen", "geçerli ve kilitsiz")
-	assert_eq(CharacterRoster.resolve("gunslinger", d, st), &"gunslinger")
+	assert_eq(
+		CharacterRoster.resolve("zyfen", d, AchievementProgressView.of_store(st)),
+		&"zyfen",
+		"geçerli ve kilitsiz"
+	)
+	assert_eq(
+		CharacterRoster.resolve("gunslinger", d, AchievementProgressView.of_store(st)),
+		&"gunslinger"
+	)
 
 
 func test_k1_resolve_locked_character_falls_back() -> void:
 	var d := _locked_zyfen_data()
 	var st := AchKit.fake_store()
-	assert_eq(CharacterRoster.resolve("zyfen", d, st), &"gunslinger", "kilitli -> varsayılan")
+	assert_eq(
+		CharacterRoster.resolve("zyfen", d, AchievementProgressView.of_store(st)),
+		&"gunslinger",
+		"kilitli -> varsayılan"
+	)
 	st.unlock(&"endure", 1700000000)
-	assert_eq(CharacterRoster.resolve("zyfen", d, st), &"zyfen", "kilit açıldı")
+	assert_eq(
+		CharacterRoster.resolve("zyfen", d, AchievementProgressView.of_store(st)),
+		&"zyfen",
+		"kilit açıldı"
+	)
 	st.corrupt = true
 	assert_eq(
-		CharacterRoster.resolve("zyfen", d, st), &"gunslinger", "bozuk kayıt: güvenli yön kilitli"
+		CharacterRoster.resolve("zyfen", d, AchievementProgressView.of_store(st)),
+		&"gunslinger",
+		"bozuk kayıt: güvenli yön kilitli"
 	)
 	assert_eq(CharacterRoster.resolve("zyfen", d, null), &"gunslinger", "store null: kilitli")
 
@@ -85,7 +102,12 @@ func test_k1_resolve_edge_tables_single_and_none() -> void:
 	assert_eq(CharacterRoster.ids(only), only.character_ids)
 	# Hiç karakter yoksa boş kimlik (yapay: kimlik listesini boşalt).
 	var none := GameData.new()
-	assert_eq(CharacterRoster.resolve("zyfen", none, AchKit.fake_store()), &"")
+	assert_eq(
+		CharacterRoster.resolve(
+			"zyfen", none, AchievementProgressView.of_store(AchKit.fake_store())
+		),
+		&""
+	)
 	assert_eq(CharacterRoster.resolve("", none, null), &"")
 
 
@@ -97,12 +119,14 @@ func test_k1_resolve_when_default_is_locked_picks_first_unlocked() -> void:
 	SimKit.write_json(gp, g)
 	var d := GameData.load_dir(dir)
 	assert_eq(
-		CharacterRoster.resolve("", d, AchKit.fake_store()),
+		CharacterRoster.resolve("", d, AchievementProgressView.of_store(AchKit.fake_store())),
 		&"zyfen",
 		"varsayılan kilitli: ilk kilitsiz"
 	)
 	assert_eq(
-		CharacterRoster.resolve("gunslinger", d, AchKit.fake_store()),
+		CharacterRoster.resolve(
+			"gunslinger", d, AchievementProgressView.of_store(AchKit.fake_store())
+		),
 		&"zyfen",
 		"kayıtlı kilitli: ilk kilitsiz"
 	)
@@ -232,9 +256,9 @@ func _controller() -> GameController:
 		"achievements_path": AchKit.tmp_path("ctrl"),
 		"clock": AchKit.clock(),
 	}
+	c.highscores = Highscores.new(AchKit.tmp_path("hs"))
 	add_child(c)
 	_ctrl = c
-	c.highscores = Highscores.new(AchKit.tmp_path("hs"))
 	return c
 
 
@@ -573,13 +597,21 @@ func test_k10_no_real_character_has_unlock() -> void:
 	var d := AchKit.legacy_data()
 	for id in d.character_ids:
 		assert_eq(d.get_character(id).unlock_achievement, &"", "%s: ödül yok -> kilitsiz" % id)
-		assert_true(CharacterRoster.is_unlocked(d.get_character(id), AchKit.fake_store()))
+		assert_true(
+			CharacterRoster.is_unlocked(
+				d.get_character(id), AchievementProgressView.of_store(AchKit.fake_store())
+			)
+		)
 
 
 func test_k10_lock_reason_text_uses_achievement_name() -> void:
 	var d := _locked_zyfen_data()
 	assert_eq(CharacterRoster.lock_reason(d.get_character(&"zyfen"), d), "Endure başarımını aç")
-	assert_false(CharacterRoster.is_unlocked(d.get_character(&"zyfen"), AchKit.fake_store()))
+	assert_false(
+		CharacterRoster.is_unlocked(
+			d.get_character(&"zyfen"), AchievementProgressView.of_store(AchKit.fake_store())
+		)
+	)
 
 
 func test_k10_locked_character_cannot_be_selected_on_screen() -> void:

@@ -19,7 +19,7 @@ def test_runs_scripts_in_name_order(tmp_path):
     log = tmp_path / "log"
     r = run(tmp_path, {"20-b.sh": f'echo B >> "{log.as_posix()}"\n', "10-a.sh": f'echo A >> "{log.as_posix()}"\n'})
     assert r.returncode == 0, r.stderr
-    assert log.read_text().split() == ["A", "B"]
+    assert log.read_text(encoding="utf-8").split() == ["A", "B"]
 
 
 def test_violation_is_red_names_the_check_and_stops(tmp_path):
@@ -52,7 +52,7 @@ def test_gate_goes_red_at_step_0_on_deliberate_violation(tmp_path):
     (repo / "tools" / "ci" / "checks.d").mkdir(parents=True)
     shutil.copy(ROOT / "tools" / "gate.sh", repo / "tools" / "gate.sh")
     shutil.copy(RUNNER, repo / "tools" / "ci" / "run_checks.sh")
-    (repo / "tools" / "ci" / "checks.d" / "10-ihlal.sh").write_text("echo KASITLI_IHLAL >&2; exit 1\n", newline="\n")
+    (repo / "tools" / "ci" / "checks.d" / "10-ihlal.sh").write_text("echo KASITLI_IHLAL >&2; exit 1\n", newline="\n", encoding="utf-8")
     r = subprocess.run(["bash", "tools/gate.sh"], cwd=repo, capture_output=True, text=True, encoding="utf-8",
                        env={"PATH": os.environ["PATH"], "GATE_PART": "static"})
     assert r.returncode == 1

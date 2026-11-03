@@ -35,8 +35,8 @@ func _ctrl(extra: Dictionary = {}) -> GameController:
 		"achievements_path": PATH, "clock": func() -> int: return _now, "data": AchKit.legacy_data()
 	}
 	gc.v2_opts.merge(extra, true)
-	add_child_autofree(gc)
 	gc.highscores = Highscores.new(HS_PATH)  # koşu sonu skor kaydı gerçek dosyaya yazmasın
+	add_child_autofree(gc)
 	return gc
 
 

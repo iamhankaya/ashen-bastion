@@ -7,11 +7,4 @@ extends RefCounted
 static func of(def: AchievementDef, store: AchievementStore) -> int:
 	if def == null or store == null:
 		return -1
-	var s := String(def.stat)
-	if s == "total_chars5":
-		return store.chars5.size()
-	if AchievementDef.TOTAL_KEY.has(s):
-		return int(store.totals[AchievementDef.TOTAL_KEY[s]])
-	if AchievementDef.BEST_KEY.has(s):
-		return int(store.best[AchievementDef.BEST_KEY[s]])
-	return -1
+	return store.progress_of(def)

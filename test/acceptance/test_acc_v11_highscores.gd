@@ -392,8 +392,8 @@ func _controller() -> GameController:
 	var c := GameController.new()
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED
-	add_child_autofree(c)
 	c.highscores = Highscores.new(_path())
+	add_child_autofree(c)
 	return c
 
 

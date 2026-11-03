@@ -18,11 +18,11 @@ var fake: V21Kit.FakeSettings
 
 
 func before_each() -> void:
-	fake = V21Kit.use_fake_settings()
+	fake = V21Kit.FakeSettings.new()
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 
 
 func _combos(n: int) -> Array[Dictionary]:
@@ -40,6 +40,7 @@ func _make(
 	host.size = Vector2(1080, 2400)
 	add_child_autofree(host)
 	var r := ResultScreen.new()
+	r.run_selection = fake.selection()
 	host.add_child(r)
 	if chip:
 		r.set_new_achievements(["AİLE II", "AİLE III"] as Array[String])
@@ -212,6 +213,7 @@ func test_b65_spoken_rank_words_for_one_to_ten() -> void:
 	host.size = Vector2(1080, 2400)
 	add_child_autofree(host)
 	var r := ResultScreen.new()
+	r.run_selection = fake.selection()
 	host.add_child(r)
 	r.show_result(true, st, _combos(0), "", {"rank": 3, "is_record": false, "previous_best": 900})
 	assert_eq(r.record_note.text, "Normal · Zor listesinde 3. sıra", "görünen metin rakamlı kalır")

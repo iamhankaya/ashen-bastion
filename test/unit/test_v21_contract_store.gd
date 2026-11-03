@@ -6,7 +6,7 @@ const TMP := "user://test_v21_contract_store.cfg"
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 
 
 func _e(score: int, mode: String = "normal", diff: String = "normal") -> Dictionary:
@@ -174,32 +174,34 @@ func test_contract_tier_id_format() -> void:
 
 
 func test_contract_selection_defaults_and_set_selection_saves() -> void:
-	var fake := V21Kit.use_fake_settings()
-	assert_eq(V21Runs.selection(), {"mode": &"normal", "diff": &"normal"})
-	V21Runs.set_selection(&"quick", &"easy")
+	var fake := V21Kit.FakeSettings.new()
+	var sel := fake.selection()
+	assert_eq(sel.selection(), {"mode": &"normal", "diff": &"normal"})
+	sel.set_selection(&"quick", &"easy")
 	assert_eq(fake.run_mode, "quick")
 	assert_eq(fake.run_diff, "easy")
 	assert_eq(fake.saves, 1)
-	assert_eq(V21Runs.selection(), {"mode": &"quick", "diff": &"easy"})
-	V21Runs.set_selection(&"turbo", &"easy")
-	V21Runs.set_selection(&"quick", &"efsane")
+	assert_eq(sel.selection(), {"mode": &"quick", "diff": &"easy"})
+	sel.set_selection(&"turbo", &"easy")
+	sel.set_selection(&"quick", &"efsane")
 	assert_eq(fake.run_mode, "quick", "bilinmeyen ad yok sayılır")
 	assert_eq(fake.saves, 1)
 
 
 func test_contract_run_opts_follow_the_selection() -> void:
-	var fake := V21Kit.use_fake_settings()
-	var normal := V21Runs.run_opts()
+	var fake := V21Kit.FakeSettings.new()
+	var sel := fake.selection()
+	var normal := sel.run_opts()
 	assert_eq(normal["end_mode"], "lord")
 	assert_eq(normal["end_time"], 1200.0)
 	assert_eq(normal["run_profile"].mode, &"normal")
 	fake.run_mode = "quick"
 	fake.run_diff = "hard"
-	var quick := V21Runs.run_opts()
+	var quick := sel.run_opts()
 	assert_eq(quick["end_time"], 600.0)
 	assert_eq(quick["run_profile"].diff, &"hard")
 	fake.run_mode = "endless"
-	assert_eq(V21Runs.run_opts()["end_mode"], "endless")
+	assert_eq(sel.run_opts()["end_mode"], "endless")
 
 
 func test_contract_run_won_covers_state_won_and_the_endless_milestone() -> void:
@@ -215,10 +217,11 @@ func test_contract_run_won_covers_state_won_and_the_endless_milestone() -> void:
 
 
 func test_contract_score_fields_take_mode_and_diff_from_the_finished_run() -> void:
-	var fake := V21Kit.use_fake_settings()
+	var fake := V21Kit.FakeSettings.new()
+	var sel := fake.selection()
 	fake.run_mode = "endless"
 	var stats := {"score": 1234, "time": 61.9, "level": 7, "mode": "quick", "diff": "easy"}
-	var f := V21Runs.score_fields(stats, true)
+	var f := sel.score_fields(stats, true)
 	assert_eq(f["score"], 1234)
 	assert_eq(f["time"], 61)
 	assert_eq(f["won"], true)
@@ -226,17 +229,17 @@ func test_contract_score_fields_take_mode_and_diff_from_the_finished_run() -> vo
 	assert_eq(f["mode"], "quick", "geçerli seçim değil, biten koşunun çifti")
 	assert_eq(f["diff"], "easy")
 	assert_gt(f["unix"], 1_700_000_000)
-	var bare := V21Runs.score_fields({"score": 1}, false)
+	var bare := sel.score_fields({"score": 1}, false)
 	assert_eq(bare["mode"], "endless", "stats'ta yoksa geçerli seçim")
 	assert_eq(bare["diff"], "normal")
 
 
 func test_contract_scores_key_uses_the_pair_or_the_selection() -> void:
-	V21Kit.use_fake_settings()
-	assert_eq(V21Runs.scores_key(), {"mode": &"normal", "diff": &"normal"})
-	assert_eq(V21Runs.scores_key(&"endless", &"hard"), {"mode": &"endless", "diff": &"hard"})
+	var sel := V21Kit.FakeSettings.new().selection()
+	assert_eq(sel.scores_key(), {"mode": &"normal", "diff": &"normal"})
+	assert_eq(sel.scores_key(&"endless", &"hard"), {"mode": &"endless", "diff": &"hard"})
 	assert_eq(
-		V21Runs.scores_key(&"endless", &""),
+		sel.scores_key(&"endless", &""),
 		{"mode": &"normal", "diff": &"normal"},
 		"eksik çift = seçim"
 	)

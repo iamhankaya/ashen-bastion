@@ -128,11 +128,9 @@ def test_duplicate_junit_testcase_is_reported(tmp_path):
 def slice_tree(marks_v202="", extra=None):
     files = {
         "tools/v202_slices.txt": "# başlık\n" + marks_v202,
-        "tools/v21_slices.txt": "# başlık\n",
         "tools/v2_slices.txt": "# başlık\n",
         "tools/v203_slices.txt": "# başlık\n",
         "test/acceptance/test_acc_v202_x.gd": gd("test_p1_a", "test_e5b_lenient_suffix", "test_a1_open_symbol_other_name"),
-        "test/acceptance/test_acc_v21_x.gd": gd("test_s1_closed"),
         "test/unit/test_plain.gd": gd("test_plain"),
     }
     files.update(extra or {})
@@ -146,7 +144,6 @@ def test_pending_allowed_is_closed_slice_tests_only(tmp_path):
     allowed = T.pending_allowed(src, d.ids)
     assert "test/acceptance/test_acc_v202_x.gd::test_p1_a" in allowed
     assert "test/acceptance/test_acc_v202_x.gd::test_e5b_lenient_suffix" in allowed  # check_slices regex'inin kaçırdığı 'e5b' soneki
-    assert "test/acceptance/test_acc_v21_x.gd::test_s1_closed" in allowed
     assert "test/unit/test_plain.gd::test_plain" not in allowed
 
 
@@ -180,7 +177,6 @@ def test_unexpected_skip_is_red_but_closed_slice_pending_is_green(tmp_path):
         ("test/acceptance/test_acc_v202_x.gd", "test_p1_a", "pending"),
         ("test/acceptance/test_acc_v202_x.gd", "test_e5b_lenient_suffix", "pending"),
         ("test/acceptance/test_acc_v202_x.gd", "test_a1_open_symbol_other_name", "pending"),  # A açık değil ama v202 'A' dilimi kapalı => izinli
-        ("test/acceptance/test_acc_v21_x.gd", "test_s1_closed", "pending"),
         ("test/unit/test_plain.gd", "test_plain", "pending"),  # dilimsiz test pending => kırmızı
     ]
     r = head_check(tmp_path, files, cases)
