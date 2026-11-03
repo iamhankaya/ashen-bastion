@@ -2,7 +2,7 @@ extends GutTest
 ## Kabul (v2.1 K): başarım kuralı (spec senaryo 10, K6-B, plan K-C5). Kolay'da Lord'a bağlı kademeler (lordslayer, endure 1200,
 ## ascension 4) olay anında açılmaz; toplam sayaçlardan yalnız runs/play_secs artar; koşu içi en iyiler her zorlukta işler;
 ## geri alma yok; Kolay -> Normal ardışık koşular doğru. Veri/kural testleri (r1-r2) C'den beri koşar; tracker yolları (k21-k28)
-## V21Slice "K" açılana dek pending.
+##
 ## Gerçek imza (T-turu): AchievementTracker._init(data, store, char, clock, rules, diff); rules = AchievementRules,
 ## diff = koşu zorluğu (controller: V21Runs.achievement_rules() + diff_of(sim)). Enjeksiyon yolu olduğundan koşullu pending yok.
 
@@ -69,8 +69,6 @@ func test_r2_rules_block_exactly_the_lord_bound_tiers_on_easy() -> void:
 
 
 func test_k21_easy_win_counts_only_runs_and_play_secs() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var r := _rig(&"easy")
 	r["tracker"].finish(true, _stats())
 	var st: AchievementStore = r["store"]
@@ -81,8 +79,6 @@ func test_k21_easy_win_counts_only_runs_and_play_secs() -> void:
 
 
 func test_k22_normal_and_hard_wins_count_and_unlock_lordslayer() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	for diff in [&"normal", &"hard"]:
 		var r := _rig(diff)
 		r["tracker"].finish(true, _stats())
@@ -91,8 +87,6 @@ func test_k22_normal_and_hard_wins_count_and_unlock_lordslayer() -> void:
 
 
 func test_k23_easy_still_records_run_bests_and_non_lord_tiers() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var r := _rig(&"easy")
 	AchKit.kills(r["bus"], 520)
 	r["tracker"].finish(false, _stats(25, 150000, 700))
@@ -105,8 +99,6 @@ func test_k23_easy_still_records_run_bests_and_non_lord_tiers() -> void:
 
 
 func test_k24_easy_never_grants_endure_1200() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var easy := _rig(&"easy")
 	var normal := _rig(&"normal")
 	easy["tracker"].finish(false, _stats(10, 1000, 1250))
@@ -116,8 +108,6 @@ func test_k24_easy_never_grants_endure_1200() -> void:
 
 
 func test_k25_easy_never_grants_ascension_4() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var easy := _rig(&"easy")
 	var normal := _rig(&"normal")
 	for r in [easy, normal]:
@@ -129,8 +119,6 @@ func test_k25_easy_never_grants_ascension_4() -> void:
 
 
 func test_k26_easy_then_normal_on_the_same_save_unlocks_in_order() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var path := AchKit.tmp_path("seq")
 	var first := _rig(&"easy", AchKit.store(path))
 	first["tracker"].finish(true, _stats())
@@ -145,8 +133,6 @@ func test_k26_easy_then_normal_on_the_same_save_unlocks_in_order() -> void:
 
 
 func test_k27_a_later_easy_run_never_rolls_back_a_normal_unlock() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var path := AchKit.tmp_path("noroll")
 	var normal := _rig(&"normal", AchKit.store(path))
 	normal["tracker"].finish(true, _stats(10, 1000, 1250))
@@ -160,8 +146,6 @@ func test_k27_a_later_easy_run_never_rolls_back_a_normal_unlock() -> void:
 
 
 func test_k28_endless_counts_one_win_however_many_lords_fall() -> void:
-	if V21Slice.require(self, "K"):
-		return
 	var r := _rig(&"normal")
 	var bus: SimBus = r["bus"]
 	bus.milestone_reached.emit()

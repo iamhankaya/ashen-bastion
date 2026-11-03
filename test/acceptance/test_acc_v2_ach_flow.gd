@@ -60,9 +60,9 @@ func _controller(extra: Dictionary = {}) -> GameController:
 	var o := {"data": AchKit.legacy_data(), "achievements_path": _ach_path, "clock": AchKit.clock()}
 	o.merge(extra, true)
 	c.v2_opts = o
+	c.highscores = Highscores.new(AchKit.tmp_path("hs"))
 	add_child(c)
 	_ctrl = c
-	c.highscores = Highscores.new(AchKit.tmp_path("hs"))
 	return c
 
 

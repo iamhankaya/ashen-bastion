@@ -5,7 +5,7 @@ description: Ashen Bastion'a yeni koşu modu veya zorluk eklerken (data/run_mode
 
 # Koşu modu / zorluk ekle (R7 `RunCatalog`)
 
-Mod ve zorluk **dosya başına bir kayıt**tır; dilim dosyası, sabit kimlik listesi ya da kayıt dosyası yoktur. `RunCatalog.default()` (`scripts/sim/catalog/run_catalog.gd`) dizinleri okur; `RunProfiles`, `RunStrip`, `Settings`, `Highscores`, `AchievementRules` ve `V21Runs.set_selection` kimlik kümesini buradan alır. Şema: `docs/data-schema.md` "Mod kataloğu (R7)".
+Mod ve zorluk **dosya başına bir kayıt**tır; dilim dosyası, sabit kimlik listesi ya da kayıt dosyası yoktur. `RunCatalog.default()` (`scripts/sim/catalog/run_catalog.gd`) dizinleri okur; `RunProfiles`, `RunStrip`, `Settings`, `Highscores`, `AchievementRules` ve `RunSelection.set_selection` kimlik kümesini buradan alır. Şema: `docs/data-schema.md` "Mod kataloğu (R7)".
 
 ## Adımlar
 1. **Dosya:** mod → `data/run_modes/<id>.json`, zorluk → `data/difficulties/<id>.json` (dosya adı = `id`; uyuşmazlık `RUN_CATALOG: ... kimlik dosya adıyla aynı olmalı`). Örnekler: `data/run_modes/quick.json`, `data/difficulties/hard.json`.

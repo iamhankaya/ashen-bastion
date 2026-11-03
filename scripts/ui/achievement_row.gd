@@ -271,7 +271,7 @@ func _goal_line(store: AchievementStore, complete: bool, bias: int) -> String:
 	if complete:
 		return (
 			"Tüm kademeler açıldı. %s"
-			% Highscores.format_date(store.step_unix(def.id, step_total), bias)
+			% DateText.local_date(store.step_unix(def.id, step_total), bias)
 		)
 	return goal_text(def, AchievementStep.next_target(def, step_have))
 
@@ -309,7 +309,7 @@ func _build_path(store: AchievementStore, bias: int) -> void:
 		var right_text := ""
 		var right_col := UiKit.KEMIK_500
 		if i < step_have:
-			right_text = Highscores.format_date(store.step_unix(def.id, i + 1), bias)
+			right_text = DateText.local_date(store.step_unix(def.id, i + 1), bias)
 			right_col = UiKit.KEMIK_300
 		elif i == step_have:
 			right_text = (

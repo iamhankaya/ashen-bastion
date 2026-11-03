@@ -70,6 +70,7 @@ func test_ring_starts_at_level_up_by_default() -> void:
 func test_debug_labels_do_not_cover_the_badge_row_or_the_drum() -> void:
 	assert_true(OS.is_debug_build(), "test koşusu debug derleme")
 	var c := GameController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.start_run()

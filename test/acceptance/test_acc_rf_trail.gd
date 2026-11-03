@@ -5,7 +5,7 @@ extends GutTest
 const EVERY := 60
 const STEPS := 600
 const SEEDS := [11, 23, 37]
-const CHARS := [&"gunslinger", &"barutcu"]
+const CHARS := [&"gunslinger", &"zyfen"]
 
 
 func _drive(seed_value: int, character: StringName, log_events: bool) -> GameSim:

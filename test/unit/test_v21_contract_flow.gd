@@ -6,14 +6,17 @@ const DIR := "user://hs_v21_flow"
 const CONTROLLER := "res://scripts/ctrl/game_controller.gd"
 const CEILING := 960
 
+var _fake := V21Kit.FakeSettings.new()
+
 
 func before_each() -> void:
+	_fake = V21Kit.FakeSettings.new()
 	DirAccess.make_dir_recursive_absolute(DIR)
 	_clean()
 
 
 func after_each() -> void:
-	V21Kit.clear_fake_settings()
+	RunSelection.reset_cache()
 
 
 func after_all() -> void:
@@ -31,6 +34,7 @@ func _controller() -> GameController:
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	c.highscores = Highscores.new(DIR + "/hs.json")
+	c.run_selection = _fake.selection()
 	add_child_autofree(c)
 	c.start_run()
 	return c
@@ -84,11 +88,11 @@ func test_contract_run_screen_never_steps_the_sim_or_auto_pauses() -> void:
 func test_contract_controller_uses_v21_runs_at_every_touchpoint() -> void:
 	var text := FileAccess.get_file_as_string(CONTROLLER)
 	for call in [
-		"V21Runs.run_opts()",
+		"run_selection.run_opts()",
 		"V21Runs.run_won(",
-		"V21Runs.score_fields(",
-		"V21Runs.scores_key(",
-		"V21Runs.set_selection(",
+		"run_selection.score_fields(",
+		"run_selection.scores_key(",
+		"run_selection.set_selection(",
 		"highscores.list_for(",
 	]:
 		assert_true(text.contains(call), call)
@@ -99,11 +103,13 @@ func test_contract_controller_uses_v21_runs_at_every_touchpoint() -> void:
 func test_contract_controller_never_submits_scores_without_mode_and_diff() -> void:
 	# Eski çağıranlar için submit mode/diff'siz çağrıyı normal:normal'a yazar; controller bunu SESSİZCE yanlış listeye yapmasın.
 	var text := FileAccess.get_file_as_string(CONTROLLER)
-	assert_false(text.contains(".submit({"), "controller yalnız V21Runs.score_fields ile gönderir")
-	var f := V21Runs.score_fields({"score": 5, "mode": "quick", "diff": "hard"}, false)
+	assert_false(
+		text.contains(".submit({"), "controller yalnız run_selection.score_fields ile gönderir"
+	)
+	var sel := V21Kit.FakeSettings.new().selection()
+	var f := sel.score_fields({"score": 5, "mode": "quick", "diff": "hard"}, false)
 	assert_true(RunProfiles.MODES.has(f["mode"]) and RunProfiles.DIFFS.has(f["diff"]))
-	V21Kit.use_fake_settings()
-	var g := V21Runs.score_fields({"score": 5}, false)
+	var g := sel.score_fields({"score": 5}, false)
 	assert_true(
 		RunProfiles.MODES.has(g["mode"]) and RunProfiles.DIFFS.has(g["diff"]),
 		"stats'ta yoksa seçimden"
@@ -116,7 +122,7 @@ func test_contract_controller_stays_within_the_line_ceiling() -> void:
 
 
 func test_contract_start_run_builds_the_sim_from_the_selection() -> void:
-	var fake := V21Kit.use_fake_settings()
+	var fake := _fake
 	fake.run_mode = "quick"
 	fake.run_diff = "easy"
 	var c := _controller()
@@ -151,7 +157,7 @@ func test_contract_run_screen_node_visibility_follows_the_screen() -> void:
 
 
 func test_contract_play_with_sets_the_selection_and_starts_that_run() -> void:
-	var fake := V21Kit.use_fake_settings()
+	var fake := _fake
 	var c := _controller()
 	c.go_menu()
 	c.play_with(&"quick", &"easy")
@@ -162,7 +168,6 @@ func test_contract_play_with_sets_the_selection_and_starts_that_run() -> void:
 
 
 func test_contract_score_is_written_to_the_pair_of_the_finished_run() -> void:
-	V21Kit.use_fake_settings()
 	var c := _controller()
 	c.go_menu()
 	c.play_with(&"quick", &"easy")
@@ -173,7 +178,6 @@ func test_contract_score_is_written_to_the_pair_of_the_finished_run() -> void:
 
 
 func test_contract_default_run_scores_into_normal_normal() -> void:
-	V21Kit.use_fake_settings()
 	var c := _controller()
 	c.sim.score.on_kill(&"elit_karga", c.sim.step_count)
 	_die(c)
@@ -182,7 +186,6 @@ func test_contract_default_run_scores_into_normal_normal() -> void:
 
 
 func test_contract_scores_open_from_menu_and_result_with_a_pair() -> void:
-	V21Kit.use_fake_settings()
 	var c := _controller()
 	c.sim.score.on_kill(&"elit_karga", c.sim.step_count)
 	_die(c)
@@ -198,7 +201,7 @@ func test_contract_scores_open_from_menu_and_result_with_a_pair() -> void:
 
 
 func test_contract_endless_milestone_counts_as_a_win_at_run_end() -> void:
-	var fake := V21Kit.use_fake_settings()
+	var fake := _fake
 	fake.run_mode = "endless"
 	var c := _controller()
 	c.sim.milestone_won = true

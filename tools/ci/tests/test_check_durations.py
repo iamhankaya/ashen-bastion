@@ -14,7 +14,7 @@ def junit(tmp_path, times):
     p = tmp_path / "junit.xml"
     p.write_text(
         f'<testsuites><testsuite name="test/unit/test_x.gd" tests="{len(times)}">{cases}</testsuite></testsuites>'
-    )
+    , encoding="utf-8")
     return str(p)
 
 

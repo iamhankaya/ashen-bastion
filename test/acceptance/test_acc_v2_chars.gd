@@ -256,9 +256,9 @@ func _controller() -> GameController:
 		"achievements_path": AchKit.tmp_path("ctrl"),
 		"clock": AchKit.clock(),
 	}
+	c.highscores = Highscores.new(AchKit.tmp_path("hs"))
 	add_child(c)
 	_ctrl = c
-	c.highscores = Highscores.new(AchKit.tmp_path("hs"))
 	return c
 
 

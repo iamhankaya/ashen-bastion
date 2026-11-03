@@ -8,6 +8,7 @@ func after_each() -> void:
 
 func _controller() -> GameController:
 	var c := GameController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)
 	c.start_run()

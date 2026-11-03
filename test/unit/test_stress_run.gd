@@ -20,6 +20,7 @@ func test_status_text_is_turkish_and_nonempty() -> void:
 
 func test_controller_stress_entry_keeps_run_alive_and_drives_scenario() -> void:
 	var gc := GameController.new()
+	gc.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	add_child_autofree(gc)
 	gc.start_stress()
 	assert_not_null(gc._stress, "start_stress sonrası koşu nesnesi yaşamalı")
@@ -65,6 +66,7 @@ func test_view_ms_is_recorded_and_reported() -> void:
 
 func test_controller_stress_records_view_time_each_frame() -> void:
 	var gc := GameController.new()
+	gc.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	add_child_autofree(gc)
 	gc.start_stress()
 	for i in 20:

@@ -7,16 +7,26 @@ const CHAR_Z := &"zyfen"
 const CHAR_G := &"gunslinger"
 const TOUGH_HP := 1.0e7
 const STEP := GameSim.STEP
+const CHAR_DIR := "res://assets/gfx/char/"
+const LEGACY_ZYFEN_WAIVER := "res://docs/design/v2.0.2/walk-waiver.md"
 
 
-## Kolsuz karakterin sanat kaynağı sahibi: `rig.walk.strip` `<sahip>_strip.png` ise `art/source/<sahip>/` (yalnız veriyle eklenen
-## karakter başka karakterin şeridini paylaşabilir); şerit adı bu kalıpta değilse karakterin kendi kimliği. `art/source/<sahip>/`
+## Kolsuz karakterin sanat kaynağı sahibi: `rig.walk.strip` KANONİK yolda (`CHAR_DIR/<sahip>_strip.png`) ise `art/source/<sahip>/`
+## (yalnız veriyle eklenen karakter başka karakterin şeridini paylaşabilir); aksi halde (başka dizin, başka ad) karakterin kendi
+## kimliği: başka sahibin adını taşıyan yabancı bir dosya o sahibin kalite kaydını ödünç alamaz (F-150). `art/source/<sahip>/`
 ## yoksa test KIRMIZI kalır (atlanmaz): yeni sanat getiren karakter kendi şeridini ve kaynağını da getirmelidir.
 static func art_owner(id: StringName, rig: Dictionary) -> StringName:
 	var walk: Variant = rig.get("walk", {})
 	var strip := str((walk as Dictionary).get("strip", "")) if walk is Dictionary else ""
 	var base := strip.get_file()
-	return StringName(base.trim_suffix("_strip.png")) if base.ends_with("_strip.png") else id
+	if base.ends_with("_strip.png") and strip == CHAR_DIR + base:
+		return StringName(base.trim_suffix("_strip.png"))
+	return id
+
+
+## Yürüme waiver dosyası karaktere bağlıdır (sahibe değil): paylaşılan şeridin sahibinin waiver'ı yeni karakteri aklamaz.
+static func waiver_path(id: StringName) -> String:
+	return LEGACY_ZYFEN_WAIVER if id == CHAR_Z else "res://docs/design/walk-waiver-%s.md" % id
 
 
 ## Zyfen sim'i, gerçek veri, doğurma çizelgesi boş. Tabanca susturulur (`silence`), beceriler verilir, ölümsüz.

@@ -153,6 +153,7 @@ func test_formatters() -> void:
 
 func test_game_controller_screen_flow() -> void:
 	var c := GameController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon: yazılamaz yol, gerçek dosya oluşmaz
 	c.process_mode = Node.PROCESS_MODE_DISABLED  # sim adımlanmaz; yalnız geçişler
 	add_child_autofree(c)
@@ -231,6 +232,7 @@ func test_hud_bind_and_refresh_with_v11_elements_leave_no_stub_calls() -> void:
 
 func test_controller_v11_call_lines_are_placed_once() -> void:
 	var c := SpyController.new()
+	c.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	c.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}  # v2.0 izolasyon
 	c.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(c)

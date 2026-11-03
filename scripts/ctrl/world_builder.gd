@@ -79,6 +79,7 @@ static func build_ui(host) -> void:
 	level_up.chosen.connect(host._on_choice)
 	var pause_screen := PauseScreen.new()
 	pause_screen.name = "Pause"
+	pause_screen.run_selection = host.run_selection
 	ui.add_child(pause_screen)
 	host.pause_screen = pause_screen
 	pause_screen.resume_requested.connect(host.resume_game)
@@ -89,12 +90,14 @@ static func build_ui(host) -> void:
 	pause_screen.settings_requested.connect(host.open_settings)
 	var result_screen := ResultScreen.new()
 	result_screen.name = "Result"
+	result_screen.run_selection = host.run_selection
 	ui.add_child(result_screen)
 	host.result_screen = result_screen
 	result_screen.replay_requested.connect(host.start_run)
 	result_screen.menu_requested.connect(host.go_menu)
 	var menu := MainMenu.new()
 	menu.name = "Menu"
+	menu.run_selection = host.run_selection
 	ui.add_child(menu)
 	host.menu = menu
 	menu.play_requested.connect(host.start_run)
@@ -143,6 +146,7 @@ static func build_v11_world(host) -> void:
 	scores_screen.play_with_requested.connect(host.play_with)
 	var run_screen := RunScreen.new()
 	run_screen.name = "RunScreen"
+	run_screen.run_selection = host.run_selection
 	ui.add_child(run_screen)
 	host.run_screen = run_screen
 	run_screen.back_requested.connect(host.go_menu)

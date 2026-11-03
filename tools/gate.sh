@@ -80,6 +80,7 @@ end_step() {
 # 3 çekirdek boştaydı. Bu kipte pytest ARKA PLANDA GUT ile birlikte koşar; HİÇBİR denetim atlanmaz ve kısa devre yoktur:
 # her birinin çıkış kodu toplanır, hepsi bitince çıktıları (ayrı log, sırayla) basılır, biri kırmızıysa gate kırmızıdır.
 # GATE_SERIAL=1 eski sıralı yolu korur. Süre denetimi eşzamanlı GUT için zaten --contended (yalnız uyarı) kullanır.
+# Yarış koruması (F-153): tools/conftest.py + tools/ci/tree_guard.py pytest oturumu boyunca ağaç değiştiyse (izlenen dosya, GUT dizinlerine yeni dosya) pytest'i kırmızı yapar.
 CONC=0
 if [ "$PART" = "all" ] && [ $FAST -eq 0 ] && [ "$JOBS" -gt 1 ] && [ "${GATE_SERIAL:-0}" != "1" ]; then CONC=1; fi
 # --- eşzamanlı denetimler (başla)
@@ -227,7 +228,6 @@ if [ "$PART" = "all" ] || [ "$PART" = "static" ]; then
   python3 tools/ci/check_slices.py tools/v2_slices.txt || fail "tools/v2_slices.txt (geçersiz simge / dosya yok)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt || fail "tools/v202_slices.txt (geçersiz simge / dosya yok)"
   python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt || fail "tools/v203_slices.txt (geçersiz simge / dosya yok)"
-  python3 tools/ci/check_slices.py --v21 tools/v21_slices.txt || fail "tools/v21_slices.txt (geçersiz simge / dosya yok)"
 
   step "5. Python testleri"
   PYDIRS=""
@@ -304,7 +304,6 @@ if [ $FAST -eq 0 ] && { [ "$PART" = "all" ] || [ "$PART" = "verify" ]; }; then
   python3 tools/ci/check_slices.py tools/v2_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v2_slices.txt)"
   python3 tools/ci/check_slices.py --v202 tools/v202_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v202_slices.txt)"
   python3 tools/ci/check_slices.py --symbols "A B C D" --force-env V203_SLICES_FORCE --classname-re v203 --no-sliceless tools/v203_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v203_slices.txt)"
-  python3 tools/ci/check_slices.py --v21 tools/v21_slices.txt .gate/junit.xml || fail "işaretli dilimde pending ya da sıfır test (tools/v21_slices.txt)"
 elif [ $FAST -eq 1 ] && [ -n "$GUT_CONFIG" ]; then
   # Hızlı mod: kimlik kapısı yalnız seçilen dosyalar için (--mode selected); tek test süre sınırı aynı; dilim/pending denetimi
   # tam JUnit ister (yalnız tam gate'te koşar).

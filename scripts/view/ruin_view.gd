@@ -24,11 +24,12 @@ func bind(actors: Node2D, map: MapSim) -> void:
 	_last_chunk = Vector2i(1 << 30, 1 << 30)
 
 
+## Anında serbest bırakır (queue_free değil): bind() hemen ardından yenilerini kurar, kare sonuna bırakılırsa sayı çiftlenir (F-125).
 func clear() -> void:
 	for i in _sprites:
 		var s: Sprite2D = _sprites[i]
 		if is_instance_valid(s):
-			s.queue_free()
+			s.free()
 	_sprites.clear()
 
 
