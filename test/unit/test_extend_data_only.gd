@@ -106,6 +106,41 @@ func test_data_only_persist_key_seeds_reconcile_after_threshold_added() -> void:
 	assert_eq(st.step_count(&"zz_picks"), 2)
 
 
+func test_hostile_save_keys_neither_displace_declared_keys_nor_persist() -> void:
+	var g := _persist_data()
+	var totals := {"zz_picks": 7}
+	for i in 40:
+		totals["a%02d" % i] = 1  # alfabetik olarak zz_picks'ten önce gelen uydurma anahtarlar
+	var raw := {"v": 2, "totals": totals, "best": {"zz_best": 4, "BAD KEY": 9}}
+	var clean := AchievementStore.sanitize(
+		raw, PackedStringArray(["zz_picks"]), PackedStringArray(["zz_best"])
+	)
+	assert_eq(int(clean["totals"]["zz_picks"]), 7, "tanımlı anahtar korunur")
+	assert_eq(int(clean["best"]["zz_best"]), 4)
+	assert_false(clean["totals"].has("a00"), "tanımsız uydurma anahtar atılır")
+	assert_false(clean["best"].has("BAD KEY"))
+	assert_eq(clean["totals"].size(), AchievementStore.TOTAL_KEYS.size() + 1)
+	var plain := AchievementStore.sanitize(raw)
+	assert_false(plain["totals"].has("zz_picks"), "tanım verilmezse yalnız yerleşik anahtarlar")
+	assert_not_null(g)
+
+
+func test_invalid_persist_key_format_is_a_catalog_error() -> void:
+	var metric := {
+		"stat": "total_zz_pick",
+		"order": 930,
+		"icon_family": "hud-oldurme",
+		"persist": {"total": "ZzPicks", "best": null},
+		"source": {"event": "pickup_collected", "filter": {}, "value": "one"},
+		"aggregate": "sum",
+	}
+	var root := _ach_root(
+		{"total_zz_pick": metric}, [_fam("zz_picks", "total_zz_pick", "total", [2, 4])]
+	)
+	var errs := "\n".join(GameData.load_dir(root).validate())
+	assert_string_contains(errs, "persist.total 'ZzPicks' geçersiz")
+
+
 # --- F-148: 4. mod / zorluk skor ekranında kod istemez -------------------------------------------------------------
 
 

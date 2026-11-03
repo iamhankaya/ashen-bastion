@@ -26,6 +26,7 @@ const POLLS: PackedStringArray = ["time", "active_slots"]
 const FINISH_WHEN: PackedStringArray = ["always", "won"]
 const FINISH_VALUES: PackedStringArray = ["one", "result.time"]
 const RESULT_KEYS: PackedStringArray = ["time", "level", "score"]
+const PERSIST_RE := "^[a-z0-9_]{1,32}$"
 const VALUE_RE := "^(one|payload\\.[a-z_][a-z0-9_]*)$"
 ## Eklenti dizini; ikincisi yalnız kuru deneme testlerinin sahte reducer'ı içindir (üretimde dizin yoktur).
 const REDUCER_DIRS: PackedStringArray = [
@@ -83,6 +84,11 @@ static func _check_persist(
 		var raw: Variant = (persist as Dictionary).get(k, null)
 		if not (raw is String) or raw == "":
 			continue  # null/yok = bu metrik o değeri tutmaz
+		if RegEx.create_from_string(PERSIST_RE).search(raw) == null:
+			out.append(
+				"ACH_METRIC: %s: persist.%s '%s' geçersiz ([a-z0-9_]{1,32})" % [stat, k, raw]
+			)
+			continue
 		var key: String = "%s:%s" % [k, raw]  # totals ve best ayrı ad alanı (kills ikisinde de meşru)
 		if keys.has(key):
 			out.append(

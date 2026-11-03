@@ -186,13 +186,11 @@ func test_p9_pool_assignments_match_the_plan_counts() -> void:
 	if V202Slice.require(self, "P"):
 		return
 	var by_pool := {"common": [], "gunslinger": [], "zyfen": []}
-	var others := 0  # yeni karakterlerin havuzları (sayıları bu plana ait değil)
 	for d in _all_skills():
 		var pool := str(d.pool)
 		if by_pool.has(pool):
 			by_pool[pool].append(str(d.id))
 		else:
-			others += 1
 			assert_true(
 				_data.get_character(StringName(pool)) != null,
 				"%s: havuz %s ne ortak ne katalogdaki karakter" % [d.id, pool]
@@ -205,15 +203,6 @@ func test_p9_pool_assignments_match_the_plan_counts() -> void:
 	assert_gte(by_pool["zyfen"].size(), 13, "Zyfen'e özel (plan tabanı)")
 	for id in ExpectedTablesV202.GUNSLINGER_ONLY:
 		assert_true(by_pool["gunslinger"].has(id), "%s Gunslinger havuzunda (plan)" % id)
-	var extras := 0  # plan dışı, veriyle eklenen beceriler (havuzları yukarıda katalogdaki karaktere bağlandı)
-	for pool: String in by_pool:
-		extras += by_pool[pool].size()
-	extras -= 7 + 12 + 13
-	assert_gte(
-		_all_skills().size(),
-		32 + others + extras,
-		"toplam beceri (dinamit çıkmış; ek becerilerle artar)"
-	)
 	assert_null(_data.get_skill(&"dinamit"), "dinamit kaldırıldı")
 
 

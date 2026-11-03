@@ -16,8 +16,6 @@ const DEFAULT_PATH := "user://achievements.json"
 const MAX_UNLOCKED := 64
 const MAX_CHARS5 := 16
 const COUNTER_CAP := 999999999
-## Veriyle eklenen (metrik `persist`) fazladan sayaç anahtarı sınırı (totals ve best ayrı ayrı).
-const MAX_EXTRA_KEYS := 32
 const TOTAL_KEYS: PackedStringArray = ["kills", "runs", "wins", "play_secs", "boss_kills"]
 const BEST_KEYS: PackedStringArray = [
 	"score",
@@ -65,7 +63,7 @@ func load_file(defs: Array = []) -> bool:
 	corrupt = bool(r["corrupt"])
 	if not bool(r["ok"]):
 		return false
-	var clean := sanitize(r["data"])
+	var clean := sanitize(r["data"], _persist_keys(defs, true), _persist_keys(defs, false))
 	if int(r["version"]) == VERSION:
 		if defs.is_empty():
 			defs = GameData.load_default().achievements
@@ -186,7 +184,6 @@ func unlock(id: StringName, unix: int) -> bool:
 	return true
 
 
-## COUNTER_CAP'e kırpar; dirty.
 ## Veriyle eklenen metriklerin `persist` anahtarlarını sıfırdan tanımlar (yoksa 0 açar; var olana dokunmaz).
 ## Tracker kurulurken çağrılır; tanımsız anahtar `add_total`/`note_best_key`te yine yok sayılır.
 func declare_counters(total_keys: PackedStringArray, best_keys: PackedStringArray) -> void:
@@ -198,6 +195,7 @@ func declare_counters(total_keys: PackedStringArray, best_keys: PackedStringArra
 			best[k] = 0
 
 
+## COUNTER_CAP'e kırpar; dirty.
 func add_total(key: StringName, n: int = 1) -> void:
 	var k := String(key)
 	if n <= 0 or not totals.has(k):
@@ -264,7 +262,13 @@ func count_steps(defs: Array) -> int:
 
 
 ## {"unlocked","steps","totals","best","chars5"} temiz kopya; kök geçersizse {}. `unlocked` anahtarları SIRALI işlenir (ilk 64).
-static func sanitize(raw: Variant) -> Dictionary:
+## `extra_totals`/`extra_bests`: veriyle tanımlı (metrik `persist`) ek sayaç anahtarları; yalnız bunlar yerleşiklerin yanında korunur,
+## kayıttaki başka anahtar atılır (düşman kayıt kota dolduramaz).
+static func sanitize(
+	raw: Variant,
+	extra_totals: PackedStringArray = PackedStringArray(),
+	extra_bests: PackedStringArray = PackedStringArray()
+) -> Dictionary:
 	if not (raw is Dictionary):
 		return {}
 	var d: Dictionary = raw
@@ -276,8 +280,8 @@ static func sanitize(raw: Variant) -> Dictionary:
 	return {
 		"unlocked": un,
 		"steps": st,
-		"totals": _clean_counters(d.get("totals", null), TOTAL_KEYS),
-		"best": _clean_counters(d.get("best", null), BEST_KEYS),
+		"totals": _clean_counters(d.get("totals", null), TOTAL_KEYS, extra_totals),
+		"best": _clean_counters(d.get("best", null), BEST_KEYS, extra_bests),
 		"chars5": _clean_chars5(d.get("chars5", null)),
 	}
 
@@ -323,7 +327,9 @@ static func _clean_steps(raw: Variant) -> Dictionary:
 	return out
 
 
-static func _clean_counters(raw: Variant, keys: PackedStringArray) -> Dictionary:
+static func _clean_counters(
+	raw: Variant, keys: PackedStringArray, extra: PackedStringArray = PackedStringArray()
+) -> Dictionary:
 	var out := {}
 	for k in keys:
 		out[k] = 0
@@ -333,18 +339,24 @@ static func _clean_counters(raw: Variant, keys: PackedStringArray) -> Dictionary
 		var n: Variant = StoreIo.int_of((raw as Dictionary).get(k, null), false)
 		if n != null and int(n) >= 0:
 			out[k] = mini(int(n), COUNTER_CAP)
-	# veriyle eklenen (yerleşik olmayan) geçerli anahtarlar kaybolmaz; sıralı ve sınırlı
-	var extra: Array = []
-	for k in (raw as Dictionary).keys():
-		if k is String and not keys.has(k) and _valid_id(k, 32):
-			extra.append(k)
-	extra.sort()
+	# veriyle tanımlı ek anahtarlar (yalnız `extra`); yerleşiklerin üzerine yazmaz
 	for k in extra:
-		if out.size() >= keys.size() + MAX_EXTRA_KEYS:
-			break
-		var n2: Variant = StoreIo.int_of((raw as Dictionary)[k], false)
+		if keys.has(k) or not _valid_id(k, 32):
+			continue
+		out[k] = 0
+		var n2: Variant = StoreIo.int_of((raw as Dictionary).get(k, null), false)
 		if n2 != null and int(n2) >= 0:
 			out[k] = mini(int(n2), COUNTER_CAP)
+	return out
+
+
+## Tanımların (`AchievementDef.total_key`/`best_key`) yerleşik olmayan kalıcılık anahtarları.
+static func _persist_keys(defs: Array, totals_side: bool) -> PackedStringArray:
+	var out := PackedStringArray()
+	for d in defs:
+		var k: String = d.total_key if totals_side else d.best_key
+		if k != "" and not out.has(k):
+			out.append(k)
 	return out
 
 
