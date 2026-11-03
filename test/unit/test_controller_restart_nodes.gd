@@ -4,6 +4,7 @@ extends GutTest
 
 func _ctrl() -> GameController:
 	var gc := GameController.new()
+	gc.highscores = Highscores.new("user://yok_klasor_v2_izolasyon/hs.json")
 	gc.v2_opts = {"achievements_path": "user://yok_klasor_v2_izolasyon/a.json"}
 	gc.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child_autofree(gc)
