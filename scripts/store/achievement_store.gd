@@ -57,16 +57,23 @@ func _init(p_path: String = DEFAULT_PATH) -> void:
 ## false = dosya yok/bozuk (durum sıfırlanır). Bozuk dosya `<yol>.bad` olarak saklanır; yarım `.tmp` hiç okunmaz.
 ## v1 dosyası aile/kademe kaydına göçer (bellekte; ilk `save()` yedekli yazar). `defs` (GameData.achievements) verilmezse
 ## varsayılan veri kullanılır; aile içermeyen tanımlarla (v2.0 tek eşikli) kayıt v1 biçiminde kalır.
-func load_file(defs: Array = []) -> bool:
+## `metrics` = GameData._stat_metrics: ailesi olmasa da `persist` anahtarı olan metriklerin sayaçları da yüklemede korunur.
+## `defs` boşsa varsayılan veri (tanımlar + metrikler) sanitize'dan ÖNCE çözülür (v1 ve v2 kayıtlarında).
+func load_file(defs: Array = [], metrics: Array = []) -> bool:
 	_reset()
 	var r := StoreIo.read_versioned_any(path, PackedInt32Array([VERSION, VERSION_V2]))
 	corrupt = bool(r["corrupt"])
 	if not bool(r["ok"]):
 		return false
-	var clean := sanitize(r["data"], _persist_keys(defs, true), _persist_keys(defs, false))
+	if defs.is_empty():
+		var dflt := GameData.load_default()
+		defs = dflt.achievements
+		if metrics.is_empty():
+			metrics = dflt._stat_metrics
+	var clean := sanitize(
+		r["data"], _persist_keys(defs, metrics, true), _persist_keys(defs, metrics, false)
+	)
 	if int(r["version"]) == VERSION:
-		if defs.is_empty():
-			defs = GameData.load_default().achievements
 		if not _has_families(defs):
 			_v1_layout = true
 		else:
@@ -350,13 +357,20 @@ static func _clean_counters(
 	return out
 
 
-## Tanımların (`AchievementDef.total_key`/`best_key`) yerleşik olmayan kalıcılık anahtarları.
-static func _persist_keys(defs: Array, totals_side: bool) -> PackedStringArray:
+## Yerleşik olmayan kalıcılık anahtarları: tanımların (`total_key`/`best_key`) ve metrik kayıtlarının `persist` değerleri.
+static func _persist_keys(defs: Array, metrics: Array, totals_side: bool) -> PackedStringArray:
 	var out := PackedStringArray()
 	for d in defs:
 		var k: String = d.total_key if totals_side else d.best_key
 		if k != "" and not out.has(k):
 			out.append(k)
+	for m in metrics:
+		var persist: Variant = (m as Dictionary).get("persist", null) if m is Dictionary else null
+		if not (persist is Dictionary):
+			continue
+		var v: Variant = (persist as Dictionary).get("total" if totals_side else "best", null)
+		if v is String and v != "" and not out.has(v):
+			out.append(v)
 	return out
 
 

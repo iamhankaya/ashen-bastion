@@ -106,6 +106,61 @@ func test_data_only_persist_key_seeds_reconcile_after_threshold_added() -> void:
 	assert_eq(st.step_count(&"zz_picks"), 2)
 
 
+func _save_zz_total(g: GameData, n: int) -> String:
+	var st := AchKit.store()
+	st.declare_counters(PackedStringArray(["zz_picks"]), PackedStringArray())
+	st.add_total(&"zz_picks", n)
+	assert_true(st.save(), "kayıt yazılır")
+	return st.path
+
+
+func test_load_file_without_args_keeps_data_defined_counters_v2() -> void:
+	var g := _persist_data()
+	var path := _save_zz_total(g, 6)
+	GameData._default = g  # argümansız load_file varsayılan veriyi çözer
+	var again := AchievementStore.new(path)
+	assert_true(again.load_file())
+	GameData.clear_default_cache()
+	assert_eq(
+		int(again.totals.get("zz_picks", -1)), 6, "varsayılan tanımlar sanitize'dan önce çözülür"
+	)
+
+
+func test_load_file_without_args_keeps_data_defined_counters_v1_record() -> void:
+	var g := _persist_data()
+	var path := AchKit.store().path
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"v": 1, "unlocked": {}, "totals": {"zz_picks": 5}, "best": {}}))
+	f.close()
+	GameData._default = g
+	var again := AchievementStore.new(path)
+	assert_true(again.load_file())
+	GameData.clear_default_cache()
+	assert_eq(int(again.totals.get("zz_picks", -1)), 5, "v1 kaydında da korunur")
+
+
+func test_metric_without_family_keeps_its_counter_across_save_and_load() -> void:
+	var metric := {
+		"stat": "total_zz_pick",
+		"order": 930,
+		"icon_family": "hud-oldurme",
+		"persist": {"total": "zz_picks", "best": null},
+		"source": {"event": "pickup_collected", "filter": {}, "value": "one"},
+		"aggregate": "sum",
+	}
+	var g := GameData.load_dir(_ach_root({"total_zz_pick": metric}, []))  # aile YOK
+	var r := AchKit.rig(&"gunslinger", AchKit.FIXED_UNIX, g)
+	var bus: SimBus = r["bus"]
+	var store: AchievementStore = r["store"]
+	for _i in 4:
+		bus.pickup_collected.emit(&"x", Vector2.ZERO)
+	assert_eq(int(store.totals["zz_picks"]), 4, "tracker yazar")
+	assert_true(store.save())
+	var again := AchievementStore.new(store.path)
+	assert_true(again.load_file(g.achievements, g._stat_metrics))
+	assert_eq(int(again.totals.get("zz_picks", -1)), 4, "ailesiz metriğin sayacı yüklemede düşmez")
+
+
 func test_hostile_save_keys_neither_displace_declared_keys_nor_persist() -> void:
 	var g := _persist_data()
 	var totals := {"zz_picks": 7}
