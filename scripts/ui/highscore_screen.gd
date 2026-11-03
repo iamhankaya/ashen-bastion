@@ -385,8 +385,22 @@ func _mark_tabs(mode: StringName, diff: StringName) -> void:
 		)
 
 
+const ORDINALS: PackedStringArray = [
+	"birincisi",
+	"ikincisi",
+	"üçüncüsü",
+	"dördüncüsü",
+	"beşincisi",
+	"altıncısı",
+	"yedincisi",
+	"sekizincisi",
+	"dokuzuncusu",
+	"onuncusu",
+]
+
+
 static func _ordinal(i: int) -> String:
-	return ["birincisi", "ikincisi", "üçüncüsü"][i] if i < 3 else "%d." % (i + 1)
+	return ORDINALS[i] if i < ORDINALS.size() else "%d." % (i + 1)
 
 
 ## Boş sekme metni: "Sonsuz · Zor listesinde kayıt yok." + yönlendirme (DESIGN §7 `04b`).
@@ -530,10 +544,8 @@ func _layout() -> void:
 	_x0 = (1080.0 - _w) * 0.5 if _w >= W else _x0
 	_dy = maxf(0.0, _extra.y - (Y_TITLE - TOP_DEFAULT))
 	_abs(title_label, 0.0, Y_TITLE + _dy, 1080.0, 110.0)
-	var tab_w := (_w - 2.0 * TAB_GAP) / 3.0
-	for i in 3:
-		_abs(mode_tabs[i], _x0 + float(i) * (tab_w + TAB_GAP), Y_TAB_MODE + _dy, tab_w, TAB_H)
-		_abs(diff_tabs[i], _x0 + float(i) * (tab_w + TAB_GAP), Y_TAB_DIFF + _dy, tab_w, TAB_H)
+	_layout_tab_row(mode_tabs, Y_TAB_MODE + _dy)
+	_layout_tab_row(diff_tabs, Y_TAB_DIFF + _dy)
 	var back_y := DESIGN_H - BOTTOM - _extra.w - BACK_H
 	_abs(back_button, _x0, back_y, _w, BACK_H)
 	var play_y := minf(Y_PLAY + _dy, back_y - BUTTONS_GAP - PLAY_H)
@@ -563,6 +575,14 @@ func _layout() -> void:
 
 
 const BUTTONS_GAP := 27.0
+
+
+## Sıra katalogdaki sekme sayısına (n >= 1) eşit bölünür; 4. mod/zorluk veriyle eklenince kod gerekmez (F-148).
+func _layout_tab_row(tabs: Array[SegTab], y: float) -> void:
+	var n := maxi(1, tabs.size())
+	var tab_w := (_w - float(n - 1) * TAB_GAP) / float(n)
+	for i in tabs.size():
+		_abs(tabs[i], _x0 + float(i) * (tab_w + TAB_GAP), y, tab_w, TAB_H)
 
 
 ## Satır yüzeyi: düz taş kutu (tema "PanelRaised" mor olduğundan kullanılmaz; DESIGN v2.1 §0 taş dili).

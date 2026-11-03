@@ -452,7 +452,7 @@ func select_button_state() -> int:
 	if _data == null or _focus == &"":
 		return SelectState.SELECTED if _focus == _selected else SelectState.SELECT
 	var c := _data.get_character(_focus)
-	if c != null and not CharacterRoster.is_unlocked(c, _store):
+	if c != null and not CharacterRoster.is_unlocked(c, AchievementProgressView.of_store(_store)):
 		return SelectState.LOCKED
 	return SelectState.SELECTED if _focus == _selected else SelectState.SELECT
 
@@ -637,7 +637,10 @@ func _refresh_cards() -> void:
 	for i in cards.size():
 		var id := _ids[i]
 		var c := _data.get_character(id)
-		var locked := c != null and not CharacterRoster.is_unlocked(c, _store)
+		var locked := (
+			c != null
+			and not CharacterRoster.is_unlocked(c, AchievementProgressView.of_store(_store))
+		)
 		var why := CharacterRoster.lock_reason(c, _data) if locked and id != _selected else ""
 		CharacterCard.refresh(
 			cards[i], _display_name(id), id == _focus, locked, id == _selected, why

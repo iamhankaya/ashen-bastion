@@ -186,28 +186,23 @@ func test_p9_pool_assignments_match_the_plan_counts() -> void:
 	if V202Slice.require(self, "P"):
 		return
 	var by_pool := {"common": [], "gunslinger": [], "zyfen": []}
-	var others := 0  # yeni karakterlerin havuzları (sayıları bu plana ait değil)
 	for d in _all_skills():
 		var pool := str(d.pool)
 		if by_pool.has(pool):
 			by_pool[pool].append(str(d.id))
 		else:
-			others += 1
 			assert_true(
 				_data.get_character(StringName(pool)) != null,
 				"%s: havuz %s ne ortak ne katalogdaki karakter" % [d.id, pool]
 			)
-	assert_eq(by_pool["common"].size(), 7, "ortak pasif sayısı")
-	assert_eq(by_pool["gunslinger"].size(), 12, "Gunslinger'a özel (8 beceri + 4 evrim)")
-	assert_eq(by_pool["zyfen"].size(), 13, "Zyfen'e özel")
-	var want: Array = ExpectedTablesV202.GUNSLINGER_ONLY.duplicate()
-	want.sort()
-	var got: Array = by_pool["gunslinger"].duplicate()
-	got.sort()
-	assert_eq(got, want, "Gunslinger havuzu planla aynı kimlikler")
-	assert_eq(
-		_all_skills().size(), 32 + others, "toplam beceri (dinamit çıkmış; yeni havuzlar eklenir)"
+	# plan sayıları TABANDIR: veriyle eklenen beceri ortak/Gunslinger/Zyfen havuzuna girebilir (F-151)
+	assert_gte(by_pool["common"].size(), 7, "ortak pasif sayısı (plan tabanı)")
+	assert_gte(
+		by_pool["gunslinger"].size(), 12, "Gunslinger'a özel (plan tabanı: 8 beceri + 4 evrim)"
 	)
+	assert_gte(by_pool["zyfen"].size(), 13, "Zyfen'e özel (plan tabanı)")
+	for id in ExpectedTablesV202.GUNSLINGER_ONLY:
+		assert_true(by_pool["gunslinger"].has(id), "%s Gunslinger havuzunda (plan)" % id)
 	assert_null(_data.get_skill(&"dinamit"), "dinamit kaldırıldı")
 
 

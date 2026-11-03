@@ -57,16 +57,23 @@ func _init(p_path: String = DEFAULT_PATH) -> void:
 ## false = dosya yok/bozuk (durum sıfırlanır). Bozuk dosya `<yol>.bad` olarak saklanır; yarım `.tmp` hiç okunmaz.
 ## v1 dosyası aile/kademe kaydına göçer (bellekte; ilk `save()` yedekli yazar). `defs` (GameData.achievements) verilmezse
 ## varsayılan veri kullanılır; aile içermeyen tanımlarla (v2.0 tek eşikli) kayıt v1 biçiminde kalır.
-func load_file(defs: Array = []) -> bool:
+## `metrics` = GameData._stat_metrics: ailesi olmasa da `persist` anahtarı olan metriklerin sayaçları da yüklemede korunur.
+## `defs` boşsa varsayılan veri (tanımlar + metrikler) sanitize'dan ÖNCE çözülür (v1 ve v2 kayıtlarında).
+func load_file(defs: Array = [], metrics: Array = []) -> bool:
 	_reset()
 	var r := StoreIo.read_versioned_any(path, PackedInt32Array([VERSION, VERSION_V2]))
 	corrupt = bool(r["corrupt"])
 	if not bool(r["ok"]):
 		return false
-	var clean := sanitize(r["data"])
+	if defs.is_empty():
+		var dflt := GameData.load_default()
+		defs = dflt.achievements
+		if metrics.is_empty():
+			metrics = dflt._stat_metrics
+	var clean := sanitize(
+		r["data"], _persist_keys(defs, metrics, true), _persist_keys(defs, metrics, false)
+	)
 	if int(r["version"]) == VERSION:
-		if defs.is_empty():
-			defs = GameData.load_default().achievements
 		if not _has_families(defs):
 			_v1_layout = true
 		else:
@@ -184,6 +191,17 @@ func unlock(id: StringName, unix: int) -> bool:
 	return true
 
 
+## Veriyle eklenen metriklerin `persist` anahtarlarını sıfırdan tanımlar (yoksa 0 açar; var olana dokunmaz).
+## Tracker kurulurken çağrılır; tanımsız anahtar `add_total`/`note_best_key`te yine yok sayılır.
+func declare_counters(total_keys: PackedStringArray, best_keys: PackedStringArray) -> void:
+	for k in total_keys:
+		if k != "" and _valid_id(k, 32) and not totals.has(k):
+			totals[k] = 0
+	for k in best_keys:
+		if k != "" and _valid_id(k, 32) and not best.has(k):
+			best[k] = 0
+
+
 ## COUNTER_CAP'e kırpar; dirty.
 func add_total(key: StringName, n: int = 1) -> void:
 	var k := String(key)
@@ -235,10 +253,10 @@ func progress_of(def: AchievementDef) -> int:
 	var s := String(def.stat)
 	if s == "total_chars5":
 		return chars5.size()
-	if AchievementDef.TOTAL_KEY.has(s):
-		return int(totals[AchievementDef.TOTAL_KEY[s]])
-	if AchievementDef.BEST_KEY.has(s):
-		return int(best[AchievementDef.BEST_KEY[s]])
+	if def.total_key != "":
+		return int(totals.get(def.total_key, 0))
+	if def.best_key != "":
+		return int(best.get(def.best_key, 0))
 	return -1
 
 
@@ -251,7 +269,13 @@ func count_steps(defs: Array) -> int:
 
 
 ## {"unlocked","steps","totals","best","chars5"} temiz kopya; kök geçersizse {}. `unlocked` anahtarları SIRALI işlenir (ilk 64).
-static func sanitize(raw: Variant) -> Dictionary:
+## `extra_totals`/`extra_bests`: veriyle tanımlı (metrik `persist`) ek sayaç anahtarları; yalnız bunlar yerleşiklerin yanında korunur,
+## kayıttaki başka anahtar atılır (düşman kayıt kota dolduramaz).
+static func sanitize(
+	raw: Variant,
+	extra_totals: PackedStringArray = PackedStringArray(),
+	extra_bests: PackedStringArray = PackedStringArray()
+) -> Dictionary:
 	if not (raw is Dictionary):
 		return {}
 	var d: Dictionary = raw
@@ -263,8 +287,8 @@ static func sanitize(raw: Variant) -> Dictionary:
 	return {
 		"unlocked": un,
 		"steps": st,
-		"totals": _clean_counters(d.get("totals", null), TOTAL_KEYS),
-		"best": _clean_counters(d.get("best", null), BEST_KEYS),
+		"totals": _clean_counters(d.get("totals", null), TOTAL_KEYS, extra_totals),
+		"best": _clean_counters(d.get("best", null), BEST_KEYS, extra_bests),
 		"chars5": _clean_chars5(d.get("chars5", null)),
 	}
 
@@ -310,7 +334,9 @@ static func _clean_steps(raw: Variant) -> Dictionary:
 	return out
 
 
-static func _clean_counters(raw: Variant, keys: PackedStringArray) -> Dictionary:
+static func _clean_counters(
+	raw: Variant, keys: PackedStringArray, extra: PackedStringArray = PackedStringArray()
+) -> Dictionary:
 	var out := {}
 	for k in keys:
 		out[k] = 0
@@ -320,6 +346,31 @@ static func _clean_counters(raw: Variant, keys: PackedStringArray) -> Dictionary
 		var n: Variant = StoreIo.int_of((raw as Dictionary).get(k, null), false)
 		if n != null and int(n) >= 0:
 			out[k] = mini(int(n), COUNTER_CAP)
+	# veriyle tanımlı ek anahtarlar (yalnız `extra`); yerleşiklerin üzerine yazmaz
+	for k in extra:
+		if keys.has(k) or not _valid_id(k, 32):
+			continue
+		out[k] = 0
+		var n2: Variant = StoreIo.int_of((raw as Dictionary).get(k, null), false)
+		if n2 != null and int(n2) >= 0:
+			out[k] = mini(int(n2), COUNTER_CAP)
+	return out
+
+
+## Yerleşik olmayan kalıcılık anahtarları: tanımların (`total_key`/`best_key`) ve metrik kayıtlarının `persist` değerleri.
+static func _persist_keys(defs: Array, metrics: Array, totals_side: bool) -> PackedStringArray:
+	var out := PackedStringArray()
+	for d in defs:
+		var k: String = d.total_key if totals_side else d.best_key
+		if k != "" and not out.has(k):
+			out.append(k)
+	for m in metrics:
+		var persist: Variant = (m as Dictionary).get("persist", null) if m is Dictionary else null
+		if not (persist is Dictionary):
+			continue
+		var v: Variant = (persist as Dictionary).get("total" if totals_side else "best", null)
+		if v is String and v != "" and not out.has(v):
+			out.append(v)
 	return out
 
 

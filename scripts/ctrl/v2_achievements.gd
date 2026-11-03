@@ -25,7 +25,7 @@ func build_world(refs: Dictionary) -> void:
 	if _data == null:
 		_data = GameData.load_default()
 	store = AchievementStore.new(str(opts.get("achievements_path", AchievementStore.DEFAULT_PATH)))
-	store.load_file(_data.achievements)  # v1 kaydı aile/kademeye göçer; sonra sayaçların hak ettiği kademeler sessizce verilir
+	store.load_file(_data.achievements, _data._stat_metrics)  # v1 kaydı aile/kademeye göçer; sonra sayaçların hak ettiği kademeler sessizce verilir
 	AchievementMigration.reconcile(store, _data.achievements, _now())
 	refs["store"] = store  # V2Characters kilit denetimi için paylaşılan sözlükten tembel okur
 	_menu = refs.get("menu", null)

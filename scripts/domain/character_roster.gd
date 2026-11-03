@@ -13,15 +13,15 @@ static func ids(data: GameData) -> Array[StringName]:
 
 
 ## `unlock` yok => true; ilerleme null ya da corrupt (ve unlock var) => false (güvenli yön).
-## `progress`: AchievementProgressView ya da AchievementStore (görünüme indirilir) ya da null.
-static func is_unlocked(c: CharacterDef, progress: Variant) -> bool:
+## `progress`: AchievementProgressView (depodan `AchievementProgressView.of_store`); null = bozuk görünüm (güvenli yön).
+static func is_unlocked(c: CharacterDef, progress: AchievementProgressView) -> bool:
 	if c.unlock_achievement == &"":
 		return true
-	return AchievementProgressView.of(progress).is_unlocked(c.unlock_achievement)
+	return progress != null and progress.is_unlocked(c.unlock_achievement)
 
 
 ## saved geçerli ve kilitsizse o; değilse DEFAULT_ID (geçerli + kilitsiz); değilse ilk kilitsiz; hiçbiri yoksa &"".
-static func resolve(saved: String, data: GameData, progress: Variant) -> StringName:
+static func resolve(saved: String, data: GameData, progress: AchievementProgressView) -> StringName:
 	if saved != "":
 		var c := data.get_character(StringName(saved))
 		if c != null and is_unlocked(c, progress):
