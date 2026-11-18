@@ -128,7 +128,7 @@ func test_rf_result_screen_rects_3_viewports_safe_area_big_text() -> void:
 				out["%s|%s|big=%s" % [vp, safe, big]] = _rects(r)
 				host.queue_free()
 	assert_eq(out.size(), 12)
-	RfBaseline.check(self, "rf_ui_result_rects", out)
+	RfBaseline.check_rects(self, "rf_ui_result_rects", out)
 
 
 func test_rf_characters_screen_rects() -> void:
@@ -145,7 +145,7 @@ func test_rf_characters_screen_rects() -> void:
 		# Portre (Ghost/Portrait/PortraitVideo) canlı nefes hareketi yapar: konum kareye göre kayar, kararsız; dışlanır.
 		out[str(vp)] = _rects(s).filter(func(l: String) -> bool: return not l.contains("/Stage/"))
 		host.queue_free()
-	RfBaseline.check(self, "rf_ui_characters_rects", out)
+	RfBaseline.check_rects(self, "rf_ui_characters_rects", out)
 
 
 func test_rf_settings_screen_rects() -> void:
@@ -159,7 +159,7 @@ func test_rf_settings_screen_rects() -> void:
 		await _settle()
 		out[str(vp)] = _rects(s)
 		host.queue_free()
-	RfBaseline.check(self, "rf_ui_settings_rects", out)
+	RfBaseline.check_rects(self, "rf_ui_settings_rects", out)
 
 
 func test_rf_run_screen_rects() -> void:
@@ -175,4 +175,4 @@ func test_rf_run_screen_rects() -> void:
 			await _settle()
 			out["%s|big=%s" % [vp, big]] = _rects(s)
 			host.queue_free()
-	RfBaseline.check(self, "rf_ui_run_rects", out)
+	RfBaseline.check_rects(self, "rf_ui_run_rects", out)

@@ -26,6 +26,32 @@ func _run(sim: GameSim, trail: Array) -> void:
 			trail.append(sim.state_hash())
 
 
+## Olay yükünü platformdan bağımsız metne çevirir: float/Vector2 değerleri FLOAT_STEP'e yuvarlanır (libm sin/cos son
+## basamak farkı Linux/Mac'te var_to_str çıktısını değiştirir); anahtarlar sıralanır.
+const FLOAT_STEP := 0.1
+
+
+func _canon_text(v: Variant) -> String:
+	match typeof(v):
+		TYPE_FLOAT:
+			return "f%.1f" % snappedf(v, FLOAT_STEP)
+		TYPE_VECTOR2:
+			return "v(%s,%s)" % [_canon_text(v.x), _canon_text(v.y)]
+		TYPE_DICTIONARY:
+			var keys: Array = v.keys()
+			keys.sort_custom(func(a, b): return str(a) < str(b))
+			var parts := PackedStringArray()
+			for k in keys:
+				parts.append("%s=%s" % [str(k), _canon_text(v[k])])
+			return "{" + ",".join(parts) + "}"
+		TYPE_ARRAY:
+			var parts := PackedStringArray()
+			for x in v:
+				parts.append(_canon_text(x))
+			return "[" + ",".join(parts) + "]"
+	return var_to_str(v)
+
+
 func test_rf_mid_hash_trail_every_60_steps() -> void:
 	var out := {}
 	for c in CHARS:
@@ -53,11 +79,11 @@ func test_rf_event_log_summary() -> void:
 		var acc := PackedStringArray()
 		for e in sim.event_log:
 			by_type[str(e["type"])] = int(by_type.get(str(e["type"]), 0)) + 1
-			acc.append(var_to_str(e))
+			acc.append(_canon_text(e))
 		out[str(s)] = {
 			"count": sim.event_log.size(),
 			"by_type": by_type,
-			"payload_hash": hash("\n".join(acc)),
+			"payload_hash": "\n".join(acc).sha256_text().substr(0, 16),
 		}
 	RfBaseline.check(self, "rf_trail_event_log", out)
 
