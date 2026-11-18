@@ -9,7 +9,7 @@ SCRIPT_SH = SCRIPT.as_posix()  # Windows: bash -c içinde ters bölü kaçış s
 # Sahte Godot: sayaç dosyasına satır ekler; davranış dizisi FAKE_PLAN ("abrt,ok" gibi) sırayla uygulanır.
 FAKE = r"""#!/usr/bin/env bash
 echo x >> "$FAKE_COUNT"
-n=$(wc -l < "$FAKE_COUNT")
+n=$(wc -l < "$FAKE_COUNT" | tr -d " ")  # BSD wc dolgu boşluğu basar
 step=$(echo "$FAKE_PLAN" | cut -d, -f"$n")
 [ -d .godot ] && echo "godot_var_$n" >> "$FAKE_SEEN" || echo "godot_yok_$n" >> "$FAKE_SEEN"
 echo "[ 30% ] reimport | a.png"
