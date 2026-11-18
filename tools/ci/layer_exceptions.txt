@@ -1,5 +1,10 @@
 # Katman istisnaları (check_layers.py). Biçim: kaynak_dosya -> hedef_sınıf_veya_yol. YALNIZ AZALIR (union yok):
 # yeni satır LAYER_NEW_EXCEPTION, ihlali kalkmış satır LAYER_STALE. İlk liste --emit-baseline ile üretilmiştir.
+# KALAN 4 İSTİSNA — gerekçe (F-ashen-bastion-155; 19 satırdan 19a57f1 ile 4'e indi, T20261118-02'de kalanlar incelendi):
+# Dördü de yalnız TÜR ANOTASYONU: ekran/satır, enjekte edilen store'u (AchievementStore / Highscores) alan alan ya da imzada tutar;
+# store'a doğrudan okuma/yazma yolu domain/view arayüzünden geçmiyor. Kaldırmak, ekran imzalarını (open/setup/_fill, public alan `store`)
+# domain'de bir salt-okunur görünüme (ör. AchievementProgressView) çevirmeyi ve rf_api_surface bazını + ekran testlerini değiştirmeyi gerektirir;
+# davranış riski/kapsam bu görevin dışında, ayrı bir refactor görevi olarak açık bırakıldı.
 scripts/ui/achievement_row.gd -> AchievementStore
 scripts/ui/achievements_screen.gd -> AchievementStore
 scripts/ui/characters_screen.gd -> AchievementStore
