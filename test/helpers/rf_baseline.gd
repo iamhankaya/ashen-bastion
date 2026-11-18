@@ -40,7 +40,9 @@ static func check_rects(t: GutTest, name: String, actual: Variant) -> void:
 		return
 	var expected: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	var why := _rects_diff(JSON.parse_string(line), expected, "")
-	t.assert_eq(why, "", "karakterizasyon bazı (yerleşim, x/genişlik ±%s px): %s" % [X_TOL_PX, name])
+	t.assert_eq(
+		why, "", "karakterizasyon bazı (yerleşim, x/genişlik ±%s px): %s" % [X_TOL_PX, name]
+	)
 
 
 static func _rects_diff(a: Variant, e: Variant, at: String) -> String:
