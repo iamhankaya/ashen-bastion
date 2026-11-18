@@ -277,7 +277,7 @@ def test_f131_touching_file_with_old_violation_elsewhere_is_not_red(repo, tmp_pa
     """F-131: dosyada TABANDAN kalan to_upper, başka satır değişince kırmızı vermez (gate.sh de yalnız yeni ihlali kırar)."""
     _base_with_old_violation(repo)
     p = repo / "scripts" / "old.gd"
-    p.write_text(p.read_text().replace("return 1", "return 2"), encoding="utf-8")
+    p.write_text(p.read_text(encoding="utf-8").replace("return 1", "return 2"), encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 0, r.stderr
@@ -287,7 +287,7 @@ def test_f131_touching_file_with_old_violation_elsewhere_is_not_red(repo, tmp_pa
 def test_f131_added_violation_line_in_old_file_is_red(repo, tmp_path):
     _base_with_old_violation(repo)
     p = repo / "scripts" / "old.gd"
-    p.write_text(p.read_text() + "\n\nfunc h(s):\n\treturn s.to_lower()\n", encoding="utf-8")
+    p.write_text(p.read_text(encoding="utf-8") + "\n\nfunc h(s):\n\treturn s.to_lower()\n", encoding="utf-8")
     commit_all(repo)
     r = run(repo, "--base", "main", tmp_path=tmp_path)
     assert r.returncode == 1

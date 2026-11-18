@@ -54,7 +54,7 @@ def branch(repo, name, path):
     sh(repo, "git", "checkout", "-q", "-B", name, "origin/main")
     p = repo / path
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(p.read_text() + "y\n" if p.exists() else "y\n", encoding="utf-8")
+    p.write_text(p.read_text(encoding="utf-8") + "y\n" if p.exists() else "y\n", encoding="utf-8")
     commit(repo, name)
 
 
