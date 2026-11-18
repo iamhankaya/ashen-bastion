@@ -34,7 +34,7 @@ const FLOAT_STEP := 0.1
 func _canon_text(v: Variant) -> String:
 	match typeof(v):
 		TYPE_FLOAT:
-			return "f%.1f" % snappedf(v, FLOAT_STEP)
+			return "f%.1f" % (snappedf(v, FLOAT_STEP) + 0.0)  # +0.0: -0.0 -> 0.0 (işaretli sıfır platformlar arası oynar)
 		TYPE_VECTOR2:
 			return "v(%s,%s)" % [_canon_text(v.x), _canon_text(v.y)]
 		TYPE_DICTIONARY:
