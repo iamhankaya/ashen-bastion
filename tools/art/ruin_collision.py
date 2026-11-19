@@ -34,7 +34,7 @@ POLE = {
 
 
 def load():
-    return json.loads(RUINS.read_text())
+    return json.loads(RUINS.read_text(encoding="utf-8"))
 
 
 def sprite(rec):
@@ -151,11 +151,11 @@ def main():
     if a.preview:
         preview(recs, a.preview)
     if a.check:
-        if RUINS.read_text() != text:
+        if RUINS.read_text(encoding="utf-8") != text:
             print("data/ruins.json güncel değil: python3 tools/art/ruin_collision.py", file=sys.stderr)
             return 1
         return 0
-    RUINS.write_text(text)
+    RUINS.write_text(text, encoding="utf-8")
     return 0
 
 

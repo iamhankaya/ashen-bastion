@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw
 d = Path(sys.argv[1])
 out = Path(sys.argv[2])
 n = int(sys.argv[3]) if len(sys.argv) > 3 else 8
-rows = json.loads((d / "walk.json").read_text())[:n]
+rows = json.loads((d / "walk.json").read_text(encoding="utf-8"))[:n]
 CROP = (180, 105, 540, 450)  # ekran: oyuncunun boyu (kamera zoom 1,5; ayak çizgisi altta)
 tiles = []
 for r in rows:

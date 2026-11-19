@@ -120,3 +120,13 @@ def test_real_repo_file_is_valid():
     p = HERE.parents[1] / "v2_slices.txt"
     ok, marks, errors = check_slices.parse(p.read_text(encoding="utf-8"))
     assert ok, errors
+
+
+def test_v203_tests_do_not_count_toward_v2_slices(tmp_path):
+    """F-ashen-bastion-088: v2.0.3 `test_b<N>_` adları v2.0 B diliminin sayacına karışmaz."""
+    cases = [
+        case("test_b1_buffer", "pending", cls="res://test/unit/test_v203_b_orbs.gd"),
+        case("test_b2_real", cls="res://test/acceptance/test_acc_v2_ach_flow.gd"),
+    ]
+    r = run(tmp_path, "B\n", junit(*cases))
+    assert r.returncode == 0, r.stderr

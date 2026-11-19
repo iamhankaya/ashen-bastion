@@ -62,7 +62,7 @@ def test_sprite_size_and_manifest(tmp_path):
     pa.run(man, root, out, log=lambda *_: None)
     im = Image.open(out / "assets/gfx/s.png")
     assert im.mode == "RGBA" and max(im.size) == 70 and im.size == (70, 30)
-    g = json.loads((out / "assets/gfx/manifest.json").read_text())
+    g = json.loads((out / "assets/gfx/manifest.json").read_text(encoding="utf-8"))
     assert g["files"]["assets/gfx/s.png"] == {"source": "art/s.png", "size": [70, 30], "frames": 1}
     assert pa.verify(man, out) == []
 
@@ -84,7 +84,7 @@ def test_component_split(tmp_path):
                        "min_area": 100, "count": [5, 12]}]}
     out = tmp_path / "o"
     pa.run(man, root, out, log=lambda *_: None)
-    meta = json.loads((out / "assets/gfx/map/ruins_manifest.json").read_text())
+    meta = json.loads((out / "assets/gfx/map/ruins_manifest.json").read_text(encoding="utf-8"))
     assert meta["count"] == 10 == len(meta["ruins"])
     for it in meta["ruins"]:
         assert it["size"] == [25, 25]
@@ -107,7 +107,7 @@ def test_three_poses_atlas(tmp_path):
     pa.run(man, root, out, log=lambda *_: None)
     im = Image.open(out / "assets/gfx/p.png")
     assert im.width == 180 and im.height % 1 == 0
-    g = json.loads((out / "assets/gfx/manifest.json").read_text())["files"]["assets/gfx/p.png"]
+    g = json.loads((out / "assets/gfx/manifest.json").read_text(encoding="utf-8"))["files"]["assets/gfx/p.png"]
     assert g["frames"] == 3
     alpha = np.asarray(im)[..., 3]
     fw = 60

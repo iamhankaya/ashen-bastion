@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """v202 zorlu koşu özeti (R0, plan '#### v202 dilimi'): aşama 1 = tüm dosyalar tek süreçte, aşama 2 = dosya başına süreç.
 
-  v202_forced_summary.py STAGE1.xml STAGE2.xml...   JSON özet (stdout)
+  v202_forced_summary.py [--expected-stage2 N] STAGE1.xml STAGE2.xml...   JSON özet (stdout)
 
 leak     : aşama 1'de kırmızı, aşama 2'de yeşil (global/önbellek sızıntısı)
 real     : aşama 2 kırmızısı, simge -> kimlikler (gerçek kod/varsayım kırmızısı)
 pending  : aşama 2'de pending kalan kimlikler
 deferred : aşama 2 kırmızısı simge başına > 10 olan simgeler (kapalı kalır, bulgu açılır)
 total_over: toplam gerçek kırmızı > 30 (hangi simgenin ertelendiği insan kararıdır)
+problems : girdi sorunları (F-ashen-bastion-133): eksik/okunamayan XML, sıfır test içeren XML, aşama-2 dosya sayısı
+           --expected-stage2 N'den az; boş değilse çıkış 1 (özet yine yazılır)
 """
 import json
 import sys
@@ -53,16 +55,39 @@ def summarize(stage1: dict, stage2: dict) -> dict:
     }
 
 
+def _read(path: Path, problems: list[str]) -> dict:
+    """XML'i yükler; eksik/bozuk dosya ve sıfır test `problems`'e yazılır, boş sözlük döner."""
+    try:
+        cases = load(path.read_text(encoding="utf-8"))
+    except (OSError, ET.ParseError) as e:
+        problems.append(f"{path.name}: okunamadı ({type(e).__name__})")
+        return {}
+    if not cases:
+        problems.append(f"{path.name}: sıfır test")
+    return cases
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) < 3:
+    args = argv[1:]
+    expected = None
+    if args[:1] == ["--expected-stage2"] and len(args) > 1 and args[1].isdigit():
+        expected, args = int(args[1]), args[2:]
+    if len(args) < 2:
         print(__doc__, file=sys.stderr)
         return 2
-    stage1 = load(Path(argv[1]).read_text(encoding="utf-8"))
+    problems: list[str] = []
+    stage1 = _read(Path(args[0]), problems)
     stage2 = {}
-    for p in argv[2:]:
-        stage2.update(load(Path(p).read_text(encoding="utf-8")))
-    print(json.dumps(summarize(stage1, stage2), indent=2, ensure_ascii=False))
-    return 0
+    for p in args[1:]:
+        stage2.update(_read(Path(p), problems))
+    if expected is not None and len(args) - 1 != expected:
+        problems.append(f"aşama 2: {len(args) - 1} XML var, {expected} bekleniyordu (bayat dosya da sorundur)")
+    out = summarize(stage1, stage2)
+    out["problems"] = problems
+    print(json.dumps(out, indent=2, ensure_ascii=False))
+    for pr in problems:
+        print(f"FORCED_SUMMARY_PROBLEM: {pr}", file=sys.stderr)
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":

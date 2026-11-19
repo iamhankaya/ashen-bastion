@@ -54,13 +54,6 @@ func apply_motion_setting() -> void:
 	(material as ShaderMaterial).set_shader_parameter("bob_scale", 0.0 if motion_reduced else 1.0)
 
 
-## Değer → ölçek (1 → 1.0, büyüdükçe log ile, en çok 2.2).
-static func scale_for_value(value: int) -> float:
-	if value <= 1:
-		return 1.0
-	return minf(1.0 + log(float(value)) * 0.35, 2.2)
-
-
 func refresh() -> void:
 	apply_motion_setting()
 	if _sim == null:

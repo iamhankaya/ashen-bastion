@@ -58,9 +58,6 @@ func test_gem_renderer_counts() -> void:
 	sim.gems.drop(Vector2(50, 5), 7)
 	r.refresh()
 	assert_eq(r.visible_count(), sim.gems.count)
-	assert_eq(GemRenderer.scale_for_value(1), 1.0)
-	assert_gt(GemRenderer.scale_for_value(7), 1.0)
-	assert_lte(GemRenderer.scale_for_value(100000), 2.2)
 
 
 func test_player_view_rig_nodes_and_arm_flip() -> void:

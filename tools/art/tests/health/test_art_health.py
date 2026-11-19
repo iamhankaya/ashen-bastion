@@ -62,7 +62,7 @@ def test_plant_tones_preserved(src):
 
 def test_ruins_count(built):
     man, out, _ = built
-    meta = json.loads((out / entry(man, "ruins")["manifest_out"]).read_text())
+    meta = json.loads((out / entry(man, "ruins")["manifest_out"]).read_text(encoding="utf-8"))
     assert 20 <= meta["count"] <= 30
     for it in meta["ruins"]:
         assert 0 <= it["foot"][0] <= 1 and 0 <= it["foot"][1] <= 1
@@ -89,8 +89,8 @@ def test_ground_seam(built):
 def test_committed_assets_match_build(built):
     """Commit'li assets/gfx, mevcut art/ref + manifest ile aynı boyutlarda mı (bayat çıktı yakalanır)."""
     man, out, _ = built
-    committed = json.loads((REPO / "assets/gfx/manifest.json").read_text())["files"]
-    fresh = json.loads((out / "assets/gfx/manifest.json").read_text())["files"]
+    committed = json.loads((REPO / "assets/gfx/manifest.json").read_text(encoding="utf-8"))["files"]
+    fresh = json.loads((out / "assets/gfx/manifest.json").read_text(encoding="utf-8"))["files"]
     assert committed == fresh
     for rel in fresh:
         assert (REPO / rel).exists(), rel

@@ -313,7 +313,7 @@ def main(argv=None) -> int:
     q = gate(manifest)
     for p, data in ((args.manifest, manifest), (args.quality, q)):
         Path(p).parent.mkdir(parents=True, exist_ok=True)
-        Path(p).write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        Path(p).write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(strip, "RGBA").save(args.out, optimize=True)
     Image.fromarray(body, "RGBA").save(args.body_out, optimize=True)

@@ -30,5 +30,5 @@ PY
 mapfile -t FILES < <(ls test/acceptance/test_acc_v202_*.gd)
 run stage1 "${FILES[@]}"
 for f in "${FILES[@]}"; do run "stage2-$(basename "$f" .gd)" "$f"; done
-python3 tools/ci/v202_forced_summary.py "$OUT/stage1.xml" "$OUT"/stage2-*.xml > "$OUT/summary.json"
+python3 tools/ci/v202_forced_summary.py --expected-stage2 "${#FILES[@]}" "$OUT/stage1.xml" "$OUT"/stage2-*.xml > "$OUT/summary.json"
 cat "$OUT/summary.json"

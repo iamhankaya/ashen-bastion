@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw
 
 d, scen, out = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
 step = int(sys.argv[4]) if len(sys.argv) > 4 else 2
-rows = json.loads((d / (scen + ".json")).read_text())
+rows = json.loads((d / (scen + ".json")).read_text(encoding="utf-8"))
 CROP = (200, 110, 520, 440)
 SCALE = 0.5
 tiles = []

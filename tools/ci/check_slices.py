@@ -50,8 +50,8 @@ class Profile:
         self.test_re = re.compile(r"^test_([%s])(\d+)[a-z]?_" % "".join(t.lower() for t in self.symbols))
 
 
-# v2.1 K/M/B testleri de test_k/m/b<N>_ adlıdır; v2.0 kapısı v21 sınıflarını saymaz (tek adlandırma kuralı, T-tur 1).
-V2 = Profile(exclude_re=r"v21(?![0-9])")
+# v2.1 ve v2.0.3 testleri de test_k/m/b<N>_ adlı olabilir; v2.0 kapısı v21 ve v203 sınıflarını saymaz (F-ashen-bastion-088).
+V2 = Profile(exclude_re=r"v21(?![0-9])|v203(?![0-9])")
 V202 = Profile(V202_SYMBOLS, "V202_SLICES_FORCE", "v202", ())
 
 

@@ -12,6 +12,8 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 OUT="${1:-.mid}"; FIRST="${2:-3001}"; N="${3:-400}"; JOBS="${4:-$(nproc)}"
 GODOT_BIN="${GODOT_BIN:-$(bash tools/ci/ensure_godot.sh)}"
+# Temiz klonda içe aktarma yoksa koşular sessizce boş çıktı üretir (F-ashen-bastion-045).
+[ -d .godot/imported ] || { echo "HATA: .godot/imported yok; önce '$GODOT_BIN --headless --import' çalıştır" >&2; exit 1; }
 mkdir -p "$OUT"
 # Karakter listesi katalogdan (data/characters/<id>.json, dosya adı sırası); CHARS ile daraltılır.
 CHARS_LIST="${CHARS:-$(for f in data/characters/*.json; do printf '%s ' "$(basename "$f" .json)"; done)}"

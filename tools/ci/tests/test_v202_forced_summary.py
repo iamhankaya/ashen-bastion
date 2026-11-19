@@ -52,3 +52,22 @@ def test_cli_prints_json(tmp_path):
     (tmp_path / "a.xml").write_text(_xml(_case("test_e1_a")), encoding="utf-8")
     r = subprocess.run([sys.executable, str(SCRIPT), str(tmp_path / "a.xml"), str(tmp_path / "a.xml")], capture_output=True, text=True)
     assert r.returncode == 0 and '"total_real": 0' in r.stdout
+
+
+def _cli(*args):
+    return subprocess.run([sys.executable, str(SCRIPT), *map(str, args)], capture_output=True, text=True)
+
+
+def test_cli_flags_zero_test_xml(tmp_path):
+    """F-ashen-bastion-133: sıfır test içeren XML yeşil sayılmaz."""
+    (tmp_path / "s1.xml").write_text(_xml(), encoding="utf-8")
+    (tmp_path / "s2.xml").write_text(_xml(_case("test_e1_a")), encoding="utf-8")
+    r = _cli(tmp_path / "s1.xml", tmp_path / "s2.xml")
+    assert r.returncode == 1 and "s1.xml: sıfır test" in r.stderr and '"problems"' in r.stdout
+
+
+def test_cli_flags_missing_stage2_xml_and_count(tmp_path):
+    (tmp_path / "s1.xml").write_text(_xml(_case("test_e1_a")), encoding="utf-8")
+    r = _cli("--expected-stage2", 3, tmp_path / "s1.xml", tmp_path / "yok.xml")
+    assert r.returncode == 1
+    assert "yok.xml: okunamadı" in r.stderr and "1 XML var, 3 bekleniyordu" in r.stderr
