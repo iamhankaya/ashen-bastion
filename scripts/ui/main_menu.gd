@@ -583,7 +583,7 @@ func set_achievement_count(open_count: int, total: int) -> void:
 
 ## Tek sürüm kaynağı: project.godot `application/config/version` (karakter adı artık sürüm satırında yok).
 static func version_text() -> String:
-	return "Sürüm %s" % ProjectSettings.get_setting("application/config/version", "2.1.0")
+	return "Sürüm %s" % SettingsScreen.version_text()
 
 
 ## En çok NAME_MAX harf (birleştirici işaretler harf sayılmaz ve kendi harfinden ayrılmaz); fazlası "…" ile kesilir.

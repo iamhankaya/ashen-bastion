@@ -40,14 +40,14 @@ def enemy(eid, name, hp, speed, dmg, radius, armor, xp, ai, sprite, h, tint="#ff
     return d
 
 
-GUNSLINGER = json.load(open(Path(__file__).resolve().parents[2] / "data/characters/gunslinger.json"))
+GUNSLINGER = json.load(open(Path(__file__).resolve().parents[2] / "data/characters/gunslinger.json", encoding="utf-8"))
 
-ACHIEVEMENTS = json.load(open(Path(__file__).resolve().parents[2] / "data/achievements.json"))
+ACHIEVEMENTS = json.load(open(Path(__file__).resolve().parents[2] / "data/achievements.json", encoding="utf-8"))
 
 VALID = {
     "characters/gunslinger.json": GUNSLINGER,
     "achievements.json": ACHIEVEMENTS,
-    "skills/cift_tabanca.json": json.load(open(Path(__file__).resolve().parents[2] / "data/skills/cift_tabanca.json")),
+    "skills/cift_tabanca.json": json.load(open(Path(__file__).resolve().parents[2] / "data/skills/cift_tabanca.json", encoding="utf-8")),
     "skills/seken_mermi.json": active(
         "seken_mermi", "Seken Mermi", ["rhythm"],
         [{"every_n": n, "bounces": b, "damage_mult": m} for n, b, m in
@@ -82,7 +82,7 @@ VALID = {
         summon={"type": "curumus_piyade", "every": 8, "count": 12,
                 "enrage_hp_frac": 0.5, "enrage_speed_mult": 1.4, "enrage_every": 5},
         anim={"kind": "stomp", "hz": 0.55, "bob": 6, "rot": 2.5, "death": "lord", "death_ms": 900}),
-    "pickups.json": json.load(open(Path(__file__).resolve().parents[2] / "data/pickups.json")),
+    "pickups.json": json.load(open(Path(__file__).resolve().parents[2] / "data/pickups.json", encoding="utf-8")),
     "score.json": {
         "kill_points": {"curumus_piyade": 10, "les_kargasi": 8, "elit_piyade": 400, "kale_lordu": 10000},
         "streak": {"window": 3.0, "tiers": [[0, 1], [10, 2], [25, 3], [50, 4], [100, 5]]},
@@ -208,9 +208,9 @@ def write(base: Path, rel: str, content):
     p = base / rel
     p.parent.mkdir(parents=True, exist_ok=True)
     if isinstance(content, str):
-        p.write_text(content)
+        p.write_text(content, encoding="utf-8")
     else:
-        p.write_text(json.dumps(content, indent=2, ensure_ascii=False) + "\n")
+        p.write_text(json.dumps(content, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def main():

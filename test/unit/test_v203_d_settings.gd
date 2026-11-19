@@ -125,6 +125,18 @@ func test_d7_version_comes_from_project_setting() -> void:
 	assert_eq(SettingsScreen.version_text(), "2.1.0")
 
 
+func test_d7b_version_fallback_has_no_hardcoded_literal() -> void:
+	# F-ashen-bastion-111: yedek sürüm de tek kaynaktan (project.godot) okunur; kaynakta sabit "x.y.z" yok.
+	var re := RegEx.create_from_string('"\\d+\\.\\d+\\.\\d+"')
+	for path in ["res://scripts/ui/settings_screen.gd", "res://scripts/ui/main_menu.gd"]:
+		var src := FileAccess.get_file_as_string(path)
+		assert_null(re.search(src), "%s sabit sürüm yedeği içeriyor" % path)
+	assert_eq(
+		SettingsScreen.version_from_project_file(),
+		ProjectSettings.get_setting("application/config/version")
+	)
+
+
 func test_d8_menu_reduce_motion_stops_embers_and_breath() -> void:
 	var host := Control.new()
 	host.size = Vector2(1080, 2400)

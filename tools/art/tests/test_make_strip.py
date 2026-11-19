@@ -177,7 +177,7 @@ def test_cli_writes_strip_manifest_and_preview(sheet_files, tmp_path):
         capture_output=True, text=True,
     )
     assert r.returncode == 0, r.stderr
-    m = json.loads(man.read_text())
+    m = json.loads(man.read_text(encoding="utf-8"))
     assert m["frames"] == 6
     img = Image.open(out)
     assert img.mode == "RGBA" and img.size == (m["cell"][0] * 7, m["cell"][1])

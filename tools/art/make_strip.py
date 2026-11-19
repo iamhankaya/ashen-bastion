@@ -409,7 +409,7 @@ def main(argv=None) -> int:
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(res.strip, "RGBA").save(out)
-    Path(args.manifest).write_text(json.dumps(res.manifest, indent=2, ensure_ascii=False) + "\n")
+    Path(args.manifest).write_text(json.dumps(res.manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for w in res.manifest["warnings"]:
         print("UYARI:", w, file=sys.stderr)
     if args.preview:

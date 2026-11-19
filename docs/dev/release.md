@@ -36,13 +36,13 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 | `ANDROID_KEYSTORE_USER` | alias: `ashenbastion` |
 | `ANDROID_KEYSTORE_PASSWORD` | keystore (= anahtar) şifresi |
 
-Önerilen sertleştirme: Settings → Environments → `release` → "Deployment branches and tags" ile yalnız `master` ve `v*` etiketlerine izin ver; isteğe bağlı "Required reviewers". Fork PR'ları secret göremez; `release.yml` `pull_request` ile hiç tetiklenmez.
+Önerilen sertleştirme: Settings → Environments → `release` → "Deployment branches and tags" ile yalnız `main` ve `v*` etiketlerine izin ver; isteğe bağlı "Required reviewers". Fork PR'ları secret göremez; `release.yml` `pull_request` ile hiç tetiklenmez.
 
 Sonra yerel dosyaları sakla/sil: base64 çıktısını panodan ve kabuk geçmişinden temizle.
 
 ## 3. Release işini tetikle
 
-- **Elle:** GitHub → **Actions → release → Run workflow** (dal: `master`).
+- **Elle:** GitHub → **Actions → release → Run workflow** (dal: `main`).
 - **Sürüm etiketiyle:** `git tag v0.1.0 && git push origin v0.1.0` — APK ayrıca **Releases** sayfasına da konur.
 
 Release işi push/PR'da **koşmaz**. `version/code` her koşuda `github.run_number` olur (güncelleme olarak kurulabilmesi için artar); etiket varsa `version/name` etiketten gelir.

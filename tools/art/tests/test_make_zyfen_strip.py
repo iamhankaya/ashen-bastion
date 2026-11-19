@@ -66,9 +66,9 @@ def test_main_writes_outputs_and_exit_code(tmp_path):
     args = ["--src", str(SRC), "--out", str(tmp_path / "s.png"), "--body-out", str(tmp_path / "b.png"),
             "--manifest", str(tmp_path / "m.json"), "--quality", str(tmp_path / "q.json")]
     assert mz.main(args) == 0
-    assert json.loads((tmp_path / "q.json").read_text())["pass"] is True
+    assert json.loads((tmp_path / "q.json").read_text(encoding="utf-8"))["pass"] is True
     assert mz.main(args + ["--stride", "400"]) == 1
-    assert json.loads((tmp_path / "q.json").read_text())["pass"] is False
+    assert json.loads((tmp_path / "q.json").read_text(encoding="utf-8"))["pass"] is False
 
 
 def test_tool_is_character_independent(tmp_path):
@@ -83,7 +83,7 @@ def test_tool_is_character_independent(tmp_path):
     assert mz.main(["--src", str(SRC)] + out("z")) == 0
     assert mz.main(["--src", str(other)] + out("o")) == 0
     assert (tmp_path / "z_s.png").read_bytes() == (tmp_path / "o_s.png").read_bytes()
-    assert json.loads((tmp_path / "z_m.json").read_text()) == json.loads((tmp_path / "o_m.json").read_text())
+    assert json.loads((tmp_path / "z_m.json").read_text(encoding="utf-8")) == json.loads((tmp_path / "o_m.json").read_text(encoding="utf-8"))
     (other / "other_idle.png").rename(other / "duruş.png")
     assert mz.main(["--src", str(other), "--idle", str(other / "duruş.png"), "--display-height", "200"] + out("i")) == 0
     # çizim boyu ayak kayması ölçeğini değiştirir (dünya px = hücre px x display_height/320)
@@ -108,9 +108,9 @@ def test_align_feet_removes_error_on_a_synthetic_walk():
 
 
 def test_committed_outputs_match_the_data_and_the_tool():
-    q = json.loads((SRC / "quality.json").read_text())
-    m = json.loads((SRC / "strip_manifest.json").read_text())
-    z = json.loads((ROOT / "data/characters/zyfen.json").read_text())["rig"]
+    q = json.loads((SRC / "quality.json").read_text(encoding="utf-8"))
+    m = json.loads((SRC / "strip_manifest.json").read_text(encoding="utf-8"))
+    z = json.loads((ROOT / "data/characters/zyfen.json").read_text(encoding="utf-8"))["rig"]
     assert q["pass"] is True, "kalite kapısı kırmızı: waiver olmadan gate geçmez"
     strip = Image.open(ROOT / "assets/gfx/char/zyfen_strip.png")
     cw, ch = m["cell"]
@@ -137,10 +137,10 @@ def test_walk_only_source_builds_walk_plus_idle_cells():
 
 
 def test_committed_gunslinger_quality_and_strip_match_character_json():
-    q = json.loads((GS / "quality.json").read_text())
+    q = json.loads((GS / "quality.json").read_text(encoding="utf-8"))
     assert q["pass"] is True and all(q["checks"].values())
-    w = json.loads((ROOT / "data/characters/gunslinger.json").read_text())["rig"]["walk"]
-    m = json.loads((GS / "strip_manifest.json").read_text())
+    w = json.loads((ROOT / "data/characters/gunslinger.json").read_text(encoding="utf-8"))["rig"]["walk"]
+    m = json.loads((GS / "strip_manifest.json").read_text(encoding="utf-8"))
     assert (w["frames"], w["stride"], w["cell"]) == (m["walk"]["frames"], m["stride"], m["cell"])
     assert Image.open(ROOT / "assets/gfx/char/gunslinger_body_walk.png").size == (m["strip_width"], 320)
 

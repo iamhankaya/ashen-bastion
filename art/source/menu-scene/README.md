@@ -11,5 +11,5 @@ dosyalarının yeşil perdesi silinmiş / kenarı eritilmiş kırpmalarıdır (`
 | `karakter.png` | Gunslinger atış görseli (`ana_gorsel` türevi) | yatay 56 px alfa eritme; namlu alevi kenarda kesilmez |
 
 UI yüzeyleri (`assets/ui/v203/*.svg`): `docs/design/v2.0.3/frames/` içinden birebir kopya (elle yazılmış SVG, tasarım turu).
-Eski `assets/gfx/ui/ana_gorsel.png` artık menüde kullanılmıyor (başka kullanıcısı yok; silinmedi, temizlik ayrı iş).
+Eski `assets/gfx/ui/ana_gorsel.png` kaldırıldı (F-ashen-bastion-090; menüde kullanılmıyordu, kaynak `art/ref/ana-gorsel-atis.png` durur).
 Tarih: 2026-10-26.

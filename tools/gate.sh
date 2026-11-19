@@ -264,12 +264,14 @@ if [ "$PART" != "static" ] && [ "$PART" != "verify" ] && [ -n "$GUT_CONFIG" ]; t
     # F-066: tam yerel gate GUT'u $JOBS paralel süreçte koşar; birleşik JUnit adım 7'nin girdisidir.
     echo "GUT $JOBS paralel süreçte (GATE_JOBS=1 tek süreç)"
     DUR_FLAGS="--contended"
-    bash tools/ci/run_gut_parallel.sh "$JOBS" || fail "GUT paralel koşu (bkz. .gate/gut-*.log)"
+    bash tools/ci/run_gut_parallel.sh "$JOBS" || { python3 tools/ci/gut_failures.py .gate/gut-*.log; fail "GUT paralel koşu (bkz. .gate/gut-*.log)"; }
     scan_log .gate/gut.log
   else
   "$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gconfig="$GUT_CONFIG" > "$GUT_LOG" 2>&1
   gut_rc=$?
   tail -n 30 "$GUT_LOG"
+  # F-ashen-bastion-126: kırpılan günlükte görünmeyen başarısız test adları ayrıca basılır.
+  [ $gut_rc -eq 0 ] || python3 tools/ci/gut_failures.py "$GUT_LOG"
   # user:// sızıntısı (tools/ci/gut_pre_hook.gd + gut_stub_hook.gd): her yol için "USER_LEAK: <yol>" satırı.
   if sed 's/\x1b\[[0-9;]*m//g' "$GUT_LOG" | grep -E 'USER_LEAK:' > .gate/leak.out; then
     cat .gate/leak.out >&2

@@ -5,7 +5,7 @@ import ruin_collision as rc
 
 def test_committed_ruins_json_is_up_to_date():
     # data/ruins.json elle değil araçla güncellenir: araç çıktısı commit'liyle birebir aynı olmalı
-    assert rc.RUINS.read_text() == json.dumps(rc.build(), indent=2) + "\n"
+    assert rc.RUINS.read_text(encoding="utf-8") == json.dumps(rc.build(), indent=2) + "\n"
 
 
 def test_solid_rule_taller_than_the_player_and_chain_follows_the_base():

@@ -382,7 +382,17 @@ func _close_licenses() -> void:
 
 ## Tek sürüm kaynağı: project.godot `application/config/version`.
 static func version_text() -> String:
-	return str(ProjectSettings.get_setting("application/config/version", "2.0.3"))
+	if ProjectSettings.has_setting("application/config/version"):
+		return str(ProjectSettings.get_setting("application/config/version"))
+	return version_from_project_file()
+
+
+## Yedek: ayar yüklenmemişse (araç/aracısız bağlam) sürüm doğrudan project.godot dosyasından okunur; sabit literal yok.
+static func version_from_project_file() -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load("res://project.godot") != OK:
+		return "?"
+	return str(cfg.get_value("application", "config/version", "?"))
 
 
 ## Bölüm başlığı (Cinzel 34 + bronz çizgi) ve altında `levha` kartı; kartın içerik kutusunu döndürür.
