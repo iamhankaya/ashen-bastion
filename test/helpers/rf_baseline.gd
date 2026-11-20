@@ -28,8 +28,32 @@ static func check(t: GutTest, name: String, actual: Variant) -> void:
 
 ## Yerleşim bazı (rf_ui_*_rects): yol|sınıf|x,y,w,h satırlarını karşılaştırır. Metin ölçüsüne bağlı yatay boyut
 ## platformlar arası (font rasterleştirici: Linux/Mac/Windows) birkaç piksel oynar; bu yüzden x ve genişlik
-## X_TOL_PX içinde eşit sayılır. Yol, sınıf, y ve yükseklik (satır sarma/dikey akış) AYNEN eşit olmalıdır.
+## X_TOL_PX içinde eşit sayılır, ama YALNIZ metin ölçülü sınıflarda (F-ashen-bastion-172). Sabit boyutlu sınıflarda
+## (Control, ColorRect, TextureRect, Panel, HSlider...) x ve genişlik de AYNEN eşit olmalıdır: tolerans sabit panel/margin
+## kaymasını gizlemesin. Yol, sınıf, y ve yükseklik (satır sarma/dikey akış) her sınıfta AYNEN eşit olmalıdır.
 const X_TOL_PX := 8.0
+## Boyutu metinden (doğrudan ya da çocuk metninden) türeyen sınıflar: Label/düğme türleri ve içeriğe göre büyüyen kapsayıcılar.
+const TEXT_SIZED_CLASSES := [
+	"Label",
+	"RichTextLabel",
+	"Button",
+	"LinkButton",
+	"CheckBox",
+	"CheckButton",
+	"OptionButton",
+	"LineEdit",
+	"TextEdit",
+	"HBoxContainer",
+	"VBoxContainer",
+	"GridContainer",
+	"FlowContainer",
+	"HFlowContainer",
+	"VFlowContainer",
+	"PanelContainer",
+	"MarginContainer",
+	"CenterContainer",
+	"ScrollContainer",
+]
 
 
 static func check_rects(t: GutTest, name: String, actual: Variant) -> void:
@@ -67,7 +91,8 @@ static func _rects_diff(a: Variant, e: Variant, at: String) -> String:
 	if a is String and e is String and a != e:
 		var pa: PackedStringArray = (a as String).rsplit("|", true, 1)
 		var pe: PackedStringArray = (e as String).rsplit("|", true, 1)
-		if pa.size() == 2 and pe.size() == 2 and pa[0] == pe[0]:
+		var cls := (pa[0] as String).rsplit("|", true, 1)[-1] if pa.size() == 2 else ""
+		if pa.size() == 2 and pe.size() == 2 and pa[0] == pe[0] and cls in TEXT_SIZED_CLASSES:
 			var ra := pa[1].split(",")
 			var re := pe[1].split(",")
 			if ra.size() == 4 and re.size() == 4:
