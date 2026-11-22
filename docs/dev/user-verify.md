@@ -193,7 +193,7 @@ Bulut yalnız headless/xvfb koştu (sentetik dokunma olayları); aşağıdakiler
 - **S-5 Kalıcılık ve hızlı sessiz** — uygulamayı kapat/aç: yüzdeler korunuyor. Menü/duraklatmadaki SES düğmesi tüm sesi kesip açıyor, kaydırıcı değerlerine dokunmuyor.
 - **S-6 Yerleşim** — ayarlar ekranı ve sağ üstteki AYARLAR düğmesi çentikli/dar cihazda kesilmiyor, başlık/etiketle çakışmıyor; geri tuşu ayarlardan önceki ekrana (menü/duraklatma) döndürüyor.
 
-## L. v2.0.2 Zyfen (parça listeleri birleştirildi: S2, U2, U3, A2a, A2b, A4)
+## L. v2.0.2 Zyfen (parça listeleri birleştirildi: S2, U2, U3, A2a, A2b, A4, fx-tuning)
 
 Aynı kural: bulutta telefon yok; yalnız cihazda doğrulanır. Zyfen ile oyna; becerileri debug kartlarıyla ya da normal seviye atlamayla topla.
 
@@ -329,6 +329,17 @@ Zyfen ile oyna; Gunslinger ile karşılaştır.
 #### Seviye ve ayar
 9. **Ayarlar ▸ EFEKT** kaydırıcısı Zyfen seslerini de ölçekler (0% sessiz, 100% tam); MÜZİK kaydırıcısı bu seslere etki etmez.
 10. Zyfen sesleri genel olarak Gunslinger seslerine göre çok yüksek/alçak mı (LUFS hedefleri `tools/audio/sfx_manifest.json`)?
+
+#### Efekt ince ayarı (T20261025-58) — cihaz kontrolü
+11. Hortum/Tufan: düşmanlar ve exp küreleri gövdenin önünde okunuyor; yalnız ön taşlar/şimşek önde.
+12. Gövde saydam (merkez daha saydam, kenar şeritleri görünür); aynı noktadaki ek hortumlar belirgin soluk.
+13. Büyük Tufan/hortum gövdesi ekran yüksekliğinin ~%35'ini aşmıyor.
+14. Gövde dönüyor (yatay akış, üstü alttan hızlı) + hafif nabız; Tufan'da da aynı.
+15. `hortum_taban`/`tufan_taban` soluk, zemine yakın sıcak kül tonunda; dönüşte bozulma yok.
+16. Girdap sade ve soluk; oyuncuyu/düşmanları kapatmıyor.
+17. Genel renkler haritaya uyuyor. İnce ayar tek yerden: `ZyfenFx.GRADE_BRIGHT / GRADE_SAT / GRADE_TINT`
+    (`scripts/view/zyfen_fx.gd`). Hortum özel sabitleri: `WindRenderer` (ALPHA_*, OVERLAP_*, CROWD_*, MAX_BODY_SCREEN,
+    FLOW_SPIN_*, PULSE_*, GIRDAP_*).
 
 ## M. v2.0.3 (bölüm dosyaları birleştirildi: A, B, C, D)
 
