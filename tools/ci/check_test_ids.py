@@ -16,7 +16,9 @@ Denetimler:
 Kipler: full = (i)(ii)(iii); selected = (i)(iii) yalnız --files'taki test dosyaları, (ii) tam; static = yalnız (ii) + declared tutarlılığı.
 JUnit verilmezse full/selected kipi static sayılır ve çıktı bunu söyler. Hata: stderr `TEST_IDS: <id>: <ETİKET>`, çıkış 1;
 --report-only farkı stdout'a yazar ve her zaman 0 çıkar.
-Dürüst sınır: kimlik düzeyinde denetim; içi boşaltılmış `func test_x(): pass` ya da döngü içi assertion kaybı yakalanmaz.
+  (iv)  tabanda gövdesi olan test HEAD'de yalnız pass/yorum/dizgeye indiyse                    -> GUTTED   (git tabanı gerekir)
+Dürüst sınır: kimlik düzeyinde denetim; yalnız TAMAMEN boşaltılan test yakalanır (GUTTED); kısmen azaltılmış ya da döngü içi
+assertion kaybı yakalanmaz (onu assertion sayacı `check_assert_counts.py` ve mutasyon kanıtı ölçer).
 """
 from __future__ import annotations
 
@@ -99,7 +101,7 @@ def parse_declared(text: str, path: str) -> tuple[list[str], list[str]]:
     unsupported: list[str] = []
     in_str = False
     for line in text.splitlines():
-        odd = line.count('"""') % 2 == 1
+        odd = (line.count('"""') + line.count("'''")) % 2 == 1  # GDScript çok satırlı dizge: """ ve '''
         if in_str:
             in_str = not odd
             continue
@@ -118,9 +120,46 @@ def parse_declared(text: str, path: str) -> tuple[list[str], list[str]]:
     return ids, unsupported
 
 
+def parse_empty(text: str, path: str) -> set[str]:
+    """İçi boş test kimlikleri: gövdede `pass`, yorum ve dizge/docstring dışında ifade yok (çok satırlı imza dahil).
+    Yalnız sütun 0'daki `func test_*`; gövde bir sonraki sütun-0 satırına kadardır (F-ashen-bastion-161)."""
+    out: set[str] = set()
+    lines = text.splitlines()
+    i, n = 0, len(lines)
+    while i < n:
+        m = FUNC.match(lines[i])
+        if not m:
+            i += 1
+            continue
+        depth = lines[i].count("(") - lines[i].count(")")
+        j = i + 1
+        while depth > 0 and j < n:  # çok satırlı imza: parantezler kapanana kadar
+            depth += lines[j].count("(") - lines[j].count(")")
+            j += 1
+        has_stmt, in_doc = False, False
+        while j < n and (not lines[j] or lines[j][0] in " \t"):
+            s = lines[j].strip()
+            j += 1
+            if in_doc:
+                in_doc = not (s.count('"""') % 2 == 1 or s.count("'''") % 2 == 1)
+                continue
+            if not s or s.startswith("#") or s == "pass":
+                continue
+            if s[0] in "\"'":  # dizge/docstring ifadesi
+                if s.count('"""') % 2 == 1 or s.count("'''") % 2 == 1:
+                    in_doc = True
+                continue
+            has_stmt = True
+        if not has_stmt:
+            out.add(f"{path}::{m.group(1)}")
+        i = j
+    return out
+
+
 @dataclass
 class Declared:
     ids: set = field(default_factory=set)
+    empty: set = field(default_factory=set)
     dups: list = field(default_factory=list)
     unsupported: list = field(default_factory=list)
 
@@ -148,7 +187,9 @@ def collect_declared(src) -> Declared:
     src.prefetch(cand)
     out = Declared()
     for f in cand:
-        ids, unsup = parse_declared(src.read(f) or "", f)
+        body = src.read(f) or ""
+        ids, unsup = parse_declared(body, f)
+        out.empty |= parse_empty(body, f) & set(ids)
         out.unsupported += unsup
         for i in ids:
             if i in out.ids:
@@ -283,16 +324,29 @@ def verify(d: Declared, j: Junit, allowed: set, only: set | None = None) -> list
     return errs
 
 
+def base_ref(root: Path, args) -> str | None:
+    ref = args.base
+    if not ref:
+        r = subprocess.run(["git", "-C", str(root), "merge-base", "HEAD", "origin/main"], capture_output=True, text=True)
+        ref = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
+    return ref
+
+
+def base_empty(root: Path, args) -> set | None:
+    """Tabandaki içi boş test kimlikleri; git tabanı yoksa/--base-declared ise None (GUTTED denetimi atlanır)."""
+    if args.no_base or args.base_declared:
+        return None
+    ref = base_ref(root, args)
+    return collect_declared(GitSource(root, ref)).empty if ref else None
+
+
 def base_sets(root: Path, args) -> tuple[set, set] | None:
     """(declared(base), pending_allowed(base)) ya da taban yok."""
     if args.no_base:
         return None
     if args.base_declared:
         return {l.strip() for l in Path(args.base_declared).read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")}, set()
-    ref = args.base
-    if not ref:
-        r = subprocess.run(["git", "-C", str(root), "merge-base", "HEAD", "origin/main"], capture_output=True, text=True)
-        ref = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
+    ref = base_ref(root, args)
     if not ref:
         return None
     src = GitSource(root, ref)
@@ -350,6 +404,10 @@ def main(argv=None) -> int:
         base = (base[0], allowed)
     gone = {i for i in (base[0] if base else set()) if i not in d.ids and i not in removed and i not in moved}
     errs += [f"TEST_IDS: {i}: LOST (declared kayboldu)" for i in sorted(gone)]
+    base_empties = base_empty(root, a) if base else None
+    if base_empties is not None:  # tabanda gövdesi olan test HEAD'de boşaltıldıysa (assertion silinmiş): kimlik denetimi görmez
+        gutted = (d.empty & base[0]) - base_empties - set(removed) - set(moved)
+        errs += [f"TEST_IDS: {i}: GUTTED (içi boşaltıldı)" for i in sorted(gutted)]
     if base and j is not None:
         lost = {i for i in base[0] - base[1] - known_pending - removed - set(moved) if i not in j.ran and i in d.ids and (only is None or i.split("::")[0] in only)}
         errs += [f"TEST_IDS: {i}: LOST (koşmadı)" for i in sorted(lost)]

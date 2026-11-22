@@ -377,3 +377,44 @@ def test_every_declared_file_is_guarded_on_the_real_tree(tmp_path):
         assert T.verify(d, T.read_junit([broken]), allowed), f"kimlik kapısı yeşil: {f}"
         checked += 1
     assert checked > 150
+
+
+# --- F-ashen-bastion-161: '''-dizge ve içi boşaltılmış test ---------------------------------------------------------------------
+
+
+def test_triple_single_quote_string_does_not_declare_tests():
+    src = "extends GutTest\nconst S := '''\nfunc test_in_str() -> void:\n'''\nfunc test_real() -> void:\n\tpass\n"
+    ids, _ = T.parse_declared(src, "test/unit/test_x.gd")
+    assert ids == ["test/unit/test_x.gd::test_real"]
+
+
+def test_parse_empty_flags_pass_only_docstring_only_and_comment_only_bodies():
+    src = (
+        "extends GutTest\n"
+        "func test_pass() -> void:\n\tpass\n"
+        "func test_comment() -> void:\n\t# yalnız yorum\n\tpass\n"
+        'func test_doc() -> void:\n\t"""açıklama"""\n'
+        "func test_multi_sig(\n\ta = 1,\n\tb = 2\n) -> void:\n\tpass\n"
+        "func test_real() -> void:\n\tassert_eq(1, 1)\n"
+        "func test_real_multi_sig(\n\ta = 1\n) -> void:\n\tassert_true(a)\n"
+    )
+    empty = T.parse_empty(src, "test/unit/test_x.gd")
+    assert empty == {f"test/unit/test_x.gd::{n}" for n in ("test_pass", "test_comment", "test_doc", "test_multi_sig")}
+
+
+def real_gd(name):
+    return f"extends GutTest\n\nfunc {name}() -> void:\n\tassert_eq(1, 1)\n"
+
+
+def test_gutted_test_is_reported(tmp_path):
+    root = tmp_path / "g"
+    init_repo(root, {"test/unit/test_a.gd": real_gd("test_one"), "tools/ci/removed_tests.txt": "", "tools/ci/moved_tests.txt": ""})
+    commit(root, {"test/unit/test_a.gd": gd("test_one")})
+    r = run(root, "--mode", "static", "--base", "HEAD~1")
+    assert r.returncode == 1
+    assert "TEST_IDS: test/unit/test_a.gd::test_one: GUTTED" in r.stderr
+
+
+def test_test_that_was_already_empty_in_base_is_not_gutted(repo):
+    commit(repo, {"test/unit/test_a.gd": gd("test_one", "test_two", "test_three")})
+    assert run(repo, "--mode", "static", "--base", "HEAD~1").returncode == 0
