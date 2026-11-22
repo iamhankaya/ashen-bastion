@@ -64,11 +64,11 @@ Seçilmemiş glif `bronz_500`, seçili `bronz_300`; çerçeve `bordo_900` 2,5 px
 **Soru:** "Hangi koşuydu, nasıl bitti, nerede sıralandım?"
 - **Koşu şeridi (yeni):** altyazının (y300) altında, y352'de ortalı **2–3 çip** (48 yüksek): `[mod glifi] MOD · SÜRE` · `[kalkan] ZORLUK` · Sonsuz'da üçüncü `LORD ×N` (amber glif). Çip = kare köşe (chamfer değil, v2.0.3 "keskin köşe"), 3 px `bronz_500` kenar, `void α0,5` dolgu, Inter 28/700 +0,06 em `kemik_100`. Çipler **yalnız bilgi** (dokunma yok).
 - **Kayma:** v2.0.3 sonuç yerleşimine **+44 px** (çip satırı + ayraç): `Y_DIV` 380→424; altındaki tüm bloklar (`Y_HERO`, `Y_RECORD`, `Y_BREAKDOWN`, `Y_STRIP`, `Y_COMBOS`) +44. Düğmeler `max(içerik_alt + 24, 1500)` kuralıyla zaten dinamik; **4 kombo + Lord bonusu satırı + Kolay notu** en kötü durumda düğmeler y≈2125'e iner (sığar). Developer testi: bu en kötü durumda bloklar çakışmaz.
-- **Sıra satırı:** rekor/sıra metni (`record_note`) artık "**Zor · Normal listesinde 3. sıra**" (Mod · Zorluk listesinde N. sıra, Inter 30/600 `kemik_300`). Sıra, **o (mod, zorluk) çiftinin** listesinden hesaplanır (K5-A). YENİ REKOR damgası da aynı liste içindir.
+- **Sıra satırı:** rekor/sıra metni (`record_note`) artık "**Normal · Zor listesinde 3. sıra**" (Mod · Zorluk listesinde N. sıra, Inter 30/600 `kemik_300`). Sıra, **o (mod, zorluk) çiftinin** listesinden hesaplanır (K5-A). YENİ REKOR damgası da aynı liste içindir.
 - **Başlık/alt başlık:** kayıp: OYUN BİTTİ / "Kale seni yuttu." · kazanç (Hızlı/Normal): KAZANDIN / "Düşmüş Kale Lordu devrildi." · **Sonsuz, Lord devrildiyse:** KAZANDIN / "Lord'u devirdin; sonra M:SS daha dayandın." (süre = Lord ölümünden ölüme) · Sonsuz, Lord'dan önce ölürse: OYUN BİTTİ (won=false).
 - **Süre/Seviye/Öldürme şeridi:** değişmez; Sonsuz'da Süre toplam süredir (27:48).
 - **Kolay notu (yalnız Kolay):** şerit ile kombolar arası 96 yüksek satır: amber 6 px sol çizgi, `!`, "Kolay: bu koşu Lord başarımlarına ve toplam sayaçlara yazılmadı." (K6-B; yazılmayan başarım yoksa da gösterilir: kuralı hatırlatır). Başarım çipi ("YENİ KADEME") varsa not onun altında.
-- **Durumlar:** kayıp · kazanç · Sonsuz zafer (LORD ×N çipi) · Kolay (not) · rekor yok/top10/dışında (v2.0.3 değişmez; sıra metni "Zor · Normal listesinde 10 dışı" yerine satır gizlenir) · 2× yazı: çipler iki satıra sarar (satır +56), geri kalan v2.0.3.
+- **Durumlar:** kayıp · kazanç · Sonsuz zafer (LORD ×N çipi) · Kolay (not) · rekor yok/top10/dışında (v2.0.3 değişmez; sıra metni "Normal · Zor listesinde 10 dışı" yerine satır gizlenir) · 2× yazı: çipler iki satıra sarar (satır +56), geri kalan v2.0.3.
 - **Pause ekranı (maketlenmedi, tarif):** "DURAKLATILDI" altında aynı çip bileşeni (mod + zorluk), salt bilgi; koşu içi değiştirme yok.
 
 ## 6. Sonsuz kilometre taşı (oyun içi, `05-sonsuz-zafer-ani`)
@@ -77,12 +77,12 @@ Sonsuz modda Lord ilk kez ölünce: üstte **bant 936×204** (`dugme-birincil` 9
 ## 7. Skorlar ekranı (`04`, anatomi `04a`, boş sekme `04b`)
 **Soru:** "Bu mod ve zorlukta en iyilerim neler?" (K5-A: (mod, zorluk) başına 10'luk liste.)
 - Başlık `EN İYİ SKORLAR` (y150). Altyazı ve ayraç kalkar (sekmeler yerine geçer).
-- **İki sekme sırası** (her biri 3×306×132, aralık 12): MOD (`HIZLI | NORMAL | SONSUZ`, y290) ve ZORLUK (`KOLAY | NORMAL | ZOR`, y434). Seçili sekme = bordo yüzey + **6 px amber kor çizgisi** (alt) + 900 ağırlık yazı; seçilmemiş = taş yüzey + `kemik_300` 700 yazı. Hücrede glif 40 + ad (Cinzel 34/+0,08 em).
+- **İki sekme sırası** (her biri 3×304×132, aralık 12; 3×304+2×12 = 936): MOD (`HIZLI | NORMAL | SONSUZ`, y290) ve ZORLUK (`KOLAY | NORMAL | ZOR`, y434). Seçili sekme = bordo yüzey + **6 px amber kor çizgisi** (alt) + 900 ağırlık yazı; seçilmemiş = taş yüzey + `kemik_300` 700 yazı. Hücrede glif 40 + ad (Cinzel 34/+0,08 em).
 - **Satırlar:** v2.0.3 satır bileşeni (sıra rozeti, skor, KAZANDI/YENİLDİ çipi, süre, tarih, YENİ etiketi); sütun y590'dan, **10 satır × 146 (pitch 158)** → y2168; `_layout`'taki uyarlanan `ROW_H` (146 ≥ `ROW_MIN_H` 120) zaten buna izin verir; `Y_ROWS` 360 → 590. GERİ y2196.
 - **Açılış sekmesi:** ana sayfadan → **geçerli seçim** (mod, zorluk); sonuç ekranından → **biten koşunun çifti**; sonra kullanıcı sekme değiştirir (kalıcı değil).
 - **Eski girişler (v1):** göç sonrası Normal/Normal listesinde görünür (kullanıcı kararı); ayrı etiket yok.
 - **Boş sekme (`04b`):** büyük soluk mod glifi + "HENÜZ SKOR YOK" + "Sonsuz · Zor listesinde kayıt yok. / Bu ayarla oynayıp ilk skoru yaz." + **`BU AYARLA OYNA`** (180 yüksek, birincil): sekmenin çiftini seçip koşuyu başlatır (ayar da o çifte geçer; etiket bunu söyler). Sekmeler boş durumda da görünür/etkindir.
-- **Durumlar:** dolu · boş (sekme) · tüm sekmeler boş (ilk açılış: Normal/Normal sekmesi boş durumu) · bozuk veri = boş · yeni rekor vurgusu (YENİ etiketi + 260 ms kayma) · 2× yazı: sekme etiketleri 40, hücre yüksekliği 132 korunur (3 sütun yeterli: "SONSUZ" ≈180 px < 306); satır içi yazı v2.0.3 kuralıyla büyür, satır 156'ya çıkar ve liste kayar.
+- **Durumlar:** dolu · boş (sekme) · tüm sekmeler boş (ilk açılış: Normal/Normal sekmesi boş durumu) · bozuk veri = boş · yeni rekor vurgusu (YENİ etiketi + 260 ms kayma) · 2× yazı: sekme etiketleri 40, hücre yüksekliği 132 korunur (3 sütun yeterli: "SONSUZ" ≈180 px < 304); satır içi yazı v2.0.3 kuralıyla büyür, satır 156'ya çıkar ve liste kayar.
 
 ## 8. Bileşen envanteri
 | Bileşen | Varyant | Durum |

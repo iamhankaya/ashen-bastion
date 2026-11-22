@@ -35,6 +35,21 @@ func test_data_only_stat_without_builtin_stays_empty() -> void:
 	assert_eq([a.total_key, a.best_key], ["", ""], "yerleşiği olmayan stat boş kalır")
 
 
+func test_non_dictionary_persist_keeps_builtin_keys() -> void:
+	# F-ashen-bastion-162: persist:"x" / dizi / null bozuk biçimleri yerleşik anahtarları bozmaz.
+	for bad in ["x", ["a"], null, 3]:
+		var a := _def("total_kills")
+		a.bind_persist([{"stat": "total_kills", "persist": bad}])
+		assert_eq(a.total_key, "kills", "persist=%s: yerleşik kalır" % str(bad))
+		assert_eq(a.best_key, "", "persist=%s: best de yerleşik (yok)" % str(bad))
+
+
+func test_other_stats_metric_does_not_touch_this_stat() -> void:
+	var a := _def("total_kills")
+	a.bind_persist([{"stat": "run_time", "persist": {"total": "zzz"}}])
+	assert_eq(a.total_key, "kills")
+
+
 func test_persist_overrides_builtin_when_given() -> void:
 	var a := _def("total_kills")
 	a.bind_persist([{"stat": "total_kills", "persist": {"total": "k2"}}])
