@@ -7,10 +7,15 @@ aranır (GameData.ERROR_CODES ile bire bir örtüşür).
 """
 import copy
 import json
+import os
 import shutil
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2] / "test" / "fixtures"
+REPO = Path(__file__).resolve().parents[2]
+# Çıktı kökü: AB_FIXTURES_OUT (test: geçici dizin) ya da commit'li test/fixtures.
+ROOT = Path(os.environ.get("AB_FIXTURES_OUT") or REPO / "test" / "fixtures")
+# Kaynak fixture kökü her zaman commit'li dizindir (çıktı kökü geçici olsa da): sabitlenen girdiler buradan okunur.
+COMMITTED = REPO / "test" / "fixtures"
 
 
 def lv5(fn):
@@ -40,14 +45,18 @@ def enemy(eid, name, hp, speed, dmg, radius, armor, xp, ai, sprite, h, tint="#ff
     return d
 
 
-GUNSLINGER = json.load(open(Path(__file__).resolve().parents[2] / "data/characters/gunslinger.json", encoding="utf-8"))
+# Karakter/beceri fixture'ları da dondurulmuş commit'li kopyadan okunur: canlı data/ evrilir (display_upper, order,
+# portrait_video...), fixture'lar şema sözleşmesinin sabit referansıdır (F-ashen-bastion-089).
+GUNSLINGER = json.load(open(COMMITTED / "data_valid" / "characters" / "gunslinger.json", encoding="utf-8"))
 
-ACHIEVEMENTS = json.load(open(Path(__file__).resolve().parents[2] / "data/achievements.json", encoding="utf-8"))
+# data_valid/achievements.json v2.0'ın dondurulmuş 22 kayıtlık tek-hedefli biçimidir (şema sözleşme fixture'ı); canlı
+# data/achievements.json aşamalı şemaya geçti (target/tier yok) ve fixture'a kaynak OLMAZ (F-ashen-bastion-089).
+ACHIEVEMENTS = json.load(open(COMMITTED / "data_valid" / "achievements.json", encoding="utf-8"))
 
 VALID = {
     "characters/gunslinger.json": GUNSLINGER,
     "achievements.json": ACHIEVEMENTS,
-    "skills/cift_tabanca.json": json.load(open(Path(__file__).resolve().parents[2] / "data/skills/cift_tabanca.json", encoding="utf-8")),
+    "skills/cift_tabanca.json": json.load(open(COMMITTED / "data_valid" / "skills" / "cift_tabanca.json", encoding="utf-8")),
     "skills/seken_mermi.json": active(
         "seken_mermi", "Seken Mermi", ["rhythm"],
         [{"every_n": n, "bounces": b, "damage_mult": m} for n, b, m in
@@ -127,8 +136,16 @@ def atlas_enemies():
     return out
 
 
-def ach(fn):
-    return {"achievements.json": mut("achievements.json", fn)}
+ILK_KAN_ICON = "res://assets/ui/achievements/ilk_kan.png"
+
+
+def ach(fn, icons=False):
+    """icons=True: aşamalı şema (v2.0.3) kötü fixture'ları; her kayıt `icon` taşır (ilk kayıt fn içinde, kalanlar burada)."""
+    d = mut("achievements.json", fn)
+    if icons:
+        for e in d:
+            e.setdefault("icon", f"res://assets/ui/achievements/{e['id']}.png")
+    return {"achievements.json": d}
 
 
 BAD = {
@@ -179,10 +196,12 @@ BAD = {
     "scope_mismatch": ach(lambda d: d[0].update(scope="run")),
     "atlas_cells": atlas_enemies(),
     # v2.0.3 aşamalı şema
-    "steps_invalid": ach(lambda d: (d[0].pop("target"), d[0].pop("tier"), d[0].update(steps=[10, 5], group="THE ROAD"))),
+    "steps_invalid": ach(lambda d: (
+        d[0].pop("target"), d[0].pop("tier"),
+        d[0].update(icon=ILK_KAN_ICON, steps=[10, 5], group="THE ROAD")), icons=True),
     "legacy_unknown": ach(lambda d: (
         d[0].pop("target"), d[0].pop("tier"),
-        d[0].update(steps=[1, 10], group="THE ROAD", legacy={"yok_boyle_eski": 1}))),
+        d[0].update(icon=ILK_KAN_ICON, steps=[1, 10], group="THE ROAD", legacy={"yok_boyle_eski": 1})), icons=True),
     "unknown_ref": {"characters/gunslinger.json": mut(
         "characters/gunslinger.json", lambda d: d.update(unlock={"achievement": "olmayan_basarim"}))},
     "rhythm_count": {
@@ -200,7 +219,12 @@ CHAR_BAD = {
     "unlock_key": lambda d: d.update(unlock={"achievement": "ilk_kan", "extra": 1}),
     "placeholder_type": lambda d: d.update(placeholder="evet"),
     "base_gun": lambda d: d.update(base_gun="cift_tabanca"),
-    "portrait_video_missing": lambda d: d.update(portrait_video="res://assets/video/portrait/yok_boyle_video.ogv"),
+    # Bu fixture ayrıca ses/sıra alanlarını taşır (portrait_video yolu dışındaki hatalar sınanmasın diye tam karakter).
+    "portrait_video_missing": lambda d: d.update(
+        display_upper="GUNSLINGER", order=1,
+        sfx={"shot": ["shot_right", "shot_left"], "hit": "hit", "reload_start": "reload_spin",
+             "reload_end": "reload_click", "dry": "dry_fire"},
+        portrait_video="res://assets/video/portrait/yok_boyle_video.ogv"),
 }
 
 
