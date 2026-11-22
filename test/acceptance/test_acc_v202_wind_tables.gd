@@ -13,7 +13,14 @@ const EVOS := ["ay_oragi", "kasirga_patlamasi", "gogun_mizragi", "tufan"]
 ## T20261025-79: `min_spawn_dist`/`keep_out` (doğuş ve yaklaşmama uzaklığı) da düğmedir; değerleri
 ## test_acc_v202_wind_keepout.gd'de sınanır.
 const KNOB_KEYS := [
-	"speed", "target_mode", "retarget_every", "max_dist", "boss_mult", "min_spawn_dist", "keep_out"
+	"speed",
+	"target_mode",
+	"retarget_every",
+	"max_dist",
+	"boss_mult",
+	"min_spawn_dist",
+	"keep_out",
+	"min_sep"
 ]
 const KNOB_SKILLS := ["hortum", "tufan"]
 

@@ -135,8 +135,9 @@ func bind_persist(metrics: Array) -> void:
 			return
 		var t: Variant = (persist as Dictionary).get("total", null)
 		var b: Variant = (persist as Dictionary).get("best", null)
-		total_key = t if t is String else ""
-		best_key = b if b is String else ""
+		# Verilmeyen/string olmayan yarı yerleşik sabit tabloya düşer (F-ashen-bastion-170); yerleşiği yoksa "".
+		total_key = t if t is String else TOTAL_KEY.get(String(stat), "")
+		best_key = b if b is String else BEST_KEY.get(String(stat), "")
 		return
 
 

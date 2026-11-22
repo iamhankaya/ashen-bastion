@@ -26,6 +26,12 @@ func test_non_strip_name_or_missing_walk_falls_back_to_the_character() -> void:
 	assert_eq(AccV202.art_owner(&"veyra", {}), &"veyra")
 
 
+func test_empty_owner_name_strip_falls_back_to_the_character() -> void:
+	# F-ashen-bastion-166: `char/_strip.png` boş sahip üretirdi (art/source// gibi okunmaz bir hata mesajı).
+	var rig := _rig("res://assets/gfx/char/_strip.png")
+	assert_eq(AccV202.art_owner(&"veyra", rig), &"veyra")
+
+
 func test_waiver_is_bound_to_the_character_not_the_strip_owner() -> void:
 	assert_eq(AccV202.waiver_path(&"veyra"), "res://docs/design/walk-waiver-veyra.md")
 	assert_eq(AccV202.waiver_path(&"zyfen"), "res://docs/design/v2.0.2/walk-waiver.md")

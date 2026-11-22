@@ -12,8 +12,12 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 OUT="${1:-.mid}"; FIRST="${2:-3001}"; N="${3:-400}"; JOBS="${4:-$(nproc)}"
 GODOT_BIN="${GODOT_BIN:-$(bash tools/ci/ensure_godot.sh)}"
-# Temiz klonda içe aktarma yoksa koşular sessizce boş çıktı üretir (F-ashen-bastion-045).
-[ -d .godot/imported ] || { echo "HATA: .godot/imported yok; önce '$GODOT_BIN --headless --import' çalıştır" >&2; exit 1; }
+# Temiz klonda içe aktarma yoksa koşular sessizce boş çıktı üretir (F-ashen-bastion-045). Yarım/boş import de aynı sonucu
+# verir: dizin varlığı yetmez, içi dolu ve sınıf önbelleği yazılmış olmalı (F-ashen-bastion-178).
+if [ -z "$(ls -A .godot/imported 2>/dev/null)" ] || [ ! -s .godot/global_script_class_cache.cfg ]; then
+  echo "HATA: .godot içe aktarması yok/yarım (imported boş ya da global_script_class_cache.cfg eksik); önce '$GODOT_BIN --headless --import' çalıştır" >&2
+  exit 1
+fi
 mkdir -p "$OUT"
 # Karakter listesi katalogdan (data/characters/<id>.json, dosya adı sırası); CHARS ile daraltılır.
 CHARS_LIST="${CHARS:-$(for f in data/characters/*.json; do printf '%s ' "$(basename "$f" .json)"; done)}"

@@ -19,7 +19,8 @@ static func art_owner(id: StringName, rig: Dictionary) -> StringName:
 	var walk: Variant = rig.get("walk", {})
 	var strip := str((walk as Dictionary).get("strip", "")) if walk is Dictionary else ""
 	var base := strip.get_file()
-	if base.ends_with("_strip.png") and strip == CHAR_DIR + base:
+	# Boş sahip adı (`_strip.png`) kanonik sayılmaz: kendi kimliğine düşer (F-ashen-bastion-166).
+	if base.ends_with("_strip.png") and strip == CHAR_DIR + base and base != "_strip.png":
 		return StringName(base.trim_suffix("_strip.png"))
 	return id
 

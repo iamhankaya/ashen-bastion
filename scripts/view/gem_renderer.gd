@@ -36,12 +36,19 @@ func bind(sim: GameSim) -> void:
 	_sim = sim
 
 
-## GemTiers.TEXTURES -> yan yana 3 kutulu atlas; bir doku yüklenemezse yer tutucu taşa düşer.
-static func atlas_texture() -> Texture2D:
+## GemTiers.TEXTURES -> yan yana 3 kutulu atlas; bir doku yüklenemezse yer tutucu taşa düşer (uyarıyla: F-ashen-bastion-087).
+## `paths` yalnız testler içindir (eksik doku senaryosu).
+static func atlas_texture(paths: PackedStringArray = GemTiers.TEXTURES) -> Texture2D:
 	var atlas := Image.create_empty(TILE_PX * GemTiers.COUNT, TILE_PX, false, Image.FORMAT_RGBA8)
 	for t in GemTiers.COUNT:
-		var tex := load(GemTiers.TEXTURES[t]) as Texture2D
+		# exists() önce: olmayan yolda load() motor ERROR'u basar; uyarı tek ve açık kalsın.
+		var tex: Texture2D = (
+			load(paths[t]) as Texture2D if ResourceLoader.exists(paths[t]) else null
+		)
 		if tex == null:
+			push_warning(
+				"GemRenderer: küre dokusu yüklenemedi: %s; yer tutucu taş kullanılıyor" % paths[t]
+			)
 			return PlaceholderArt.gem_texture()
 		var img := tex.get_image()
 		img.convert(Image.FORMAT_RGBA8)
