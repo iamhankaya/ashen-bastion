@@ -231,10 +231,10 @@ CHAR_BAD = {
 def write(base: Path, rel: str, content):
     p = base / rel
     p.parent.mkdir(parents=True, exist_ok=True)
-    if isinstance(content, str):
-        p.write_text(content, encoding="utf-8")
-    else:
-        p.write_text(json.dumps(content, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    # Bayt yazımı: Windows metin kipi "\n"i CRLF'e çevirir, commit'li fixture LF'dir (platformdan bağımsız LF).
+    if not isinstance(content, str):
+        content = json.dumps(content, indent=2, ensure_ascii=False) + "\n"
+    p.write_bytes(content.encode("utf-8"))
 
 
 def main():
