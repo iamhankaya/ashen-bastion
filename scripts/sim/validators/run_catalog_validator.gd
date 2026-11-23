@@ -14,9 +14,13 @@ func validator_id() -> StringName:
 
 
 func run(g: GameData, out: PackedStringArray, _complete: bool) -> void:
+	# Dizinlerden biri bile varsa katalog denetlenir (F-ashen-bastion-139): tek başına difficulties/ olan kök sessiz geçmez.
 	if (
 		g.root_dir == ""
-		or not DirAccess.dir_exists_absolute(g.root_dir.path_join(RunCatalog.MODES_DIR))
+		or not (
+			DirAccess.dir_exists_absolute(g.root_dir.path_join(RunCatalog.MODES_DIR))
+			or DirAccess.dir_exists_absolute(g.root_dir.path_join(RunCatalog.DIFFS_DIR))
+		)
 	):
 		return
 	out.append_array(PackedStringArray(RunProfiles.load_dir(g.root_dir)["errors"]))

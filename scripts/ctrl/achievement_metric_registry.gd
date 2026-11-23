@@ -8,10 +8,19 @@ extends RefCounted
 
 var _metrics: Array = []  # stat sıralı ham girdiler (yinelenenler dahil; validate bildirir)
 
+static var _default: AchievementMetricRegistry = null
 
-## Gerçek veri: res://data/achievements/*.json.
+
+## Gerçek veri: res://data/achievements/*.json. Kayıt salt okunurdur; her kurulumda 21 JSON'u diskten okumamak için bellekte
+## tutulur (F-ashen-bastion-142). Veri kökü koşu içinde değişmez; testler `clear_default_cache` ile sıfırlar.
 static func default() -> AchievementMetricRegistry:
-	return from_dicts(MetricSchema.read_dir())
+	if _default == null:
+		_default = from_dicts(MetricSchema.read_dir())
+	return _default
+
+
+static func clear_default_cache() -> void:
+	_default = null
 
 
 static func from_dicts(metrics: Array) -> AchievementMetricRegistry:

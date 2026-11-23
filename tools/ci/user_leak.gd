@@ -114,6 +114,13 @@ static func cleanup_and_restore() -> void:
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
+## Koşu kapsamlı önbellekleri sıfırlar; GUT ön ve son kancası çağırır (koşu başı + sonu: F-ashen-bastion-127).
+static func clear_run_caches() -> void:
+	UiKit.clear_caches()
+	ArtLoader.clear_caches()
+	AchievementMetricRegistry.clear_default_cache()
+
+
 static func _allowed(path: String, allow: PackedStringArray) -> bool:
 	for pat in allow:
 		if path.match(pat) or path.trim_suffix("/").match(pat):

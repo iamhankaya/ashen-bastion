@@ -12,6 +12,7 @@
       "cooldown": 9.0,
       "count": 3,
       "radius": 190,
+      "min_sep": 133,
       "damage": 20,
       "interval": 0.35,
       "pull": 260,
