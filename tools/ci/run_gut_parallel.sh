@@ -4,7 +4,7 @@
 # Çıkış: 0 yeşil, 1 kırmızı (parça çıkış kodu / USER_LEAK / eksik JUnit / kapsam eksik-yinelenen), 2 kullanım hatası.
 # Çıktı: $GATE_DIR/junit.xml (birleşik), gut-K.log, junit-K.xml, gut.log (günlüklerin birleşimi; gate.sh scan_log taraması için).
 # Kapsam kanıtı CI'daki ile aynıdır: shard.py check-merge --require-all (her test dosyası tam bir parçada koşmuş olmalı).
-# Her süreç KENDİ XDG_DATA_HOME'unu alır: `user://` o dizinde olur; ortak dizinde bir parçanın geçici dosyaları
+# Her süreç KENDİ XDG_DATA_HOME'unu (Linux) ve HOME'unu (macOS) alır: `user://` o dizinde olur; ortak dizinde bir parçanın geçici dosyaları
 # (gut_pre_hook/gut_stub_hook taban karşılaştırması) diğer parçada USER_LEAK görünürdü.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -21,9 +21,10 @@ mkdir -p "$GATE_DIR"
 pids=()
 for k in $(seq 1 "$N"); do
   "$PY" tools/ci/shard.py config "$k" "$N" "$GATE_DIR/gutconfig-$k.json" --junit "res://$GATE_DIR/junit-$k.xml" || { echo "GATE FAIL: shard.py config $k/$N" >&2; exit 1; }
-  mkdir -p "$ROOT/$GATE_DIR/xdg-$k"
+  mkdir -p "$ROOT/$GATE_DIR/xdg-$k/home"
   echo "parça $k/$N: $("$PY" tools/ci/shard.py assign "$k" "$N" | wc -l) test dosyası"
-  XDG_DATA_HOME="$ROOT/$GATE_DIR/xdg-$k" "$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gconfig="res://$GATE_DIR/gutconfig-$k.json" \
+  # Linux: XDG_DATA_HOME; macOS: HOME (XDG etkisiz, F-ashen-bastion-184; ölçüm: OS.get_user_data_dir). Yalnız bu süreç.
+  XDG_DATA_HOME="$ROOT/$GATE_DIR/xdg-$k" HOME="$ROOT/$GATE_DIR/xdg-$k/home" "$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gconfig="res://$GATE_DIR/gutconfig-$k.json" \
     > "$GATE_DIR/gut-$k.log" 2>&1 < /dev/null &
   pids+=($!)
 done

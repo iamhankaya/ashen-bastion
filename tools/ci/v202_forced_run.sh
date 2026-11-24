@@ -21,8 +21,8 @@ cfg["tests"] = ["res://" + f for f in open(sys.argv[1], encoding="utf-8").read()
 cfg["junit_xml_file"] = sys.argv[3]
 json.dump(cfg, open(sys.argv[2], "w", encoding="utf-8"))
 PY
-  mkdir -p "$OUT/xdg-$name"
-  XDG_DATA_HOME="$PWD/$OUT/xdg-$name" "$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gconfig="$PWD/$OUT/$name.json" \
+  mkdir -p "$OUT/xdg-$name/home"
+  XDG_DATA_HOME="$PWD/$OUT/xdg-$name" HOME="$PWD/$OUT/xdg-$name/home" "$GODOT_BIN" --headless -s res://addons/gut/gut_cmdln.gd -gconfig="$PWD/$OUT/$name.json" \
     > "$OUT/$name.log" 2>&1 < /dev/null
   echo "$name: çıkış $?"
 }
