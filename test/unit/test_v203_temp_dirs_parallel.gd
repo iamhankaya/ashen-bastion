@@ -29,7 +29,8 @@ func after_each() -> void:
 	# Yalnız bu testin sahte komşu dizinleri (kendi oluşturduğumuz sabit yollar) silinir.
 	for d in _neighbor_dirs():
 		assert_true(d.contains("_%d_" % NEIGHBOR_PID) or d.contains("/%d_" % NEIGHBOR_PID))
-		KitDev.remove_dir(d)
+		if DirAccess.dir_exists_absolute(d):
+			KitDev.remove_dir(d)
 
 
 func _assert_neighbors_alive(msg: String) -> void:
