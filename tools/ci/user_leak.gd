@@ -95,8 +95,7 @@ static func allowed_leaks() -> PackedStringArray:
 static func cleanup_and_restore() -> void:
 	if not has_baseline:
 		return
-	for d in TEMP_DIRS:
-		_remove_recursive(ProjectSettings.globalize_path(ROOT + d))
+	remove_own_temp(OS.get_process_id())
 	for t in TRACKED:
 		var path := ROOT + t
 		if tracked_bytes.has(t):
@@ -112,6 +111,24 @@ static func cleanup_and_restore() -> void:
 					f.close()
 		elif FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+## `pid` sürecinin geçici dizinlerini siler (TEMP_DIRS altında `<pid>_N` ya da `<etiket>_<pid>_N`). Kökü ve başka
+## sürecin dizinlerini silmez: paralel GUT parçaları (Mac'te XDG_DATA_HOME etkisiz, F-184) `user://`'i paylaşır; biten
+## parçanın ortak kökü silmesi koşan parçanın dizinini altından çekiyordu (F-ashen-bastion-177). Kök kalır (_ignored).
+static func remove_own_temp(pid: int, only: String = "") -> void:
+	for t in TEMP_DIRS:
+		if only != "" and t != only:
+			continue
+		var root := ProjectSettings.globalize_path(ROOT + t)
+		for d in DirAccess.get_directories_at(root):
+			if owned_by(d, pid):
+				_remove_recursive(root.path_join(d))
+
+
+## Geçici dizin adı `pid` sürecine mi ait: `<pid>_N` (KitDev) ya da `<etiket>_<pid>_N` (SimKit).
+static func owned_by(dir_name: String, pid: int) -> bool:
+	return dir_name.begins_with("%d_" % pid) or dir_name.contains("_%d_" % pid)
 
 
 ## Koşu kapsamlı önbellekleri sıfırlar; GUT ön ve son kancası çağırır (koşu başı + sonu: F-ashen-bastion-127).

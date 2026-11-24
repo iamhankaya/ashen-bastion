@@ -53,13 +53,9 @@ static func remove_dir(path: String) -> void:
 
 
 ## Yalnız bu sürecin dizinlerini (`<pid>_N`) siler; ortak kökü silmek paralel GUT süreçlerinin dizinini altından çeker
-## (F-ashen-bastion-177). Boş kalan kök kalır (UserLeak TEMP_DIRS'te; koşu sonu kancası siler).
+## (F-ashen-bastion-177). Boş kalan kök kalır (UserLeak TEMP_DIRS'te; _ignored).
 static func remove_tmp() -> void:
-	var root := ProjectSettings.globalize_path(TMP_ROOT)
-	var prefix := "%d_" % OS.get_process_id()
-	for d in DirAccess.get_directories_at(root):
-		if d.begins_with(prefix):
-			_remove_recursive(root.path_join(d))
+	UserLeak.remove_own_temp(OS.get_process_id(), "kit_dev_tmp")
 
 
 static func _apply_overlay(src: String, dst: String, rel: String) -> void:
