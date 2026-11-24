@@ -183,7 +183,8 @@ static func read_json(path: String) -> Variant:
 
 static func remove_tmp() -> void:
 	_cache.clear()
-	_remove_recursive(ProjectSettings.globalize_path(TMP_ROOT))
+	# Yalnız bu sürecin dizinleri: ortak kök paralel GUT parçalarıyla paylaşılır (F-ashen-bastion-177).
+	UserLeak.remove_own_temp(OS.get_process_id(), "sim_kit_tmp")
 
 
 static func _cached(key: String, src: String, empty_waves: bool, with_pickups: bool) -> GameData:
