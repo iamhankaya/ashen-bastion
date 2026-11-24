@@ -22,6 +22,7 @@ for a in "$@"; do case "$a" in -gconfig=*) CFG="${a#-gconfig=res://}" ;; esac; d
 [ -n "${CFG:-}" ] || { echo "--version"; exit 0; }
 K="$(basename "$CFG" .json | sed 's/gutconfig-//')"
 echo "XDG=$XDG_DATA_HOME" > "$FAKE_OUT/xdg-$K.txt"
+echo "HOME=$HOME" > "$FAKE_OUT/home-$K.txt"
 if [ -n "${FAKE_BARRIER:-}" ]; then  # eşzamanlılık bariyeri: FAKE_BARRIER=N parçanın hepsi başlayana dek bekle (en çok ~30 sn)
   touch "$FAKE_OUT/start-$K"
   for _ in $(seq 1 300); do [ "$(ls "$FAKE_OUT" | grep -c '^start-')" -ge "$FAKE_BARRIER" ] && break; sleep 0.1; done
@@ -81,6 +82,17 @@ def test_each_shard_gets_its_own_user_dir(env):
     assert run(e, 3).returncode == 0
     dirs = {(out / f"xdg-{k}.txt").read_text(encoding="utf-8").strip() for k in (1, 2, 3)}
     assert len(dirs) == 3 and all(d.startswith("XDG=") and d != "XDG=" for d in dirs)
+
+
+def test_each_shard_gets_its_own_home_for_macos(env):
+    # F-ashen-bastion-184: macOS'ta Godot `user://`'i HOME'dan türetir (XDG_DATA_HOME etkisiz): her parça ayrı HOME almalı,
+    # gerçek HOME'a dokunulmamalı (gerçek kullanıcı kaydı/ayarları).
+    e, gdir, out = env
+    assert run(e, 3).returncode == 0
+    homes = [(out / f"home-{k}.txt").read_text(encoding="utf-8").strip().removeprefix("HOME=") for k in (1, 2, 3)]
+    assert len(set(homes)) == 3, homes
+    for h in homes:
+        assert h != e.get("HOME", "") and Path(h).resolve().is_relative_to(gdir.resolve()), h
 
 
 def test_failing_shard_fails_and_names_shard(env):

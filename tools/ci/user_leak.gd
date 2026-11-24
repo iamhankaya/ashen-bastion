@@ -114,7 +114,7 @@ static func cleanup_and_restore() -> void:
 
 
 ## `pid` sürecinin geçici dizinlerini siler (TEMP_DIRS altında `<pid>_N` ya da `<etiket>_<pid>_N`). Kökü ve başka
-## sürecin dizinlerini silmez: paralel GUT parçaları (Mac'te XDG_DATA_HOME etkisiz, F-184) `user://`'i paylaşır; biten
+## sürecin dizinlerini silmez: paralel GUT parçaları `user://`'i paylaşırsa (HOME/XDG yalıtımı yoksa; F-184) biten
 ## parçanın ortak kökü silmesi koşan parçanın dizinini altından çekiyordu (F-ashen-bastion-177). Kök kalır (_ignored).
 static func remove_own_temp(pid: int, only: String = "") -> void:
 	for t in TEMP_DIRS:
